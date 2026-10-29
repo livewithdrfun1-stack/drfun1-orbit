@@ -1,0 +1,6 @@
+{
+  "name": "Satcom Orbit - Satellite Operator & Carrier Directory",
+  "description": "Comprehensive dynamic directory of global satellite operators, constellations, and satcom carriers for connectivity and bandwidth leasing. Licensed to Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
