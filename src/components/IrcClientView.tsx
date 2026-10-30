@@ -188,7 +188,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
     }
   };
 
-  const handleLeafAll12NodesToHub = () => {
+  const handleLeafAll25NodesToHub = () => {
     if (isBurstingSync) return;
     setIsBurstingSync(true);
 
@@ -197,7 +197,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
       timestamp: new Date().toLocaleTimeString(),
       sender: '***',
       channel: currentChannel,
-      content: `[UNREALIRCD LINK BURST] Initializing leaf link synchronization for all 12 Switch nodes to Root Hub ${UNREAL_HUB_DETAILS.host}:${UNREAL_HUB_DETAILS.port} (SID ${UNREAL_HUB_DETAILS.sid})...`,
+      content: `[UNREALIRCD LINK BURST] Initializing leaf link synchronization for all 25 Switch nodes to Root Hub ${UNREAL_HUB_DETAILS.host}:${UNREAL_HUB_DETAILS.port} (SID ${UNREAL_HUB_DETAILS.sid})...`,
       type: 'system',
     };
 
@@ -206,7 +206,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
       [currentChannel]: [...(prev[currentChannel] || []), startMsg],
     }));
 
-    // Sequentially leaf-sync each of the 12 nodes with realistic burst telemetry
+    // Sequentially leaf-sync each of the 25 nodes with realistic burst telemetry
     SWITCH_DEDICATED_NODES.forEach((node, index) => {
       setTimeout(() => {
         const nodeBurstMsg: IrcMessage = {
@@ -221,7 +221,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
           ...prev,
           [currentChannel]: [...(prev[currentChannel] || []), nodeBurstMsg],
         }));
-      }, (index + 1) * 220);
+      }, (index + 1) * 120);
     });
 
     // Final summary notification from Switch_NOC_Bot
@@ -232,14 +232,14 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
         timestamp: new Date().toLocaleTimeString(),
         sender: 'Switch_NOC_Bot',
         channel: currentChannel,
-        content: `[LEAF CLUSTER SYNC COMPLETE] All 12 dedicated Switch nodes (Las Vegas, Tahoe Reno, Grand Rapids, Atlanta, Space Gateway, Austin, Chicago, Seattle, New York, London, Tokyo, Hawaii) are 100% leaf-synced to ${UNREAL_HUB_DETAILS.host}. Total synchronized: ${UNREAL_HUB_DETAILS.totalSyncedUsers.toLocaleString()} users and 14 all-band channels over 1.46 Tbps RisingNet optical backbone!`,
+        content: `[LEAF CLUSTER SYNC COMPLETE] All 25 dedicated Switch & teleport nodes (Las Vegas, Tahoe Reno, Grand Rapids, Atlanta, Space Gateway, Austin, Chicago, Seattle, New York, London, Tokyo, Hawaii, Silicon Valley, Denver, Miami, Ashburn, Los Angeles, Frankfurt, Stockholm, Singapore, Sydney, São Paulo, Dubai, Deep Space Goldstone, SUPERNAP 9) are 100% leaf-synced to ${UNREAL_HUB_DETAILS.host}. Total synchronized: ${UNREAL_HUB_DETAILS.totalSyncedUsers.toLocaleString()} users and 14 all-band channels over 3.85 Tbps RisingNet optical backbone!`,
         type: 'notice',
       };
       setChannelMessages(prev => ({
         ...prev,
         [currentChannel]: [...(prev[currentChannel] || []), summaryMsg],
       }));
-    }, (SWITCH_DEDICATED_NODES.length + 1) * 220);
+    }, (SWITCH_DEDICATED_NODES.length + 1) * 120);
   };
 
   const handleSlashCommand = (cmdStr: string) => {
@@ -283,10 +283,10 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
 
       case 'node':
         const nodeIdx = parseInt(arg, 10);
-        if (nodeIdx >= 1 && nodeIdx <= 12) {
+        if (nodeIdx >= 1 && nodeIdx <= 25) {
           handleSwitchNode(`switch_node_${nodeIdx}`);
         } else {
-          addSysMsg('Usage: /node 1-12 (1: Las Vegas, 2: Tahoe Reno, 3: Grand Rapids, 4: Atlanta, 5: Space Gateway, 6: Austin, 7: Chicago, 8: Seattle, 9: New York, 10: London, 11: Tokyo, 12: Hawaii)');
+          addSysMsg('Usage: /node 1-25 (e.g. 1: Las Vegas Core, 5: Space Teleport, 13: Silicon Valley, 24: Deep Space Goldstone, 25: SUPERNAP 9 Redundant Core)');
         }
         break;
 
@@ -294,24 +294,16 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
       case 'links':
         addSysMsg('=== UnrealIRCd 6.1.4 Server Mesh Topology (Root Hub: irc.drfun1.com) ===');
         addSysMsg('`-- irc.drfun1.com [HUB - SID 001] (Switch SUPERNAP Las Vegas Core / RisingNet IP Transit)');
-        addSysMsg('    |-- node1.lasvegas.switch.drfun1.com [LEAF - SID 002] (3.2ms, 482 nicks, 100G fiber)');
-        addSysMsg('    |-- node2.tahoereno.switch.drfun1.com [LEAF - SID 003] (4.8ms, 318 nicks, 100G solar)');
-        addSysMsg('    |-- node3.grandrapids.switch.drfun1.com [LEAF - SID 004] (14.1ms, 245 nicks, 40G fiber)');
-        addSysMsg('    |-- node4.atlanta.switch.drfun1.com [LEAF - SID 005] (18.4ms, 198 nicks, 100G subsea)');
-        addSysMsg('    |-- node5.space-teleport.switch.drfun1.com [LEAF - SID 006] (1.9ms, 614 nicks, 400G laser)');
-        addSysMsg('    |-- node6.austin.switch.drfun1.com [LEAF - SID 007] (11.6ms, 362 nicks, 100G fiber)');
-        addSysMsg('    |-- node7.chicago.switch.drfun1.com [LEAF - SID 008] (15.2ms, 410 nicks, 100G fiber)');
-        addSysMsg('    |-- node8.seattle.switch.drfun1.com [LEAF - SID 009] (8.7ms, 295 nicks, 100G subsea)');
-        addSysMsg('    |-- node9.newyork.switch.drfun1.com [LEAF - SID 010] (21.3ms, 388 nicks, 100G transatlantic)');
-        addSysMsg('    |-- node10.london.switch.drfun1.com [LEAF - SID 011] (64.5ms, 320 nicks, 100G DWDM)');
-        addSysMsg('    |-- node11.tokyo.switch.drfun1.com [LEAF - SID 012] (82.1ms, 435 nicks, 100G transpacific)');
-        addSysMsg('    `-- node12.hawaii.switch.drfun1.com [LEAF - SID 013] (36.4ms, 346 nicks, 100G orbital feed)');
-        addSysMsg('*** Total Network: 1 Master Hub, 12 Dedicated Leafs, 4,215 Users, 14 Channels Synced across 1.46 Tbps.');
+        SWITCH_DEDICATED_NODES.forEach((node, i) => {
+          const prefix = i === SWITCH_DEDICATED_NODES.length - 1 ? '    `-- ' : '    |-- ';
+          addSysMsg(`${prefix}${node.host} [LEAF - SID ${node.sid}] (${node.latencyMs}ms, ${node.usersOnline} nicks, ${node.location.split(',')[0]} - ${node.fiberCapacity.split('+')[0].trim()})`);
+        });
+        addSysMsg(`*** Total Network: 1 Master Hub, 25 Dedicated Leafs, ${UNREAL_HUB_DETAILS.totalSyncedUsers.toLocaleString()} Users, 14 Channels Synced across 3.85 Tbps.`);
         break;
 
       case 'leafsync':
       case 'sync':
-        handleLeafAll12NodesToHub();
+        handleLeafAll25NodesToHub();
         break;
 
       case 'hub':
@@ -319,7 +311,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
         addSysMsg(`Colocation: ${UNREAL_HUB_DETAILS.colocation}`);
         addSysMsg(`Transit Provider: ${UNREAL_HUB_DETAILS.transitProvider}`);
         addSysMsg(`Licensee: ${UNREAL_HUB_DETAILS.licensee}`);
-        addSysMsg(`Active Leafs: 12/12 Switch Dedicated Nodes linked with TLSv1.3 AES-256-GCM (1.46 Tbps mesh)`);
+        addSysMsg(`Active Leafs: 25/25 Switch Dedicated Nodes linked with TLSv1.3 AES-256-GCM (3.85 Tbps mesh)`);
         break;
 
       case 'ping':
@@ -341,7 +333,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
         break;
 
       case 'help':
-        addSysMsg('Available IRC commands: /join <#chan>, /nick <name>, /node <1-12>, /map, /links, /leafsync, /hub, /ping, /whois <nick>, /clear, /help. Hosted by risingnet.com on Switch 12-Node infrastructure.');
+        addSysMsg('Available IRC commands: /join <#chan>, /nick <name>, /node <1-25>, /map, /links, /leafsync, /hub, /ping, /whois <nick>, /clear, /help. Hosted by risingnet.com on Switch 25-Node infrastructure.');
         break;
 
       default:
@@ -375,7 +367,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                 | Hosted by <a href="https://www.risingnet.com" target="_blank" rel="noreferrer" className="text-sky-300 hover:underline font-semibold">risingnet.com</a>
               </span>
               <span className="hidden md:inline text-slate-400 ml-2">
-                | 5 Dedicated Nodes by <a href="https://www.switch.com" target="_blank" rel="noreferrer" className="text-emerald-300 hover:underline font-semibold">www.switch.com</a>
+                | 25 Dedicated Nodes by <a href="https://www.switch.com" target="_blank" rel="noreferrer" className="text-emerald-300 hover:underline font-semibold">www.switch.com</a>
               </span>
             </div>
           </div>
@@ -416,15 +408,15 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
 
             <div className="flex items-center gap-2 text-slate-300 font-mono text-[11px]">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-300 font-semibold">12/12 Dedicated Leafs Synced</span>
+              <span className="text-emerald-300 font-semibold">25/25 Dedicated Leafs Synced</span>
               <span className="text-slate-600 hidden sm:inline">|</span>
-              <span className="text-slate-400 hidden sm:inline">1.46 Tbps RisingNet Optical Backbone</span>
+              <span className="text-slate-400 hidden sm:inline">3.85 Tbps RisingNet Optical Backbone</span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={handleLeafAll12NodesToHub}
+              onClick={handleLeafAll25NodesToHub}
               disabled={isBurstingSync}
               className={`px-3.5 py-1.5 rounded-lg font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-md ${
                 isBurstingSync
@@ -433,7 +425,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
               }`}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isBurstingSync ? 'animate-spin' : ''}`} />
-              <span>{isBurstingSync ? 'Synchronizing 12 Nodes...' : 'Leaf All 12 Nodes to irc.drfun1.com'}</span>
+              <span>{isBurstingSync ? 'Synchronizing 25 Nodes...' : 'Leaf All 25 Nodes to irc.drfun1.com'}</span>
             </button>
 
             <button
@@ -447,19 +439,20 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
         </div>
       </div>
 
-      {/* 12 Dedicated Switch Nodes Ribbon Selector */}
+      {/* 25 Dedicated Switch Nodes Ribbon Selector */}
       <div className="bg-slate-900 border-b border-slate-800 px-4 py-2 sm:px-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-              12 Dedicated Switch Nodes:
+              25 Dedicated Switch Nodes:
             </span>
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
             {SWITCH_DEDICATED_NODES.map((node, idx) => {
               const isCurrent = node.id === activeNodeId;
+              const nodeNum = idx + 1 < 10 ? `Node 0${idx + 1}` : `Node ${idx + 1}`;
               return (
                 <button
                   key={node.id}
@@ -472,7 +465,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full ${isCurrent ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`} />
-                  <span className="font-semibold">{`Node 0${idx + 1}`}</span>
+                  <span className="font-semibold">{nodeNum}</span>
                   <span className="text-[10px] text-slate-400 truncate max-w-[100px]">
                     {node.location.split(',')[0]}
                   </span>
@@ -872,11 +865,11 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                   <div className="grid grid-cols-2 gap-3 text-xs font-mono shrink-0">
                     <div className="bg-slate-950/70 border border-purple-500/20 p-2.5 rounded-lg">
                       <span className="text-[10px] text-slate-400 block">Total Synced Leafs</span>
-                      <span className="text-sm font-bold text-emerald-400">12 Switch Nodes</span>
+                      <span className="text-sm font-bold text-emerald-400">25 Switch Nodes</span>
                     </div>
                     <div className="bg-slate-950/70 border border-purple-500/20 p-2.5 rounded-lg">
                       <span className="text-[10px] text-slate-400 block">Aggregate Mesh</span>
-                      <span className="text-sm font-bold text-purple-300">1.46 Tbps</span>
+                      <span className="text-sm font-bold text-purple-300">3.85 Tbps</span>
                     </div>
                   </div>
                 </div>
@@ -887,7 +880,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                 <div className="flex items-center justify-between">
                   <h5 className="text-xs font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
                     <Network className="w-3.5 h-3.5 text-emerald-400" />
-                    12 Dedicated Switch Nodes (Direct Leafs to irc.drfun1.com)
+                    25 Dedicated Switch Nodes (Direct Leafs to irc.drfun1.com)
                   </h5>
                   <span className="text-[11px] font-mono text-slate-400">
                     Click any node to inspect its unrealircd.conf link block
@@ -898,6 +891,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                   {SWITCH_DEDICATED_NODES.map((node, idx) => {
                     const isSelected = selectedLeafInspection?.id === node.id;
                     const isCurrentActive = activeNodeId === node.id;
+                    const nodeNum = idx + 1 < 10 ? `Node 0${idx + 1}` : `Node ${idx + 1}`;
 
                     return (
                       <button
@@ -912,7 +906,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                         <div className="space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-mono font-bold text-slate-400">
-                              Node 0{idx + 1}
+                              {nodeNum}
                             </span>
                             <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-purple-500/20 text-purple-300 font-semibold">
                               SID {node.sid}
@@ -1051,13 +1045,13 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
               <div className="flex items-center gap-2.5">
                 <button
                   onClick={() => {
-                    handleLeafAll12NodesToHub();
+                    handleLeafAll25NodesToHub();
                   }}
                   disabled={isBurstingSync}
                   className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-semibold flex items-center gap-1.5 transition-all shadow-md shadow-emerald-950/40"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isBurstingSync ? 'animate-spin' : ''}`} />
-                  <span>{isBurstingSync ? 'Bursting 12-Node Cluster Sync...' : 'Leaf All 12 Nodes to irc.drfun1.com'}</span>
+                  <span>{isBurstingSync ? 'Bursting 25-Node Cluster Sync...' : 'Leaf All 25 Nodes to irc.drfun1.com'}</span>
                 </button>
 
                 <button

@@ -14,7 +14,7 @@ export interface SwitchDedicatedNode {
   leafPeers: number;
   unrealVersion: string;
   sslFingerprint: string;
-  transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)';
+  transitProvider: string;
   // UnrealIRCd Hub-and-Leaf Peering to irc.drfun1.com
   leafHub: 'irc.drfun1.com';
   hubPort: 6697;

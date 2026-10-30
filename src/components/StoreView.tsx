@@ -46,6 +46,8 @@ export const StoreView: React.FC<StoreViewProps> = ({
 
   const categories: (ProductCategory | 'All')[] = [
     'All',
+    'DrFun1 Broadcast TV & Online Radio',
+    'Phone Carrier Spectrum & Backhaul',
     'Quantum Fiber & Terrestrial Optical',
     'ISP & Dedicated Satellite Internet',
     'Wireless Carrier & 5G NTN eSIM',

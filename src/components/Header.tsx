@@ -1,7 +1,7 @@
 import React from 'react';
-import { Satellite, Download, Plus, Bookmark, ShoppingBag, Sparkles } from 'lucide-react';
+import { Satellite, Download, Plus, Bookmark, ShoppingBag, Sparkles, Smartphone } from 'lucide-react';
 
-export type AppTab = 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'stream' | 'social' | 'irc';
+export type AppTab = 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'stream' | 'social' | 'irc' | 'media' | 'carriers';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -47,7 +47,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Zone 2: Single-line clean text nav links */}
-        <nav className="hidden xl:flex items-center gap-4 text-sm font-medium text-slate-400">
+        <nav className="hidden xl:flex items-center gap-3.5 text-sm font-medium text-slate-400">
           <button
             onClick={() => setActiveTab('directory')}
             className={`whitespace-nowrap shrink-0 transition-colors pb-1 border-b-2 ${
@@ -57,6 +57,36 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             Directory
+          </button>
+          <button
+            onClick={() => setActiveTab('media')}
+            className={`whitespace-nowrap shrink-0 transition-colors pb-1 border-b-2 flex items-center gap-1.5 ${
+              activeTab === 'media'
+                ? 'text-purple-400 border-purple-400 font-semibold'
+                : 'text-slate-400 border-transparent hover:text-purple-300'
+            }`}
+          >
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
+            </span>
+            <span>Radio &amp; TV</span>
+            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-purple-500/20 text-purple-300">
+              DrFun1
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('carriers')}
+            className={`whitespace-nowrap shrink-0 transition-colors pb-1 border-b-2 flex items-center gap-1.5 ${
+              activeTab === 'carriers'
+                ? 'text-sky-400 border-sky-400 font-semibold'
+                : 'text-slate-400 border-transparent hover:text-slate-200'
+            }`}
+          >
+            <span>Phone Carriers</span>
+            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-sky-500/20 text-sky-300">
+              NTN
+            </span>
           </button>
           <button
             onClick={() => setActiveTab('store')}
@@ -69,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span>Store &amp; Resell</span>
             <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-amber-400/20 text-amber-300">
-              DrFun1
+              ECOM
             </span>
           </button>
           <button
@@ -137,7 +167,7 @@ export const Header: React.FC<HeaderProps> = ({
                 : 'text-slate-400 border-transparent hover:text-slate-200'
             }`}
           >
-            Outreach &amp; RFQ
+            RFQ
           </button>
           <button
             onClick={onOpenCompare}
@@ -220,13 +250,31 @@ export const Header: React.FC<HeaderProps> = ({
           Directory
         </button>
         <button
+          onClick={() => setActiveTab('media')}
+          className={`whitespace-nowrap shrink-0 transition-colors flex items-center gap-1 ${
+            activeTab === 'media' ? 'text-purple-400 font-semibold' : 'text-purple-400/90 hover:text-purple-300'
+          }`}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-pulse" />
+          <span>Radio &amp; TV</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('carriers')}
+          className={`whitespace-nowrap shrink-0 transition-colors flex items-center gap-1 ${
+            activeTab === 'carriers' ? 'text-sky-400 font-semibold' : 'text-sky-400/90 hover:text-sky-300'
+          }`}
+        >
+          <Smartphone className="w-3 h-3 text-sky-400" />
+          <span>Carriers</span>
+        </button>
+        <button
           onClick={() => setActiveTab('store')}
           className={`whitespace-nowrap shrink-0 transition-colors flex items-center gap-1 ${
             activeTab === 'store' ? 'text-sky-400 font-semibold' : 'text-amber-400/90 hover:text-amber-300'
           }`}
         >
           <Sparkles className="w-3 h-3 text-amber-400" />
-          <span>Store &amp; Resell</span>
+          <span>Store</span>
         </button>
         <button
           onClick={() => setActiveTab('stream')}

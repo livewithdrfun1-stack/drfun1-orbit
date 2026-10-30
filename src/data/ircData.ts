@@ -22,10 +22,23 @@ export const UNREAL_HUB_DETAILS: UnrealIrcdHub = {
     'node10.london.switch.drfun1.com',
     'node11.tokyo.switch.drfun1.com',
     'node12.hawaii.switch.drfun1.com',
+    'node13.sanjose.switch.drfun1.com',
+    'node14.denver.switch.drfun1.com',
+    'node15.miami.switch.drfun1.com',
+    'node16.ashburn.switch.drfun1.com',
+    'node17.losangeles.switch.drfun1.com',
+    'node18.frankfurt.switch.drfun1.com',
+    'node19.stockholm.switch.drfun1.com',
+    'node20.singapore.switch.drfun1.com',
+    'node21.sydney.switch.drfun1.com',
+    'node22.saopaulo.switch.drfun1.com',
+    'node23.dubai.switch.drfun1.com',
+    'node24.goldstone.switch.drfun1.com',
+    'node25.lasvegas-edge.switch.drfun1.com',
   ],
   totalSyncedChannels: 14,
-  totalSyncedUsers: 4215,
-  aggregateBandwidth: '1.46 Tbps Terrestrial, Subsea & Optical Space Interconnect',
+  totalSyncedUsers: 8838,
+  aggregateBandwidth: '3.85 Tbps Global Terrestrial, Subsea, Quantum Fiber & Space Teleport Interconnect',
 };
 
 export const SWITCH_DEDICATED_NODES: SwitchDedicatedNode[] = [
@@ -529,6 +542,552 @@ link irc.drfun1.com {
         options { ssl; };
     };
     password "WittLaw_Switch_Node12_Auth_2026";
+    class servers;
+    type leaf;
+};`,
+  },
+  {
+    id: 'switch_node_13',
+    name: 'Switch Silicon Valley Quantum Fiber Ingest (Node 13)',
+    subdomain: 'node13.sanjose.switch.drfun1.com',
+    host: 'node13.sanjose.switch.drfun1.com',
+    port: 6697,
+    location: 'San Jose, CA, USA',
+    campusName: 'Switch / Quantum Fiber Silicon Valley Interconnect',
+    tier: 'Tier 5 Platinum Quantum Fiber & Earth Station Gateway',
+    fiberCapacity: '400 Gbps Coherent DWDM + 8G Symmetrical Quantum Mesh',
+    status: 'active',
+    latencyMs: 5.1,
+    usersOnline: 388,
+    leafPeers: 18,
+    unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2',
+    sslFingerprint: 'SHA256:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99',
+    transitProvider: 'RisingNet Optical Ring & Quantum Fiber (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '014',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 14,
+      syncedNicks: 388,
+      syncLatencyMs: 5.1,
+      lastBurst: '1.5s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* Node 13 Leaf Link to Master Hub irc.drfun1.com */
+link irc.drfun1.com {
+    incoming { mask *.drfun1.com; };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Node13_Auth_2026";
+    class servers;
+    type leaf;
+};`,
+  },
+  {
+    id: 'switch_node_14',
+    name: 'Switch Rocky Mountain Optical Node (Node 14)',
+    subdomain: 'node14.denver.switch.drfun1.com',
+    host: 'node14.denver.switch.drfun1.com',
+    port: 6697,
+    location: 'Denver, CO, USA',
+    campusName: 'Switch Front Range Teleport & Earth Station',
+    tier: 'Tier 5 Platinum Terrestrial & Satcom Teleport',
+    fiberCapacity: '100 Gbps Low-Latency Continental Ring',
+    status: 'active',
+    latencyMs: 8.4,
+    usersOnline: 276,
+    leafPeers: 14,
+    unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2',
+    sslFingerprint: 'SHA256:11:22:33:44:55:66:77:88:99:00:AA:BB:CC:DD:EE:FF:11:22',
+    transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '015',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 14,
+      syncedNicks: 276,
+      syncLatencyMs: 8.4,
+      lastBurst: '1.9s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* Node 14 Leaf Link to Master Hub irc.drfun1.com */
+link irc.drfun1.com {
+    incoming { mask *.drfun1.com; };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Node14_Auth_2026";
+    class servers;
+    type leaf;
+};`,
+  },
+  {
+    id: 'switch_node_15',
+    name: 'Switch South Atlantic Teleport (Node 15)',
+    subdomain: 'node15.miami.switch.drfun1.com',
+    host: 'node15.miami.switch.drfun1.com',
+    port: 6697,
+    location: 'Miami, FL, USA',
+    campusName: 'Switch South Atlantic Gateway & Subsea Landing',
+    tier: 'Tier 5 Platinum Subsea & Satellite Teleport',
+    fiberCapacity: '200 Gbps Subsea Fiber Cross-Connect',
+    status: 'active',
+    latencyMs: 24.1,
+    usersOnline: 310,
+    leafPeers: 16,
+    unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2',
+    sslFingerprint: 'SHA256:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44',
+    transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '016',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 14,
+      syncedNicks: 310,
+      syncLatencyMs: 24.1,
+      lastBurst: '2.1s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* Node 15 Leaf Link to Master Hub irc.drfun1.com */
+link irc.drfun1.com {
+    incoming { mask *.drfun1.com; };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Node15_Auth_2026";
+    class servers;
+    type leaf;
+};`,
+  },
+  {
+    id: 'switch_node_16',
+    name: 'Switch Mid-Atlantic Federal Teleport (Node 16)',
+    subdomain: 'node16.ashburn.switch.drfun1.com',
+    host: 'node16.ashburn.switch.drfun1.com',
+    port: 6697,
+    location: 'Ashburn, VA, USA',
+    campusName: 'Switch Data Center Alley Federal Earth Teleport',
+    tier: 'Tier 5 Platinum FedRAMP & DoD Security Array',
+    fiberCapacity: '400 Gbps Quantum Encrypted Optical Core',
+    status: 'active',
+    latencyMs: 19.5,
+    usersOnline: 492,
+    leafPeers: 22,
+    unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2',
+    sslFingerprint: 'SHA256:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:77',
+    transitProvider: 'RisingNet Federal Optical Ring (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '017',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 14,
+      syncedNicks: 492,
+      syncLatencyMs: 19.5,
+      lastBurst: '1.7s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* Node 16 Leaf Link to Master Hub irc.drfun1.com */
+link irc.drfun1.com {
+    incoming { mask *.drfun1.com; };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Node16_Auth_2026";
+    class servers;
+    type leaf;
+};`,
+  },
+  {
+    id: 'switch_node_17',
+    name: 'Switch Southern California Gateway (Node 17)',
+    subdomain: 'node17.losangeles.switch.drfun1.com',
+    host: 'node17.losangeles.switch.drfun1.com',
+    port: 6697,
+    location: 'Los Angeles, CA, USA',
+    campusName: 'Switch Pacific Coast Broadcast Teleport',
+    tier: 'Tier 5 Platinum Media & Entertainment Teleport',
+    fiberCapacity: '200 Gbps Low-Latency Pacific Wave Direct',
+    status: 'active',
+    latencyMs: 4.2,
+    usersOnline: 415,
+    leafPeers: 18,
+    unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2',
+    sslFingerprint: 'SHA256:77:88:99:00:AA:BB:CC:DD:EE:FF:11:22:33:44:55:66:77:88',
+    transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '018',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 14,
+      syncedNicks: 415,
+      syncLatencyMs: 4.2,
+      lastBurst: '1.3s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* Node 17 Leaf Link to Master Hub irc.drfun1.com */
+link irc.drfun1.com {
+    incoming { mask *.drfun1.com; };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Node17_Auth_2026";
+    class servers;
+    type leaf;
+};`,
+  },
+  {
+    id: 'switch_node_18',
+    name: 'Switch Continental Europe Core (Node 18)',
+    subdomain: 'node18.frankfurt.switch.drfun1.com',
+    host: 'node18.frankfurt.switch.drfun1.com',
+    port: 6697,
+    location: 'Frankfurt, Germany',
+    campusName: 'Switch European Central Teleport & DE-CIX Interconnect',
+    tier: 'Tier 5 Platinum EU GDPR Compliant Earth Node',
+    fiberCapacity: '100 Gbps Transatlantic Optical Subsea Ingest',
+    status: 'active',
+    latencyMs: 71.3,
+    usersOnline: 394,
+    leafPeers: 15,
+    unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2',
+    sslFingerprint: 'SHA256:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:00',
+    transitProvider: 'RisingNet European Optical Ring (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '019',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 14,
+      syncedNicks: 394,
+      syncLatencyMs: 71.3,
+      lastBurst: '2.8s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* Node 18 Leaf Link to Master Hub irc.drfun1.com */
+link irc.drfun1.com {
+    incoming { mask *.drfun1.com; };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Node18_Auth_2026";
+    class servers;
+    type leaf;
+};`,
+  },
+  {
+    id: 'switch_node_19',
+    name: 'Switch Nordic Satellite Gateway (Node 19)',
+    subdomain: 'node19.stockholm.switch.drfun1.com',
+    host: 'node19.stockholm.switch.drfun1.com',
+    port: 6697,
+    location: 'Stockholm, Sweden',
+    campusName: 'Switch Nordic Polar Orbit Teleport Ground Array',
+    tier: 'Tier 5 Platinum High-Latitude LEO Downlink Center',
+    fiberCapacity: '100 Gbps Arctic Optical Cross-Connect',
+    status: 'active',
+    latencyMs: 78.6,
+    usersOnline: 260,
+    leafPeers: 12,
+    unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2',
+    sslFingerprint: 'SHA256:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC',
+    transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '020',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 14,
+      syncedNicks: 260,
+      syncLatencyMs: 78.6,
+      lastBurst: '3.1s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* Node 19 Leaf Link to Master Hub irc.drfun1.com */
+link irc.drfun1.com {
+    incoming { mask *.drfun1.com; };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Node19_Auth_2026";
+    class servers;
+    type leaf;
+};`,
+  },
+  {
+    id: 'switch_node_20',
+    name: 'Switch Southeast Asia Hub (Node 20)',
+    subdomain: 'node20.singapore.switch.drfun1.com',
+    host: 'node20.singapore.switch.drfun1.com',
+    port: 6697,
+    location: 'Singapore',
+    campusName: 'Switch ASEAN Subsea Cable Landing & Teleport',
+    tier: 'Tier 5 Platinum Equinix SG1 / APAC Optical Center',
+    fiberCapacity: '200 Gbps Transoceanic Subsea Optical Ring',
+    status: 'active',
+    latencyMs: 94.2,
+    usersOnline: 450,
+    leafPeers: 20,
+    unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2',
+    sslFingerprint: 'SHA256:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE',
+    transitProvider: 'RisingNet APAC Optical Ring (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '021',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 14,
+      syncedNicks: 450,
+      syncLatencyMs: 94.2,
+      lastBurst: '3.6s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* Node 20 Leaf Link to Master Hub irc.drfun1.com */
+link irc.drfun1.com {
+    incoming { mask *.drfun1.com; };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Node20_Auth_2026";
+    class servers;
+    type leaf;
+};`,
+  },
+  {
+    id: 'switch_node_21',
+    name: 'Switch Australasia Teleport (Node 21)',
+    subdomain: 'node21.sydney.switch.drfun1.com',
+    host: 'node21.sydney.switch.drfun1.com',
+    port: 6697,
+    location: 'Sydney, Australia',
+    campusName: 'Switch Oceania Teleport & Southern Cross Subsea',
+    tier: 'Tier 5 Platinum Trans-Tasman & Pacific Gateway',
+    fiberCapacity: '100 Gbps Subsea Transpacific Link',
+    status: 'active',
+    latencyMs: 112.5,
+    usersOnline: 335,
+    leafPeers: 14,
+    unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2',
+    sslFingerprint: 'SHA256:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00',
+    transitProvider: 'RisingNet Oceania Optical Ring (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '022',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 14,
+      syncedNicks: 335,
+      syncLatencyMs: 112.5,
+      lastBurst: '4.2s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* Node 21 Leaf Link to Master Hub irc.drfun1.com */
+link irc.drfun1.com {
+    incoming { mask *.drfun1.com; };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Node21_Auth_2026";
+    class servers;
+    type leaf;
+};`,
+  },
+  {
+    id: 'switch_node_22',
+    name: 'Switch Latin America Teleport (Node 22)',
+    subdomain: 'node22.saopaulo.switch.drfun1.com',
+    host: 'node22.saopaulo.switch.drfun1.com',
+    port: 6697,
+    location: 'São Paulo, Brazil',
+    campusName: 'Switch South America Core & Monet Subsea Teleport',
+    tier: 'Tier 5 Platinum Pan-American Earth Gateway',
+    fiberCapacity: '100 Gbps Atlantic Direct Subsea Cable',
+    status: 'active',
+    latencyMs: 86.4,
+    usersOnline: 298,
+    leafPeers: 13,
+    unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2',
+    sslFingerprint: 'SHA256:12:34:56:78:9A:BC:DE:F0:12:34:56:78:9A:BC:DE:F0:12:34',
+    transitProvider: 'RisingNet LatAm Optical Ring (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '023',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 14,
+      syncedNicks: 298,
+      syncLatencyMs: 86.4,
+      lastBurst: '3.4s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* Node 22 Leaf Link to Master Hub irc.drfun1.com */
+link irc.drfun1.com {
+    incoming { mask *.drfun1.com; };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Node22_Auth_2026";
+    class servers;
+    type leaf;
+};`,
+  },
+  {
+    id: 'switch_node_23',
+    name: 'Switch Middle East Optical Teleport (Node 23)',
+    subdomain: 'node23.dubai.switch.drfun1.com',
+    host: 'node23.dubai.switch.drfun1.com',
+    port: 6697,
+    location: 'Dubai, UAE',
+    campusName: 'Switch Middle East Satellite Hub & GCC Interconnect',
+    tier: 'Tier 5 Platinum Middle East Satcom NOC',
+    fiberCapacity: '100 Gbps Red Sea Optical Subsea Cable Ring',
+    status: 'active',
+    latencyMs: 108.2,
+    usersOnline: 275,
+    leafPeers: 12,
+    unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2',
+    sslFingerprint: 'SHA256:56:78:9A:BC:DE:F0:12:34:56:78:9A:BC:DE:F0:12:34:56:78',
+    transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '024',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 14,
+      syncedNicks: 275,
+      syncLatencyMs: 108.2,
+      lastBurst: '3.9s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* Node 23 Leaf Link to Master Hub irc.drfun1.com */
+link irc.drfun1.com {
+    incoming { mask *.drfun1.com; };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Node23_Auth_2026";
+    class servers;
+    type leaf;
+};`,
+  },
+  {
+    id: 'switch_node_24',
+    name: 'Switch Deep Space Ground Teleport (Node 24)',
+    subdomain: 'node24.goldstone.switch.drfun1.com',
+    host: 'node24.goldstone.switch.drfun1.com',
+    port: 6697,
+    location: 'Goldstone / Barstow, CA, USA',
+    campusName: 'Switch Mojave Deep Space & Lunar Optical Downlink Array',
+    tier: 'Tier 5 Platinum Lunar/Mars Laser Comm Earth Station',
+    fiberCapacity: '400 Gbps Ultra-High-Throughput Optical Laser Direct',
+    status: 'active',
+    latencyMs: 2.8,
+    usersOnline: 520,
+    leafPeers: 24,
+    unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2',
+    sslFingerprint: 'SHA256:78:9A:BC:DE:F0:12:34:56:78:9A:BC:DE:F0:12:34:56:78:9A',
+    transitProvider: 'RisingNet Optical Ring & Laser Ground Mesh (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '025',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 14,
+      syncedNicks: 520,
+      syncLatencyMs: 2.8,
+      lastBurst: '1.1s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* Node 24 Leaf Link to Master Hub irc.drfun1.com */
+link irc.drfun1.com {
+    incoming { mask *.drfun1.com; };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Node24_Auth_2026";
+    class servers;
+    type leaf;
+};`,
+  },
+  {
+    id: 'switch_node_25',
+    name: 'Switch SUPERNAP 9 Redundant Optical Core (Node 25)',
+    subdomain: 'node25.lasvegas-edge.switch.drfun1.com',
+    host: 'node25.lasvegas-edge.switch.drfun1.com',
+    port: 6697,
+    location: 'Las Vegas, NV, USA',
+    campusName: 'Switch SUPERNAP 9 High-Density Optical Teleport Vault',
+    tier: 'Tier 5 Platinum Mission-Critical Core Earth Facility',
+    fiberCapacity: '400 Gbps Direct Redundant Cross-Connect to Hub 001',
+    status: 'active',
+    latencyMs: 1.4,
+    usersOnline: 612,
+    leafPeers: 25,
+    unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2',
+    sslFingerprint: 'SHA256:9A:BC:DE:F0:12:34:56:78:9A:BC:DE:F0:12:34:56:78:9A:BC',
+    transitProvider: 'RisingNet Optical Core Backbone (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '026',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 14,
+      syncedNicks: 612,
+      syncLatencyMs: 1.4,
+      lastBurst: '0.8s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* Node 25 Leaf Link to Master Hub irc.drfun1.com */
+link irc.drfun1.com {
+    incoming { mask *.drfun1.com; };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Node25_Auth_2026";
     class servers;
     type leaf;
 };`,

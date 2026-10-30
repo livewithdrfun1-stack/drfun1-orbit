@@ -29,6 +29,8 @@ import { CartDrawer } from './components/CartDrawer';
 import { RestreamStudioView } from './components/RestreamStudioView';
 import { FacebookSocialView } from './components/FacebookSocialView';
 import { IrcClientView } from './components/IrcClientView';
+import { BroadcastMediaView } from './components/BroadcastMediaView';
+import { PhoneCarriersView } from './components/PhoneCarriersView';
 import { AppTab } from './components/Header';
 import { 
   Satellite, 
@@ -441,7 +443,7 @@ export default function App() {
         </div>
       )}
 
-      {/* View routing: MultiStream Studio, SpaceBook Social, WebIRC Client, or Standard Workspace */}
+      {/* View routing: MultiStream Studio, SpaceBook Social, WebIRC Client, Radio & TV, Phone Carriers, or Standard Workspace */}
       {activeTab === 'stream' ? (
         <RestreamStudioView
           onOpenLicense={() => setIsLicenseModalOpen(true)}
@@ -464,6 +466,19 @@ export default function App() {
           onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
           onNavigateToStore={() => setActiveTab('store')}
           onNavigateToStudio={() => setActiveTab('stream')}
+        />
+      ) : activeTab === 'media' ? (
+        <BroadcastMediaView
+          onOpenStore={() => setActiveTab('store')}
+          onOpenIrc={() => setActiveTab('irc')}
+          onOpenLicense={() => setIsLicenseModalOpen(true)}
+          onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+        />
+      ) : activeTab === 'carriers' ? (
+        <PhoneCarriersView
+          onOpenStore={() => setActiveTab('store')}
+          onOpenLicense={() => setIsLicenseModalOpen(true)}
+          onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
         />
       ) : (
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">

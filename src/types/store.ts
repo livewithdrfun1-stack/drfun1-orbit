@@ -8,7 +8,9 @@ export type ProductCategory =
   | 'ISP & Dedicated Satellite Internet'
   | 'Wireless Carrier & 5G NTN eSIM'
   | 'Bare-Metal & Teleport Hosting'
-  | 'Quantum Fiber & Terrestrial Optical';
+  | 'Quantum Fiber & Terrestrial Optical'
+  | 'DrFun1 Broadcast TV & Online Radio'
+  | 'Phone Carrier Spectrum & Backhaul';
 
 export interface StoreProduct {
   id: string;

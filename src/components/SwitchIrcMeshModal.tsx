@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SatelliteCompany } from '../types/satellite';
 import { getSwitchInterconnectForCompany } from '../utils/switchInterconnect';
+import { SWITCH_DEDICATED_NODES } from '../data/ircData';
 import { 
   X, 
   Server, 
@@ -52,20 +53,9 @@ export const SwitchIrcMeshModal: React.FC<SwitchIrcMeshModalProps> = ({
  * Core Teleport Colocation: Switch SUPERNAP (www.switch.com)
  * Tier-1 Carrier IP Transit: RisingNet BGP Transit (www.risingnet.com)
  * Licensed to: Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com)
- * All 12 Dedicated Switch Nodes Leafed to irc.drfun1.com:
- *   1. node1.lasvegas.switch.drfun1.com (SID 002) - Las Vegas Core
- *   2. node2.tahoereno.switch.drfun1.com (SID 003) - Tahoe Reno Citadel
- *   3. node3.grandrapids.switch.drfun1.com (SID 004) - Pyramid Grand Rapids
- *   4. node4.atlanta.switch.drfun1.com (SID 005) - The Keep Atlanta
- *   5. node5.space-teleport.switch.drfun1.com (SID 006) - Space Teleport Gateway
- *   6. node6.austin.switch.drfun1.com (SID 007) - Texas Core Teleport
- *   7. node7.chicago.switch.drfun1.com (SID 008) - Great Lakes Gateway
- *   8. node8.seattle.switch.drfun1.com (SID 009) - PNW Transpacific Teleport
- *   9. node9.newyork.switch.drfun1.com (SID 010) - East Coast Optical Teleport
- *  10. node10.london.switch.drfun1.com (SID 011) - European Optical Teleport
- *  11. node11.tokyo.switch.drfun1.com (SID 012) - Asia-Pacific Teleport
- *  12. node12.hawaii.switch.drfun1.com (SID 013) - Pacific Orbital Teleport
- * Total Connected Satcom Leaf Nodes: ${companies.length} Carriers
+ * All 25 Dedicated Switch Nodes Leafed to irc.drfun1.com:
+${SWITCH_DEDICATED_NODES.map((n, i) => ` *   ${i + 1 < 10 ? ' ' : ''}${i + 1}. ${n.host} (SID ${n.sid}) - ${n.location.split(',')[0]}`).join('\n')}
+ * Total Connected Satcom Leaf Nodes: \${companies.length} Carriers
  * ==================================================================== */
 
 me {
@@ -89,103 +79,15 @@ set {
 };
 
 /* ====================================================================
- * 12 Dedicated Switch Datacenter Leaf Blocks (Leafed to irc.drfun1.com)
+ * 25 Dedicated Switch Datacenter Leaf Blocks (Leafed to irc.drfun1.com)
  * ==================================================================== */
-link node1.lasvegas.switch.drfun1.com {
+${SWITCH_DEDICATED_NODES.map((node, i) => `link ${node.host} {
     incoming { mask *.drfun1.com; };
-    outgoing { hostname "node1.lasvegas.switch.drfun1.com"; port 6697; options { ssl; }; };
-    password "WittLaw_Switch_Node1_Auth_2026";
+    outgoing { hostname "${node.host}"; port 6697; options { ssl; }; };
+    password "WittLaw_Switch_Node${i + 1}_Auth_2026";
     class servers;
     type leaf;
-};
-
-link node2.tahoereno.switch.drfun1.com {
-    incoming { mask *.drfun1.com; };
-    outgoing { hostname "node2.tahoereno.switch.drfun1.com"; port 6697; options { ssl; }; };
-    password "WittLaw_Switch_Node2_Auth_2026";
-    class servers;
-    type leaf;
-};
-
-link node3.grandrapids.switch.drfun1.com {
-    incoming { mask *.drfun1.com; };
-    outgoing { hostname "node3.grandrapids.switch.drfun1.com"; port 6697; options { ssl; }; };
-    password "WittLaw_Switch_Node3_Auth_2026";
-    class servers;
-    type leaf;
-};
-
-link node4.atlanta.switch.drfun1.com {
-    incoming { mask *.drfun1.com; };
-    outgoing { hostname "node4.atlanta.switch.drfun1.com"; port 6697; options { ssl; }; };
-    password "WittLaw_Switch_Node4_Auth_2026";
-    class servers;
-    type leaf;
-};
-
-link node5.space-teleport.switch.drfun1.com {
-    incoming { mask *.drfun1.com; };
-    outgoing { hostname "node5.space-teleport.switch.drfun1.com"; port 6697; options { ssl; }; };
-    password "WittLaw_Switch_Node5_Auth_2026";
-    class servers;
-    type leaf;
-};
-
-link node6.austin.switch.drfun1.com {
-    incoming { mask *.drfun1.com; };
-    outgoing { hostname "node6.austin.switch.drfun1.com"; port 6697; options { ssl; }; };
-    password "WittLaw_Switch_Node6_Auth_2026";
-    class servers;
-    type leaf;
-};
-
-link node7.chicago.switch.drfun1.com {
-    incoming { mask *.drfun1.com; };
-    outgoing { hostname "node7.chicago.switch.drfun1.com"; port 6697; options { ssl; }; };
-    password "WittLaw_Switch_Node7_Auth_2026";
-    class servers;
-    type leaf;
-};
-
-link node8.seattle.switch.drfun1.com {
-    incoming { mask *.drfun1.com; };
-    outgoing { hostname "node8.seattle.switch.drfun1.com"; port 6697; options { ssl; }; };
-    password "WittLaw_Switch_Node8_Auth_2026";
-    class servers;
-    type leaf;
-};
-
-link node9.newyork.switch.drfun1.com {
-    incoming { mask *.drfun1.com; };
-    outgoing { hostname "node9.newyork.switch.drfun1.com"; port 6697; options { ssl; }; };
-    password "WittLaw_Switch_Node9_Auth_2026";
-    class servers;
-    type leaf;
-};
-
-link node10.london.switch.drfun1.com {
-    incoming { mask *.drfun1.com; };
-    outgoing { hostname "node10.london.switch.drfun1.com"; port 6697; options { ssl; }; };
-    password "WittLaw_Switch_Node10_Auth_2026";
-    class servers;
-    type leaf;
-};
-
-link node11.tokyo.switch.drfun1.com {
-    incoming { mask *.drfun1.com; };
-    outgoing { hostname "node11.tokyo.switch.drfun1.com"; port 6697; options { ssl; }; };
-    password "WittLaw_Switch_Node11_Auth_2026";
-    class servers;
-    type leaf;
-};
-
-link node12.hawaii.switch.drfun1.com {
-    incoming { mask *.drfun1.com; };
-    outgoing { hostname "node12.hawaii.switch.drfun1.com"; port 6697; options { ssl; }; };
-    password "WittLaw_Switch_Node12_Auth_2026";
-    class servers;
-    type leaf;
-};
+};`).join('\n\n')}
 
 /* Satcom Carrier Leaf Blocks (Sample for Top Global Fleets) */
 ${companies.slice(0, 8).map((c) => {
