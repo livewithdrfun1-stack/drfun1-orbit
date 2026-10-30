@@ -46,6 +46,7 @@ export const StoreView: React.FC<StoreViewProps> = ({
 
   const categories: (ProductCategory | 'All')[] = [
     'All',
+    'Quantum Fiber & Terrestrial Optical',
     'ISP & Dedicated Satellite Internet',
     'Wireless Carrier & 5G NTN eSIM',
     'Bare-Metal & Teleport Hosting',
@@ -145,20 +146,20 @@ export const StoreView: React.FC<StoreViewProps> = ({
 
           <div className="max-w-3xl">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
-              Commercial Satellite Reseller & Rebranding Store
+              Commercial Satellite &amp; Quantum Fiber Reseller Store
             </h1>
             <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-              Procure wholesale satellite hardware, dedicated multi-orbit CIR bandwidth, direct-to-device cellular NTN subscriptions, and teleport racks from global satcom operators. Rebrand each line under the turnkey <span className="text-white font-medium">DrFun1 ecosystem</span> with pre-engineered interconnects to <span className="text-sky-300 font-medium">Switch Data Centers</span>, <span className="text-sky-300 font-medium">RisingNet IP Transit</span>, and encrypted mission telemetry via <span className="text-emerald-300 font-medium font-mono">irc.drfun1.com:6697</span>.
+              Procure wholesale satellite hardware, dedicated multi-orbit CIR bandwidth, <strong className="text-cyan-300 font-semibold">Quantum Fiber 8G multi-gigabit &amp; 400G dark fiber</strong>, direct-to-device cellular NTN, and teleport racks. Rebrand and co-brand each line under the turnkey <span className="text-white font-medium">DrFun1 ecosystem</span> with pre-engineered interconnects to <span className="text-sky-300 font-medium">Switch Data Centers</span>, <span className="text-sky-300 font-medium">RisingNet IP Transit</span>, and encrypted mission telemetry via <span className="text-emerald-300 font-medium font-mono">irc.drfun1.com:6697</span>.
             </p>
           </div>
 
           {/* Quick Pillars Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-800/80 text-xs text-slate-300">
             <div className="flex items-start gap-2.5 bg-slate-900/60 border border-slate-800/60 p-3 rounded-xl">
-              <Zap className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+              <Zap className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-white">DrFun1 Private Labeling</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Wholesale discount pricing up to 35% off retail with custom reseller firmware.</p>
+                <p className="font-semibold text-white">Quantum Fiber Co-Branding</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">8 Gbps symmetrical fiber, 400G coherent DWDM waves, and SmartNID WiFi 7 hardware.</p>
               </div>
             </div>
 
@@ -166,7 +167,7 @@ export const StoreView: React.FC<StoreViewProps> = ({
               <Server className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-white">Switch SUPERNAP Teleport</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Direct 100G fiber cross-connects at Switch Las Vegas & Tahoe Reno campuses.</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Direct 100G fiber cross-connects at Switch Las Vegas &amp; Tahoe Reno campuses.</p>
               </div>
             </div>
 
@@ -182,7 +183,7 @@ export const StoreView: React.FC<StoreViewProps> = ({
               <Building2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-white">Turnkey PO Generation</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Generate and download legally-binding signed purchase orders instantly.</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Generate and download legally-binding signed purchase orders licensed to Richard Alan Witt.</p>
               </div>
             </div>
           </div>

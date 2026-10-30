@@ -229,12 +229,12 @@ ${companies.slice(0, 8).map((c) => {
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Architecture Summary Banner */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
             {/* Box 1: Switch Data Centers */}
             <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-mono uppercase text-sky-400 font-bold">
-                  Colocation & Teleport
+                  Colocation &amp; Teleport
                 </span>
                 <a
                   href="https://www.switch.com"
@@ -254,7 +254,31 @@ ${companies.slice(0, 8).map((c) => {
               </p>
             </div>
 
-            {/* Box 2: RisingNet IP Transit */}
+            {/* Box 2: Quantum Fiber & Lumen */}
+            <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-mono uppercase text-cyan-400 font-bold">
+                  Terrestrial Optical
+                </span>
+                <a
+                  href="https://www.q.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-cyan-400 hover:underline flex items-center gap-1 text-[11px]"
+                >
+                  <span>q.com</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </a>
+              </div>
+              <h4 className="text-sm font-bold text-slate-100">
+                Quantum Fiber 8G &amp; DWDM
+              </h4>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                500,000+ route-mile fiber footprint delivering 8 Gbps symmetrical broadband and 400G coherent dark fiber waves directly into Switch teleports.
+              </p>
+            </div>
+
+            {/* Box 3: RisingNet IP Transit */}
             <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-mono uppercase text-sky-400 font-bold">
@@ -278,17 +302,17 @@ ${companies.slice(0, 8).map((c) => {
               </p>
             </div>
 
-            {/* Box 3: UnrealIRCd & irc.drfun1.com */}
+            {/* Box 4: UnrealIRCd & irc.drfun1.com */}
             <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-mono uppercase text-sky-400 font-bold">
+                <span className="text-[11px] font-mono uppercase text-emerald-400 font-bold">
                   Out-of-Band NOC Hub
                 </span>
                 <a
                   href="https://www.unrealircd.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sky-400 hover:underline flex items-center gap-1 text-[11px]"
+                  className="text-emerald-400 hover:underline flex items-center gap-1 text-[11px]"
                 >
                   <span>unrealircd.com</span>
                   <ExternalLink className="w-2.5 h-2.5" />

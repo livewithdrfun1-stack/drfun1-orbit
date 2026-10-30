@@ -7,7 +7,8 @@ export type ProductCategory =
   | 'Earth Observation & SAR Data'
   | 'ISP & Dedicated Satellite Internet'
   | 'Wireless Carrier & 5G NTN eSIM'
-  | 'Bare-Metal & Teleport Hosting';
+  | 'Bare-Metal & Teleport Hosting'
+  | 'Quantum Fiber & Terrestrial Optical';
 
 export interface StoreProduct {
   id: string;

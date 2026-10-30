@@ -270,7 +270,8 @@ export default function App() {
         next.delete(id);
       } else {
         if (next.size >= 4) {
-          alert('You can compare a maximum of 4 satellite operators simultaneously.');
+          setExportNotice('You can compare a maximum of 4 satellite operators simultaneously.');
+          setTimeout(() => setExportNotice(null), 3500);
           return prev;
         }
         next.add(id);

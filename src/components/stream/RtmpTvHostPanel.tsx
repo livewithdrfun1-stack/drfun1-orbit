@@ -276,6 +276,57 @@ export const RtmpTvHostPanel: React.FC<RtmpTvHostPanelProps> = ({
         </div>
       </div>
 
+      {/* Master Program Audio Fader & Peak Meter */}
+      <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-2">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-bold text-white flex items-center gap-1.5">
+            <Volume2 className="w-3.5 h-3.5 text-red-400" />
+            Master Playout Audio Gain &amp; Stereo VU
+          </span>
+          <span className="font-mono text-xs font-bold text-red-400">
+            {tvConfig.programVolume}% ({((tvConfig.programVolume - 100) / 5).toFixed(1)} dBFS)
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={tvConfig.programVolume}
+            onChange={e => onUpdateConfig({ programVolume: Number(e.target.value) })}
+            className="flex-1 accent-red-500 h-1.5 bg-slate-800 rounded cursor-pointer"
+          />
+
+          {/* Stereo Peak Bars */}
+          <div className="flex flex-col gap-1 w-28 bg-slate-900 p-1.5 rounded border border-slate-800">
+            <div className="flex items-center gap-1">
+              <span className="text-[9px] font-mono text-slate-500 w-3">L</span>
+              <div className="flex-1 bg-slate-950 h-2 rounded-full overflow-hidden flex">
+                <div 
+                  className={`h-full transition-all duration-75 ${
+                    tvConfig.programVolume > 90 ? 'bg-red-500' : tvConfig.programVolume > 70 ? 'bg-amber-400' : 'bg-emerald-400'
+                  }`}
+                  style={{ width: `${tvConfig.programVolume}%` }}
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[9px] font-mono text-slate-500 w-3">R</span>
+              <div className="flex-1 bg-slate-950 h-2 rounded-full overflow-hidden flex">
+                <div 
+                  className={`h-full transition-all duration-75 ${
+                    tvConfig.programVolume > 90 ? 'bg-red-500' : tvConfig.programVolume > 70 ? 'bg-amber-400' : 'bg-emerald-400'
+                  }`}
+                  style={{ width: `${Math.max(0, tvConfig.programVolume - 2)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Ingest Endpoints & Keys */}
       <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
         <h4 className="font-bold text-white text-xs flex items-center gap-1.5">

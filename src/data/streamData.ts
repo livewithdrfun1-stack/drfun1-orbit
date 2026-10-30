@@ -284,6 +284,17 @@ export const INITIAL_TVU_CLOUD_CDN: TvuCloudCdnConfig = {
       status: 'active',
     },
     {
+      id: 'bond_quantum_fiber',
+      name: 'Quantum Fiber 8G Terrestrial Optical Link',
+      type: 'fiber',
+      carrier: 'Quantum Fiber / Lumen (www.q.com)',
+      bitrateMbps: 980,
+      packetLossPercent: 0.0,
+      latencyMs: 1.9,
+      priority: 1,
+      status: 'active',
+    },
+    {
       id: 'bond_risingnet',
       name: 'RisingNet 1.46 Tbps IP Transit',
       type: 'fiber',
