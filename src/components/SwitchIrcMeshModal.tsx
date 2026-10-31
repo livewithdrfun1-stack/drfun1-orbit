@@ -10,11 +10,7 @@ import {
   Copy, 
   Check, 
   Send, 
-  Layers, 
-  Radio, 
-  Globe, 
-  ShieldCheck,
-  Cpu
+  Layers
 } from 'lucide-react';
 
 interface SwitchIrcMeshModalProps {

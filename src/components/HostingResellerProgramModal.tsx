@@ -22,11 +22,14 @@ import {
   Award,
   Sparkles,
   RefreshCw,
-  Clock,
-  HelpCircle
+  BookOpen,
+  CheckCircle2,
+  Code,
+  CheckSquare,
+  Square,
+  Play
 } from 'lucide-react';
 import { STORE_PRODUCTS } from '../data/storeProducts';
-import { StoreProduct } from '../types/store';
 
 interface HostingResellerProgramModalProps {
   isOpen: boolean;
@@ -34,8 +37,9 @@ interface HostingResellerProgramModalProps {
   onSelectProductForOrder: (productId: string) => void;
 }
 
-type TabType = 'matrix' | 'calculator' | 'whitelabel' | 'onboarding' | 'legal';
+type TabType = 'ezsetup' | 'matrix' | 'calculator' | 'whitelabel' | 'onboarding' | 'legal';
 type HostingCategoryFilter = 'all' | 'ircd' | 'baremetal' | 'wordpress' | 'broadcast' | 'fiber';
+type EzSetupNiche = 'all' | 'ircd' | 'wordpress' | 'broadcast' | 'fiber';
 
 interface PartnerRegistration {
   companyName: string;
@@ -52,15 +56,43 @@ interface PartnerRegistration {
 }
 
 const STORAGE_KEY_RESELLER_PARTNER = 'drfun1_hosting_reseller_partner';
+const STORAGE_KEY_EZ_CHECKLIST = 'drfun1_hosting_reseller_ez_checklist';
 
 export const HostingResellerProgramModal: React.FC<HostingResellerProgramModalProps> = ({
   isOpen,
   onClose,
   onSelectProductForOrder,
 }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('matrix');
+  const [activeTab, setActiveTab] = useState<TabType>('ezsetup');
   const [categoryFilter, setCategoryFilter] = useState<HostingCategoryFilter>('all');
+  const [ezsetupNiche, setEzsetupNiche] = useState<EzSetupNiche>('all');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [dnsTestStatus, setDnsTestStatus] = useState<'idle' | 'testing' | 'verified'>('idle');
+
+  // EZ Setup Progress Checklist State (persisted)
+  const [ezChecklist, setEzChecklist] = useState<{ [key: string]: boolean }>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_EZ_CHECKLIST);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error loading EZ checklist', e);
+    }
+    return {
+      step1: false,
+      step2: false,
+      step3: false,
+      step4: false,
+      step5: false,
+    };
+  });
+
+  const toggleChecklist = (stepKey: string) => {
+    setEzChecklist((prev) => {
+      const updated = { ...prev, [stepKey]: !prev[stepKey] };
+      localStorage.setItem(STORAGE_KEY_EZ_CHECKLIST, JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   // Stored or active partner registration
   const [partner, setPartner] = useState<PartnerRegistration | null>(() => {
@@ -338,6 +370,133 @@ Certification Hash: SHA256-RAW-HOSTING-RESELLER-2026-OK
     URL.revokeObjectURL(url);
   };
 
+  // Test DNS verification simulator
+  const handleTestDns = () => {
+    setDnsTestStatus('testing');
+    setTimeout(() => {
+      setDnsTestStatus('verified');
+      toggleChecklist('step2');
+    }, 1200);
+  };
+
+  // Download complete EZ Setup Guide
+  const handleDownloadEzSetupGuide = () => {
+    const doc = `# DRFUN1 WHOLESALE HOSTING RESELLER NETWORK: EZ SETUP & DEPLOYMENT GUIDE
+**Document Reference**: DRFUN1-EZ-HOST-SETUP-2026-v1.0
+**Certified Legal Counsel**: Richard Alan Witt, Esq. (Witt Law Firm / Owens Company)
+**Official Counsel Registry**: https://www.wittlawfirm.com | https://www.owenscompany.com
+**Partner ID**: ${partner ? partner.partnerId : 'DRFUN1-HOST-RESELLER-DEMO'}
+**Partner Entity**: ${partner ? partner.companyName : 'Authorized Reseller'}
+**Reseller API Key**: ${partner ? partner.apiKey : 'drf_live_resell_demo_key'}
+**Target Hostname**: ${testDomain}
+**Date Generated**: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+
+---
+
+## 5-MINUTE EZ SETUP OVERVIEW
+As an authorized DrFun1 Hosting Reseller, you can provision and resell enterprise bare-metal, 40Gbps unmetered IRCDs, high-traffic WordPress chat duplicators, 320kbps Icecast DJ servers, and Quantum Fiber optical broadband with 100% margin retention.
+
+---
+
+## STEP 1: 60-SECOND PARTNER ACTIVATION & API TOKEN
+1. Verify your Partner ID: ${partner ? partner.partnerId : 'ACTIVE'}
+2. Payout destination: ${partner ? partner.payoutMethod.toUpperCase() : 'STRIPE CONNECT / BANK WIRE / ACH / USDC'}
+3. Production Reseller API Token:
+   Authorization: Bearer ${partner ? partner.apiKey : 'drf_live_resell_demo_key'}
+
+---
+
+## STEP 2: WHITE-LABEL DNS & rDNS CONFIGURATION
+To brand nodes under your domain name:
+1. Add DNS CNAME Record:
+   - Host / Subdomain: irc (or stream, wp, cloud)
+   - Type: CNAME
+   - Target Value: edge-teleport.drfun1.com
+   - TTL: 300 seconds
+2. Add Domain Verification TXT Record:
+   - Host: @
+   - Type: TXT
+   - Value: drfun1-verify=${partner ? partner.partnerId : 'DRFUN1-HOST-RESELLER-DEMO'}
+3. Automated SSL & rDNS:
+   Our system automatically issues Let's Encrypt Wildcard certificates and provisions reverse DNS (rDNS) pointing back to your brand hostname.
+
+---
+
+## STEP 3: AUTOMATED PROVISIONING METHODS (CHOOSE 1)
+
+### METHOD A: ZERO-CODE STORE & SIGNED PO GENERATION
+1. Navigate to the Store tab in DrFun1 Orbit.
+2. Select your hosting package (e.g. Switch SuperNAP Bare-Metal IRCD, WordPress Duplicator Cloud).
+3. Click "Deploy via Reseller Portal" & input your customer's domain/brand.
+4. Download the legally certified Purchase Order (PO) licensed to Richard Alan Witt.
+
+### METHOD B: WHMCS BILLING MODULE (FULLY AUTOMATED)
+1. Download 'drfun1_hosting_whmcs_v2.zip'.
+2. Extract to: '/whmcs/modules/servers/drfun1_hosting/'.
+3. In WHMCS Admin -> Products/Services -> Module Settings:
+   - Module Name: DrFun1 Wholesale Hosting
+   - Partner ID: ${partner ? partner.partnerId : 'YOUR_PARTNER_ID'}
+   - API Secret: ${partner ? partner.apiKey : 'YOUR_API_KEY'}
+   - Datacenter Default: switch-supernap-las-vegas
+4. When clients pay on your website, servers provision automatically in <90 seconds.
+
+### METHOD C: 1-LINE CLI / CURL DEPLOYMENT SCRIPT
+Deploy directly from any Linux terminal:
+\`\`\`bash
+# 1-Line Reseller Deployer
+curl -sSL https://get.drfun1.com/reseller-deploy.sh | bash -s -- \\
+  --key="${partner ? partner.apiKey : 'YOUR_API_KEY'}" \\
+  --pkg="drfun1-switch-ircd-baremetal" \\
+  --domain="${testDomain}" \\
+  --datacenter="switch-supernap-las-vegas" \\
+  --ddos="risingnet-cleanpipe"
+\`\`\`
+
+---
+
+## STEP 4: UNREALIRCD 6.1 TELEMETRY LEAF PEERING
+Connect your reseller nodes into the global high-availability teleport mesh:
+\`\`\`text
+/* Add to unrealircd.conf */
+me {
+  name "${testDomain}";
+  info "Reseller Host Node - 100% Green SuperNAP";
+  sid "00A";
+};
+
+link hub.drfun1.com {
+  incoming { mask *@*; }
+  outgoing {
+    bind-ip *;
+    hostname hub.drfun1.com;
+    port 6697;
+    options { tls; }
+  }
+  password "WholesaleToken_${partner ? partner.partnerId : 'RAW2026'}";
+  class servers;
+};
+\`\`\`
+
+---
+
+## STEP 5: MONTHLY BILLING & PROFIT PAYOUTS
+- You charge clients whatever price you determine (no minimum price fixing).
+- Wholesale base cost is billed to your reseller ledger at month end.
+- You retain 100% of the margin (e.g., $330/mo per Switch IRCD, $400/mo per DataPacket node, $30/mo per WordPress Duplicator, $1,050/mo per Quantum 8G line).
+- Legal protection & SLA pass-through certified by Richard Alan Witt LLC (www.wittlawfirm.com / www.owenscompany.com).
+`;
+
+    const blob = new Blob([doc], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `DrFun1_Reseller_Host_EZ_Setup_Guide_${partner ? partner.partnerId : 'Quickstart'}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -422,6 +581,21 @@ Certification Hash: SHA256-RAW-HOSTING-RESELLER-2026-OK
         {/* Tab Strip */}
         <div className="bg-slate-900 border-b border-slate-800 px-5 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
           <button
+            onClick={() => setActiveTab('ezsetup')}
+            className={`py-3 px-3 text-xs font-semibold border-b-2 flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer ${
+              activeTab === 'ezsetup'
+                ? 'border-amber-400 text-amber-300'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+            <span>EZ Setup Instructions</span>
+            <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">
+              5-Min Start
+            </span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('matrix')}
             className={`py-3 px-3 text-xs font-semibold border-b-2 flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer ${
               activeTab === 'matrix'
@@ -490,6 +664,627 @@ Certification Hash: SHA256-RAW-HOSTING-RESELLER-2026-OK
 
         {/* Tab Body */}
         <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+
+          {/* TAB 0: EZ SETUP INSTRUCTIONS FOR RESELLER HOSTS */}
+          {activeTab === 'ezsetup' && (
+            <div className="space-y-6">
+              {/* Header Hero Banner */}
+              <div className="bg-gradient-to-r from-amber-950/80 via-slate-900 to-emerald-950/80 border border-amber-500/40 rounded-2xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+                <div className="absolute right-0 top-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-amber-400 shrink-0 shadow-lg shadow-amber-500/20">
+                      <BookOpen className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold border border-amber-500/40 uppercase tracking-wide">
+                          5-Minute Fast-Track Guide
+                        </span>
+                        <span className="text-slate-400 font-mono text-xs">
+                          Turnkey White-Label Hosting Deployment
+                        </span>
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-bold text-white mt-1">
+                        EZ Set Up Instructions for Reseller Hosts
+                      </h3>
+                      <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                        Follow this step-by-step roadmap to activate your reseller credentials, configure custom white-label DNS, select your billing engine (Store, WHMCS, or CLI), and deploy your first profitable client instance.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0 font-mono text-xs">
+                    <button
+                      onClick={handleDownloadEzSetupGuide}
+                      className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition-all border border-slate-700 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                    >
+                      <Download className="w-4 h-4 text-emerald-400" />
+                      <span>Download Offline Guide (.MD)</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('matrix')}
+                      className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition-all shadow-md shadow-amber-500/25 flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <span>Browse Packages &amp; Margins</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Interactive Setup Progress Tracker */}
+                <div className="mt-5 pt-5 border-t border-slate-800/80">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 font-mono text-xs">
+                    <span className="text-slate-300 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-400" />
+                      <span>
+                        Reseller Launch Progress:{' '}
+                        <strong className="text-white">
+                          {Object.values(ezChecklist).filter(Boolean).length} of 5 Milestones Completed
+                        </strong>
+                      </span>
+                    </span>
+                    <span className="text-emerald-400 font-bold">
+                      {Math.round((Object.values(ezChecklist).filter(Boolean).length / 5) * 100)}% Setup Complete
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                    <div
+                      className="bg-gradient-to-r from-amber-500 to-emerald-400 h-full transition-all duration-500"
+                      style={{
+                        width: `${Math.round((Object.values(ezChecklist).filter(Boolean).length / 5) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Hosting Niche Selector */}
+              <div className="flex flex-wrap items-center gap-2 p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
+                <span className="text-xs font-mono text-slate-400 mr-2 flex items-center gap-1">
+                  <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Tailor EZ Steps For:</span>
+                </span>
+                {[
+                  { id: 'all', label: 'All Hosting Packages' },
+                  { id: 'ircd', label: 'Dedicated IRCD (Switch/DataPacket/RisingNet)' },
+                  { id: 'wordpress', label: 'WordPress IRC Duplicator Cloud' },
+                  { id: 'broadcast', label: 'MPD DJ & Broadcast Icecast' },
+                  { id: 'fiber', label: 'Quantum Fiber Optical Internet' },
+                ].map((niche) => (
+                  <button
+                    key={niche.id}
+                    onClick={() => setEzsetupNiche(niche.id as EzSetupNiche)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-colors cursor-pointer ${
+                      ezsetupNiche === niche.id
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 font-bold'
+                        : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                    }`}
+                  >
+                    {niche.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* STEP 1: 60-SECOND PARTNER ENROLLMENT & API TOKEN */}
+              <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-mono font-bold text-sm">
+                      1
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <span>Step 1: 60-Second Partner Enrollment &amp; Production API Token</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          Instant Activation
+                        </span>
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Register your business entity once to obtain your unique Reseller Partner ID and secure API Key.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => toggleChecklist('step1')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 border transition-colors cursor-pointer ${
+                      ezChecklist.step1
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold'
+                        : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-white'
+                    }`}
+                  >
+                    {ezChecklist.step1 ? (
+                      <>
+                        <CheckSquare className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Step 1 Completed</span>
+                      </>
+                    ) : (
+                      <>
+                        <Square className="w-3.5 h-3.5" />
+                        <span>Mark as Done</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {partner ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
+                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                      <span className="text-slate-500 block text-[10px] uppercase">Active Partner ID</span>
+                      <span className="text-emerald-400 font-bold text-sm">{partner.partnerId}</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                      <span className="text-slate-500 block text-[10px] uppercase">Reseller API Key</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-amber-300 font-mono truncate">{partner.apiKey?.slice(0, 16)}...</span>
+                        <button
+                          onClick={() => handleCopy(partner.apiKey || '', 'ezKey')}
+                          className="text-slate-400 hover:text-white ml-2 cursor-pointer"
+                        >
+                          {copiedKey === 'ezKey' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                      <span className="text-slate-500 block text-[10px] uppercase">Margin Payout Channel</span>
+                      <span className="text-white uppercase font-bold">{partner.payoutMethod} Settlement</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Key className="w-5 h-5 text-amber-400 shrink-0" />
+                      <div>
+                        <p className="text-xs font-bold text-white">No Reseller Profile Enrolled Yet</p>
+                        <p className="text-xs text-slate-300 mt-0.5">
+                          Enrolling takes 30 seconds and generates your production credentials instantly with no fees.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('onboarding')}
+                      className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs font-mono transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
+                    >
+                      <span>Jump to 1-Click Enrollment</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* STEP 2: INSTANT DNS & WHITE-LABEL DOMAIN SETUP */}
+              <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center font-mono font-bold text-sm">
+                      2
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <span>Step 2: Instant DNS &amp; White-Label Domain Pointing</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                          Automated Let&apos;s Encrypt SSL
+                        </span>
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Brand all resold servers, IRC links, and audio decks under your own domain name (e.g. <code>irc.yourbrand.com</code>).
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => toggleChecklist('step2')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 border transition-colors cursor-pointer ${
+                      ezChecklist.step2
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold'
+                        : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-white'
+                    }`}
+                  >
+                    {ezChecklist.step2 ? (
+                      <>
+                        <CheckSquare className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Step 2 Completed</span>
+                      </>
+                    ) : (
+                      <>
+                        <Square className="w-3.5 h-3.5" />
+                        <span>Mark as Done</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-xs text-slate-300">
+                    Add the following 2 DNS records to your domain registrar (Cloudflare, Route53, Namecheap, GoDaddy):
+                  </p>
+
+                  <div className="overflow-x-auto border border-slate-800 rounded-xl">
+                    <table className="w-full text-left text-xs font-mono">
+                      <thead className="bg-slate-900/90 text-slate-400 uppercase text-[10px] border-b border-slate-800">
+                        <tr>
+                          <th className="p-3">Record Type</th>
+                          <th className="p-3">Host / Name</th>
+                          <th className="p-3">Target Value</th>
+                          <th className="p-3">TTL</th>
+                          <th className="p-3">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800 text-slate-200">
+                        <tr className="hover:bg-slate-900/50">
+                          <td className="p-3 font-bold text-sky-400">CNAME</td>
+                          <td className="p-3 font-semibold text-white">irc (or stream, wp)</td>
+                          <td className="p-3 text-amber-300 font-bold">edge-teleport.drfun1.com</td>
+                          <td className="p-3 text-slate-400">300 sec (Automatic)</td>
+                          <td className="p-3">
+                            <button
+                              onClick={() => handleCopy('edge-teleport.drfun1.com', 'cnameVal')}
+                              className="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-[11px] text-slate-300 flex items-center gap-1 cursor-pointer"
+                            >
+                              {copiedKey === 'cnameVal' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                              <span>Copy Value</span>
+                            </button>
+                          </td>
+                        </tr>
+                        <tr className="hover:bg-slate-900/50">
+                          <td className="p-3 font-bold text-purple-400">TXT</td>
+                          <td className="p-3 font-semibold text-white">@ (Apex)</td>
+                          <td className="p-3 text-emerald-300">drfun1-verify={partner ? partner.partnerId : 'YOUR_PARTNER_ID'}</td>
+                          <td className="p-3 text-slate-400">300 sec</td>
+                          <td className="p-3">
+                            <button
+                              onClick={() => handleCopy(`drfun1-verify=${partner ? partner.partnerId : 'DRFUN1-HOST-RESELLER-DEMO'}`, 'txtVal')}
+                              className="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-[11px] text-slate-300 flex items-center gap-1 cursor-pointer"
+                            >
+                              {copiedKey === 'txtVal' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                              <span>Copy Value</span>
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* DNS Live Tester */}
+                  <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-xs font-mono">
+                      <Globe className="w-4 h-4 text-sky-400" />
+                      <span className="text-slate-300">
+                        Target Reseller Host: <strong className="text-white">{testDomain}</strong>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {dnsTestStatus === 'verified' && (
+                        <span className="text-xs font-mono text-emerald-400 flex items-center gap-1">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>CNAME &amp; TLS 1.3 Verified!</span>
+                        </span>
+                      )}
+                      <button
+                        onClick={handleTestDns}
+                        disabled={dnsTestStatus === 'testing'}
+                        className="px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold font-mono text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        {dnsTestStatus === 'testing' ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Verifying Propagation...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-3.5 h-3.5" />
+                            <span>Run Instant DNS &amp; SSL Test</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* STEP 3: CHOOSE YOUR AUTOMATED RESELLER PROVISIONING PATH */}
+              <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-mono font-bold text-sm">
+                      3
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <span>Step 3: Choose Your Automated Reseller Storefront / Provisioning Path</span>
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Select how you want to deploy client packages: Zero-code portal, WHMCS/Blesta automated plugin, or 1-line CLI.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => toggleChecklist('step3')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 border transition-colors cursor-pointer ${
+                      ezChecklist.step3
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold'
+                        : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-white'
+                    }`}
+                  >
+                    {ezChecklist.step3 ? (
+                      <>
+                        <CheckSquare className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Step 3 Completed</span>
+                      </>
+                    ) : (
+                      <>
+                        <Square className="w-3.5 h-3.5" />
+                        <span>Mark as Done</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Path A */}
+                  <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          PATH A &bull; EASIEST
+                        </span>
+                        <span className="text-[10px] font-mono text-emerald-400">Zero-Coding</span>
+                      </div>
+                      <h5 className="text-xs font-bold text-white">Turnkey In-App Storefront</h5>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Deploy packages directly through this portal with 1 click. Set customer brand, allocate IP transit, and download official purchase orders signed under Richard Alan Witt LLC.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setActiveTab('matrix')}
+                      className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold font-mono text-xs rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <span>Deploy via Store Now</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Path B */}
+                  <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                          PATH B &bull; AUTOMATED
+                        </span>
+                        <span className="text-[10px] font-mono text-purple-300">WHMCS / Blesta</span>
+                      </div>
+                      <h5 className="text-xs font-bold text-white">Billing Engine Module</h5>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Download our pre-built server module. Drop it into <code>/modules/servers/drfun1_hosting/</code> and paste your Reseller API Key. Client pays on your site &rarr; server provisions in 90 seconds.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => handleCopy('https://get.drfun1.com/modules/drfun1_hosting_whmcs_v2.zip', 'whmcsUrl')}
+                      className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold font-mono text-xs rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      {copiedKey === 'whmcsUrl' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Download className="w-3.5 h-3.5" />}
+                      <span>Copy WHMCS Module URL</span>
+                    </button>
+                  </div>
+
+                  {/* Path C */}
+                  <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          PATH C &bull; CLI / REST
+                        </span>
+                        <span className="text-[10px] font-mono text-emerald-300">DevOps / cURL</span>
+                      </div>
+                      <h5 className="text-xs font-bold text-white">1-Line Bash Automation</h5>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Run a single command on your terminal to launch instances, register DNS records, and obtain TLS certificates in 60 seconds programmatically.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        handleCopy(
+                          `curl -sSL https://get.drfun1.com/reseller-deploy.sh | bash -s -- --key="${partner ? partner.apiKey : 'YOUR_API_KEY'}" --pkg="drfun1-switch-ircd-baremetal" --domain="${testDomain}"`,
+                          'cliCmd'
+                        )
+                      }
+                      className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold font-mono text-xs rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer border border-slate-700"
+                    >
+                      {copiedKey === 'cliCmd' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Code className="w-3.5 h-3.5" />}
+                      <span>Copy 1-Line Command</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* STEP 4: CONNECT TO GLOBAL UNREALIRCD TELEPORT MESH */}
+              <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-mono font-bold text-sm">
+                      4
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <span>Step 4: Connect to Global UnrealIRCd Mesh (`irc.drfun1.com:6697`)</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                          TLS 1.3 &bull; AES-256
+                        </span>
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Leaf peering enables encrypted cross-network chat duplication, mission telemetry, and live NOC alerts.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => toggleChecklist('step4')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 border transition-colors cursor-pointer ${
+                      ezChecklist.step4
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold'
+                        : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-white'
+                    }`}
+                  >
+                    {ezChecklist.step4 ? (
+                      <>
+                        <CheckSquare className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Step 4 Completed</span>
+                      </>
+                    ) : (
+                      <>
+                        <Square className="w-3.5 h-3.5" />
+                        <span>Mark as Done</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="bg-slate-900 rounded-xl p-3.5 border border-slate-800 space-y-2 font-mono text-xs">
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span className="text-emerald-400 font-bold text-[11px]">unrealircd.conf (Mutual TLS Link Block):</span>
+                    <button
+                      onClick={() =>
+                        handleCopy(
+                          `/* Add to unrealircd.conf */\nme {\n  name "${testDomain}";\n  info "Reseller Host Node - Switch SUPERNAP";\n  sid "00A";\n};\n\nlink hub.drfun1.com {\n  incoming { mask *@*; }\n  outgoing {\n    bind-ip *;\n    hostname hub.drfun1.com;\n    port 6697;\n    options { tls; }\n  }\n  password "WholesaleToken_${partner ? partner.partnerId : 'RAW2026'}";\n  class servers;\n};`,
+                          'ircConf'
+                        )
+                      }
+                      className="text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedKey === 'ircConf' ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="text-emerald-400">Copied Link Block</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy Link Block</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <pre className="text-[11px] text-slate-300 bg-slate-950 p-2.5 rounded-lg overflow-x-auto">
+{`me {
+  name "${testDomain}";
+  info "Reseller Host Node - 100% Green SuperNAP";
+  sid "00A";
+};
+
+link hub.drfun1.com {
+  incoming { mask *@*; }
+  outgoing {
+    bind-ip *;
+    hostname hub.drfun1.com;
+    port 6697;
+    options { tls; }
+  }
+  password "WholesaleToken_${partner ? partner.partnerId : 'RAW2026'}";
+  class servers;
+};`}
+                  </pre>
+                </div>
+              </div>
+
+              {/* STEP 5: CLIENT ONBOARDING & PROFIT RETENTION */}
+              <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center font-mono font-bold text-sm">
+                      5
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <span>Step 5: Client Onboarding &amp; 100% Monthly Margin Retention</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                          Zero Clawbacks
+                        </span>
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Set your own client billing prices. Carrier Provider debits wholesale at month-end; you keep 100% of profit.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => toggleChecklist('step5')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 border transition-colors cursor-pointer ${
+                      ezChecklist.step5
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold'
+                        : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-white'
+                    }`}
+                  >
+                    {ezChecklist.step5 ? (
+                      <>
+                        <CheckSquare className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Step 5 Completed</span>
+                      </>
+                    ) : (
+                      <>
+                        <Square className="w-3.5 h-3.5" />
+                        <span>Mark as Done</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="space-y-3 font-mono text-xs">
+                  <p className="text-slate-300 leading-relaxed">
+                    Reseller host profit retention model example with standard recommended retail pricing:
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                      <span className="text-slate-400 block text-[10px] uppercase">Switch SuperNAP Bare-Metal</span>
+                      <div className="text-white font-bold">$980 retail - $650 wholesale</div>
+                      <span className="text-emerald-400 font-bold text-sm block">+$330.00/mo net profit</span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                      <span className="text-slate-400 block text-[10px] uppercase">DataPacket 40G IRCD</span>
+                      <div className="text-white font-bold">$1,150 retail - $750 wholesale</div>
+                      <span className="text-emerald-400 font-bold text-sm block">+$400.00/mo net profit</span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                      <span className="text-slate-400 block text-[10px] uppercase">WordPress IRC Duplicator</span>
+                      <div className="text-white font-bold">$65 retail - $35 wholesale</div>
+                      <span className="text-emerald-400 font-bold text-sm block">+$30.00/mo net profit</span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                      <span className="text-slate-400 block text-[10px] uppercase">Quantum Fiber 1 Gig</span>
+                      <div className="text-white font-bold">$85 retail - $60 wholesale</div>
+                      <span className="text-emerald-400 font-bold text-sm block">+$25.00/mo net profit</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between gap-4 text-[11px] text-slate-400">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>
+                        All client transactions are legally arbitrated &amp; protected by{' '}
+                        <strong className="text-slate-200">Richard Alan Witt LLC</strong> (Witt Law Firm / Owens Company).
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('calculator')}
+                      className="text-amber-400 hover:underline shrink-0 font-bold cursor-pointer"
+                    >
+                      Model Custom Portfolio &rarr;
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* TAB 1: ALL HOSTING PACKAGES CATALOG & MARGIN MATRIX */}
           {activeTab === 'matrix' && (

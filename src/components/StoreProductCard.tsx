@@ -5,12 +5,8 @@ import {
   Satellite, 
   Server, 
   Cpu, 
-  ShieldCheck, 
   Plus, 
-  Check, 
-  ExternalLink,
   Sparkles,
-  ArrowRight,
   Layers,
   Zap
 } from 'lucide-react';

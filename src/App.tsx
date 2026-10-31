@@ -40,18 +40,13 @@ import {
   Satellite, 
   Radio, 
   Search, 
-  Layers, 
-  Download, 
-  Plus, 
-  Globe, 
   RotateCcw,
   Mail,
   ShieldCheck,
   Check,
   ExternalLink,
   Server,
-  Terminal,
-  ShoppingBag
+  Terminal
 } from 'lucide-react';
 
 const STORAGE_KEY_CUSTOM_COMPANIES = 'satcom_directory_custom_companies';

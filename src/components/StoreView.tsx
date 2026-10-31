@@ -14,15 +14,13 @@ import {
   ExternalLink,
   Layers,
   ArrowRight,
-  TrendingDown,
   Building2,
-  Cpu,
   Radio,
   FileCheck,
   Zap,
   DollarSign,
   TrendingUp,
-  Award
+  BookOpen
 } from 'lucide-react';
 import { QuantumFiberResellerModal } from './QuantumFiberResellerModal';
 import { HostingResellerProgramModal } from './HostingResellerProgramModal';
@@ -46,7 +44,6 @@ export const StoreView: React.FC<StoreViewProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [brandFilter, setBrandFilter] = useState<'all' | 'drfun1-preferred' | 'oem-only'>('all');
   const [sortBy, setSortBy] = useState<'recommended' | 'price-asc' | 'price-desc' | 'name'>('recommended');
   const [isQuantumResellerModalOpen, setIsQuantumResellerModalOpen] = useState(false);
   const [isHostingResellerModalOpen, setIsHostingResellerModalOpen] = useState(false);
@@ -280,7 +277,14 @@ export const StoreView: React.FC<StoreViewProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 font-mono text-xs">
+        <div className="flex items-center gap-2 shrink-0 font-mono text-xs flex-wrap">
+          <button
+            onClick={() => setIsHostingResellerModalOpen(true)}
+            className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/40 transition-colors cursor-pointer flex items-center gap-1.5 font-bold"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+            <span>EZ Setup Guide</span>
+          </button>
           <button
             onClick={() => setSelectedCategory('Dedicated IRCD & Transit Hosting')}
             className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-colors cursor-pointer"

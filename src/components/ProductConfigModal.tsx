@@ -5,14 +5,10 @@ import {
   Check, 
   Sparkles, 
   Server, 
-  ExternalLink, 
   Terminal, 
   ShieldCheck, 
   Plus, 
-  Minus,
-  Satellite,
-  Radio,
-  Cpu
+  Minus
 } from 'lucide-react';
 
 interface ProductConfigModalProps {

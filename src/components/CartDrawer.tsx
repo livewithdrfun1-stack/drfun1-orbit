@@ -5,16 +5,10 @@ import {
   Trash2, 
   Plus, 
   Minus, 
-  Sparkles, 
   FileText, 
   Download, 
   Check, 
-  Send, 
-  Server, 
-  ShieldCheck,
-  Terminal,
-  ShoppingBag,
-  ArrowRight
+  ShoppingBag
 } from 'lucide-react';
 
 interface CartDrawerProps {

@@ -4,22 +4,15 @@ import {
   Zap, 
   CheckCircle2, 
   DollarSign, 
-  TrendingUp, 
   Users, 
   Download, 
   Sparkles, 
-  Server, 
   ShieldCheck, 
-  Wifi, 
-  Building2, 
   Sliders, 
   Search, 
-  ExternalLink,
-  Plus,
   ShoppingBag,
   FileText
 } from 'lucide-react';
-import { StoreProduct } from '../types/store';
 
 interface QuantumFiberResellerModalProps {
   isOpen: boolean;
