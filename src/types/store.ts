@@ -10,7 +10,8 @@ export type ProductCategory =
   | 'Bare-Metal & Teleport Hosting'
   | 'Quantum Fiber & Terrestrial Optical'
   | 'DrFun1 Broadcast TV & Online Radio'
-  | 'Phone Carrier Spectrum & Backhaul';
+  | 'Phone Carrier Spectrum & Backhaul'
+  | 'Dedicated IRCD & Transit Hosting';
 
 export interface StoreProduct {
   id: string;

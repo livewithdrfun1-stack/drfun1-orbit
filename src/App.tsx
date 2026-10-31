@@ -31,6 +31,8 @@ import { FacebookSocialView } from './components/FacebookSocialView';
 import { IrcClientView } from './components/IrcClientView';
 import { BroadcastMediaView } from './components/BroadcastMediaView';
 import { PhoneCarriersView } from './components/PhoneCarriersView';
+import { MpdBotControlView } from './components/MpdBotControlView';
+import { IrcDuplicatorView } from './components/IrcDuplicatorView';
 import { AppTab } from './components/Header';
 import { 
   Satellite, 
@@ -473,12 +475,28 @@ export default function App() {
           onOpenIrc={() => setActiveTab('irc')}
           onOpenLicense={() => setIsLicenseModalOpen(true)}
           onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+          onOpenMpd={() => setActiveTab('mpd')}
+          onOpenDuplicator={() => setActiveTab('duplicator')}
         />
       ) : activeTab === 'carriers' ? (
         <PhoneCarriersView
           onOpenStore={() => setActiveTab('store')}
           onOpenLicense={() => setIsLicenseModalOpen(true)}
           onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+        />
+      ) : activeTab === 'mpd' ? (
+        <MpdBotControlView
+          onOpenIrc={() => setActiveTab('irc')}
+          onOpenBroadcast={() => setActiveTab('media')}
+          onOpenDuplicator={() => setActiveTab('duplicator')}
+        />
+      ) : activeTab === 'duplicator' ? (
+        <IrcDuplicatorView
+          onOpenLicense={() => setIsLicenseModalOpen(true)}
+          onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+          onOpenIrc={() => setActiveTab('irc')}
+          onOpenMpd={() => setActiveTab('mpd')}
+          onOpenMedia={() => setActiveTab('media')}
         />
       ) : (
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">

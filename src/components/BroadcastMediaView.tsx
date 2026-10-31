@@ -54,6 +54,8 @@ interface BroadcastMediaViewProps {
   onOpenIrc?: () => void;
   onOpenLicense?: () => void;
   onOpenSwitchMesh?: () => void;
+  onOpenMpd?: () => void;
+  onOpenDuplicator?: () => void;
 }
 
 export const BroadcastMediaView: React.FC<BroadcastMediaViewProps> = ({
@@ -61,6 +63,8 @@ export const BroadcastMediaView: React.FC<BroadcastMediaViewProps> = ({
   onOpenIrc,
   onOpenLicense,
   onOpenSwitchMesh,
+  onOpenMpd,
+  onOpenDuplicator,
 }) => {
   const [selectedChannelId, setSelectedChannelId] = useState<string>(DRFUN1_BROADCAST_CHANNELS[0].id);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
@@ -709,6 +713,24 @@ export const BroadcastMediaView: React.FC<BroadcastMediaViewProps> = ({
               <Server className="w-3.5 h-3.5 text-emerald-400" />
               <span>Switch</span>
             </button>
+            {onOpenMpd && (
+              <button
+                onClick={onOpenMpd}
+                className="text-emerald-300 hover:text-white px-2 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 transition-colors flex items-center gap-1 font-mono text-[11px] shadow-sm shadow-emerald-500/10 cursor-pointer"
+              >
+                <Headphones className="w-3.5 h-3.5 text-emerald-400" />
+                <span>MPD Bot</span>
+              </button>
+            )}
+            {onOpenDuplicator && (
+              <button
+                onClick={onOpenDuplicator}
+                className="text-sky-300 hover:text-white px-2 py-1.5 rounded-lg bg-sky-950/60 border border-sky-500/40 transition-colors flex items-center gap-1 font-mono text-[11px] shadow-sm shadow-sky-500/10 cursor-pointer"
+              >
+                <Share2 className="w-3.5 h-3.5 text-sky-400" />
+                <span>IRC Duplicator</span>
+              </button>
+            )}
           </div>
         </div>
         {syncSuccessMessage && (

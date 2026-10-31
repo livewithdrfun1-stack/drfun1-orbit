@@ -19,8 +19,10 @@ import {
   Cpu,
   Radio,
   FileCheck,
-  Zap
+  Zap,
+  DollarSign
 } from 'lucide-react';
+import { QuantumFiberResellerModal } from './QuantumFiberResellerModal';
 
 interface StoreViewProps {
   onOpenProductConfig: (product: StoreProduct, isDrfun1Branded: boolean) => void;
@@ -43,9 +45,11 @@ export const StoreView: React.FC<StoreViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [brandFilter, setBrandFilter] = useState<'all' | 'drfun1-preferred' | 'oem-only'>('all');
   const [sortBy, setSortBy] = useState<'recommended' | 'price-asc' | 'price-desc' | 'name'>('recommended');
+  const [isQuantumResellerModalOpen, setIsQuantumResellerModalOpen] = useState(false);
 
   const categories: (ProductCategory | 'All')[] = [
     'All',
+    'Dedicated IRCD & Transit Hosting',
     'DrFun1 Broadcast TV & Online Radio',
     'Phone Carrier Spectrum & Backhaul',
     'Quantum Fiber & Terrestrial Optical',
@@ -126,10 +130,19 @@ export const StoreView: React.FC<StoreViewProps> = ({
               <span>DrFun1 Authorized Wholesale & Resale Exchange</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => setIsQuantumResellerModalOpen(true)}
+                className="text-xs text-cyan-300 hover:text-white bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-bold shadow-sm shadow-cyan-500/20 cursor-pointer"
+              >
+                <Zap className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Resell Quantum Fiber (Margin Calculator)</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse ml-0.5" />
+              </button>
+
               <button
                 onClick={onOpenLicenseModal}
-                className="text-xs text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/70 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-medium"
+                className="text-xs text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/70 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Licensed to Richard Alan Witt</span>
@@ -138,7 +151,7 @@ export const StoreView: React.FC<StoreViewProps> = ({
 
               <button
                 onClick={onOpenSwitchMeshModal}
-                className="text-xs text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/70 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-medium"
+                className="text-xs text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/70 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
               >
                 <Terminal className="w-3.5 h-3.5 text-sky-400" />
                 <span>irc.drfun1.com Peering</span>
@@ -148,28 +161,34 @@ export const StoreView: React.FC<StoreViewProps> = ({
 
           <div className="max-w-3xl">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
-              Commercial Satellite &amp; Quantum Fiber Reseller Store
+              Commercial Satellite, Quantum Fiber &amp; Dedicated IRCD Reseller Store
             </h1>
             <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-              Procure wholesale satellite hardware, dedicated multi-orbit CIR bandwidth, <strong className="text-cyan-300 font-semibold">Quantum Fiber 8G multi-gigabit &amp; 400G dark fiber</strong>, direct-to-device cellular NTN, and teleport racks. Rebrand and co-brand each line under the turnkey <span className="text-white font-medium">DrFun1 ecosystem</span> with pre-engineered interconnects to <span className="text-sky-300 font-medium">Switch Data Centers</span>, <span className="text-sky-300 font-medium">RisingNet IP Transit</span>, and encrypted mission telemetry via <span className="text-emerald-300 font-medium font-mono">irc.drfun1.com:6697</span>.
+              Procure wholesale satellite hardware, dedicated multi-orbit CIR bandwidth, <strong className="text-cyan-300 font-semibold">Quantum Fiber 8G multi-gigabit &amp; 400G dark fiber</strong>, and <strong className="text-purple-300 font-semibold">Dedicated IRCD Bare-Metal Hosting</strong> powered directly by <a href="https://www.datapacket.com" target="_blank" rel="noopener noreferrer" className="text-sky-400 underline font-mono">datapacket.com</a>, <a href="https://www.risingnet.com" target="_blank" rel="noopener noreferrer" className="text-sky-400 underline font-mono">risingnet.com</a>, and <a href="https://www.switch.com" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline font-mono">www.switch.com</a>. Rebrand and co-brand each line under the turnkey <span className="text-white font-medium">DrFun1 ecosystem</span> with pre-engineered interconnects, clean-pipe DDoS defense, and encrypted mission telemetry via <span className="text-emerald-300 font-medium font-mono">irc.drfun1.com:6697</span>.
             </p>
           </div>
 
           {/* Quick Pillars Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-800/80 text-xs text-slate-300">
             <div className="flex items-start gap-2.5 bg-slate-900/60 border border-slate-800/60 p-3 rounded-xl">
-              <Zap className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+              <Server className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-white">Quantum Fiber Co-Branding</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">8 Gbps symmetrical fiber, 400G coherent DWDM waves, and SmartNID WiFi 7 hardware.</p>
+                <p className="font-semibold text-white">Dedicated IRCD Hosting</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">DataPacket unmetered 40G, Switch Tier 5 Platinum SuperNAP &amp; RisingNet clean-pipe BGP.</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-2.5 bg-slate-900/60 border border-slate-800/60 p-3 rounded-xl">
-              <Server className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <div 
+              onClick={() => setIsQuantumResellerModalOpen(true)}
+              className="flex items-start gap-2.5 bg-slate-900/60 border border-cyan-500/30 hover:border-cyan-400 p-3 rounded-xl cursor-pointer transition-all hover:bg-slate-900"
+            >
+              <Zap className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-white">Switch SUPERNAP Teleport</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Direct 100G fiber cross-connects at Switch Las Vegas &amp; Tahoe Reno campuses.</p>
+                <p className="font-semibold text-white flex items-center gap-1">
+                  <span>Quantum Fiber Co-Branding</span>
+                  <span className="text-[10px] text-cyan-400 font-mono">Resell ➔</span>
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">500M, 1G, 2G, 3G, 8G symmetrical fiber, 400G waves, and SmartNID WiFi 7 hardware.</p>
               </div>
             </div>
 
@@ -218,6 +237,47 @@ export const StoreView: React.FC<StoreViewProps> = ({
           </button>
         </div>
       )}
+
+      {/* Co-Branded Quantum Fiber Reseller Banner */}
+      <div className="bg-gradient-to-r from-cyan-950/70 via-slate-900/90 to-purple-950/70 border border-cyan-500/40 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl shadow-cyan-950/30">
+        <div className="flex items-start gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-cyan-500/20 border border-cyan-500/50 flex items-center justify-center text-cyan-400 shrink-0 mt-0.5 shadow-lg shadow-cyan-500/20">
+            <Zap className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono text-[10px] font-bold border border-cyan-500/40 uppercase tracking-wide">
+                Active Wholesale Reseller Program
+              </span>
+              <span className="text-slate-400 font-mono text-xs">
+                500M &bull; 1 Gig &bull; 2 Gig &bull; 3 Gig &bull; 8 Gig &bull; QuantumBiz
+              </span>
+            </div>
+            <h3 className="text-base font-bold text-white mt-1">
+              Co-Branded Quantum Fiber Internet Reseller Network
+            </h3>
+            <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              Resell symmetrical fiber internet under your brand co-badged with DrFun1 and Quantum Fiber. Wholesale margins up to <strong className="text-emerald-400 font-mono font-semibold">$1,050.00/mo recurring per line</strong> with SmartNID WiFi 7 hardware, captive portal branding, and Richard Alan Witt legal reseller escrow.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 font-mono text-xs">
+          <button
+            onClick={() => setSelectedCategory('Quantum Fiber & Terrestrial Optical')}
+            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-colors cursor-pointer"
+          >
+            Filter Quantum Products
+          </button>
+          <button
+            onClick={() => setIsQuantumResellerModalOpen(true)}
+            className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold transition-all shadow-md shadow-cyan-500/25 flex items-center gap-1.5 cursor-pointer"
+          >
+            <DollarSign className="w-4 h-4" />
+            <span>Launch Reseller Calculator</span>
+          </button>
+        </div>
+      </div>
 
       {/* Filter and Control Bar */}
       <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-4 space-y-4">
@@ -415,6 +475,18 @@ export const StoreView: React.FC<StoreViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Quantum Fiber Reseller Modal */}
+      <QuantumFiberResellerModal
+        isOpen={isQuantumResellerModalOpen}
+        onClose={() => setIsQuantumResellerModalOpen(false)}
+        onSelectProductForOrder={(id) => {
+          const product = STORE_PRODUCTS.find((p) => p.id === id);
+          if (product) {
+            onOpenProductConfig(product, true);
+          }
+        }}
+      />
     </div>
   );
 };
