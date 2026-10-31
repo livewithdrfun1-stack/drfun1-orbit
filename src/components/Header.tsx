@@ -7,7 +7,8 @@ import {
   Sparkles, 
   Smartphone, 
   Scale, 
-  Server
+  Server,
+  TrendingUp
 } from 'lucide-react';
 
 export type AppTab = 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'stream' | 'social' | 'irc' | 'media' | 'carriers' | 'mpd' | 'duplicator';
@@ -22,6 +23,7 @@ interface HeaderProps {
   onOpenCompare: () => void;
   onOpenLicense: () => void;
   onOpenSwitchMesh: () => void;
+  onOpenResellerProgram?: () => void;
   cartCount?: number;
   onOpenCart?: () => void;
 }
@@ -36,6 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCompare,
   onOpenLicense,
   onOpenSwitchMesh,
+  onOpenResellerProgram,
   cartCount = 0,
   onOpenCart,
 }) => {
@@ -95,6 +98,20 @@ export const Header: React.FC<HeaderProps> = ({
               <span>Switch Mesh</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             </button>
+
+            {/* Hosting Reseller Program */}
+            {onOpenResellerProgram && (
+              <button
+                onClick={onOpenResellerProgram}
+                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-amber-950/40 text-amber-300 hover:text-white hover:bg-amber-900/60 border-amber-500/40 hover:border-amber-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-amber-950/30"
+              >
+                <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Reseller Program</span>
+                <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-amber-400/20 text-amber-300 font-bold">
+                  Wholesale
+                </span>
+              </button>
+            )}
 
             {/* License Certificate */}
             <button

@@ -20,9 +20,12 @@ import {
   Radio,
   FileCheck,
   Zap,
-  DollarSign
+  DollarSign,
+  TrendingUp,
+  Award
 } from 'lucide-react';
 import { QuantumFiberResellerModal } from './QuantumFiberResellerModal';
+import { HostingResellerProgramModal } from './HostingResellerProgramModal';
 
 interface StoreViewProps {
   onOpenProductConfig: (product: StoreProduct, isDrfun1Branded: boolean) => void;
@@ -46,6 +49,7 @@ export const StoreView: React.FC<StoreViewProps> = ({
   const [brandFilter, setBrandFilter] = useState<'all' | 'drfun1-preferred' | 'oem-only'>('all');
   const [sortBy, setSortBy] = useState<'recommended' | 'price-asc' | 'price-desc' | 'name'>('recommended');
   const [isQuantumResellerModalOpen, setIsQuantumResellerModalOpen] = useState(false);
+  const [isHostingResellerModalOpen, setIsHostingResellerModalOpen] = useState(false);
 
   const categories: (ProductCategory | 'All')[] = [
     'All',
@@ -132,12 +136,20 @@ export const StoreView: React.FC<StoreViewProps> = ({
 
             <div className="flex items-center gap-2 flex-wrap">
               <button
+                onClick={() => setIsHostingResellerModalOpen(true)}
+                className="text-xs text-amber-300 hover:text-white bg-amber-950/80 hover:bg-amber-900 border border-amber-500/50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-bold shadow-sm shadow-amber-500/20 cursor-pointer"
+              >
+                <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
+                <span>Start Reselling All Hosting Packages</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse ml-0.5" />
+              </button>
+
+              <button
                 onClick={() => setIsQuantumResellerModalOpen(true)}
                 className="text-xs text-cyan-300 hover:text-white bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-bold shadow-sm shadow-cyan-500/20 cursor-pointer"
               >
                 <Zap className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Resell Quantum Fiber (Margin Calculator)</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse ml-0.5" />
+                <span>Quantum Fiber Reseller</span>
               </button>
 
               <button
@@ -170,10 +182,16 @@ export const StoreView: React.FC<StoreViewProps> = ({
 
           {/* Quick Pillars Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-800/80 text-xs text-slate-300">
-            <div className="flex items-start gap-2.5 bg-slate-900/60 border border-slate-800/60 p-3 rounded-xl">
-              <Server className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
+            <div 
+              onClick={() => setIsHostingResellerModalOpen(true)}
+              className="flex items-start gap-2.5 bg-slate-900/60 border border-amber-500/30 hover:border-amber-400 p-3 rounded-xl cursor-pointer transition-all hover:bg-slate-900"
+            >
+              <Server className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-white">Dedicated IRCD Hosting</p>
+                <p className="font-semibold text-white flex items-center gap-1">
+                  <span>Dedicated IRCD &amp; Hosting Reselling</span>
+                  <span className="text-[10px] text-amber-400 font-mono">Resell ➔</span>
+                </p>
                 <p className="text-[11px] text-slate-400 mt-0.5">DataPacket unmetered 40G, Switch Tier 5 Platinum SuperNAP &amp; RisingNet clean-pipe BGP.</p>
               </div>
             </div>
@@ -237,6 +255,47 @@ export const StoreView: React.FC<StoreViewProps> = ({
           </button>
         </div>
       )}
+
+      {/* Master Hosting Reseller Program Showcase Banner */}
+      <div className="bg-gradient-to-r from-amber-950/70 via-slate-900/90 to-emerald-950/70 border border-amber-500/40 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl shadow-amber-950/30">
+        <div className="flex items-start gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-amber-400 shrink-0 mt-0.5 shadow-lg shadow-amber-500/20">
+            <TrendingUp className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold border border-amber-500/40 uppercase tracking-wide">
+                Universal Hosting Reseller Program
+              </span>
+              <span className="text-slate-400 font-mono text-xs">
+                IRCD Nodes &bull; Bare-Metal &bull; WordPress Duplicator &bull; Icecast DJ &bull; Quantum Fiber
+              </span>
+            </div>
+            <h3 className="text-base font-bold text-white mt-1">
+              Start Reselling All Cloud, Bare-Metal &amp; Transit Hosting Packages
+            </h3>
+            <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              Launch your white-label hosting business with 100% margin retention. Resell Switch SUPERNAP bare-metal, DataPacket 40G unmetered transit, RisingNet DDoS-shielded IRCD nodes, and WordPress chat duplicators with automated WHMCS APIs and Richard Alan Witt legal contract protection.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 font-mono text-xs">
+          <button
+            onClick={() => setSelectedCategory('Dedicated IRCD & Transit Hosting')}
+            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-colors cursor-pointer"
+          >
+            Filter Hosting Products
+          </button>
+          <button
+            onClick={() => setIsHostingResellerModalOpen(true)}
+            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition-all shadow-md shadow-amber-500/25 flex items-center gap-1.5 cursor-pointer"
+          >
+            <DollarSign className="w-4 h-4" />
+            <span>Open Reseller Hub &amp; Calculator</span>
+          </button>
+        </div>
+      </div>
 
       {/* Co-Branded Quantum Fiber Reseller Banner */}
       <div className="bg-gradient-to-r from-cyan-950/70 via-slate-900/90 to-purple-950/70 border border-cyan-500/40 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl shadow-cyan-950/30">
@@ -480,6 +539,18 @@ export const StoreView: React.FC<StoreViewProps> = ({
       <QuantumFiberResellerModal
         isOpen={isQuantumResellerModalOpen}
         onClose={() => setIsQuantumResellerModalOpen(false)}
+        onSelectProductForOrder={(id) => {
+          const product = STORE_PRODUCTS.find((p) => p.id === id);
+          if (product) {
+            onOpenProductConfig(product, true);
+          }
+        }}
+      />
+
+      {/* Master Hosting Reseller Program Modal */}
+      <HostingResellerProgramModal
+        isOpen={isHostingResellerModalOpen}
+        onClose={() => setIsHostingResellerModalOpen(false)}
         onSelectProductForOrder={(id) => {
           const product = STORE_PRODUCTS.find((p) => p.id === id);
           if (product) {

@@ -33,6 +33,8 @@ import { BroadcastMediaView } from './components/BroadcastMediaView';
 import { PhoneCarriersView } from './components/PhoneCarriersView';
 import { MpdBotControlView } from './components/MpdBotControlView';
 import { IrcDuplicatorView } from './components/IrcDuplicatorView';
+import { HostingResellerProgramModal } from './components/HostingResellerProgramModal';
+import { STORE_PRODUCTS } from './data/storeProducts';
 import { AppTab } from './components/Header';
 import { 
   Satellite, 
@@ -122,6 +124,7 @@ export default function App() {
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [isLicenseModalOpen, setIsLicenseModalOpen] = useState(false);
   const [isSwitchMeshModalOpen, setIsSwitchMeshModalOpen] = useState(false);
+  const [isHostingResellerModalOpen, setIsHostingResellerModalOpen] = useState(false);
   const [exportNotice, setExportNotice] = useState<string | null>(null);
 
   // Store & Cart State
@@ -428,6 +431,7 @@ export default function App() {
         onOpenCompare={() => setIsCompareModalOpen(true)}
         onOpenLicense={() => setIsLicenseModalOpen(true)}
         onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+        onOpenResellerProgram={() => setIsHostingResellerModalOpen(true)}
         cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
         onOpenCart={() => setIsCartOpen(true)}
       />
@@ -1049,6 +1053,19 @@ export default function App() {
         onUpdateQuantity={handleUpdateCartQuantity}
         onRemoveItem={handleRemoveCartItem}
         onClearCart={handleClearCart}
+      />
+
+      {/* Global Master Hosting Reseller Program Modal */}
+      <HostingResellerProgramModal
+        isOpen={isHostingResellerModalOpen}
+        onClose={() => setIsHostingResellerModalOpen(false)}
+        onSelectProductForOrder={(id) => {
+          const product = STORE_PRODUCTS.find((p) => p.id === id);
+          if (product) {
+            handleOpenProductConfig(product, true);
+            setActiveTab('store');
+          }
+        }}
       />
     </div>
   );
