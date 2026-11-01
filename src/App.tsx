@@ -34,6 +34,8 @@ import { PhoneCarriersView } from './components/PhoneCarriersView';
 import { MpdBotControlView } from './components/MpdBotControlView';
 import { IrcDuplicatorView } from './components/IrcDuplicatorView';
 import { HostingResellerProgramModal } from './components/HostingResellerProgramModal';
+import { IrcdAdminPanelModal } from './components/IrcdAdminPanelModal';
+import { AnopeRankLevel } from './types/ircdAdmin';
 import { STORE_PRODUCTS } from './data/storeProducts';
 import { AppTab } from './components/Header';
 import { 
@@ -120,6 +122,14 @@ export default function App() {
   const [isLicenseModalOpen, setIsLicenseModalOpen] = useState(false);
   const [isSwitchMeshModalOpen, setIsSwitchMeshModalOpen] = useState(false);
   const [isHostingResellerModalOpen, setIsHostingResellerModalOpen] = useState(false);
+  const [isIrcdAdminOpen, setIsIrcdAdminOpen] = useState(false);
+  const [activeOperRank, setActiveOperRank] = useState<AnopeRankLevel>(() => {
+    try {
+      const saved = localStorage.getItem('drfun1_active_anope_rank');
+      if (saved) return saved as AnopeRankLevel;
+    } catch (_) {}
+    return 'op';
+  });
   const [exportNotice, setExportNotice] = useState<string | null>(null);
 
   // Store & Cart State
@@ -153,6 +163,13 @@ export default function App() {
       console.error('Error saving notes', e);
     }
   }, [userNotes]);
+
+  // Sync active Anope rank
+  useEffect(() => {
+    try {
+      localStorage.setItem('drfun1_active_anope_rank', activeOperRank);
+    } catch (_) {}
+  }, [activeOperRank]);
 
   // Sync cart items to localStorage
   useEffect(() => {
@@ -427,6 +444,8 @@ export default function App() {
         onOpenLicense={() => setIsLicenseModalOpen(true)}
         onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
         onOpenResellerProgram={() => setIsHostingResellerModalOpen(true)}
+        onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
+        activeOperRank={activeOperRank}
         cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
         onOpenCart={() => setIsCartOpen(true)}
       />
@@ -452,6 +471,8 @@ export default function App() {
           onNavigateToStore={() => setActiveTab('store')}
           onNavigateToIrc={() => setActiveTab('irc')}
           onAddToCart={handleQuickAddToCart}
+          activeRank={activeOperRank}
+          onOpenAdminPanel={() => setIsIrcdAdminOpen(true)}
         />
       ) : activeTab === 'social' ? (
         <FacebookSocialView
@@ -467,6 +488,8 @@ export default function App() {
           onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
           onNavigateToStore={() => setActiveTab('store')}
           onNavigateToStudio={() => setActiveTab('stream')}
+          activeRank={activeOperRank}
+          onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
         />
       ) : activeTab === 'media' ? (
         <BroadcastMediaView
@@ -476,6 +499,8 @@ export default function App() {
           onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
           onOpenMpd={() => setActiveTab('mpd')}
           onOpenDuplicator={() => setActiveTab('duplicator')}
+          activeRank={activeOperRank}
+          onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
         />
       ) : activeTab === 'carriers' ? (
         <PhoneCarriersView
@@ -488,6 +513,9 @@ export default function App() {
           onOpenIrc={() => setActiveTab('irc')}
           onOpenBroadcast={() => setActiveTab('media')}
           onOpenDuplicator={() => setActiveTab('duplicator')}
+          activeRank={activeOperRank}
+          onRankChange={setActiveOperRank}
+          onOpenAdminPanel={() => setIsIrcdAdminOpen(true)}
         />
       ) : activeTab === 'duplicator' ? (
         <IrcDuplicatorView
@@ -1061,6 +1089,16 @@ export default function App() {
             setActiveTab('store');
           }
         }}
+      />
+
+      {/* UnrealIRCd & Anope Services Ops Web Control Panel Modal */}
+      <IrcdAdminPanelModal
+        isOpen={isIrcdAdminOpen}
+        onClose={() => setIsIrcdAdminOpen(false)}
+        activeRank={activeOperRank}
+        onRankChange={setActiveOperRank}
+        onNavigateToMpd={() => setActiveTab('mpd')}
+        onNavigateToIrc={() => setActiveTab('irc')}
       />
     </div>
   );

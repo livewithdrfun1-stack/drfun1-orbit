@@ -11,7 +11,9 @@ export type ProductCategory =
   | 'Quantum Fiber & Terrestrial Optical'
   | 'DrFun1 Broadcast TV & Online Radio'
   | 'Phone Carrier Spectrum & Backhaul'
-  | 'Dedicated IRCD & Transit Hosting';
+  | 'Dedicated IRCD & Transit Hosting'
+  | 'Switch.com Fiber Optical & Teleport'
+  | 'Snapdragon Qualcomm Satellite & 5G';
 
 export interface StoreProduct {
   id: string;

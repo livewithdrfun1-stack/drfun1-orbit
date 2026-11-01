@@ -48,18 +48,26 @@ import {
   Headphones
 } from 'lucide-react';
 
+import { AnopeRankLevel } from '../types/ircdAdmin';
+import { ANOPE_RANKS } from '../data/ircdAdminData';
 import { MpdDjControlPanel } from './MpdDjControlPanel';
 
 interface MpdBotControlViewProps {
   onOpenIrc?: () => void;
   onOpenBroadcast?: () => void;
   onOpenDuplicator?: () => void;
+  activeRank?: AnopeRankLevel;
+  onRankChange?: (rank: AnopeRankLevel) => void;
+  onOpenAdminPanel?: () => void;
 }
 
 export const MpdBotControlView: React.FC<MpdBotControlViewProps> = ({
   onOpenIrc,
   onOpenBroadcast,
-  onOpenDuplicator
+  onOpenDuplicator,
+  activeRank = 'op',
+  onRankChange,
+  onOpenAdminPanel,
 }) => {
   // Primary View Mode: DJ Booth, MPD Deck, Chat Duplicator, or Fleet
   const [viewMode, setViewMode] = useState<'dj_booth' | 'mpd_deck' | 'duplicator' | 'fleet'>('dj_booth');
@@ -607,6 +615,20 @@ export const MpdBotControlView: React.FC<MpdBotControlViewProps> = ({
               <span>GitHub Repo</span>
             </a>
 
+            {onOpenAdminPanel && (
+              <button
+                onClick={onOpenAdminPanel}
+                className="px-2.5 py-1.5 rounded-lg bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/50 transition-colors flex items-center gap-1.5 font-mono text-[11px] font-bold cursor-pointer shadow-sm shadow-purple-500/20"
+                title="Open IRCD UnrealIRCd & Anope Admin Web Control Panel"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
+                <span>IRCD &amp; Anope Admin</span>
+                <span className="text-[9px] px-1 py-0.2 rounded bg-purple-500/30 text-purple-300">
+                  {['op', 'sop', 'founder', 'so', 'admin', 'sra'].includes(activeRank) ? 'Ops+' : 'Locked'}
+                </span>
+              </button>
+            )}
+
             {onOpenIrc && (
               <button
                 onClick={onOpenIrc}
@@ -722,6 +744,9 @@ export const MpdBotControlView: React.FC<MpdBotControlViewProps> = ({
             onOpenIrc={onOpenIrc}
             onOpenBroadcast={onOpenBroadcast}
             onOpenDuplicator={onOpenDuplicator}
+            activeRank={activeRank}
+            onRankChange={onRankChange}
+            onOpenAdminPanel={onOpenAdminPanel}
           />
         </div>
       )}

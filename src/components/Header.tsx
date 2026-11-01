@@ -8,8 +8,10 @@ import {
   Smartphone, 
   Scale, 
   Server,
-  TrendingUp
+  TrendingUp,
+  ShieldCheck
 } from 'lucide-react';
+import { AnopeRankLevel } from '../types/ircdAdmin';
 
 export type AppTab = 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'stream' | 'social' | 'irc' | 'media' | 'carriers' | 'mpd' | 'duplicator';
 
@@ -24,6 +26,8 @@ interface HeaderProps {
   onOpenLicense: () => void;
   onOpenSwitchMesh: () => void;
   onOpenResellerProgram?: () => void;
+  onOpenIrcdAdmin?: () => void;
+  activeOperRank?: AnopeRankLevel;
   cartCount?: number;
   onOpenCart?: () => void;
 }
@@ -39,6 +43,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenLicense,
   onOpenSwitchMesh,
   onOpenResellerProgram,
+  onOpenIrcdAdmin,
+  activeOperRank,
   cartCount = 0,
   onOpenCart,
 }) => {
@@ -98,6 +104,22 @@ export const Header: React.FC<HeaderProps> = ({
               <span>Switch Mesh</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             </button>
+
+            {/* IRCD & Anope Ops Panel */}
+            {onOpenIrcdAdmin && (
+              <button
+                onClick={onOpenIrcdAdmin}
+                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-purple-950/40 text-purple-300 hover:text-white hover:bg-purple-900/60 border-purple-500/40 hover:border-purple-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-purple-950/30"
+                title="UnrealIRCd & Anope Services Ops Web Control Center"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
+                <span className="hidden sm:inline">IRCD &amp; Anope Admin</span>
+                <span className="sm:hidden">Ops</span>
+                <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-purple-400/20 text-purple-300 font-bold">
+                  {activeOperRank && ['op', 'sop', 'founder', 'so', 'admin', 'sra'].includes(activeOperRank) ? 'Ops+' : 'Anope'}
+                </span>
+              </button>
+            )}
 
             {/* Hosting Reseller Program */}
             {onOpenResellerProgram && (

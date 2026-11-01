@@ -102,12 +102,16 @@ export const StoreProductCard: React.FC<StoreProductCardProps> = ({
           {/* Center Graphic Badge */}
           <div className="relative z-10 flex items-center justify-center my-auto">
             <div className="w-14 h-14 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 group-hover:scale-105 transition-transform duration-200 shadow-lg shadow-sky-500/5">
-              {product.category.includes('Hardware') && <Satellite className="w-7 h-7 text-sky-400" />}
+              {product.category.includes('Snapdragon') && <Cpu className="w-7 h-7 text-red-400" />}
+              {product.category.includes('Switch.com') && <Server className="w-7 h-7 text-emerald-400" />}
+              {product.category.includes('Hardware') && !product.category.includes('Snapdragon') && <Satellite className="w-7 h-7 text-sky-400" />}
               {product.category.includes('Bandwidth') && <Zap className="w-7 h-7 text-amber-400" />}
-              {product.category.includes('Device') && <Radio className="w-7 h-7 text-emerald-400" />}
-              {product.category.includes('IoT') && <Cpu className="w-7 h-7 text-cyan-400" />}
-              {product.category.includes('Teleport') && <Server className="w-7 h-7 text-indigo-400" />}
+              {product.category.includes('Device') && !product.category.includes('Snapdragon') && <Radio className="w-7 h-7 text-emerald-400" />}
+              {product.category.includes('IoT') && !product.category.includes('Snapdragon') && <Cpu className="w-7 h-7 text-cyan-400" />}
+              {product.category.includes('Teleport') && !product.category.includes('Switch.com') && <Server className="w-7 h-7 text-indigo-400" />}
               {product.category.includes('Earth') && <Layers className="w-7 h-7 text-violet-400" />}
+              {product.category.includes('Fiber') && !product.category.includes('Switch.com') && <Zap className="w-7 h-7 text-cyan-400" />}
+              {product.category.includes('IRCD') && <Server className="w-7 h-7 text-purple-400" />}
             </div>
           </div>
 

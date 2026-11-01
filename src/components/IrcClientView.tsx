@@ -43,14 +43,19 @@ import {
   CheckCircle2,
   ArrowRight,
   Sparkles,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react';
+import { AnopeRankLevel } from '../types/ircdAdmin';
+import { MultistreamIrcChatRoom } from './MultistreamIrcChatRoom';
 
 interface IrcClientViewProps {
   onOpenLicense: () => void;
   onOpenSwitchMesh: () => void;
   onNavigateToStore?: () => void;
   onNavigateToStudio?: () => void;
+  activeRank?: AnopeRankLevel;
+  onOpenIrcdAdmin?: () => void;
 }
 
 export const IrcClientView: React.FC<IrcClientViewProps> = ({
@@ -58,11 +63,14 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
   onOpenSwitchMesh,
   onNavigateToStore,
   onNavigateToStudio,
+  activeRank = 'op',
+  onOpenIrcdAdmin,
 }) => {
   // Connection state
   const [activeNodeId, setActiveNodeId] = useState<string>('switch_node_1');
   const [currentNick, setCurrentNick] = useState<string>('RichardAlanWitt');
   const [currentChannel, setCurrentChannel] = useState<string>('#drfun1-media');
+  const [isMultistreamCombinedMode, setIsMultistreamCombinedMode] = useState<boolean>(false);
   const [isConnected, setIsConnected] = useState<boolean>(true);
   const [isReconnecting, setIsReconnecting] = useState<boolean>(false);
   const [isBurstingSync, setIsBurstingSync] = useState<boolean>(false);
@@ -435,6 +443,28 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
               <GitBranch className="w-3.5 h-3.5 text-sky-400" />
               <span>Leaf Topology (/map)</span>
             </button>
+
+            <button
+              onClick={() => setIsMultistreamCombinedMode(!isMultistreamCombinedMode)}
+              className={`px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-md ${
+                isMultistreamCombinedMode
+                  ? 'bg-purple-600 border border-purple-400 text-white shadow-purple-950/50 ring-2 ring-purple-400/40'
+                  : 'bg-slate-900 hover:bg-slate-800 border border-purple-500/40 text-purple-300 hover:text-purple-100'
+              }`}
+            >
+              <Radio className={`w-3.5 h-3.5 ${isMultistreamCombinedMode ? 'text-white animate-pulse' : 'text-purple-400'}`} />
+              <span>{isMultistreamCombinedMode ? 'Exit Combined Mode' : 'Multistream Combined Mode'}</span>
+            </button>
+
+            {onOpenIrcdAdmin && (
+              <button
+                onClick={onOpenIrcdAdmin}
+                className="px-3 py-1.5 rounded-lg bg-red-950/70 hover:bg-red-900/80 border border-red-700/60 text-red-200 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-red-400" />
+                <span>IRCD Admin</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -482,8 +512,39 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
         </div>
       </div>
 
-      {/* Main IRC Interface: 3-column layout (Channels list, Terminal chat, User list) */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4">
+      {/* Main IRC Interface: 3-column layout or Multistream Combined Mode */}
+      {isMultistreamCombinedMode ? (
+        <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-4">
+          <div className="p-3.5 rounded-xl bg-purple-950/40 border border-purple-500/30 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5 text-purple-200">
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse" />
+              <span className="font-bold">Multistream IRC Combined Cockpit:</span>
+              <span className="text-purple-300">
+                Live dual-routed IRC chat room synchronized across UnrealIRCd 6 (<code className="text-purple-100 font-mono">irc.drfun1.com:6697</code>) and BroadCast destinations (Twitch, YouTube, Kick, Facebook, Switch CDN).
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsMultistreamCombinedMode(false)}
+                className="px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white rounded text-xs font-mono font-medium transition-colors"
+              >
+                Switch to Standard 3-Column IRC
+              </button>
+            </div>
+          </div>
+
+          <div className="h-[740px]">
+            <MultistreamIrcChatRoom
+              variant="full"
+              defaultChannel={currentChannel}
+              activeRank={activeRank}
+              onOpenAdminPanel={onOpenIrcdAdmin}
+              onOpenIrcClient={() => setIsMultistreamCombinedMode(false)}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Left Column: Channels & All Bands Selector (3 cols on lg) */}
         <div className="lg:col-span-3 flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg h-[650px]">
           {/* Channel Header & Filter */}
@@ -800,6 +861,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
           )}
         </div>
       </div>
+      )}
 
       {/* UnrealIRCd Hub-and-Leaf Topology Tree Modal */}
       {showLeafTopologyModal && (

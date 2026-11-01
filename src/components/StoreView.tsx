@@ -20,7 +20,8 @@ import {
   Zap,
   DollarSign,
   TrendingUp,
-  BookOpen
+  BookOpen,
+  Cpu
 } from 'lucide-react';
 import { QuantumFiberResellerModal } from './QuantumFiberResellerModal';
 import { HostingResellerProgramModal } from './HostingResellerProgramModal';
@@ -43,6 +44,7 @@ export const StoreView: React.FC<StoreViewProps> = ({
   onOpenSwitchMeshModal,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedPartner, setSelectedPartner] = useState<string>('All Partners');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'recommended' | 'price-asc' | 'price-desc' | 'name'>('recommended');
   const [isQuantumResellerModalOpen, setIsQuantumResellerModalOpen] = useState(false);
@@ -50,19 +52,44 @@ export const StoreView: React.FC<StoreViewProps> = ({
 
   const categories: (ProductCategory | 'All')[] = [
     'All',
-    'Dedicated IRCD & Transit Hosting',
-    'DrFun1 Broadcast TV & Online Radio',
-    'Phone Carrier Spectrum & Backhaul',
+    'Switch.com Fiber Optical & Teleport',
+    'Snapdragon Qualcomm Satellite & 5G',
     'Quantum Fiber & Terrestrial Optical',
-    'ISP & Dedicated Satellite Internet',
-    'Wireless Carrier & 5G NTN eSIM',
-    'Bare-Metal & Teleport Hosting',
+    'Dedicated IRCD & Transit Hosting',
     'Terminals & User Hardware',
     'Bandwidth & Enterprise CIR',
     'Direct-to-Device (3GPP NTN)',
+    'DrFun1 Broadcast TV & Online Radio',
+    'Phone Carrier Spectrum & Backhaul',
+    'ISP & Dedicated Satellite Internet',
+    'Wireless Carrier & 5G NTN eSIM',
+    'Bare-Metal & Teleport Hosting',
     'Satellite IoT & Asset Tracking',
     'Teleport & Switch Colocation',
     'Earth Observation & SAR Data',
+  ];
+
+  const partners: string[] = [
+    'All Partners',
+    'Switch.com',
+    'Snapdragon Qualcomm',
+    'Quantum Fiber',
+    'Starlink (SpaceX)',
+    'Amazon Project Kuiper',
+    'SES (SES S.A.)',
+    'Eutelsat OneWeb',
+    'AST SpaceMobile',
+    'Telesat (Lightspeed)',
+    'EchoStar / HughesNet',
+    'Globalstar',
+    'Sateliot',
+    'Kymeta',
+    'Space42 (Yahsat / Thuraya)',
+    'Planet Labs',
+    'ICEYE',
+    'Kinéis',
+    'RisingNet',
+    'DataPacket',
   ];
 
   // Total items in cart
@@ -86,6 +113,23 @@ export const StoreView: React.FC<StoreViewProps> = ({
       // Category filter
       if (selectedCategory !== 'All' && product.category !== selectedCategory) {
         return false;
+      }
+
+      // Partner filter
+      if (selectedPartner !== 'All Partners') {
+        const pLower = selectedPartner.toLowerCase().split(' ')[0]; // match first keyword
+        const fullPartner = selectedPartner.toLowerCase();
+        const matchesCarrier = product.oemCarriers.some(c => 
+          c.toLowerCase().includes(pLower) || 
+          fullPartner.includes(c.toLowerCase()) ||
+          c.toLowerCase().includes(fullPartner)
+        );
+        const matchesName = product.name.toLowerCase().includes(pLower) || 
+                            product.drfun1RebrandedName.toLowerCase().includes(pLower);
+        const matchesCategory = product.category.toLowerCase().includes(pLower);
+        if (!matchesCarrier && !matchesName && !matchesCategory) {
+          return false;
+        }
       }
 
       // Search query
@@ -115,7 +159,7 @@ export const StoreView: React.FC<StoreViewProps> = ({
       // 'recommended'
       return 0;
     });
-  }, [selectedCategory, searchQuery, sortBy]);
+  }, [selectedCategory, selectedPartner, searchQuery, sortBy]);
 
   return (
     <div className="space-y-8">
@@ -342,6 +386,97 @@ export const StoreView: React.FC<StoreViewProps> = ({
         </div>
       </div>
 
+      {/* Switch.com Optical Fiber & Teleport Colocation Hub Banner */}
+      <div className="bg-gradient-to-r from-emerald-950/70 via-slate-900/90 to-teal-950/70 border border-emerald-500/40 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl shadow-emerald-950/30">
+        <div className="flex items-start gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5 shadow-lg shadow-emerald-500/20">
+            <Server className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/40 uppercase tracking-wide">
+                www.switch.com Optical &amp; Teleport Wholesale
+              </span>
+              <span className="text-slate-400 font-mono text-xs">
+                400G Coherent Waves &bull; Unlit OS2 Dark Fiber &bull; Teleport Antenna Pads &bull; QKD Quantum Transport
+              </span>
+            </div>
+            <h3 className="text-base font-bold text-white mt-1">
+              Switch SUPERNAP Optical Fiber &amp; Earth Station Teleport Infrastructure
+            </h3>
+            <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              Procure and resell 100% green renewable powered optical infrastructure from <strong className="text-emerald-300 font-semibold">Switch (www.switch.com)</strong>. Deploy 400G DWDM coherent wavelengths, dedicated single-mode dark fiber pairs, and satellite dish pads with RF-over-Fiber conduits directly into Las Vegas, Tahoe Reno Citadel, Grand Rapids, and Atlanta Keep data centers.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 font-mono text-xs flex-wrap">
+          <button
+            onClick={() => {
+              setSelectedCategory('Switch.com Fiber Optical & Teleport');
+              setSelectedPartner('Switch.com');
+            }}
+            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/40 transition-colors cursor-pointer font-bold"
+          >
+            Filter Switch.com Products
+          </button>
+          <button
+            onClick={onOpenSwitchMeshModal}
+            className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition-all shadow-md shadow-emerald-500/25 flex items-center gap-1.5 cursor-pointer"
+          >
+            <Server className="w-4 h-4" />
+            <span>Switch Teleport &amp; 25 Leafs</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Qualcomm Snapdragon Satellite & 5G NTN Platform Banner */}
+      <div className="bg-gradient-to-r from-red-950/70 via-slate-900/90 to-amber-950/70 border border-red-500/40 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl shadow-red-950/30">
+        <div className="flex items-start gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-red-500/20 border border-red-500/50 flex items-center justify-center text-red-400 shrink-0 mt-0.5 shadow-lg shadow-red-500/20">
+            <Cpu className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 font-mono text-[10px] font-bold border border-red-500/40 uppercase tracking-wide">
+                Qualcomm Snapdragon NTN &bull; 3GPP Rel-17/18
+              </span>
+              <span className="text-slate-400 font-mono text-xs">
+                Snapdragon Satellite &bull; X80 5G Modem-RF &bull; 212S 10-Yr IoT Fleet &bull; Digital Chassis TCU
+              </span>
+            </div>
+            <h3 className="text-base font-bold text-white mt-1">
+              Snapdragon Qualcomm Direct-to-Device &amp; Industrial Satellite NTN
+            </h3>
+            <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              Procure certified <strong className="text-red-300 font-semibold">Qualcomm Snapdragon</strong> satellite hardware, developer kits, and IoT transceiver fleets. Bridges terrestrial 5G Advanced with non-terrestrial orbital networks, enabling two-way space messaging, emergency SOS, and automotive telematics with zero cellular deadzones.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 font-mono text-xs flex-wrap">
+          <button
+            onClick={() => {
+              setSelectedCategory('Snapdragon Qualcomm Satellite & 5G');
+              setSelectedPartner('Snapdragon Qualcomm');
+            }}
+            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-red-300 border border-red-500/40 transition-colors cursor-pointer font-bold"
+          >
+            Filter Snapdragon Products
+          </button>
+          <button
+            onClick={() => {
+              setSelectedCategory('Snapdragon Qualcomm Satellite & 5G');
+              setSelectedPartner('Snapdragon Qualcomm');
+            }}
+            className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-400 text-white font-bold transition-all shadow-md shadow-red-500/25 flex items-center gap-1.5 cursor-pointer"
+          >
+            <Radio className="w-4 h-4" />
+            <span>Explore 5G NTN Silicon</span>
+          </button>
+        </div>
+      </div>
+
       {/* Filter and Control Bar */}
       <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-4 space-y-4">
         {/* Search & Sort Row */}
@@ -396,35 +531,85 @@ export const StoreView: React.FC<StoreViewProps> = ({
         </div>
 
         {/* Category Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`whitespace-nowrap px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                selectedCategory === cat
-                  ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
-                  : 'bg-slate-950/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 border border-slate-800/80'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-[11px] text-slate-400">
+            <span className="font-semibold text-slate-300">Product Categories:</span>
+            {selectedCategory !== 'All' && (
+              <button
+                onClick={() => setSelectedCategory('All')}
+                className="text-sky-400 hover:underline"
+              >
+                Reset Category
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`whitespace-nowrap px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                  selectedCategory === cat
+                    ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-semibold'
+                    : 'bg-slate-950/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 border border-slate-800/80'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Partner & Carrier Filter Pills */}
+        <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
+          <div className="flex items-center justify-between text-[11px] text-slate-400">
+            <span className="font-semibold text-slate-300 flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5 text-emerald-400" />
+              Filter by Associated Satellite &amp; Carrier Partner:
+            </span>
+            {selectedPartner !== 'All Partners' && (
+              <button
+                onClick={() => setSelectedPartner('All Partners')}
+                className="text-emerald-400 hover:underline font-mono"
+              >
+                Reset Partner ({selectedPartner})
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            {partners.map((partner) => (
+              <button
+                key={partner}
+                onClick={() => setSelectedPartner(partner)}
+                className={`whitespace-nowrap px-2.5 py-1 rounded-lg text-[11px] font-mono transition-colors ${
+                  selectedPartner === partner
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold'
+                    : 'bg-slate-950 text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-slate-800'
+                }`}
+              >
+                {partner}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Results Count & Wholesale Transparency Indicator */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 text-xs text-slate-400">
         <div>
-          Showing <span className="text-white font-semibold font-mono">{filteredProducts.length}</span> wholesale products & service tiers
+          Showing <span className="text-white font-semibold font-mono">{filteredProducts.length}</span> wholesale products &amp; service tiers
           {selectedCategory !== 'All' && <span> in <span className="text-sky-300 font-medium">"{selectedCategory}"</span></span>}
+          {selectedPartner !== 'All Partners' && <span> for <span className="text-emerald-300 font-medium font-mono">[{selectedPartner}]</span></span>}
         </div>
-        <div className="flex items-center gap-4 text-[11px]">
+        <div className="flex items-center gap-4 text-[11px] flex-wrap">
           <span className="flex items-center gap-1 text-sky-400">
             <Sparkles className="w-3 h-3" /> DrFun1 wholesale provides direct reseller margin
           </span>
           <span className="flex items-center gap-1 text-emerald-400">
-            <CheckCircle2 className="w-3 h-3" /> Switch & UnrealIRCd pre-provisioned
+            <CheckCircle2 className="w-3 h-3" /> Switch &amp; UnrealIRCd pre-provisioned
+          </span>
+          <span className="flex items-center gap-1 text-red-400">
+            <Cpu className="w-3 h-3" /> Snapdragon NTN certified
           </span>
         </div>
       </div>

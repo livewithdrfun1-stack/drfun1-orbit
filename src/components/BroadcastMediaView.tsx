@@ -46,8 +46,11 @@ import {
   Flame,
   Building2,
   Network,
-  Video
+  Video,
+  MessageSquare
 } from 'lucide-react';
+import { AnopeRankLevel } from '../types/ircdAdmin';
+import { MultistreamIrcChatRoom } from './MultistreamIrcChatRoom';
 
 interface BroadcastMediaViewProps {
   onOpenStore?: () => void;
@@ -56,6 +59,8 @@ interface BroadcastMediaViewProps {
   onOpenSwitchMesh?: () => void;
   onOpenMpd?: () => void;
   onOpenDuplicator?: () => void;
+  activeRank?: AnopeRankLevel;
+  onOpenIrcdAdmin?: () => void;
 }
 
 export const BroadcastMediaView: React.FC<BroadcastMediaViewProps> = ({
@@ -65,6 +70,8 @@ export const BroadcastMediaView: React.FC<BroadcastMediaViewProps> = ({
   onOpenSwitchMesh,
   onOpenMpd,
   onOpenDuplicator,
+  activeRank = 'op',
+  onOpenIrcdAdmin,
 }) => {
   const [selectedChannelId, setSelectedChannelId] = useState<string>(DRFUN1_BROADCAST_CHANNELS[0].id);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
@@ -73,7 +80,9 @@ export const BroadcastMediaView: React.FC<BroadcastMediaViewProps> = ({
   const [mediaFilter, setMediaFilter] = useState<'all' | BroadcastMediaType>('all');
   const [bandFilter, setBandFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'player' | 'guide' | 'spec'>('player');
+  const [activeTab, setActiveTab] = useState<'player' | 'guide' | 'spec' | 'irc_chat'>('player');
+  const [showIrcOverlay, setShowIrcOverlay] = useState<boolean>(true);
+  const [showDockedChat, setShowDockedChat] = useState<boolean>(true);
   const [copiedLink, setCopiedLink] = useState(false);
   const [showWittLawModal, setShowWittLawModal] = useState<boolean>(false);
   const [isSyncingWithWittLaw, setIsSyncingWithWittLaw] = useState<boolean>(false);
@@ -801,6 +810,14 @@ export const BroadcastMediaView: React.FC<BroadcastMediaViewProps> = ({
                   </span>
                 </div>
               )}
+              {/* Multistream IRC Chat Room Overlay directly on BroadCast Video */}
+              {showIrcOverlay && (
+                <MultistreamIrcChatRoom
+                  variant="overlay"
+                  activeRank={activeRank}
+                  defaultChannel={selectedChannel.unrealIrcChannel || '#drfun1-media'}
+                />
+              )}
             </div>
 
             {/* Live Master Control Bar */}
@@ -830,12 +847,12 @@ export const BroadcastMediaView: React.FC<BroadcastMediaViewProps> = ({
                 </div>
               </div>
 
-              {/* Volume & Audio Controls */}
-              <div className="flex items-center gap-4">
+              {/* Volume & Audio Controls & Multistream IRC Toggles */}
+              <div className="flex items-center flex-wrap gap-2 sm:gap-3">
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setIsMuted(!isMuted)}
-                    className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors"
+                    className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
                   >
                     {isMuted || volume === 0 ? (
                       <VolumeX className="w-4 h-4 text-red-400" />
@@ -852,16 +869,45 @@ export const BroadcastMediaView: React.FC<BroadcastMediaViewProps> = ({
                       setVolume(parseInt(e.target.value, 10));
                       if (isMuted) setIsMuted(false);
                     }}
-                    className="w-20 sm:w-24 accent-purple-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                    className="w-16 sm:w-20 accent-purple-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
                   />
-                  <span className="font-mono text-[10px] text-slate-400 w-7">
+                  <span className="font-mono text-[10px] text-slate-400 w-6">
                     {isMuted ? '0%' : `${volume}%`}
                   </span>
                 </div>
 
+                {/* On-Screen Video Chat Overlay Button */}
+                <button
+                  onClick={() => setShowIrcOverlay(!showIrcOverlay)}
+                  className={`px-2.5 py-1.5 text-xs font-mono rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer border ${
+                    showIrcOverlay
+                      ? 'bg-purple-600/30 text-purple-200 border-purple-500/50'
+                      : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border-slate-700'
+                  }`}
+                  title="Toggle on-screen IRC chat room overlay over BroadCast video"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Overlay: {showIrcOverlay ? 'ON' : 'OFF'}</span>
+                </button>
+
+                {/* Docked Multistream Chat Toggle Button */}
+                <button
+                  onClick={() => setShowDockedChat(!showDockedChat)}
+                  className={`px-2.5 py-1.5 text-xs font-mono rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer border ${
+                    showDockedChat
+                      ? 'bg-emerald-600/30 text-emerald-200 border-emerald-500/50 font-bold'
+                      : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border-slate-700'
+                  }`}
+                  title="Toggle Multistream IRC Chat Room panel below player"
+                >
+                  <Radio className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="hidden sm:inline">Multistream IRC</span>
+                  <span className="sm:hidden">IRC</span>
+                </button>
+
                 <button
                   onClick={() => handleCopyStream(selectedChannel.streamUrl)}
-                  className="px-2.5 py-1.5 text-xs font-mono bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-lg transition-colors flex items-center gap-1.5"
+                  className="px-2.5 py-1.5 text-xs font-mono bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                   title="Copy Stream URL"
                 >
                   {copiedLink ? (
@@ -880,10 +926,25 @@ export const BroadcastMediaView: React.FC<BroadcastMediaViewProps> = ({
             </div>
           </div>
 
+          {/* Dockable Multistream IRC Chat Room on BroadCast */}
+          {showDockedChat && (
+            <div className="animate-fadeIn">
+              <MultistreamIrcChatRoom
+                variant="full"
+                activeRank={activeRank}
+                onOpenAdminPanel={onOpenIrcdAdmin}
+                onOpenIrcClient={onOpenIrc}
+                defaultChannel={selectedChannel.unrealIrcChannel || '#drfun1-media'}
+                isOverlayVisible={showIrcOverlay}
+                onToggleOverlay={setShowIrcOverlay}
+              />
+            </div>
+          )}
+
           {/* Channel Detail & Technical Spec Tabs */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => setActiveTab('player')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-colors font-semibold ${
@@ -893,6 +954,18 @@ export const BroadcastMediaView: React.FC<BroadcastMediaViewProps> = ({
                   }`}
                 >
                   Channel Overview
+                </button>
+                <button
+                  onClick={() => setActiveTab('irc_chat')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-colors font-semibold flex items-center gap-1.5 ${
+                    activeTab === 'irc_chat'
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-purple-300" />
+                  <span>Multistream IRC Room</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 </button>
                 <button
                   onClick={() => setActiveTab('spec')}
@@ -1013,6 +1086,21 @@ export const BroadcastMediaView: React.FC<BroadcastMediaViewProps> = ({
                     <span className="text-emerald-300 truncate block text-[11px]">{selectedChannel.rtmpUplinkUrl}</span>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Tab: Multistream Combined IRC Chat Room */}
+            {activeTab === 'irc_chat' && (
+              <div className="space-y-4">
+                <MultistreamIrcChatRoom
+                  variant="full"
+                  activeRank={activeRank}
+                  onOpenAdminPanel={onOpenIrcdAdmin}
+                  onOpenIrcClient={onOpenIrc}
+                  defaultChannel={selectedChannel.unrealIrcChannel || '#drfun1-media'}
+                  isOverlayVisible={showIrcOverlay}
+                  onToggleOverlay={setShowIrcOverlay}
+                />
               </div>
             )}
 

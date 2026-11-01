@@ -18,6 +18,8 @@ import {
 } from '../data/streamData';
 import { STORE_PRODUCTS } from '../data/storeProducts';
 import { StoreProduct } from '../types/store';
+import { AnopeRankLevel } from '../types/ircdAdmin';
+import { MultistreamIrcChatRoom } from './MultistreamIrcChatRoom';
 import { EcomTransmissionOverlay } from './stream/EcomTransmissionOverlay';
 import { RtmpTvHostPanel } from './stream/RtmpTvHostPanel';
 import { TvuNetworksCdnClonePanel } from './stream/TvuNetworksCdnClonePanel';
@@ -65,6 +67,8 @@ interface RestreamStudioViewProps {
   onNavigateToStore?: () => void;
   onNavigateToIrc?: () => void;
   onAddToCart?: (product: StoreProduct, isDrfun1: boolean) => void;
+  activeRank?: AnopeRankLevel;
+  onOpenAdminPanel?: () => void;
 }
 
 type VideoSourceType = 'webcam' | 'switch_teleport' | 'launch_feed' | 'orbit_telemetry' | 's_band_radio' | 'optical_laser' | 'color_bars';
@@ -75,6 +79,8 @@ export const RestreamStudioView: React.FC<RestreamStudioViewProps> = ({
   onNavigateToStore,
   onNavigateToIrc,
   onAddToCart,
+  activeRank = 'op',
+  onOpenAdminPanel,
 }) => {
   // Broadcaster State
   const [isBroadcasting, setIsBroadcasting] = useState<boolean>(true);
@@ -83,6 +89,7 @@ export const RestreamStudioView: React.FC<RestreamStudioViewProps> = ({
   const [isMicOn, setIsMicOn] = useState<boolean>(true);
   const [isVideoOn, setIsVideoOn] = useState<boolean>(true);
   const [isScreenSharing, setIsScreenSharing] = useState<boolean>(false);
+  const [isIrcOverlayOnVideo, setIsIrcOverlayOnVideo] = useState<boolean>(true);
   const [selectedOverlayId, setSelectedOverlayId] = useState<string>('ov_license');
   const [activeTab, setActiveTab] = useState<'destinations' | 'ecom_transmission' | 'tv_host' | 'tvu_cloud_cdn' | 'chat' | 'rtmp_setup'>('destinations');
 
@@ -506,6 +513,15 @@ export const RestreamStudioView: React.FC<RestreamStudioViewProps> = ({
                   )}
                 </div>
               </div>
+
+              {/* On-Screen Live IRC Multistream Chat Room Overlay displayed directly on BroadCast */}
+              {isIrcOverlayOnVideo && (
+                <MultistreamIrcChatRoom
+                  variant="overlay"
+                  activeRank={activeRank}
+                  defaultChannel="#drfun1-media"
+                />
+              )}
             </div>
           </div>
 
@@ -522,7 +538,7 @@ export const RestreamStudioView: React.FC<RestreamStudioViewProps> = ({
                     : 'bg-red-500/20 text-red-300 border border-red-500/40'
                 }`}
               >
-                {isMicOn ? <Mic className="w-4 h-4 text-emerald-400" /> : <MicOff className="w-4 h-4" />}
+                {isMicOn ? <Mic className="w-4 h-4 text-emerald-400" /> : <MicOff className="w-4 h-4 text-slate-500" />}
                 <span className="hidden sm:inline">{isMicOn ? 'Mic On' : 'Muted'}</span>
               </button>
 
@@ -567,6 +583,20 @@ export const RestreamStudioView: React.FC<RestreamStudioViewProps> = ({
               >
                 <Monitor className="w-4 h-4" />
                 <span className="hidden sm:inline">Screen Share</span>
+              </button>
+
+              {/* Toggle IRC on BroadCast Video */}
+              <button
+                onClick={() => setIsIrcOverlayOnVideo(!isIrcOverlayOnVideo)}
+                className={`p-2.5 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-medium cursor-pointer ${
+                  isIrcOverlayOnVideo
+                    ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50 shadow-sm'
+                    : 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700'
+                }`}
+                title="Display live IRC chat room directly on BroadCast video surface"
+              >
+                <MessageSquare className="w-4 h-4 text-purple-400" />
+                <span className="hidden sm:inline">IRC on BroadCast: {isIrcOverlayOnVideo ? 'ON' : 'OFF'}</span>
               </button>
             </div>
 
@@ -923,76 +953,18 @@ export const RestreamStudioView: React.FC<RestreamStudioViewProps> = ({
             />
           )}
 
-          {/* Tab 5: Consolidated Multi-Chat */}
+          {/* Tab 5: Multistream Combined IRC Chat Room */}
           {activeTab === 'chat' && (
-            <div className="p-4 flex flex-col flex-1 h-[530px]">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <MessageSquare className="w-3.5 h-3.5 text-sky-400" />
-                  Consolidated Stream Chat
-                </span>
-                <span className="text-[10px] text-emerald-400 font-mono">
-                  ● 5 platforms aggregated
-                </span>
-              </div>
-
-              {/* Chat Message List */}
-              <div className="flex-1 overflow-y-auto space-y-3 pr-1 bg-slate-950 p-3 rounded-lg border border-slate-800">
-                {chatMessages.map(msg => (
-                  <div key={msg.id} className="text-xs leading-relaxed">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className={`text-[10px] px-1 py-0.2 rounded font-mono font-bold text-white ${
-                        msg.platform === 'facebook'
-                          ? 'bg-blue-600'
-                          : msg.platform === 'youtube'
-                          ? 'bg-red-600'
-                          : msg.platform === 'twitch'
-                          ? 'bg-purple-600'
-                          : msg.platform === 'x'
-                          ? 'bg-slate-700'
-                          : msg.platform === 'unreal_irc'
-                          ? 'bg-fuchsia-700'
-                          : 'bg-emerald-600'
-                      }`}>
-                        {msg.platform === 'facebook' && 'Facebook'}
-                        {msg.platform === 'youtube' && 'YouTube'}
-                        {msg.platform === 'twitch' && 'Twitch'}
-                        {msg.platform === 'x' && 'X'}
-                        {msg.platform === 'unreal_irc' && 'IRC'}
-                        {msg.platform === 'switch_noc' && 'Switch NOC'}
-                      </span>
-
-                      <span className="font-semibold text-slate-200">{msg.sender}</span>
-                      {msg.badge && (
-                        <span className="text-[9px] px-1 rounded bg-amber-400/20 text-amber-300 font-mono">
-                          {msg.badge}
-                        </span>
-                      )}
-                      <span className="text-[10px] text-slate-500 ml-auto">{msg.timestamp}</span>
-                    </div>
-                    <p className="text-slate-300 mt-1 pl-1 text-[12px]">{msg.message}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Send Message to All Destinations */}
-              <form onSubmit={handleSendMessage} className="mt-3 flex gap-2">
-                <input
-                  type="text"
-                  value={newMessageText}
-                  onChange={e => setNewMessageText(e.target.value)}
-                  placeholder="Send broadcast message to all chatrooms..."
-                  className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
-                />
-                <button
-                  type="submit"
-                  disabled={!newMessageText.trim()}
-                  className="px-3 py-2 bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-slate-950 font-bold rounded-lg text-xs transition-colors flex items-center gap-1"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Send</span>
-                </button>
-              </form>
+            <div className="p-3 flex flex-col flex-1">
+              <MultistreamIrcChatRoom
+                variant="full"
+                activeRank={activeRank}
+                onOpenAdminPanel={onOpenAdminPanel}
+                onOpenIrcClient={onNavigateToIrc}
+                defaultChannel="#drfun1-media"
+                isOverlayVisible={isIrcOverlayOnVideo}
+                onToggleOverlay={setIsIrcOverlayOnVideo}
+              />
             </div>
           )}
 

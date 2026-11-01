@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MpdBotInstance, MpdTrack } from '../types/mpdBot';
 import { GITHUB_MPD_REPO } from '../data/mpdBotData';
+import { AnopeRankLevel } from '../types/ircdAdmin';
+import { ANOPE_RANKS } from '../data/ircdAdminData';
 import { 
   Disc, 
   Play, 
@@ -24,7 +26,11 @@ import {
   Zap,
   Layers,
   ArrowRight,
-  Shuffle
+  Shuffle,
+  ShieldCheck,
+  Lock,
+  Unlock,
+  AlertTriangle
 } from 'lucide-react';
 
 interface MpdDjControlPanelProps {
@@ -34,6 +40,9 @@ interface MpdDjControlPanelProps {
   onOpenIrc?: () => void;
   onOpenBroadcast?: () => void;
   onOpenDuplicator?: () => void;
+  activeRank?: AnopeRankLevel;
+  onRankChange?: (rank: AnopeRankLevel) => void;
+  onOpenAdminPanel?: () => void;
 }
 
 interface DjDeckState {
@@ -62,6 +71,9 @@ export const MpdDjControlPanel: React.FC<MpdDjControlPanelProps> = ({
   onOpenIrc,
   onOpenBroadcast,
   onOpenDuplicator,
+  activeRank = 'op',
+  onRankChange,
+  onOpenAdminPanel,
 }) => {
   // DJ Identity and Broadcast Status
   const [djHandle, setDjHandle] = useState<string>('DJ Orbit Nova');
@@ -72,6 +84,18 @@ export const MpdDjControlPanel: React.FC<MpdDjControlPanelProps> = ({
     '🔥 "Locked in on irc.drfun1.com with DJ Orbit Nova dropping pure vinyl heat!"',
     '🔊 "Duplicating this mix across #deathrow-records, #all-music & #drfun1-media!"',
   ]);
+  const [permissionNotice, setPermissionNotice] = useState<string | null>(null);
+
+  // Compute Anope Oper status
+  const currentRankDef = ANOPE_RANKS.find(r => r.id === activeRank) || ANOPE_RANKS[0];
+  const isOpsAndAbove = ['op', 'sop', 'founder', 'so', 'admin', 'sra'].includes(activeRank);
+
+  const requireOps = (actionName: string): boolean => {
+    if (isOpsAndAbove) return true;
+    setPermissionNotice(`Action '${actionName}' locked: Channel Operator (@ / +o, Level 500+) or Anope Admin required.`);
+    setTimeout(() => setPermissionNotice(null), 5000);
+    return false;
+  };
 
   // Crossfader: 0 (100% Deck A) to 100 (100% Deck B), 50 is center
   const [crossfader, setCrossfader] = useState<number>(50);
@@ -458,10 +482,32 @@ export const MpdDjControlPanel: React.FC<MpdDjControlPanelProps> = ({
             </div>
           </div>
 
-          {/* Quick Actions & Status */}
+          {/* Quick Actions, Rank Indicator & Status */}
           <div className="flex items-center flex-wrap gap-2 font-mono text-xs">
+            {/* Anope Oper Rank Badge */}
+            <div className={`px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 text-xs font-mono font-bold ${
+              isOpsAndAbove 
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+                : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+            }`}>
+              {isOpsAndAbove ? (
+                <>
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>DJ Rank: {currentRankDef.prefix || ''}{currentRankDef.name.split(' (')[0]} (Lvl {currentRankDef.accessLevel})</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Rank: {currentRankDef.name.split(' (')[0]} (Deck Locked)</span>
+                </>
+              )}
+            </div>
+
             <button
-              onClick={() => setIsMicTalkover(!isMicTalkover)}
+              onClick={() => {
+                if (!requireOps('Microphone Talkover (-12dB Duck)')) return;
+                setIsMicTalkover(!isMicTalkover);
+              }}
               className={`px-3 py-2 rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer font-bold ${
                 isMicTalkover
                   ? 'bg-rose-600 text-white border-rose-400 shadow-md shadow-rose-600/30'
@@ -473,7 +519,10 @@ export const MpdDjControlPanel: React.FC<MpdDjControlPanelProps> = ({
             </button>
 
             <button
-              onClick={() => setIsOnAir(!isOnAir)}
+              onClick={() => {
+                if (!requireOps('Go Live / Takeover Mount')) return;
+                setIsOnAir(!isOnAir);
+              }}
               className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer ${
                 isOnAir
                   ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-950'
@@ -483,13 +532,24 @@ export const MpdDjControlPanel: React.FC<MpdDjControlPanelProps> = ({
               {isOnAir ? 'MUTE ON-AIR' : 'GO LIVE ON-AIR'}
             </button>
 
+            {onOpenAdminPanel && (
+              <button
+                onClick={onOpenAdminPanel}
+                className="px-3 py-2 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 transition-colors flex items-center gap-1.5 cursor-pointer font-bold"
+                title="Configure UnrealIRCd and Anope Ranks"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
+                <span>IRCD &amp; Anope Admin</span>
+              </button>
+            )}
+
             {onOpenIrc && (
               <button
                 onClick={onOpenIrc}
-                className="px-3 py-2 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                <Terminal className="w-3.5 h-3.5" />
-                <span>Open IRC Console</span>
+                <Terminal className="w-3.5 h-3.5 text-slate-400" />
+                <span>IRC Console</span>
               </button>
             )}
 
@@ -499,11 +559,62 @@ export const MpdDjControlPanel: React.FC<MpdDjControlPanelProps> = ({
                 className="px-3 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 <Share2 className="w-3.5 h-3.5 text-sky-400" />
-                <span>IRC Duplicator Mesh</span>
+                <span>IRC Duplicator</span>
               </button>
             )}
           </div>
         </div>
+
+        {/* Temporary Permission Gating Alert */}
+        {permissionNotice && (
+          <div className="bg-red-950/80 border border-red-500/50 rounded-xl px-4 py-2.5 flex items-center justify-between text-xs text-red-200 font-mono animate-fadeIn">
+            <span className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+              {permissionNotice}
+            </span>
+            {onRankChange && (
+              <button
+                onClick={() => {
+                  onRankChange('op');
+                  setPermissionNotice(null);
+                }}
+                className="px-2.5 py-1 rounded bg-red-600 hover:bg-red-500 text-white font-bold text-xs shrink-0 cursor-pointer"
+              >
+                Promote to Channel Op (@)
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Persistent Non-Op Notice Banner */}
+        {!isOpsAndAbove && (
+          <div className="bg-amber-950/70 border border-amber-500/40 rounded-xl px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-200">
+            <div className="flex items-center gap-2">
+              <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>
+                <strong>DJ Deck Restricted:</strong> Currently testing as <strong>{currentRankDef.name}</strong>. On-air live broadcasting, microphone talkover ducking, and dual-deck crossfade control require <strong>Ops and Above</strong> (Channel Operator @ / +o, Level 500+).
+              </span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {onRankChange && (
+                <button
+                  onClick={() => onRankChange('op')}
+                  className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs cursor-pointer shadow-md"
+                >
+                  Elevate to Channel Op (@)
+                </button>
+              )}
+              {onOpenAdminPanel && (
+                <button
+                  onClick={onOpenAdminPanel}
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 text-xs font-mono cursor-pointer"
+                >
+                  Manage Ranks
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* DJ Shoutout Bar directly linked to mpd_irc_bot */}
         <form onSubmit={handleSendShoutout} className="flex items-center gap-2 pt-2 border-t border-purple-500/20">
@@ -972,6 +1083,7 @@ export const MpdDjControlPanel: React.FC<MpdDjControlPanelProps> = ({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => {
+                      if (!requireOps('Load Crate Track to Deck A')) return;
                       setDeckA(prev => ({ ...prev, track: req, elapsedSeconds: 0 }));
                     }}
                     className="px-2.5 py-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-[10px] font-bold cursor-pointer"
@@ -980,6 +1092,7 @@ export const MpdDjControlPanel: React.FC<MpdDjControlPanelProps> = ({
                   </button>
                   <button
                     onClick={() => {
+                      if (!requireOps('Load Crate Track to Deck B')) return;
                       setDeckB(prev => ({ ...prev, track: req, elapsedSeconds: 0 }));
                     }}
                     className="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-[10px] font-bold cursor-pointer"
