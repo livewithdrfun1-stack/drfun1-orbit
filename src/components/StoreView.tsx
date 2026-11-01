@@ -784,6 +784,7 @@ export const StoreView: React.FC<StoreViewProps> = ({
       <HostingResellerProgramModal
         isOpen={isHostingResellerModalOpen}
         onClose={() => setIsHostingResellerModalOpen(false)}
+        onOpenLegalCenter={onOpenLicenseModal}
         onSelectProductForOrder={(id) => {
           const product = STORE_PRODUCTS.find((p) => p.id === id);
           if (product) {

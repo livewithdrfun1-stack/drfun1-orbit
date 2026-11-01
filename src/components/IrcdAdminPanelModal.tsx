@@ -57,7 +57,8 @@ import {
   Sliders,
   ExternalLink,
   ChevronRight,
-  Info
+  Info,
+  Scale
 } from 'lucide-react';
 
 interface IrcdAdminPanelModalProps {
@@ -80,7 +81,7 @@ export const IrcdAdminPanelModal: React.FC<IrcdAdminPanelModalProps> = ({
   if (!isOpen) return null;
 
   // Active top-level tab
-  const [activeTab, setActiveTab] = useState<'ircd_options' | 'anope_services' | 'ops_control' | 'dj_matrix'>('ircd_options');
+  const [activeTab, setActiveTab] = useState<'ircd_options' | 'anope_services' | 'ops_control' | 'dj_matrix' | 'wittlaw_governance'>('ircd_options');
 
   // Sub-tabs
   const [anopeSubTab, setAnopeSubTab] = useState<'ranks' | 'chanserv' | 'nickserv' | 'operserv' | 'botserv' | 'hostserv'>('ranks');
@@ -541,6 +542,21 @@ ${unrealConfig.linkBlocks.map(lk => `link ${lk.name} {
             <span>MPD Bot DJ Rank Matrix</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold">
               Ops Tier
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('wittlaw_governance')}
+            className={`py-3 px-4 text-xs font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === 'wittlaw_governance'
+                ? 'border-red-500 text-red-400 bg-red-500/10 font-semibold'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+            }`}
+          >
+            <Scale className="w-4 h-4 text-red-400" />
+            <span>Witt Law Firm NetAdmin Authority</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-red-500/20 text-red-300 font-bold">
+              ~ Owner / www.wittlawfirm.com
             </span>
           </button>
         </div>
@@ -1948,6 +1964,295 @@ ${unrealConfig.linkBlocks.map(lk => `link ${lk.name} {
                       <span>Promote to Op (@) to Broadcast</span>
                     </button>
                   )}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* ========================================================
+            TAB 5: WITT LAW FIRM NETADMIN AUTHORITY & LEGAL GOVERNANCE
+            ======================================================== */}
+        {activeTab === 'wittlaw_governance' && (
+          <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 text-xs text-slate-300">
+            {/* Header Banner */}
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-red-950/70 via-slate-900 to-purple-950/50 border border-red-500/40 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-red-500/20 border border-red-500/50 flex items-center justify-center text-red-400 shrink-0">
+                    <Scale className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-bold text-white tracking-tight">
+                        IRCD Oper &amp; NetAdmin Authority Charter
+                      </h3>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-red-500/20 text-red-300 border border-red-500/40 font-bold">
+                        Established via www.wittlawfirm.com
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 font-mono mt-0.5">
+                      The Law Office of Richard A. Witt LLC &bull; Richard Alan Witt, Network Owner &bull; Owens Company
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <a
+                    href="https://www.wittlawfirm.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-1.5 px-3 rounded-lg bg-red-950/80 hover:bg-red-900 border border-red-500/50 text-red-300 font-mono text-xs flex items-center gap-1.5 font-semibold transition-colors"
+                  >
+                    <span>wittlawfirm.com</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-300 mt-3 leading-relaxed">
+                All operator privileges, administrative classes, UnrealIRCd TLS 1.3 cryptographic bindings, and Anope services permissions on <strong className="text-white">irc.drfun1.com</strong> are legally certified and governed by <strong className="text-white">The Law Office of Richard A. Witt LLC</strong>. Operating authority is established under exclusive license to <strong className="text-white">Richard Alan Witt</strong>, including designated NetAdmins, Chief IRCOps, and certified Station DJ Operators.
+              </p>
+            </div>
+
+            {/* Quick Sanctioned Oper Roster Switcher */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-red-400" />
+                  <span>Sanctioned Oper Roster Established by www.wittlawfirm.com</span>
+                </h4>
+                <span className="text-[11px] font-mono text-slate-500">Click to assume administrative identity</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* 1. Richard Alan Witt */}
+                <div className={`p-4 rounded-xl border transition-all ${
+                  activeRank === 'sra'
+                    ? 'bg-red-950/40 border-red-500/60 shadow-lg shadow-red-950/30'
+                    : 'bg-slate-950/70 border-slate-800 hover:border-slate-700'
+                }`}>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div>
+                      <span className="text-[10px] font-mono font-bold uppercase text-red-400 block">
+                        Network Owner &bull; Level 10000
+                      </span>
+                      <h5 className="text-sm font-bold text-white flex items-center gap-1.5">
+                        <Crown className="w-4 h-4 text-amber-400" />
+                        <span>~ RichardAlanWitt</span>
+                      </h5>
+                    </div>
+                    {activeRank === 'sra' && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-snug mb-3">
+                    Managing Counsel at Witt Law Firm. Supreme network root, Switch SUPERNAP datacenter teleport vault link authority, and ultimate Anope OperServ key.
+                  </p>
+                  <button
+                    onClick={() => {
+                      onRankChange('sra');
+                      handleExecuteCommand('/WALLOPS Administrative session authenticated: RichardAlanWitt (Network Owner via www.wittlawfirm.com)');
+                      triggerNotice('Authenticated as Network Owner & Chief NetAdmin (~ Richard Alan Witt)');
+                    }}
+                    className="w-full py-1.5 px-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-mono text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-red-950/30"
+                  >
+                    <Key className="w-3.5 h-3.5" />
+                    <span>Assume Richard Alan Witt (NetAdmin)</span>
+                  </button>
+                </div>
+
+                {/* 2. DrFun1_Admin */}
+                <div className={`p-4 rounded-xl border transition-all ${
+                  activeRank === 'admin'
+                    ? 'bg-amber-950/40 border-amber-500/60 shadow-lg shadow-amber-950/30'
+                    : 'bg-slate-950/70 border-slate-800 hover:border-slate-700'
+                }`}>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div>
+                      <span className="text-[10px] font-mono font-bold uppercase text-amber-400 block">
+                        Services Root &bull; Level 5000
+                      </span>
+                      <h5 className="text-sm font-bold text-white flex items-center gap-1.5">
+                        <ShieldAlert className="w-4 h-4 text-amber-400" />
+                        <span>* DrFun1_Admin</span>
+                      </h5>
+                    </div>
+                    {activeRank === 'admin' && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-snug mb-3">
+                    Technical NetAdmin. Holds global GLINE, ZLINE, server DIE/RESTART override, BotServ provisioning, and BGP clean-pipe routing control.
+                  </p>
+                  <button
+                    onClick={() => {
+                      onRankChange('admin');
+                      handleExecuteCommand('/WALLOPS Administrative session authenticated: DrFun1_Admin (Services Admin)');
+                      triggerNotice('Authenticated as Services Admin (* DrFun1_Admin)');
+                    }}
+                    className="w-full py-1.5 px-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-slate-950 font-mono text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-amber-950/30"
+                  >
+                    <Key className="w-3.5 h-3.5" />
+                    <span>Assume DrFun1_Admin (Services Root)</span>
+                  </button>
+                </div>
+
+                {/* 3. Global IRCOp */}
+                <div className={`p-4 rounded-xl border transition-all ${
+                  activeRank === 'so'
+                    ? 'bg-purple-950/40 border-purple-500/60 shadow-lg shadow-purple-950/30'
+                    : 'bg-slate-950/70 border-slate-800 hover:border-slate-700'
+                }`}>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div>
+                      <span className="text-[10px] font-mono font-bold uppercase text-purple-400 block">
+                        Global IRCOp &bull; Level 2000
+                      </span>
+                      <h5 className="text-sm font-bold text-white flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-purple-400" />
+                        <span>@ DrFun1_Tech</span>
+                      </h5>
+                    </div>
+                    {activeRank === 'so' && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-snug mb-3">
+                    Core infrastructure operator. Network-wide moderation, channel takeover mitigation, satellite telemetry link maintenance, and station DJ overrides.
+                  </p>
+                  <button
+                    onClick={() => {
+                      onRankChange('so');
+                      handleExecuteCommand('/WALLOPS Oper session authenticated: DrFun1_Tech (Global IRCOp)');
+                      triggerNotice('Authenticated as Global IRCOp (@ DrFun1_Tech)');
+                    }}
+                    className="w-full py-1.5 px-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-purple-950/30"
+                  >
+                    <Key className="w-3.5 h-3.5" />
+                    <span>Assume Global IRCOp (@ DrFun1_Tech)</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Live NetAdmin Directives & Control Panel */}
+            <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Terminal className="w-4 h-4 text-emerald-400" />
+                  <span>Witt Law Firm NetAdmin Action Matrix</span>
+                </h4>
+                <span className="text-[10px] font-mono bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-slate-400">
+                  Target Hub: irc.drfun1.com:6697 (SID 001)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 font-mono text-xs">
+                <button
+                  onClick={() => {
+                    handleExecuteCommand('/REHASH');
+                    triggerNotice('Executed: /REHASH under Witt Law Firm NetAdmin authority');
+                  }}
+                  className="p-2.5 rounded-lg bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-sky-500 text-slate-200 transition-colors text-left"
+                >
+                  <span className="font-bold text-sky-400 block text-[11px]">/REHASH</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">Reload unrealircd.conf</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    handleExecuteCommand('/REHASH -TLS');
+                    triggerNotice('Executed: /REHASH -TLS certificates reloaded');
+                  }}
+                  className="p-2.5 rounded-lg bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-emerald-500 text-slate-200 transition-colors text-left"
+                >
+                  <span className="font-bold text-emerald-400 block text-[11px]">/REHASH -TLS</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">Hot-reload TLS keys</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    handleExecuteCommand('/WALLOPS Official Directive: Network operating under Witt Law Firm (www.wittlawfirm.com) legal governance.');
+                    triggerNotice('WALLOPS broadcast sent to all servers and opers');
+                  }}
+                  className="p-2.5 rounded-lg bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-amber-500 text-slate-200 transition-colors text-left"
+                >
+                  <span className="font-bold text-amber-400 block text-[11px]">/WALLOPS</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">Broadcast Legal Directive</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    handleExecuteCommand('/STATS u');
+                    triggerNotice('Queried: Server uptime and connected leaf nodes');
+                  }}
+                  className="p-2.5 rounded-lg bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-purple-500 text-slate-200 transition-colors text-left"
+                >
+                  <span className="font-bold text-purple-400 block text-[11px]">/STATS U</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">Uptime &amp; Leaf Sync</span>
+                </button>
+              </div>
+
+              {/* Certified Oper Block Code Display */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono uppercase text-slate-400 font-bold">
+                    Official unrealircd.conf Oper Block (Witt Law Firm Certified):
+                  </span>
+                  <button
+                    onClick={() => {
+                      const code = `/* Official Oper Block certified by The Law Office of Richard A. Witt LLC */
+oper RichardAlanWitt {
+    class netadmin;
+    mask "*@*";
+    password "$2y$12$WittLawFirmEscrowCert2026NetAdminHash";
+    swhois "is Network Owner, Chief NetAdmin & Managing Counsel (www.wittlawfirm.com)";
+    vhost "founder.wittlawfirm.com";
+    snomask "+cksdjnbevf";
+    flags {
+        local;
+        global;
+        netadmin;
+        services-admin;
+        coadmin;
+        admin;
+        can_rehash;
+        can_die;
+        can_restart;
+        can_kline;
+        can_gline;
+        can_zline;
+    };
+};`;
+                      navigator.clipboard.writeText(code);
+                      triggerNotice('RichardAlanWitt oper block copied to clipboard!');
+                    }}
+                    className="text-[10px] font-mono text-sky-400 hover:underline flex items-center gap-1"
+                  >
+                    <Copy className="w-3 h-3" />
+                    <span>Copy Oper Block</span>
+                  </button>
+                </div>
+
+                <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 font-mono text-[11px] text-slate-300 whitespace-pre-wrap select-text">
+{`/* Official Oper Block certified by The Law Office of Richard A. Witt LLC */
+oper RichardAlanWitt {
+    class netadmin;
+    mask "*@*";
+    password "$2y$12$WittLawFirmEscrowCert2026NetAdminHash";
+    swhois "is Network Owner, Chief NetAdmin & Managing Counsel (www.wittlawfirm.com)";
+    vhost "founder.wittlawfirm.com";
+    snomask "+cksdjnbevf";
+    flags { local; global; netadmin; services-admin; can_rehash; can_die; can_kline; can_gline; };
+};`}
                 </div>
               </div>
             </div>

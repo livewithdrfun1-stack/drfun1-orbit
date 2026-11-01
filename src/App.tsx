@@ -1082,6 +1082,7 @@ export default function App() {
       <HostingResellerProgramModal
         isOpen={isHostingResellerModalOpen}
         onClose={() => setIsHostingResellerModalOpen(false)}
+        onOpenLegalCenter={() => setIsLicenseModalOpen(true)}
         onSelectProductForOrder={(id) => {
           const product = STORE_PRODUCTS.find((p) => p.id === id);
           if (product) {

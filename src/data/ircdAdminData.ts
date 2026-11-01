@@ -19,11 +19,11 @@ import {
 export const ANOPE_RANKS: AnopeRankDefinition[] = [
   {
     id: 'sra',
-    name: 'Services Root Admin (SRA / NetAdmin)',
+    name: 'Network Owner & Chief NetAdmin (~ Richard Alan Witt / www.wittlawfirm.com)',
     prefix: '~',
     modes: '+q / +a / +o / +h / +v',
-    accessLevel: 9999,
-    description: 'Ultimate network authority. Full control over UnrealIRCd server processes, OperServ akills, ChanServ overrides, and unrestricted master DJ broadcast priority.',
+    accessLevel: 10000,
+    description: 'Supreme Network Authority established and certified by The Law Office of Richard A. Witt LLC (www.wittlawfirm.com). Full master control over all UnrealIRCd 6.1.4 server processes, 25 Switch SUPERNAP leaf nodes, OperServ akills, ChanServ overrides, and master DJ broadcast priority.',
     isOpsAndAbove: true,
     canOperateIrcd: true,
     canGoLiveDj: true,
@@ -368,10 +368,20 @@ export const INITIAL_UNREAL_CONFIG: UnrealIrcdConfigOptions = {
   operBlocks: [
     {
       id: 'oper-richard',
-      name: 'Richard_Witt',
+      name: 'RichardAlanWitt',
       operClass: 'netadmin',
-      vhost: 'staff.drfun1.com',
-      swhois: 'is Network Administrator & Managing Counsel (www.wittlawfirm.com)',
+      vhost: 'founder.wittlawfirm.com',
+      swhois: 'is Network Owner, Chief NetAdmin & Managing Counsel (www.wittlawfirm.com)',
+      sslOnly: true,
+      snomask: '+cksdjnbevf',
+      active: true,
+    },
+    {
+      id: 'oper-admin',
+      name: 'DrFun1_Admin',
+      operClass: 'netadmin',
+      vhost: 'admin.drfun1.com',
+      swhois: 'is Network Administrator & Witt Law Firm Operations Escrow Holder',
       sslOnly: true,
       snomask: '+cksdjnbevf',
       active: true,

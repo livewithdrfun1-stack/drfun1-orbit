@@ -110,13 +110,13 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={onOpenIrcdAdmin}
                 className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-purple-950/40 text-purple-300 hover:text-white hover:bg-purple-900/60 border-purple-500/40 hover:border-purple-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-purple-950/30"
-                title="UnrealIRCd & Anope Services Ops Web Control Center"
+                title="UnrealIRCd & Anope Services Ops & NetAdmin Web Control Center (set by www.wittlawfirm.com)"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
-                <span className="hidden sm:inline">IRCD &amp; Anope Admin</span>
-                <span className="sm:hidden">Ops</span>
+                <span className="hidden sm:inline">IRCD NetAdmin &amp; Ops</span>
+                <span className="sm:hidden">NetAdmin</span>
                 <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-purple-400/20 text-purple-300 font-bold">
-                  {activeOperRank && ['op', 'sop', 'founder', 'so', 'admin', 'sra'].includes(activeOperRank) ? 'Ops+' : 'Anope'}
+                  {activeOperRank === 'sra' ? '~ Owner' : activeOperRank && ['op', 'sop', 'founder', 'so', 'admin'].includes(activeOperRank) ? 'Ops+' : 'Anope'}
                 </span>
               </button>
             )}
@@ -128,20 +128,22 @@ export const Header: React.FC<HeaderProps> = ({
                 className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-amber-950/40 text-amber-300 hover:text-white hover:bg-amber-900/60 border-amber-500/40 hover:border-amber-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-amber-950/30"
               >
                 <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
-                <span className="hidden sm:inline">Reseller Program</span>
-                <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-amber-400/20 text-amber-300 font-bold">
-                  Wholesale
+                <span className="hidden sm:inline">Turnkey Reseller</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 font-bold">
+                  Co-Brand / Resell
                 </span>
               </button>
             )}
 
-            {/* License Certificate */}
+            {/* Global Legal & License Certificate (wittlawfirm.com) */}
             <button
               onClick={onOpenLicense}
-              className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-slate-900/80 text-slate-400 hover:text-sky-300 border-slate-800 hover:border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer hidden sm:flex font-sans"
+              className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-slate-900/80 text-slate-300 hover:text-white hover:border-emerald-500/50 transition-colors flex items-center gap-1.5 cursor-pointer hidden sm:flex font-sans"
+              title="Global Legal Compliance & License via www.wittlawfirm.com"
             >
-              <span>License</span>
-              <span className="text-[10px] text-emerald-400">●</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Legal &amp; License</span>
+              <span className="text-[10px] text-emerald-400 font-mono hidden md:inline">wittlawfirm.com</span>
             </button>
 
             {/* Procurement Cart */}

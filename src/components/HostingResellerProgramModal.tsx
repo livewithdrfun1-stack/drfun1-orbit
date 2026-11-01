@@ -35,6 +35,7 @@ interface HostingResellerProgramModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectProductForOrder: (productId: string) => void;
+  onOpenLegalCenter?: () => void;
 }
 
 type TabType = 'ezsetup' | 'matrix' | 'calculator' | 'whitelabel' | 'onboarding' | 'legal';
@@ -62,6 +63,7 @@ export const HostingResellerProgramModal: React.FC<HostingResellerProgramModalPr
   isOpen,
   onClose,
   onSelectProductForOrder,
+  onOpenLegalCenter,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('ezsetup');
   const [categoryFilter, setCategoryFilter] = useState<HostingCategoryFilter>('all');
@@ -2065,6 +2067,20 @@ curl -X POST https://api.drfun1.com/v1/reseller/deploy \\
                         I hereby represent that I am an authorized corporate officer and agree to the Master Wholesale Reseller Agreement under legal arbitration governed by <strong>Richard Alan Witt LLC</strong> (Witt Law Firm / Owens Company), agreeing to wholesale billing terms and SLA guarantees.
                       </span>
                     </label>
+
+                    {onOpenLegalCenter && (
+                      <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+                        <span className="text-[11px] text-slate-400 font-mono">Need to review all 8 global compliance codices?</span>
+                        <button
+                          type="button"
+                          onClick={onOpenLegalCenter}
+                          className="text-xs text-sky-400 hover:text-sky-300 underline font-mono font-semibold flex items-center gap-1 cursor-pointer"
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Open Global Legal Compliance Portal (www.wittlawfirm.com)</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex justify-end gap-3 pt-2">
@@ -2089,24 +2105,36 @@ curl -X POST https://api.drfun1.com/v1/reseller/deploy \\
           {/* TAB 5: MASTER LEGAL RESELLER CONTRACT */}
           {activeTab === 'legal' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
                     <FileText className="w-4 h-4 text-indigo-400" />
                     <span>Master Wholesale Reseller Agreement (Certified Copy)</span>
                   </h3>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Legally certified by Richard Alan Witt, Esq. &bull; Witt Law Firm / Owens Company
+                    Legally certified by Richard Alan Witt, Esq. &bull; Witt Law Firm / Owens Company (www.wittlawfirm.com)
                   </p>
                 </div>
 
-                <button
-                  onClick={handleDownloadAgreement}
-                  className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs flex items-center gap-2 border border-slate-700 transition-colors cursor-pointer"
-                >
-                  <Download className="w-4 h-4 text-emerald-400" />
-                  <span>Download .MD Contract</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  {onOpenLegalCenter && (
+                    <button
+                      onClick={onOpenLegalCenter}
+                      className="px-3 py-2 rounded-lg bg-sky-950/80 hover:bg-sky-900 text-sky-300 border border-sky-500/50 font-mono text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>All Legal Pages (wittlawfirm.com)</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={handleDownloadAgreement}
+                    className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs flex items-center gap-2 border border-slate-700 transition-colors cursor-pointer"
+                  >
+                    <Download className="w-4 h-4 text-emerald-400" />
+                    <span>Download .MD Contract</span>
+                  </button>
+                </div>
               </div>
 
               <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-4 font-mono text-xs text-slate-300 max-h-96 overflow-y-auto leading-relaxed">
