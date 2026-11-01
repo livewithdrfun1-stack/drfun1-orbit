@@ -8,7 +8,10 @@ import {
   Plus, 
   Sparkles,
   Layers,
-  Zap
+  Zap,
+  Smartphone,
+  Wifi,
+  Unlock
 } from 'lucide-react';
 
 interface StoreProductCardProps {
@@ -63,7 +66,7 @@ export const StoreProductCard: React.FC<StoreProductCardProps> = ({
               }`}
             >
               <Sparkles className="w-3 h-3 text-sky-400" />
-              <span>DrFun1 Branded</span>
+              <span>DrFun1 Wireless</span>
             </button>
             <button
               onClick={() => setIsDrfun1(false)}
@@ -102,11 +105,13 @@ export const StoreProductCard: React.FC<StoreProductCardProps> = ({
           {/* Center Graphic Badge */}
           <div className="relative z-10 flex items-center justify-center my-auto">
             <div className="w-14 h-14 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 group-hover:scale-105 transition-transform duration-200 shadow-lg shadow-sky-500/5">
-              {product.category.includes('Snapdragon') && <Cpu className="w-7 h-7 text-red-400" />}
+              {product.category.includes('Unlocked Phones') && <Smartphone className="w-7 h-7 text-sky-400" />}
+              {product.category.includes('Satellite 5G Plans') && <Wifi className="w-7 h-7 text-teal-400" />}
+              {product.category.includes('Snapdragon') && !product.category.includes('Unlocked Phones') && <Cpu className="w-7 h-7 text-red-400" />}
               {product.category.includes('Switch.com') && <Server className="w-7 h-7 text-emerald-400" />}
-              {product.category.includes('Hardware') && !product.category.includes('Snapdragon') && <Satellite className="w-7 h-7 text-sky-400" />}
+              {product.category.includes('Hardware') && !product.category.includes('Snapdragon') && !product.category.includes('Unlocked Phones') && <Satellite className="w-7 h-7 text-sky-400" />}
               {product.category.includes('Bandwidth') && <Zap className="w-7 h-7 text-amber-400" />}
-              {product.category.includes('Device') && !product.category.includes('Snapdragon') && <Radio className="w-7 h-7 text-emerald-400" />}
+              {product.category.includes('Device') && !product.category.includes('Snapdragon') && !product.category.includes('Unlocked Phones') && <Radio className="w-7 h-7 text-emerald-400" />}
               {product.category.includes('IoT') && !product.category.includes('Snapdragon') && <Cpu className="w-7 h-7 text-cyan-400" />}
               {product.category.includes('Teleport') && !product.category.includes('Switch.com') && <Server className="w-7 h-7 text-indigo-400" />}
               {product.category.includes('Earth') && <Layers className="w-7 h-7 text-violet-400" />}
@@ -123,6 +128,29 @@ export const StoreProductCard: React.FC<StoreProductCardProps> = ({
             </span>
           </div>
         </div>
+
+        {/* Unlocked Carrier Tag & Satellite NTN Tag */}
+        {product.unlockedCarriers && (
+          <div className="mb-2.5 px-2.5 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-[11px] font-mono flex items-center gap-1.5">
+            <Unlock className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+            <div className="truncate">
+              <span className="font-semibold text-emerald-300">Unlocked: </span>
+              <span className="text-emerald-200/90">{product.unlockedCarriers.slice(0, 3).join(', ')}{product.unlockedCarriers.length > 3 ? ' + more' : ''}</span>
+            </div>
+          </div>
+        )}
+
+        {product.satellite5gSupported && (
+          <div className="mb-2.5 px-2.5 py-1 rounded-lg bg-sky-950/40 border border-sky-500/30 text-[10px] font-mono flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-sky-300 font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+              <span>Satellite 5G NTN Active</span>
+            </span>
+            <span className="text-slate-400 text-[10px] truncate max-w-[140px]">
+              {product.satellite5gNetworks?.[0] || 'Direct-to-Cell'}
+            </span>
+          </div>
+        )}
 
         {/* Title & Tagline */}
         <div className="mb-3">

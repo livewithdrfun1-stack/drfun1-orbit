@@ -126,6 +126,33 @@ export const PhoneCarriersView: React.FC<PhoneCarriersViewProps> = ({
       {/* Main Container */}
       <div className="max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
         
+        {/* DrFun1 Wireless Rebrand Callout Banner */}
+        <div className="bg-gradient-to-r from-sky-950/90 via-slate-900 to-emerald-950/70 border border-sky-500/40 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-mono border border-emerald-500/40">
+              <Sparkles className="w-3 h-3 text-emerald-400" />
+              <span>Universal Carrier Rebrand &bull; DrFun1 Wireless</span>
+            </div>
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+              <span>Factory-Unlocked Cell Phones &amp; Satellite 5G Carrier Plans</span>
+            </h2>
+            <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+              DrFun1 ECOM Inc unifies all satellite and phone carriers into <strong className="text-sky-300 font-semibold">DrFun1 Wireless</strong>. Purchase 100% factory-unlocked smartphones (iPhone 16 Pro Max, Galaxy S25 Ultra, Pixel 9 Pro) compatible with T-Mobile, AT&amp;T, Verizon, Vodafone, and SoftBank, with automated orbital LEO Direct-to-Cell 5G failover.
+            </p>
+          </div>
+
+          {onOpenStore && (
+            <button
+              onClick={onOpenStore}
+              className="py-2.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs font-mono transition-all flex items-center gap-2 shadow-lg shadow-sky-500/20 whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>Shop DrFun1 Wireless Store</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
         {/* Filter and Search Bar */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

@@ -835,11 +835,20 @@ export const BroadcastMediaView: React.FC<BroadcastMediaViewProps> = ({
                 </button>
 
                 <div>
-                  <h4 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+                  <h4 className="text-sm font-bold text-white tracking-tight flex items-center gap-2 flex-wrap">
                     <span>{selectedChannel.name}</span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
                       {selectedChannel.frequencyBand.split('/')[0].trim()}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowDockedChat(true)}
+                      className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-950/80 hover:bg-sky-900/80 text-sky-300 border border-sky-800/40 flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Open Network Communications IRC Channel"
+                    >
+                      <Radio className="w-2.5 h-2.5 text-sky-400" />
+                      <span>IRC: {selectedChannel.unrealIrcChannel || '#drfun1-media'}</span>
+                    </button>
                   </h4>
                   <p className="text-xs text-slate-400 line-clamp-1">
                     {selectedChannel.currentShow}

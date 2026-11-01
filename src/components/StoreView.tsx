@@ -21,10 +21,14 @@ import {
   DollarSign,
   TrendingUp,
   BookOpen,
-  Cpu
+  Cpu,
+  Smartphone,
+  Wifi,
+  Unlock
 } from 'lucide-react';
 import { QuantumFiberResellerModal } from './QuantumFiberResellerModal';
 import { HostingResellerProgramModal } from './HostingResellerProgramModal';
+import { DrFun1WirelessModal } from './DrFun1WirelessModal';
 
 interface StoreViewProps {
   onOpenProductConfig: (product: StoreProduct, isDrfun1Branded: boolean) => void;
@@ -49,9 +53,12 @@ export const StoreView: React.FC<StoreViewProps> = ({
   const [sortBy, setSortBy] = useState<'recommended' | 'price-asc' | 'price-desc' | 'name'>('recommended');
   const [isQuantumResellerModalOpen, setIsQuantumResellerModalOpen] = useState(false);
   const [isHostingResellerModalOpen, setIsHostingResellerModalOpen] = useState(false);
+  const [isWirelessModalOpen, setIsWirelessModalOpen] = useState(false);
 
   const categories: (ProductCategory | 'All')[] = [
     'All',
+    'DrFun1 Wireless Unlocked Phones',
+    'DrFun1 Wireless Satellite 5G Plans',
     'Switch.com Fiber Optical & Teleport',
     'Snapdragon Qualcomm Satellite & 5G',
     'Quantum Fiber & Terrestrial Optical',
@@ -71,14 +78,25 @@ export const StoreView: React.FC<StoreViewProps> = ({
 
   const partners: string[] = [
     'All Partners',
-    'Switch.com',
+    'DrFun1 Wireless',
+    'Apple',
+    'Samsung',
+    'Google',
     'Snapdragon Qualcomm',
+    'Switch.com',
     'Quantum Fiber',
+    'T-Mobile',
+    'AT&T',
+    'Verizon',
+    'Vodafone',
+    'Deutsche Telekom',
+    'SoftBank',
     'Starlink (SpaceX)',
+    'AST SpaceMobile',
+    'Skylo 3GPP NTN',
     'Amazon Project Kuiper',
     'SES (SES S.A.)',
     'Eutelsat OneWeb',
-    'AST SpaceMobile',
     'Telesat (Lightspeed)',
     'EchoStar / HughesNet',
     'Globalstar',
@@ -172,17 +190,25 @@ export const StoreView: React.FC<StoreViewProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-mono">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>DrFun1 Authorized Wholesale & Resale Exchange</span>
+              <span>DrFun1 Wireless &bull; Wholesale &amp; Carrier Division &bull; drfun1 ECOM inc</span>
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => setIsWirelessModalOpen(true)}
+                className="text-xs text-sky-300 hover:text-white bg-sky-950/90 hover:bg-sky-900 border border-sky-500/60 px-3.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-bold shadow-md shadow-sky-500/20 cursor-pointer animate-pulse"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-sky-400" />
+                <span>DrFun1 Wireless Carrier &amp; Unlocked Phones</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 ml-0.5" />
+              </button>
+
               <button
                 onClick={() => setIsHostingResellerModalOpen(true)}
                 className="text-xs text-amber-300 hover:text-white bg-amber-950/80 hover:bg-amber-900 border border-amber-500/50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-bold shadow-sm shadow-amber-500/20 cursor-pointer"
               >
                 <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
-                <span>Start Reselling All Hosting Packages</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse ml-0.5" />
+                <span>Hosting Packages</span>
               </button>
 
               <button
@@ -190,7 +216,7 @@ export const StoreView: React.FC<StoreViewProps> = ({
                 className="text-xs text-cyan-300 hover:text-white bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-bold shadow-sm shadow-cyan-500/20 cursor-pointer"
               >
                 <Zap className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Quantum Fiber Reseller</span>
+                <span>Quantum Fiber</span>
               </button>
 
               <button
@@ -213,16 +239,34 @@ export const StoreView: React.FC<StoreViewProps> = ({
           </div>
 
           <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-mono mb-2.5">
+              <Unlock className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Universal Carrier Rebrand: All Satellite &amp; Phone Carriers Unified into DrFun1 Wireless</span>
+            </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
-              Commercial Satellite, Quantum Fiber &amp; Dedicated IRCD Reseller Store
+              DrFun1 Wireless Carrier, Factory-Unlocked Phones &amp; Satellite 5G
             </h1>
             <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-              Procure wholesale satellite hardware, dedicated multi-orbit CIR bandwidth, <strong className="text-cyan-300 font-semibold">Quantum Fiber 8G multi-gigabit &amp; 400G dark fiber</strong>, and <strong className="text-purple-300 font-semibold">Dedicated IRCD Bare-Metal Hosting</strong> powered directly by <a href="https://www.datapacket.com" target="_blank" rel="noopener noreferrer" className="text-sky-400 underline font-mono">datapacket.com</a>, <a href="https://www.risingnet.com" target="_blank" rel="noopener noreferrer" className="text-sky-400 underline font-mono">risingnet.com</a>, and <a href="https://www.switch.com" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline font-mono">www.switch.com</a>. Rebrand and co-brand each line under the turnkey <span className="text-white font-medium">DrFun1 ecosystem</span> with pre-engineered interconnects, clean-pipe DDoS defense, and encrypted mission telemetry via <span className="text-emerald-300 font-medium font-mono">irc.drfun1.com:6697</span>.
+              drfun1 ECOM inc rebrands and unifies all phone and satellite carriers into <strong className="text-sky-300 font-semibold">DrFun1 Wireless</strong>. Experience total freedom with 100% factory-unlocked smartphones from every phone carrier (Apple, Samsung, Google, Motorola, Qualcomm) with zero carrier bloatware and unconditional carrier interoperability across <span className="text-white font-medium">T-Mobile, AT&amp;T, Verizon, Vodafone, and SoftBank</span>. Automatically fall back to <strong className="text-emerald-300 font-semibold">Direct-to-Cell LEO Satellite 5G</strong> (AST SpaceMobile, Starlink, Qualcomm Snapdragon Satellite, Skylo NTN) whenever off terrestrial cellular coverage.
             </p>
           </div>
 
           {/* Quick Pillars Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-800/80 text-xs text-slate-300">
+            <div 
+              onClick={() => setIsWirelessModalOpen(true)}
+              className="flex items-start gap-2.5 bg-sky-950/40 border border-sky-500/40 hover:border-sky-300 p-3 rounded-xl cursor-pointer transition-all hover:bg-sky-950/60 group"
+            >
+              <Smartphone className="w-4 h-4 text-sky-400 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+              <div>
+                <p className="font-semibold text-white flex items-center gap-1">
+                  <span>DrFun1 Wireless Unlocked</span>
+                  <span className="text-[10px] text-sky-400 font-mono">Explore ➔</span>
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Factory-unlocked phones for T-Mo, AT&amp;T, Verizon + Direct Satellite 5G failover.</p>
+              </div>
+            </div>
+
             <div 
               onClick={() => setIsHostingResellerModalOpen(true)}
               className="flex items-start gap-2.5 bg-slate-900/60 border border-amber-500/30 hover:border-amber-400 p-3 rounded-xl cursor-pointer transition-all hover:bg-slate-900"
@@ -746,6 +790,13 @@ export const StoreView: React.FC<StoreViewProps> = ({
             onOpenProductConfig(product, true);
           }
         }}
+      />
+
+      {/* DrFun1 Wireless Carrier & Unlocked Phones Modal */}
+      <DrFun1WirelessModal
+        isOpen={isWirelessModalOpen}
+        onClose={() => setIsWirelessModalOpen(false)}
+        onSelectCategory={(cat) => setSelectedCategory(cat)}
       />
     </div>
   );

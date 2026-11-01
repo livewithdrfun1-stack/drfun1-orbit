@@ -8,7 +8,10 @@ import {
   Terminal, 
   ShieldCheck, 
   Plus, 
-  Minus
+  Minus,
+  Unlock,
+  Smartphone,
+  Wifi
 } from 'lucide-react';
 
 interface ProductConfigModalProps {
@@ -142,6 +145,42 @@ export const ProductConfigModal: React.FC<ProductConfigModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Carrier Freedom & Satellite 5G Matrix (if phone or wireless plan) */}
+          {(product.unlockedCarriers || product.satellite5gSupported) && (
+            <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-950 to-sky-950/40 border border-emerald-500/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs text-white flex items-center gap-1.5 font-mono">
+                  <Unlock className="w-4 h-4 text-emerald-400" />
+                  <span>DrFun1 Wireless Carrier Freedom &amp; Interoperability</span>
+                </span>
+                <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/40">
+                  100% Factory Unlocked
+                </span>
+              </div>
+              {product.unlockedCarriers && (
+                <div className="text-[11px] font-mono text-slate-300">
+                  <span className="text-slate-400">Compatible Carriers: </span>
+                  <span className="text-emerald-300 font-semibold">{product.unlockedCarriers.join(' • ')}</span>
+                </div>
+              )}
+              {product.satellite5gSupported && (
+                <div className="text-[11px] font-mono text-slate-300 flex items-center gap-2">
+                  <span className="text-sky-400 font-semibold flex items-center gap-1">
+                    <Wifi className="w-3.5 h-3.5" />
+                    <span>Direct-to-Cell 5G NTN:</span>
+                  </span>
+                  <span className="text-sky-200">{product.satellite5gNetworks?.join(', ') || 'LEO Direct-to-Cell Active'}</span>
+                </div>
+              )}
+              {product.esimSupport && (
+                <div className="text-[10px] font-mono text-slate-400">
+                  <span>SIM Architecture: </span>
+                  <span className="text-slate-200">{product.esimSupport}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Technical Specifications Matrix */}
           <div>

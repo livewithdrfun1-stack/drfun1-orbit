@@ -44,7 +44,8 @@ import {
   ArrowRight,
   Sparkles,
   X,
-  MessageSquare
+  MessageSquare,
+  Search
 } from 'lucide-react';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { MultistreamIrcChatRoom } from './MultistreamIrcChatRoom';
@@ -83,7 +84,8 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
   const [selectedUserWhois, setSelectedUserWhois] = useState<IrcUser | null>(null);
 
   // Channel filter
-  const [channelCategoryFilter, setChannelCategoryFilter] = useState<'all' | 'media' | 'bands' | 'noc'>('all');
+  const [channelCategoryFilter, setChannelCategoryFilter] = useState<'all' | 'satellite' | 'carrier' | 'broadcast' | 'bands' | 'noc'>('all');
+  const [channelSearchQuery, setChannelSearchQuery] = useState<string>('');
 
   // Media stream simulation inside IRC
   const [isMediaAudioPlaying, setIsMediaAudioPlaying] = useState<boolean>(false);
@@ -352,9 +354,27 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
 
   // Channel filtering
   const filteredChannels = ALL_DRFUN1_MEDIA_CHANNELS.filter(ch => {
-    if (channelCategoryFilter === 'media') return ch.category === 'media_channels';
-    if (channelCategoryFilter === 'bands') return ch.category === 'frequency_bands';
-    if (channelCategoryFilter === 'noc') return ch.category === 'teleport_infrastructure' || ch.category === 'legal_spectrum';
+    if (channelCategoryFilter === 'satellite') {
+      if (ch.category !== 'satellite_companies') return false;
+    } else if (channelCategoryFilter === 'carrier') {
+      if (ch.category !== 'phone_carriers') return false;
+    } else if (channelCategoryFilter === 'broadcast') {
+      if (ch.category !== 'broadcast_networks' && ch.category !== 'media_channels') return false;
+    } else if (channelCategoryFilter === 'bands') {
+      if (ch.category !== 'frequency_bands') return false;
+    } else if (channelCategoryFilter === 'noc') {
+      if (ch.category !== 'teleport_infrastructure' && ch.category !== 'legal_spectrum') return false;
+    }
+
+    if (channelSearchQuery.trim()) {
+      const q = channelSearchQuery.toLowerCase();
+      const matchName = ch.name.toLowerCase().includes(q);
+      const matchTopic = ch.topic.toLowerCase().includes(q);
+      const matchCompany = ch.companyName ? ch.companyName.toLowerCase().includes(q) : false;
+      const matchBand = ch.frequencyBand.toLowerCase().includes(q);
+      if (!matchName && !matchTopic && !matchCompany && !matchBand) return false;
+    }
+
     return true;
   });
 
@@ -552,27 +572,78 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-white flex items-center gap-1.5">
                 <Radio className="w-3.5 h-3.5 text-purple-400" />
-                DrFun1 Channels &amp; Bands
+                Inter-Network Channels
               </span>
-              <span className="text-[10px] font-mono text-purple-300 px-1.5 py-0.2 rounded bg-purple-500/20">
-                {ALL_DRFUN1_MEDIA_CHANNELS.length} Active
+              <span className="text-[10px] font-mono text-purple-300 px-1.5 py-0.5 rounded bg-purple-500/20">
+                {ALL_DRFUN1_MEDIA_CHANNELS.length} Synced
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-1 text-[10px] font-medium">
+            {/* Channel Search Input */}
+            <div className="relative">
+              <Search className="w-3 h-3 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={channelSearchQuery}
+                onChange={e => setChannelSearchQuery(e.target.value)}
+                placeholder="Search satellite, carrier, band..."
+                className="w-full bg-slate-900 border border-slate-700/70 rounded-md pl-7 pr-7 py-1 text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 font-mono"
+              />
+              {channelSearchQuery && (
+                <button
+                  onClick={() => setChannelSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Pills */}
+            <div className="grid grid-cols-3 gap-1 text-[9px] font-medium font-mono">
               <button
                 onClick={() => setChannelCategoryFilter('all')}
-                className={`py-1 rounded text-center transition-colors ${
+                className={`py-1 px-1 rounded text-center transition-colors truncate ${
                   channelCategoryFilter === 'all'
                     ? 'bg-purple-600 text-white font-bold'
                     : 'bg-slate-900 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                All Bands
+                All ({ALL_DRFUN1_MEDIA_CHANNELS.length})
+              </button>
+              <button
+                onClick={() => setChannelCategoryFilter('satellite')}
+                className={`py-1 px-1 rounded text-center transition-colors truncate ${
+                  channelCategoryFilter === 'satellite'
+                    ? 'bg-purple-600 text-white font-bold'
+                    : 'bg-slate-900 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Satellites (35)
+              </button>
+              <button
+                onClick={() => setChannelCategoryFilter('carrier')}
+                className={`py-1 px-1 rounded text-center transition-colors truncate ${
+                  channelCategoryFilter === 'carrier'
+                    ? 'bg-purple-600 text-white font-bold'
+                    : 'bg-slate-900 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Carriers (12)
+              </button>
+              <button
+                onClick={() => setChannelCategoryFilter('broadcast')}
+                className={`py-1 px-1 rounded text-center transition-colors truncate ${
+                  channelCategoryFilter === 'broadcast'
+                    ? 'bg-purple-600 text-white font-bold'
+                    : 'bg-slate-900 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Broadcast (7)
               </button>
               <button
                 onClick={() => setChannelCategoryFilter('bands')}
-                className={`py-1 rounded text-center transition-colors ${
+                className={`py-1 px-1 rounded text-center transition-colors truncate ${
                   channelCategoryFilter === 'bands'
                     ? 'bg-purple-600 text-white font-bold'
                     : 'bg-slate-900 text-slate-400 hover:text-slate-200'
@@ -582,7 +653,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
               </button>
               <button
                 onClick={() => setChannelCategoryFilter('noc')}
-                className={`py-1 rounded text-center transition-colors ${
+                className={`py-1 px-1 rounded text-center transition-colors truncate ${
                   channelCategoryFilter === 'noc'
                     ? 'bg-purple-600 text-white font-bold'
                     : 'bg-slate-900 text-slate-400 hover:text-slate-200'
@@ -595,43 +666,56 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
 
           {/* Channel List */}
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {filteredChannels.map(ch => {
-              const isSelected = ch.name === currentChannel;
-              return (
-                <button
-                  key={ch.name}
-                  onClick={() => setCurrentChannel(ch.name)}
-                  className={`w-full text-left p-2 rounded-lg transition-all flex items-center justify-between ${
-                    isSelected
-                      ? 'bg-purple-500/15 border border-purple-500/40 text-purple-200 font-medium'
-                      : 'text-slate-400 hover:bg-slate-800/80 hover:text-slate-200'
-                  }`}
-                >
-                  <div className="min-w-0 flex items-center gap-2">
-                    <Hash className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-purple-400' : 'text-slate-500'}`} />
-                    <div className="truncate">
-                      <span className="text-xs font-mono font-semibold block leading-tight">
-                        {ch.name}
-                      </span>
-                      <span className="text-[10px] text-slate-500 truncate block">
-                        {ch.frequencyBand}
-                      </span>
+            {filteredChannels.length === 0 ? (
+              <div className="p-4 text-center text-xs text-slate-500 font-mono">
+                No channels match &quot;{channelSearchQuery}&quot;
+              </div>
+            ) : (
+              filteredChannels.map(ch => {
+                const isSelected = ch.name === currentChannel;
+                return (
+                  <button
+                    key={ch.name}
+                    onClick={() => setCurrentChannel(ch.name)}
+                    className={`w-full text-left p-2 rounded-lg transition-all flex items-center justify-between ${
+                      isSelected
+                        ? 'bg-purple-500/15 border border-purple-500/40 text-purple-200 font-medium'
+                        : 'text-slate-400 hover:bg-slate-800/80 hover:text-slate-200'
+                    }`}
+                  >
+                    <div className="min-w-0 flex items-center gap-2">
+                      <Hash className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-purple-400' : 'text-slate-500'}`} />
+                      <div className="truncate">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs font-mono font-semibold block leading-tight">
+                            {ch.name}
+                          </span>
+                          {ch.companyName && (
+                            <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-sky-950/80 text-sky-300 border border-sky-800/40 truncate max-w-[120px]">
+                              {ch.companyName}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-slate-500 truncate block">
+                          {ch.frequencyBand}
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="text-right shrink-0 ml-2">
-                    <span className="text-[10px] font-mono text-slate-400">
-                      {ch.userCount}
-                    </span>
-                    {ch.isStreamActive && (
-                      <span className="block text-[8px] font-mono font-bold text-red-400 uppercase">
-                        LIVE
+                    <div className="text-right shrink-0 ml-2">
+                      <span className="text-[10px] font-mono text-slate-400">
+                        {ch.userCount}
                       </span>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
+                      {ch.isStreamActive && (
+                        <span className="block text-[8px] font-mono font-bold text-red-400 uppercase">
+                          LIVE
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })
+            )}
           </div>
 
           {/* Switch Node Telemetry Box */}

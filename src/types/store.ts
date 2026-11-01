@@ -1,4 +1,6 @@
 export type ProductCategory = 
+  | 'DrFun1 Wireless Unlocked Phones'
+  | 'DrFun1 Wireless Satellite 5G Plans'
   | 'Terminals & User Hardware'
   | 'Bandwidth & Enterprise CIR'
   | 'Direct-to-Device (3GPP NTN)'
@@ -40,6 +42,10 @@ export interface StoreProduct {
   switchInterconnectCampus?: string;
   unrealIrcdEnabled: boolean;
   risingNetProtected: boolean;
+  unlockedCarriers?: string[];
+  satellite5gSupported?: boolean;
+  satellite5gNetworks?: string[];
+  esimSupport?: string;
 }
 
 export interface CartItem {

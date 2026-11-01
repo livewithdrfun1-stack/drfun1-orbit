@@ -55,7 +55,19 @@ interface CombinedChatMessage extends StreamChatMessage {
 }
 
 const DEFAULT_IRC_CHANNELS = [
+  { id: '#drfun1-wireless', name: '#drfun1-wireless', topic: 'DrFun1 Wireless Carrier & Factory Unlocked Satellite 5G Handsets NOC', users: 260, modes: '+cnt' },
   { id: '#drfun1-media', name: '#drfun1-media', topic: 'Official DrFun1 Orbit 24/7 BroadCast Stream & TV Relay', users: 182, modes: '+cnt' },
+  { id: '#drfun1-tv', name: '#drfun1-tv', topic: 'DrFun1 Media Prime TV Inter-Network Coordination', users: 214, modes: '+cnt' },
+  { id: '#drfun1-radio', name: '#drfun1-radio', topic: 'DrFun1 24/7 Orbit Live Radio & DJ Master Feed', users: 156, modes: '+cnt' },
+  { id: '#starlink', name: '#starlink', topic: 'Starlink Direct-to-Cell & Starshield LEO Optical Telemetry', users: 342, modes: '+cnt' },
+  { id: '#tmobile-direct', name: '#tmobile-direct', topic: 'T-Mobile Direct to Cell & 5G Carrier Uplink Hub', users: 198, modes: '+cnt' },
+  { id: '#att-spacemobile', name: '#att-spacemobile', topic: 'AT&T AST SpaceMobile BlueBird Direct Satcom', users: 167, modes: '+cnt' },
+  { id: '#switch-supernap', name: '#switch-supernap', topic: 'Switch SUPERNAP 100G Fiber & Core Teleport NOC', users: 289, modes: '+isnt' },
+  { id: '#qualcomm-snapdragon', name: '#qualcomm-snapdragon', topic: 'Qualcomm Snapdragon Satellite Modem Baseband NOC', users: 145, modes: '+cnt' },
+  { id: '#cablecast-tv', name: '#cablecast-tv', topic: 'Cablecast PEG Community BroadCast Automation', users: 112, modes: '+cnt' },
+  { id: '#fubo-sports', name: '#fubo-sports', topic: 'Fubo Sports 4K UHD Inter-Network Stream Coordination', users: 135, modes: '+cnt' },
+  { id: '#tvu-broadcast', name: '#tvu-broadcast', topic: 'TVU Networks Grid IP Video Distribution Hub', users: 89, modes: '+cnt' },
+  { id: '#whitehouse-briefings', name: '#whitehouse-briefings', topic: 'White House Official Briefings Inter-Network Press Feed', users: 310, modes: '+cnt' },
   { id: '#all-music', name: '#all-music', topic: '24/7 MPD Audio Decks, Death Row Records & Live DJ Feeds', users: 245, modes: '+cnt' },
   { id: '#stream-live', name: '#stream-live', topic: 'Multistream Interactive Studio Audience & Teleport NOC', users: 94, modes: '+nt' },
   { id: '#orbit-ops', name: '#orbit-ops', topic: 'Switch SUPERNAP & RisingNet Satcom Oper Coordination (+s +i)', users: 16, modes: '+isnt' },

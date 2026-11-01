@@ -31,10 +31,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   if (!isOpen) return null;
 
   const [customerName, setCustomerName] = useState('Richard Alan Witt');
-  const [companyName, setCompanyName] = useState('Owens Company / The Law Office of Richard A. Witt LLC');
-  const [email, setEmail] = useState('rawitt@wittlawfirm.com');
+  const [companyName, setCompanyName] = useState('DrFun1 Wireless / Owens Company / The Law Office of Richard A. Witt LLC');
+  const [email, setEmail] = useState('livewithdrfun1@gmail.com');
   const [phone, setPhone] = useState('+1 (860) 747-1999');
-  const [billingNotes, setBillingNotes] = useState('Requesting Switch SUPERNAP optical cross-connect provisioning, RisingNet BGP transit peering, and UnrealIRCd leaf credentials linking to irc.drfun1.com:6697.');
+  const [billingNotes, setBillingNotes] = useState('DrFun1 Wireless carrier activation & unlocked smartphone provisioning with Switch SUPERNAP cross-connect, RisingNet clean-pipe BGP transit, and UnrealIRCd leaf link to irc.drfun1.com:6697 (#drfun1-wireless).');
 
   const [orderConfirmed, setOrderConfirmed] = useState<ProcurementOrder | null>(null);
   const [copiedOrder, setCopiedOrder] = useState(false);
@@ -305,6 +305,16 @@ Licensed to Richard Alan Witt.
 
                       {/* Included Add-ons Badges */}
                       <div className="flex flex-wrap gap-1 text-[10px] font-mono text-slate-400">
+                        {item.product.unlockedCarriers && (
+                          <span className="bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-500/40 text-emerald-300 font-semibold">
+                            🔓 Unlocked: {item.product.unlockedCarriers.slice(0, 3).join(', ')}
+                          </span>
+                        )}
+                        {item.product.satellite5gSupported && (
+                          <span className="bg-sky-950/80 px-1.5 py-0.5 rounded border border-sky-500/40 text-sky-300">
+                            🛰️ Satellite 5G NTN Active
+                          </span>
+                        )}
                         {item.addSwitchColocation && (
                           <span className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-sky-300">
                             + Switch SUPERNAP

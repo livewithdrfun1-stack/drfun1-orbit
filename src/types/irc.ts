@@ -49,19 +49,21 @@ export interface UnrealIrcdHub {
 export interface IrcChannel {
   name: string;
   topic: string;
-  category: 'media_channels' | 'frequency_bands' | 'teleport_infrastructure' | 'legal_spectrum';
-  frequencyBand: 'All Bands' | 'Ka-Band' | 'Ku-Band' | 'C-Band' | 'X-Band' | 'S-Band' | 'L-Band' | 'V/Q-Band' | 'Optical Laser (1550nm)' | '3GPP 5G NTN';
+  category: 'media_channels' | 'frequency_bands' | 'teleport_infrastructure' | 'legal_spectrum' | 'satellite_companies' | 'phone_carriers' | 'broadcast_networks';
+  frequencyBand: string;
   userCount: number;
   modes: string;
   isStreamActive: boolean;
   mediaType: string;
   mediaBitrate: string;
   unrealLeafSync: boolean;
+  companyName?: string;
+  networkType?: 'satellite' | 'carrier' | 'broadcast' | 'teleport' | 'spectrum';
 }
 
 export interface IrcUser {
   nick: string;
-  prefix: '@' | '+' | '';
+  prefix: '~' | '&' | '@' | '%' | '+' | '*' | '';
   role: string;
   hostmask: string;
   isBot?: boolean;

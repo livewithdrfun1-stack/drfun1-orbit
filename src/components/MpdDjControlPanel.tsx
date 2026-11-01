@@ -3,6 +3,7 @@ import { MpdBotInstance, MpdTrack } from '../types/mpdBot';
 import { GITHUB_MPD_REPO } from '../data/mpdBotData';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { ANOPE_RANKS } from '../data/ircdAdminData';
+import { ALL_DRFUN1_MEDIA_CHANNELS } from '../data/ircData';
 import { 
   Disc, 
   Play, 
@@ -30,8 +31,86 @@ import {
   ShieldCheck,
   Lock,
   Unlock,
-  AlertTriangle
+  AlertTriangle,
+  UserCheck,
+  Users
 } from 'lucide-react';
+
+export interface CertifiedDj {
+  nick: string;
+  name: string;
+  rankId: AnopeRankLevel;
+  rankPrefix: string;
+  rankTitle: string;
+  accessLevel: number;
+  assignedMount: string;
+  status: 'live' | 'standby' | 'cueing';
+  specialty: string;
+  station: string;
+}
+
+export const CERTIFIED_STATION_DJS: CertifiedDj[] = [
+  {
+    nick: 'DJ_OrbitNova',
+    name: 'DJ Orbit Nova',
+    rankId: 'op',
+    rankPrefix: '@',
+    rankTitle: 'Channel Operator DJ',
+    accessLevel: 500,
+    assignedMount: '/live_dj_orbit_nova.mp3',
+    status: 'live',
+    specialty: 'EDM & Synthwave Inter-Satellite Drops',
+    station: '#drfun1-radio & #starlink',
+  },
+  {
+    nick: 'DrFun1_Tech',
+    name: 'DrFun1 Tech',
+    rankId: 'so',
+    rankPrefix: '@',
+    rankTitle: 'IRCOp / Services Oper DJ',
+    accessLevel: 2000,
+    assignedMount: '/drfun1_telemetry_stream.ogg',
+    status: 'cueing',
+    specialty: 'Switch 100G Optical Telemetry & Ambient Tracks',
+    station: '#switch-supernap & #qualcomm-snapdragon',
+  },
+  {
+    nick: 'DJ_VinylKev',
+    name: 'DJ Vinyl Kev',
+    rankId: 'sop',
+    rankPrefix: '&',
+    rankTitle: 'Super Operator (SOP) DJ',
+    accessLevel: 800,
+    assignedMount: '/vinyl_deathrow_classics.mp3',
+    status: 'standby',
+    specialty: 'Death Row 90s Vinyl & West Coast Hip-Hop',
+    station: '#deathrow-records & #tmobile-direct',
+  },
+  {
+    nick: 'DrFun1_Admin',
+    name: 'DrFun1 Admin',
+    rankId: 'founder',
+    rankPrefix: '~',
+    rankTitle: 'Channel Founder Executive DJ',
+    accessLevel: 1000,
+    assignedMount: '/drfun1_prime_320k.mp3',
+    status: 'standby',
+    specialty: 'Prime TV & Media Network Drops',
+    station: '#drfun1-tv & #cablecast-tv',
+  },
+  {
+    nick: 'RichardAlanWitt',
+    name: 'Richard Alan Witt',
+    rankId: 'sra',
+    rankPrefix: '~',
+    rankTitle: 'Services Root Admin / NetAdmin DJ',
+    accessLevel: 9999,
+    assignedMount: '/drfun1_master_flac.ogg',
+    status: 'standby',
+    specialty: 'Master Optical Feed & Witt Law Firm Licensing',
+    station: '#all-music & #drfun1-media',
+  },
+];
 
 interface MpdDjControlPanelProps {
   bots: MpdBotInstance[];
@@ -84,6 +163,7 @@ export const MpdDjControlPanel: React.FC<MpdDjControlPanelProps> = ({
     '🔥 "Locked in on irc.drfun1.com with DJ Orbit Nova dropping pure vinyl heat!"',
     '🔊 "Duplicating this mix across #deathrow-records, #all-music & #drfun1-media!"',
   ]);
+  const [broadcastTargetChannel, setBroadcastTargetChannel] = useState<string>('#drfun1-radio');
   const [permissionNotice, setPermissionNotice] = useState<string | null>(null);
 
   // Compute Anope Oper status
@@ -436,7 +516,7 @@ export const MpdDjControlPanel: React.FC<MpdDjControlPanelProps> = ({
     e.preventDefault();
     if (!djShoutout.trim()) return;
 
-    const formatted = `[DJ SHOUTOUT] <${djHandle}>: "${djShoutout.trim()}" (Broadcasting on ${activeBot.ircChannel})`;
+    const formatted = `[DJ SHOUTOUT] <${djHandle}>: "${djShoutout.trim()}" (Transmitting on ${broadcastTargetChannel})`;
     setRecentShoutouts(prev => [formatted, ...prev.slice(0, 4)]);
     setDjShoutout('');
   };
@@ -616,21 +696,69 @@ export const MpdDjControlPanel: React.FC<MpdDjControlPanelProps> = ({
           </div>
         )}
 
-        {/* DJ Shoutout Bar directly linked to mpd_irc_bot */}
-        <form onSubmit={handleSendShoutout} className="flex items-center gap-2 pt-2 border-t border-purple-500/20">
+        {/* Authorized Station DJ Quick Persona Switcher */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-purple-500/20 text-xs font-mono">
+          <span className="text-[11px] text-purple-300 font-semibold flex items-center gap-1 mr-1">
+            <UserCheck className="w-3.5 h-3.5 text-purple-400" />
+            Station DJs (Ops &amp; IRCOps+):
+          </span>
+          {CERTIFIED_STATION_DJS.map(dj => {
+            const isCurrent = djHandle === dj.name || djHandle === dj.nick;
+            return (
+              <button
+                key={dj.nick}
+                type="button"
+                onClick={() => {
+                  setDjHandle(dj.name);
+                  if (onRankChange) onRankChange(dj.rankId);
+                }}
+                className={`px-2.5 py-1 rounded-lg border text-[11px] flex items-center gap-1.5 transition-all cursor-pointer ${
+                  isCurrent
+                    ? 'bg-purple-600 text-white border-purple-400 shadow-sm font-bold'
+                    : 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:border-purple-500/50 hover:text-white'
+                }`}
+              >
+                <span className="text-purple-300 font-bold">{dj.rankPrefix}</span>
+                <span>{dj.name.split(' (')[0]}</span>
+                <span className="text-[9px] text-purple-300/80 bg-purple-950/60 px-1 py-0.2 rounded border border-purple-800/40">
+                  {dj.rankId.toUpperCase()}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* DJ Shoutout Bar directly linked to mpd_irc_bot & inter-network broadcast */}
+        <form onSubmit={handleSendShoutout} className="flex flex-wrap items-center gap-2 pt-2 border-t border-purple-500/20">
+          <div className="flex items-center gap-1.5 text-xs font-mono shrink-0">
+            <Radio className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-slate-400 text-[11px]">Target IRC:</span>
+            <select
+              value={broadcastTargetChannel}
+              onChange={(e) => setBroadcastTargetChannel(e.target.value)}
+              className="bg-slate-900 border border-purple-500/30 rounded-lg px-2 py-1.5 text-xs font-mono text-emerald-300 focus:outline-none focus:border-purple-400 max-w-[190px] sm:max-w-[220px]"
+            >
+              {ALL_DRFUN1_MEDIA_CHANNELS.map(ch => (
+                <option key={ch.name} value={ch.name}>
+                  {ch.name} {ch.companyName ? `(${ch.companyName})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <input
             type="text"
-            placeholder={`Broadcast live voice/text shoutout to ${activeBot.ircChannel} and all duplicated channels...`}
+            placeholder={`Broadcast live voice/text drop to ${broadcastTargetChannel}...`}
             value={djShoutout}
             onChange={(e) => setDjShoutout(e.target.value)}
-            className="flex-1 bg-slate-950/80 border border-purple-500/30 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
+            className="flex-1 min-w-[200px] bg-slate-950/80 border border-purple-500/30 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
           />
           <button
             type="submit"
-            className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-md"
+            className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-md shrink-0"
           >
             <Send className="w-3.5 h-3.5" />
-            <span>Broadcast Shoutout</span>
+            <span>Drop to {broadcastTargetChannel}</span>
           </button>
         </form>
       </div>
@@ -1105,6 +1233,94 @@ export const MpdDjControlPanel: React.FC<MpdDjControlPanelProps> = ({
           </div>
         </div>
 
+      </div>
+
+      {/* CERTIFIED STATION DJ ROSTER & INTER-NETWORK OPERATOR PRIVILEGES */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300">
+              <ShieldCheck className="w-4 h-4 text-purple-400" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-sm">
+                Certified Station DJs (Channel Operators @, IRCOps &amp; Above)
+              </h3>
+              <p className="text-xs text-slate-400">
+                Authorized UnrealIRCd 6 oper accounts and Anope Services ranks authorized for MPD Icecast / SHOUTcast live mount takeovers
+              </p>
+            </div>
+          </div>
+          <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">
+            5 Certified Oper DJs Online
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs font-mono">
+            <thead>
+              <tr className="border-b border-slate-800 text-[11px] text-slate-400 uppercase tracking-wider">
+                <th className="pb-2">DJ Nick &amp; Identity</th>
+                <th className="pb-2">Anope Rank</th>
+                <th className="pb-2">Level</th>
+                <th className="pb-2">Mount Point</th>
+                <th className="pb-2">Inter-Network Channels</th>
+                <th className="pb-2">Specialty</th>
+                <th className="pb-2 text-right">Station Control</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/60">
+              {CERTIFIED_STATION_DJS.map(dj => {
+                const isSelected = djHandle === dj.name || djHandle === dj.nick;
+                return (
+                  <tr key={dj.nick} className={isSelected ? 'bg-purple-500/10' : 'hover:bg-slate-800/40'}>
+                    <td className="py-2.5 pr-2 font-bold text-white flex items-center gap-2">
+                      <span className="text-purple-400 font-bold text-sm">{dj.rankPrefix}</span>
+                      <span>{dj.name}</span>
+                      {isSelected && (
+                        <span className="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-500/40">
+                          ACTIVE DJ
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2.5 pr-2">
+                      <span className="px-2 py-0.5 rounded bg-slate-800 text-purple-300 text-[10px] font-semibold border border-purple-500/30">
+                        {dj.rankTitle}
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-2 text-slate-300 font-bold">
+                      {dj.accessLevel}
+                    </td>
+                    <td className="py-2.5 pr-2 text-slate-400">
+                      {dj.assignedMount}
+                    </td>
+                    <td className="py-2.5 pr-2 text-sky-400">
+                      {dj.station}
+                    </td>
+                    <td className="py-2.5 pr-2 text-slate-400 text-[11px]">
+                      {dj.specialty}
+                    </td>
+                    <td className="py-2.5 text-right">
+                      <button
+                        onClick={() => {
+                          setDjHandle(dj.name);
+                          if (onRankChange) onRankChange(dj.rankId);
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-colors ${
+                          isSelected
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-slate-800 hover:bg-slate-700 text-purple-300 border border-slate-700'
+                        }`}
+                      >
+                        {isSelected ? 'Live in Booth' : 'Assume DJ Persona'}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
     </div>
