@@ -205,7 +205,7 @@ export const Header: React.FC<HeaderProps> = ({
             Directory
           </button>
 
-          {/* Radio & TV */}
+          {/* DrFun1TV & Master Studio */}
           <button
             onClick={() => setActiveTab('media')}
             className={`whitespace-nowrap shrink-0 transition-all py-1 px-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
@@ -218,9 +218,9 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
             </span>
-            <span>Radio &amp; TV</span>
+            <span>DrFun1TV &amp; Studio</span>
             <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">
-              DrFun1
+              DrFun1TV
             </span>
           </button>
 

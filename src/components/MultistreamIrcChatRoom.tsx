@@ -4,7 +4,7 @@
  * Licensed to Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com)
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { StreamChatMessage } from '../types/stream';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { ANOPE_RANKS } from '../data/ircdAdminData';
@@ -55,22 +55,30 @@ interface CombinedChatMessage extends StreamChatMessage {
 }
 
 const DEFAULT_IRC_CHANNELS = [
+  { id: '#drfun1-primetv', name: '#drfun1-primetv', topic: 'DrFun1 Media Prime TV 4K (WDF1-TV) Official Broadcast Room | FCC Part 73/25', users: 380, modes: '+cnt' },
+  { id: '#drfun1-satcomnews', name: '#drfun1-satcomnews', topic: 'DrFun1 Satcom 24/7 News TV (KDF1-DT) Live Telemetry & FCC Filings Desk', users: 240, modes: '+cnt' },
+  { id: '#drfun1-wirelesstv', name: '#drfun1-wirelesstv', topic: 'DrFun1 Wireless 5G Network TV (WDF1-WL) Unlocked Handsets & LEO NTN', users: 310, modes: '+cnt' },
+  { id: '#drfun1-4kspace', name: '#drfun1-4kspace', topic: 'DrFun1 Space Horizon 4K Ultra HD (KDF1-4K) Teleport Optics', users: 195, modes: '+cnt' },
+  { id: '#drfun1-orbitradio', name: '#drfun1-orbitradio', topic: 'DrFun1 Orbit Live FM & MPD DJ Feed (WDF1-FM)', users: 220, modes: '+cnt' },
+  { id: '#paramount-cbs', name: '#paramount-cbs', topic: 'Paramount Global CBS Network (WCB-TV) Master Feeds', users: 410, modes: '+cnt' },
+  { id: '#paramount-network', name: '#paramount-network', topic: 'Paramount Network (WPNT-TV) Linear Playout', users: 180, modes: '+cnt' },
+  { id: '#paramount-showtime', name: '#paramount-showtime', topic: 'Paramount Showtime Premiere (WSHO-DT)', users: 165, modes: '+cnt' },
+  { id: '#disney-abc', name: '#disney-abc', topic: 'The Walt Disney Company ABC Network (WABC-TV) Feed', users: 430, modes: '+cnt' },
+  { id: '#disney-espn', name: '#disney-espn', topic: 'ESPN Sports Network (WESP-DT) Live Sports & Scoring', users: 540, modes: '+cnt' },
+  { id: '#wbd-cnn', name: '#wbd-cnn', topic: 'Warner Bros. Discovery CNN International (WCNN-DT)', users: 390, modes: '+cnt' },
+  { id: '#wbd-hbo', name: '#wbd-hbo', topic: 'HBO Master Feed (WHBO-DT) Premium Cinema Playout', users: 275, modes: '+cnt' },
+  { id: '#comcast-nbc', name: '#comcast-nbc', topic: 'Comcast / Xfinity NBC Network (WNBC-TV) Master Room', users: 420, modes: '+cnt' },
+  { id: '#dish-scape', name: '#dish-scape', topic: 'Dish Network Dish Scape 4K (KDSH-4K) Direct Satcom Feed', users: 190, modes: '+cnt' },
+  { id: '#dish-nasatv', name: '#dish-nasatv', topic: 'NASA TV HD (KNSA-TV) Space Exploration & Live EVA', users: 315, modes: '+cnt' },
+  { id: '#satcom-starlink', name: '#satcom-starlink', topic: 'Starlink Direct-to-Cell LEO Satellite Feeds', users: 480, modes: '+cnt' },
+  { id: '#satcom-ses-mpower', name: '#satcom-ses-mpower', topic: 'SES O3b mPOWER MEO High-Throughput Spot-Beams', users: 210, modes: '+cnt' },
+  { id: '#satcom-intelsat', name: '#satcom-intelsat', topic: 'Intelsat Galaxy 19 Commercial C/Ku Transponders', users: 185, modes: '+cnt' },
   { id: '#drfun1-wireless', name: '#drfun1-wireless', topic: 'DrFun1 Wireless Carrier & Factory Unlocked Satellite 5G Handsets NOC', users: 260, modes: '+cnt' },
   { id: '#drfun1-media', name: '#drfun1-media', topic: 'Official DrFun1 Orbit 24/7 BroadCast Stream & TV Relay', users: 182, modes: '+cnt' },
-  { id: '#drfun1-tv', name: '#drfun1-tv', topic: 'DrFun1 Media Prime TV Inter-Network Coordination', users: 214, modes: '+cnt' },
-  { id: '#drfun1-radio', name: '#drfun1-radio', topic: 'DrFun1 24/7 Orbit Live Radio & DJ Master Feed', users: 156, modes: '+cnt' },
-  { id: '#starlink', name: '#starlink', topic: 'Starlink Direct-to-Cell & Starshield LEO Optical Telemetry', users: 342, modes: '+cnt' },
-  { id: '#tmobile-direct', name: '#tmobile-direct', topic: 'T-Mobile Direct to Cell & 5G Carrier Uplink Hub', users: 198, modes: '+cnt' },
-  { id: '#att-spacemobile', name: '#att-spacemobile', topic: 'AT&T AST SpaceMobile BlueBird Direct Satcom', users: 167, modes: '+cnt' },
-  { id: '#switch-supernap', name: '#switch-supernap', topic: 'Switch SUPERNAP 100G Fiber & Core Teleport NOC', users: 289, modes: '+isnt' },
-  { id: '#qualcomm-snapdragon', name: '#qualcomm-snapdragon', topic: 'Qualcomm Snapdragon Satellite Modem Baseband NOC', users: 145, modes: '+cnt' },
   { id: '#cablecast-tv', name: '#cablecast-tv', topic: 'Cablecast PEG Community BroadCast Automation', users: 112, modes: '+cnt' },
   { id: '#fubo-sports', name: '#fubo-sports', topic: 'Fubo Sports 4K UHD Inter-Network Stream Coordination', users: 135, modes: '+cnt' },
   { id: '#tvu-broadcast', name: '#tvu-broadcast', topic: 'TVU Networks Grid IP Video Distribution Hub', users: 89, modes: '+cnt' },
-  { id: '#whitehouse-briefings', name: '#whitehouse-briefings', topic: 'White House Official Briefings Inter-Network Press Feed', users: 310, modes: '+cnt' },
-  { id: '#all-music', name: '#all-music', topic: '24/7 MPD Audio Decks, Death Row Records & Live DJ Feeds', users: 245, modes: '+cnt' },
-  { id: '#stream-live', name: '#stream-live', topic: 'Multistream Interactive Studio Audience & Teleport NOC', users: 94, modes: '+nt' },
-  { id: '#orbit-ops', name: '#orbit-ops', topic: 'Switch SUPERNAP & RisingNet Satcom Oper Coordination (+s +i)', users: 16, modes: '+isnt' },
+  { id: '#switch-supernap', name: '#switch-supernap', topic: 'Switch SUPERNAP 100G Fiber & Core Teleport NOC', users: 289, modes: '+isnt' },
 ];
 
 const INITIAL_IRC_USERS = [
@@ -176,8 +184,25 @@ export const MultistreamIrcChatRoom: React.FC<MultistreamIrcChatRoomProps> = ({
   const currentRankDef = ANOPE_RANKS.find(r => r.id === activeRank) || ANOPE_RANKS[0];
   const isOpsAndAbove = currentRankDef.isOpsAndAbove;
 
-  // Active channel details
-  const activeChannelObj = DEFAULT_IRC_CHANNELS.find(c => c.id === selectedChannel) || DEFAULT_IRC_CHANNELS[0];
+  // Sync selected channel when defaultChannel prop changes
+  useEffect(() => {
+    if (defaultChannel) {
+      setSelectedChannel(defaultChannel);
+    }
+  }, [defaultChannel]);
+
+  // Active channel details (fallback dynamically for any custom channel)
+  const activeChannelObj = useMemo(() => {
+    const found = DEFAULT_IRC_CHANNELS.find(c => c.id.toLowerCase() === selectedChannel.toLowerCase());
+    if (found) return found;
+    return {
+      id: selectedChannel,
+      name: selectedChannel,
+      topic: `Official DrFun1 BroadCast Room for ${selectedChannel} | UnrealIRCd irc.drfun1.com:6697`,
+      users: 154,
+      modes: '+cnt'
+    };
+  }, [selectedChannel]);
 
   // Auto-scroll on new message
   useEffect(() => {

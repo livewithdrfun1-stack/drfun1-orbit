@@ -1,7 +1,7 @@
 export interface StreamDestination {
   id: string;
   name: string;
-  platform: 'facebook' | 'youtube' | 'twitch' | 'x' | 'switch' | 'risingnet' | 'custom_rtmp' | 'unreal_irc' | 'tvu_cloud' | 'rtmp_tv';
+  platform: 'facebook' | 'youtube' | 'twitch' | 'kick' | 'x' | 'switch' | 'risingnet' | 'custom_rtmp' | 'unreal_irc' | 'tvu_cloud' | 'rtmp_tv';
   iconName: string;
   streamUrl: string;
   streamKey: string;
@@ -17,7 +17,7 @@ export interface StreamChatMessage {
   id: string;
   sender: string;
   avatar: string;
-  platform: 'facebook' | 'youtube' | 'twitch' | 'x' | 'unreal_irc' | 'switch_noc';
+  platform: 'facebook' | 'youtube' | 'twitch' | 'kick' | 'x' | 'unreal_irc' | 'switch_noc';
   message: string;
   timestamp: string;
   isModerator?: boolean;

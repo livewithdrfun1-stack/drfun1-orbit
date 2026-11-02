@@ -1,0 +1,334 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ * Licensed to Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com)
+ * DrFun1 Media Inc. & DrFun1 ECOM Inc.
+ * Seed Data for dev.twitch.tv, dev.kick.com, User Profiles, Forums, and FAQ
+ */
+
+import { 
+  TwitchDevConfig, 
+  KickDevConfig, 
+  BroadcasterUserProfile, 
+  ForumThread, 
+  FaqItem 
+} from '../types/developerPortals';
+
+export const DEFAULT_TWITCH_DEV_CONFIG: TwitchDevConfig = {
+  clientId: 'drfun1_helix_client_99a8b7',
+  clientSecret: 'live_secret_sk_wittlaw_orbit2026',
+  appAccessToken: 'oauth:2b8d9f10a8c437e29a0f41bc88190',
+  userOAuthToken: 'oauth:usr_9921_tw_drfun1_broadcast',
+  broadcasterId: '98412034',
+  channelName: 'drfun1tv',
+  selectedScopes: [
+    'channel:manage:broadcast',
+    'chat:read',
+    'chat:edit',
+    'channel:read:subscriptions',
+    'bits:read',
+    'channel:manage:redemptions',
+    'clips:edit'
+  ],
+  ingestServer: 'rtmp://sfo.contribute.live-video.net/app/',
+  streamKey: 'live_98412034_kZ8mQ10px9VbN72wQ',
+  isEventSubActive: true,
+  eventSubEndpoint: 'https://stream.drfun1.com/api/twitch/eventsub/webhook',
+  chatBotNick: 'DrFun1OrbitBot',
+  chatBotChannel: '#drfun1tv',
+  channelPointsRewardTitle: 'Trigger SCTE-35 Break on DrFun1TV',
+  channelPointsCost: 500,
+};
+
+export const DEFAULT_KICK_DEV_CONFIG: KickDevConfig = {
+  apiKey: 'kick_live_api_88921a4f02be8d12',
+  botUsername: 'DrFun1KickBot',
+  botToken: 'bot_auth_kck_990142_switch_supernap',
+  channelSlug: 'drfun1tv',
+  chatroomId: '3819402',
+  webhookUrl: 'https://stream.drfun1.com/api/kick/webhooks/v2',
+  webhookSecret: 'whsec_kick_90912a7bf83c',
+  rtmpStreamUrl: 'rtmps://fa723fc1b171.global-contribute.live-video.net:443/app/',
+  rtmpStreamKey: 'sk_us-west_99120482_kick_drfun1',
+  pusherCluster: 'us2',
+  isPusherConnected: true,
+  monetizationSplitPercent: 95,
+  subscriptionTierPrice: 4.99,
+};
+
+export const DEFAULT_USER_PROFILE: BroadcasterUserProfile = {
+  id: 'usr_raw_drfun1_01',
+  username: 'richard_witt',
+  displayName: 'Richard Alan Witt',
+  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
+  bio: 'Master Broadcaster & Legal Counsel at The Law Office of Richard A. Witt LLC (www.wittlawfirm.com / www.owenscompany.com). Managing DrFun1TV linear satellite playout, Switch SUPERNAP optical teleport, and UnrealIRCd mesh.',
+  role: 'Master Broadcaster',
+  email: 'livewithdrfun1@gmail.com',
+  website: 'https://www.wittlawfirm.com',
+  twitchUsername: 'drfun1tv',
+  kickUsername: 'drfun1tv',
+  unrealIrcNick: 'RichardAlanWitt',
+  wittLawLicenseId: 'RAW-SATCOM-2026-LIC-0881',
+  fccStationAffiliation: 'WDF1-TV / FRN 0034981290',
+  customBadge: 'Master NetAdmin Level 10000',
+  totalBroadcastHours: 14820,
+  totalChannelsManaged: 34,
+  subscriberCount: 28450,
+  apiTokensCount: 12,
+};
+
+export const INITIAL_FORUM_THREADS: ForumThread[] = [
+  {
+    id: 'th-01',
+    category: 'dev_twitch',
+    title: 'Connecting Twitch EventSub WebSockets to DrFun1TV SCTE-35 Ad Splice Trigger',
+    authorName: 'Richard Alan Witt',
+    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+    authorRole: 'Witt Law Certified NetAdmin',
+    content: 'We successfully linked Twitch EventSub "channel.ad_break.begin" and Channel Points redemptions directly into the DrFun1TV Cadjin master control switcher. When a viewer redeems points or an ad cue is dispatched via Helix REST API, the SCTE-35 cue starts with zero dropped frames.',
+    codeSnippet: `// Twitch Helix REST API - Trigger Commercial via dev.twitch.tv
+const triggerTwitchAdBreak = async (broadcasterId, lengthSeconds = 30) => {
+  const res = await fetch('https://api.twitch.tv/helix/channels/commercial', {
+    method: 'POST',
+    headers: {
+      'Client-Id': 'drfun1_helix_client_99a8b7',
+      'Authorization': 'Bearer oauth:usr_9921_tw_drfun1_broadcast',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      broadcaster_id: broadcasterId,
+      length: lengthSeconds
+    })
+  });
+  const data = await res.json();
+  console.log('[Twitch Helix Commercial Result]:', data);
+  return data;
+};`,
+    codeLanguage: 'javascript',
+    tags: ['dev.twitch.tv', 'Helix API', 'EventSub', 'SCTE-35', 'DrFun1TV'],
+    timestamp: '2 hours ago',
+    repliesCount: 3,
+    upvotes: 42,
+    views: 618,
+    isSolved: true,
+    isPinned: true,
+    replies: [
+      {
+        id: 'rep-01-1',
+        threadId: 'th-01',
+        authorName: 'DJ Orbit Nova',
+        authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
+        authorRole: 'Station DJ / Ops',
+        content: 'Confirmed working on WDF1-TV 4K feed! Audio limiter stays at -23.4 LUFS without clipping during transitions.',
+        timestamp: '1 hour ago',
+        upvotes: 14,
+      },
+      {
+        id: 'rep-01-2',
+        threadId: 'th-01',
+        authorName: 'Switch Teleport Lead',
+        authorAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
+        authorRole: 'Infrastructure Engineer',
+        content: 'We routed this over the Switch SUPERNAP 100G fiber ring in Las Vegas. Latency is sub-2.4ms.',
+        timestamp: '45 mins ago',
+        upvotes: 9,
+      }
+    ]
+  },
+  {
+    id: 'th-02',
+    category: 'dev_kick',
+    title: 'dev.kick.com Webhook Ingest & 95/5 Revenue Split Telemetry Integration',
+    authorName: 'Kick_Dev_Lead',
+    authorAvatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&auto=format&fit=crop&q=80',
+    authorRole: 'Kick Verified Developer',
+    content: 'Kick API v2 enables real-time stream status polling and Pusher WebSocket chatroom bridging. Here is how you configure the RTMP stream key and Pusher connection for DrFun1TV Restream.io multistream.',
+    codeSnippet: `// Kick Developer Portal - Pusher WebSocket Chat Ingest
+import Pusher from 'pusher-js';
+
+const kickPusher = new Pusher('32cbd69e4b950bf97679', {
+  cluster: 'us2',
+  forceTLS: true,
+});
+
+const channel = kickPusher.subscribe('chatrooms.3819402.v2');
+channel.bind('App\\\\Events\\\\ChatMessageEvent', (event) => {
+  console.log('[Kick Chat Message]:', event.sender.username, event.content);
+  // Bridge into DrFun1 UnrealIRCd irc.drfun1.com #drfun1tv
+});`,
+    codeLanguage: 'javascript',
+    tags: ['dev.kick.com', 'Pusher WS', 'Kick API v2', '95/5 Split', 'Restream'],
+    timestamp: '5 hours ago',
+    repliesCount: 2,
+    upvotes: 38,
+    views: 490,
+    isSolved: true,
+    isPinned: true,
+    replies: [
+      {
+        id: 'rep-02-1',
+        threadId: 'th-02',
+        authorName: 'Richard Alan Witt',
+        authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+        authorRole: 'Witt Law Certified NetAdmin',
+        content: 'Great implementation. We also bridged Kick subscription events directly to UnrealIRCd notice banners.',
+        timestamp: '3 hours ago',
+        upvotes: 18,
+      }
+    ]
+  },
+  {
+    id: 'th-03',
+    category: 'drfun1tv_playout',
+    title: 'Strimm.com Linear Schedule Sequencer with Dynamic News Crawl & Logo Bug',
+    authorName: 'Elena Rostova',
+    authorAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80',
+    authorRole: 'Playout Architect',
+    content: 'For automated 24/7 TV channels created with the "Start Your Own Channel" wizard, you can dynamically pass custom HTML5 canvas overlays for corner logo bugs, lower thirds, and breaking news tickers while synchronizing to dedicated 1:1 IRC channels.',
+    tags: ['DrFun1TV', 'Strimm', 'Linear Playout', 'News Crawl', 'Logo Bug'],
+    timestamp: '1 day ago',
+    repliesCount: 4,
+    upvotes: 27,
+    views: 380,
+    isSolved: false,
+    replies: []
+  },
+  {
+    id: 'th-04',
+    category: 'legal_compliance',
+    title: 'FCC Part 73 Digital Subcarrier & Witt Law Firm Global Master Reseller Terms',
+    authorName: 'Richard Alan Witt',
+    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+    authorRole: 'Witt Law Certified NetAdmin',
+    content: 'Review the regulatory framework governing FCC Facility IDs, FRN 0034981290, and co-branded turnkey reseller rights certified via www.wittlawfirm.com. All stations launched on DrFun1TV inherit carrier-grade indemnification.',
+    tags: ['FCC.gov', 'Witt Law Firm', 'Reseller Agreement', 'Compliance'],
+    timestamp: '2 days ago',
+    repliesCount: 1,
+    upvotes: 53,
+    views: 820,
+    isSolved: true,
+    replies: []
+  }
+];
+
+export const INITIAL_FAQ_ITEMS: FaqItem[] = [
+  // Pillar 1: dev.twitch.tv
+  {
+    id: 'faq-tw-1',
+    category: 'twitch_dev',
+    question: 'How do I authenticate with the Twitch Helix REST API on dev.twitch.tv?',
+    answer: 'Register your application on the Twitch Developer Console (dev.twitch.tv/console/apps). Obtain your Client ID and Client Secret, then request an OAuth 2.0 App Access Token or User Token with required scopes such as "channel:manage:broadcast" and "chat:read". Use the Bearer token in the Authorization header of all API calls.',
+    codeExample: `curl -X POST https://id.twitch.tv/oauth2/token \\
+  -d client_id=YOUR_CLIENT_ID \\
+  -d client_secret=YOUR_CLIENT_SECRET \\
+  -d grant_type=client_credentials`,
+    externalLink: {
+      label: 'Twitch Helix Documentation',
+      url: 'https://dev.twitch.tv/docs/api/'
+    }
+  },
+  {
+    id: 'faq-tw-2',
+    category: 'twitch_dev',
+    question: 'How does Twitch EventSub integrate with DrFun1TV broadcast automation?',
+    answer: 'Twitch EventSub provides real-time Webhook and WebSocket notifications for stream events (follow, subscribe, raid, bits, channel points). DrFun1TV listens to these events to dynamically update on-screen lower thirds, playout ticker alerts, and trigger SCTE-35 ad breaks automatically.',
+    codeExample: `// EventSub Subscription Payload
+{
+  "type": "channel.follow",
+  "version": "2",
+  "condition": { "broadcaster_user_id": "98412034", "moderator_user_id": "98412034" },
+  "transport": {
+    "method": "webhook",
+    "callback": "https://stream.drfun1.com/api/twitch/eventsub",
+    "secret": "live_secret_sk_wittlaw_orbit2026"
+  }
+}`,
+    externalLink: {
+      label: 'Twitch EventSub Guide',
+      url: 'https://dev.twitch.tv/docs/eventsub/'
+    }
+  },
+  {
+    id: 'faq-tw-3',
+    category: 'twitch_dev',
+    question: 'Can I connect a Twitch chatbot directly to DrFun1TV and UnrealIRCd?',
+    answer: 'Yes! Twitch Chat uses an IRCv3-compliant gateway at irc.chat.twitch.tv:6697 (SSL). DrFun1TV provides a built-in cross-relay between Twitch chat and your channel\'s dedicated UnrealIRCd room on irc.drfun1.com, allowing viewers from both networks to chat together seamlessly.',
+    externalLink: {
+      label: 'Twitch IRC Guide',
+      url: 'https://dev.twitch.tv/docs/irc/'
+    }
+  },
+
+  // Pillar 2: dev.kick.com
+  {
+    id: 'faq-kck-1',
+    category: 'kick_dev',
+    question: 'How do I access dev.kick.com and set up the Kick API v2 & Webhooks?',
+    answer: 'Visit dev.kick.com to obtain your Developer API Key and Bot Authorization Token. Configure your webhook endpoint URL and select subscription events (livestream status, chat messages, follows, gifted subs). Kick webhooks send cryptographically signed JSON payloads verified using your webhook secret.',
+    codeExample: `curl -X GET https://kick.com/api/v2/channels/drfun1tv \\
+  -H "Authorization: Bearer YOUR_KICK_API_KEY" \\
+  -H "Accept: application/json"`,
+    externalLink: {
+      label: 'Kick Developer Portal',
+      url: 'https://dev.kick.com'
+    }
+  },
+  {
+    id: 'faq-kck-2',
+    category: 'kick_dev',
+    question: 'How does Kick\'s 95/5 revenue split work with DrFun1TV community channels?',
+    answer: 'Kick gives 95% of subscription revenue directly to the creator ($4.74 of a $4.99 sub), with only 5% retained by the platform. Channels created and monetized through DrFun1TV and Restream.io can connect Kick sub telemetry to unlock on-screen VIP subscriber badges and automated bot shoutouts.',
+    externalLink: {
+      label: 'Kick Creator Program',
+      url: 'https://kick.com/community-guidelines'
+    }
+  },
+  {
+    id: 'faq-kck-3',
+    category: 'kick_dev',
+    question: 'What RTMP settings are recommended for Kick live streaming?',
+    answer: 'Kick recommends 1080p60 at 8,000 kbps CBR with 2-second keyframe intervals and AAC audio at 160-320 kbps. The RTMP ingest endpoint is rtmps://fa723fc1b171.global-contribute.live-video.net:443/app/ with your secret stream key.',
+  },
+
+  // Pillar 3: DrFun1TV (Strimm.com Rebranded)
+  {
+    id: 'faq-st-1',
+    category: 'drfun1tv_strimm',
+    question: 'What is DrFun1TV linear playout and how does it relate to Strimm.com?',
+    answer: 'DrFun1TV rebrands and elevates Strimm.com\'s proven linear TV channel sequencing technology. It allows creators to schedule video programs, clips, and live feeds into continuous 24/7 broadcast schedules, complete with on-screen corner logo bugs, real-time news crawl tickers, lower thirds, and scheduled commercial breaks.',
+  },
+  {
+    id: 'faq-st-2',
+    category: 'drfun1tv_strimm',
+    question: 'How does SCTE-35 digital ad insertion work in DrFun1TV?',
+    answer: 'SCTE-35 is the broadcast industry standard for signaling digital ad insertion cues. In DrFun1TV and the Cadjin Master Control deck, clicking "Inject SCTE-35 Ad" cues a 15-second sponsor overlay with a live countdown, then smoothly transitions back to the primary broadcast playout feed without dropping stream connections.',
+  },
+
+  // Pillar 4: Restream.io
+  {
+    id: 'faq-rs-1',
+    category: 'restream_io',
+    question: 'How does DrFun1TV broadcast from Restream.io to multiple destinations simultaneously?',
+    answer: 'DrFun1TV feeds its master video playout into the Restream.io cloud distribution core hosted at Switch SUPERNAP. The cloud matrix duplicates and transmuxes the stream to YouTube Live, Twitch, Kick, Facebook Live, X/Twitter, and custom RTMP endpoints with zero additional bandwidth overhead on the creator\'s local network.',
+  },
+
+  // Pillar 5: FCC & 1:1 IRC Channel
+  {
+    id: 'faq-fcc-1',
+    category: 'fcc_irc',
+    question: 'Why does every single TV channel have a dedicated 1-to-1 IRC room?',
+    answer: 'Under DrFun1 ECOM\'s telecommunications architecture, every broadcast station (WDF1-TV, CBS, ABC, CNN, NBC, Starlink, etc.) is mapped 1:1 to an UnrealIRCd channel on irc.drfun1.com:6697 (SSL). This provides instant inter-network coordination between broadcasters, teleports, and audiences across global satellite and cellular feeds.',
+  },
+
+  // Pillar 6: Witt Law Firm Legal
+  {
+    id: 'faq-witt-1',
+    category: 'witt_legal',
+    question: 'How is this broadcast ecosystem licensed and certified via www.wittlawfirm.com?',
+    answer: 'The entire DrFun1TV suite, FCC station directory, carrier roaming agreements, and turnkey reseller program are certified and legally held by The Law Office of Richard A. Witt LLC (www.wittlawfirm.com / www.owenscompany.com) for Richard Alan Witt under Certificate ID RAW-SATCOM-2026-LIC-0881. Contact livewithdrfun1@gmail.com for questions.',
+    externalLink: {
+      label: 'Witt Law Firm Official Portal',
+      url: 'https://www.wittlawfirm.com'
+    }
+  }
+];

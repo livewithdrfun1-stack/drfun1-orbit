@@ -844,6 +844,8 @@ export const RestreamStudioView: React.FC<RestreamStudioViewProps> = ({
                             ? 'bg-red-600'
                             : dest.platform === 'twitch'
                             ? 'bg-purple-600'
+                            : dest.platform === 'kick'
+                            ? 'bg-emerald-500 text-slate-950 font-bold'
                             : dest.platform === 'x'
                             ? 'bg-slate-800'
                             : dest.platform === 'switch'
@@ -861,6 +863,7 @@ export const RestreamStudioView: React.FC<RestreamStudioViewProps> = ({
                           {dest.platform === 'facebook' && 'FB'}
                           {dest.platform === 'youtube' && 'YT'}
                           {dest.platform === 'twitch' && 'TW'}
+                          {dest.platform === 'kick' && 'KCK'}
                           {dest.platform === 'x' && 'X'}
                           {dest.platform === 'switch' && 'SW'}
                           {dest.platform === 'risingnet' && 'RN'}
@@ -1094,7 +1097,8 @@ export const RestreamStudioView: React.FC<RestreamStudioViewProps> = ({
                   <option value="rtmp_tv">DrFun1 RTMP TV Broadcast Host</option>
                   <option value="facebook">Facebook Live (SpaceBook)</option>
                   <option value="youtube">YouTube Live</option>
-                  <option value="twitch">Twitch</option>
+                  <option value="twitch">Twitch (dev.twitch.tv)</option>
+                  <option value="kick">Kick Live (dev.kick.com 95/5 Split)</option>
                   <option value="x">X / Twitter Live</option>
                   <option value="switch">Switch SUPERNAP CDN</option>
                   <option value="risingnet">RisingNet Backbone</option>

@@ -30,6 +30,7 @@ import { RestreamStudioView } from './components/RestreamStudioView';
 import { FacebookSocialView } from './components/FacebookSocialView';
 import { IrcClientView } from './components/IrcClientView';
 import { BroadcastMediaView } from './components/BroadcastMediaView';
+import { DrFun1MasterBroadcastStudio } from './components/DrFun1MasterBroadcastStudio';
 import { PhoneCarriersView } from './components/PhoneCarriersView';
 import { MpdBotControlView } from './components/MpdBotControlView';
 import { IrcDuplicatorView } from './components/IrcDuplicatorView';
@@ -492,7 +493,7 @@ export default function App() {
           onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
         />
       ) : activeTab === 'media' ? (
-        <BroadcastMediaView
+        <DrFun1MasterBroadcastStudio
           onOpenStore={() => setActiveTab('store')}
           onOpenIrc={() => setActiveTab('irc')}
           onOpenLicense={() => setIsLicenseModalOpen(true)}
