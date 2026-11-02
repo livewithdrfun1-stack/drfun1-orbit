@@ -208,11 +208,91 @@ channel.bind('App\\\\Events\\\\ChatMessageEvent', (event) => {
     views: 820,
     isSolved: true,
     replies: []
+  },
+  {
+    id: 'th-05',
+    category: 'satellite_carrier',
+    title: 'RF Transponder Auto-Scanner: Ingesting 22+ DrFun1 ECOM Cable & Satellite Stations',
+    authorName: 'Capt. Richard Alan Witt',
+    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+    authorRole: 'Master Station Operator',
+    content: 'The new RF Transponder Auto-Scanner allows station operators to sweep Ka-band, Ku-band, C-band, Optical Laser (1550nm DWDM), and QAM-256 digital cable headends across DrFun1 ECOM\'s FCC-licensed teleport network. Discovered feeds can be added to your master EPG with 1:1 dedicated UnrealIRCd synchronization.',
+    codeSnippet: `// Demodulate DrFun1 ECOM DVB-S2 & QAM-256 Transponder Carriers
+const scanDrFun1Transponders = async (targetBand = 'all') => {
+  const endpoint = \`https://stream.drfun1.com/api/rf/scan?band=\${targetBand}\`;
+  const res = await fetch(endpoint, {
+    headers: {
+      'Authorization': 'Bearer RAW-SATCOM-2026-LIC-0881',
+      'X-FCC-FRN': '0034981290'
+    }
+  });
+  const { lockedTransponders } = await res.json();
+  console.log(\`[RF Scanner]: \${lockedTransponders.length} DrFun1 stations locked.\`);
+  return lockedTransponders;
+};`,
+    codeLanguage: 'javascript',
+    tags: ['RF Scanner', 'DrFun1 ECOM', 'DVB-S2', 'QAM Cable', 'Transponder Lock'],
+    timestamp: '15 mins ago',
+    repliesCount: 2,
+    upvotes: 68,
+    views: 310,
+    isSolved: true,
+    isPinned: true,
+    replies: [
+      {
+        id: 'rep-05-1',
+        threadId: 'th-05',
+        authorName: 'Switch Teleport Lead',
+        authorAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
+        authorRole: 'Infrastructure Engineer',
+        content: 'Lock time is under 180ms across all 22 carriers on Switch SUPERNAP dish clusters in Nevada. SNR exceeds +19.4 dB with zero bit error rate.',
+        timestamp: '10 mins ago',
+        upvotes: 18,
+      }
+    ]
   }
 ];
 
 export const INITIAL_FAQ_ITEMS: FaqItem[] = [
-  // Pillar 1: dev.twitch.tv
+  // ========================================================
+  // Pillar 0: Platform Navigation & Master Studio Tour
+  // ========================================================
+  {
+    id: 'faq-nav-1',
+    category: 'platform_navigation',
+    question: 'How do I navigate between the broadcast tools in DrFun1TV & Master Studio?',
+    answer: 'DrFun1TV & Master Broadcast Studio unifies 10 professional broadcast and developer systems into one interface. Use the studio tool tabs directly below the live monitor: 1. DrFun1TV Playout (Strimm.com linear sequencer), 2. FCC EPG Guide (FCC-registered station matrix), 3. Restream.io Multistream (cloud RTMP distribution), 4. dev.twitch.tv (Helix REST API & EventSub), 5. dev.kick.com (API v2 & Pusher WebSocket), 6. TVU Networks (bonded cellular IP grid), 7. Cablecast PEG (carousel automation & EAS alert overrides), 8. Cadjin Master Control (PGM/PVW video switcher & LUFS audio meter), 9. Broadcaster Forums, and 10. Studio FAQ Knowledge Base.',
+    relatedToolId: 'strimm_drfun1tv',
+  },
+  {
+    id: 'faq-nav-2',
+    category: 'platform_navigation',
+    question: 'How do I tune a TV station and synchronize with its dedicated UnrealIRCd room?',
+    answer: 'Select the "FCC EPG Guide" or use the "Scan Cable/Sat Stations" tool. Each station card features a "Tune Station & Sync IRC" button. Clicking this tunes the live 4K/HD video canvas to the station\'s HLS/RTMP feed, updates the on-screen logo bug and news crawl ticker, and automatically syncs the bottom right chatroom to that station\'s dedicated 1-to-1 IRC room on irc.drfun1.com:6697 (SSL).',
+    relatedToolId: 'epg_guide',
+  },
+  {
+    id: 'faq-nav-3',
+    category: 'platform_navigation',
+    question: 'How do I launch a new independent TV channel with custom graphics and IRC?',
+    answer: 'Click the "Start Your Own Channel" or "New Station Wizard" button. The 4-step wizard guides you through: Step 1: Identity & Call Sign (e.g. WXYZ-TV), Step 2: Playout Engine & On-Screen Overlays (corner logo bug, news crawl text), Step 3: Program Rundown & SCTE-35 Commercial Ad Intervals, and Step 4: Multi-Destination Playout with dev.twitch.tv & dev.kick.com credentials. Your channel is instantly added to your EPG with a dedicated IRC channel.',
+    relatedToolId: 'strimm_drfun1tv',
+  },
+  {
+    id: 'faq-nav-4',
+    category: 'platform_navigation',
+    question: 'How does the RF Spectrum Demodulator & Transponder Scanner work?',
+    answer: 'Click "Scan Cable/Sat Stations" in the top banner or EPG Guide. The integrated RF demodulator performs high-speed blind scanning across Ka, Ku, C, X, S, Optical Laser (1550nm DWDM), and QAM-256 digital cable headends across DrFun1 ECOM\'s FCC-licensed fleet (FRN 0034981290). Locked carriers display signal power (dBm), SNR (dB), modulation (DVB-S2X / 256-QAM), and can be added to your studio in bulk with 1:1 IRC room sync.',
+    codeExample: `# Query transponder carrier lock via CLI:
+curl -X GET "https://stream.drfun1.com/api/rf/scan?band=all&owner=drfun1_ecom" \\
+  -H "X-DrFun1-FRN: 0034981290" \\
+  -H "X-License-Cert: RAW-SATCOM-2026-LIC-0881"`,
+    relatedToolId: 'epg_guide',
+  },
+
+  // ========================================================
+  // Pillar 1: dev.twitch.tv (Helix REST API & EventSub)
+  // ========================================================
   {
     id: 'faq-tw-1',
     category: 'twitch_dev',
@@ -222,6 +302,7 @@ export const INITIAL_FAQ_ITEMS: FaqItem[] = [
   -d client_id=YOUR_CLIENT_ID \\
   -d client_secret=YOUR_CLIENT_SECRET \\
   -d grant_type=client_credentials`,
+    relatedToolId: 'dev_twitch',
     externalLink: {
       label: 'Twitch Helix Documentation',
       url: 'https://dev.twitch.tv/docs/api/'
@@ -243,6 +324,7 @@ export const INITIAL_FAQ_ITEMS: FaqItem[] = [
     "secret": "live_secret_sk_wittlaw_orbit2026"
   }
 }`,
+    relatedToolId: 'dev_twitch',
     externalLink: {
       label: 'Twitch EventSub Guide',
       url: 'https://dev.twitch.tv/docs/eventsub/'
@@ -253,13 +335,34 @@ export const INITIAL_FAQ_ITEMS: FaqItem[] = [
     category: 'twitch_dev',
     question: 'Can I connect a Twitch chatbot directly to DrFun1TV and UnrealIRCd?',
     answer: 'Yes! Twitch Chat uses an IRCv3-compliant gateway at irc.chat.twitch.tv:6697 (SSL). DrFun1TV provides a built-in cross-relay between Twitch chat and your channel\'s dedicated UnrealIRCd room on irc.drfun1.com, allowing viewers from both networks to chat together seamlessly.',
+    relatedToolId: 'dev_twitch',
     externalLink: {
       label: 'Twitch IRC Guide',
       url: 'https://dev.twitch.tv/docs/irc/'
     }
   },
+  {
+    id: 'faq-tw-4',
+    category: 'twitch_dev',
+    question: 'What Twitch scopes are required for full DrFun1TV studio integration?',
+    answer: 'For full automation (triggering commercial ad breaks, reading/posting chat, detecting custom reward redemptions, and updating stream titles), the following scopes are recommended: channel:manage:broadcast (commercials & stream title), chat:read & chat:edit (IRC bridge), channel:read:subscriptions (VIP badges), bits:read, channel:manage:redemptions (Channel Points to SCTE-35 trigger), and clips:edit.',
+    relatedToolId: 'dev_twitch',
+    externalLink: {
+      label: 'Twitch OAuth Scopes List',
+      url: 'https://dev.twitch.tv/docs/authentication/scopes/'
+    }
+  },
+  {
+    id: 'faq-tw-5',
+    category: 'twitch_dev',
+    question: 'How do Twitch Channel Points trigger on-screen SCTE-35 commercial breaks?',
+    answer: 'In the dev.twitch.tv panel under Channel Points, configure a reward title such as "Trigger SCTE-35 Break on DrFun1TV" (e.g. 500 Channel Points). When a viewer redeems this reward on Twitch, the EventSub webhook automatically instructs the Cadjin master control switcher to cue a 15-second sponsor bumper with on-screen countdown timer.',
+    relatedToolId: 'dev_twitch',
+  },
 
-  // Pillar 2: dev.kick.com
+  // ========================================================
+  // Pillar 2: dev.kick.com (API v2 & Pusher WebSocket)
+  // ========================================================
   {
     id: 'faq-kck-1',
     category: 'kick_dev',
@@ -268,6 +371,7 @@ export const INITIAL_FAQ_ITEMS: FaqItem[] = [
     codeExample: `curl -X GET https://kick.com/api/v2/channels/drfun1tv \\
   -H "Authorization: Bearer YOUR_KICK_API_KEY" \\
   -H "Accept: application/json"`,
+    relatedToolId: 'dev_kick',
     externalLink: {
       label: 'Kick Developer Portal',
       url: 'https://dev.kick.com'
@@ -277,7 +381,8 @@ export const INITIAL_FAQ_ITEMS: FaqItem[] = [
     id: 'faq-kck-2',
     category: 'kick_dev',
     question: 'How does Kick\'s 95/5 revenue split work with DrFun1TV community channels?',
-    answer: 'Kick gives 95% of subscription revenue directly to the creator ($4.74 of a $4.99 sub), with only 5% retained by the platform. Channels created and monetized through DrFun1TV and Restream.io can connect Kick sub telemetry to unlock on-screen VIP subscriber badges and automated bot shoutouts.',
+    answer: 'Kick gives 95% of subscription revenue directly to the creator ($4.74 of a standard $4.99 sub), with only 5% retained by the platform for payment processing. Channels created and monetized through DrFun1TV and Restream.io can connect Kick sub telemetry to unlock on-screen VIP subscriber badges, automated bot shoutouts, and live creator earnings tracking.',
+    relatedToolId: 'dev_kick',
     externalLink: {
       label: 'Kick Creator Program',
       url: 'https://kick.com/community-guidelines'
@@ -287,40 +392,110 @@ export const INITIAL_FAQ_ITEMS: FaqItem[] = [
     id: 'faq-kck-3',
     category: 'kick_dev',
     question: 'What RTMP settings are recommended for Kick live streaming?',
-    answer: 'Kick recommends 1080p60 at 8,000 kbps CBR with 2-second keyframe intervals and AAC audio at 160-320 kbps. The RTMP ingest endpoint is rtmps://fa723fc1b171.global-contribute.live-video.net:443/app/ with your secret stream key.',
+    answer: 'Kick recommends 1080p60 at 8,000 kbps CBR with 2-second keyframe intervals and AAC audio at 160-320 kbps. The RTMP ingest endpoint is rtmps://fa723fc1b171.global-contribute.live-video.net:443/app/ with your secret stream key configured in the dev.kick.com panel.',
+    relatedToolId: 'dev_kick',
+  },
+  {
+    id: 'faq-kck-4',
+    category: 'kick_dev',
+    question: 'How do Kick HMAC SHA-256 Webhook signatures work and how are they verified?',
+    answer: 'Kick sends an "x-kick-signature" header with every webhook dispatch. The signature is a hexadecimal HMAC-SHA256 digest generated using your Webhook Secret over the raw HTTP request body string. DrFun1TV verifies this signature to prevent unauthorized event spoofing.',
+    codeExample: `const crypto = require('crypto');
+
+function verifyKickWebhook(rawBody, signatureHeader, secret) {
+  const hmac = crypto.createHmac('sha256', secret);
+  const digest = hmac.update(rawBody).digest('hex');
+  return crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(signatureHeader));
+}`,
+    relatedToolId: 'dev_kick',
+  },
+  {
+    id: 'faq-kck-5',
+    category: 'kick_dev',
+    question: 'How does Kick Pusher WebSocket integration provide sub-second live chat?',
+    answer: 'Kick utilizes Pusher WebSockets (cluster "us2" at ws-us2.pusher.com). By subscribing to the public channel "chatrooms.{chatroom_id}.v2", DrFun1TV receives chat messages, subscriber events, and pin notices with under 200ms latency, mirrored simultaneously into the UnrealIRCd chatroom.',
+    relatedToolId: 'dev_kick',
   },
 
-  // Pillar 3: DrFun1TV (Strimm.com Rebranded)
+  // ========================================================
+  // Pillar 3: DrFun1TV & Strimm.com Linear Playout
+  // ========================================================
   {
     id: 'faq-st-1',
     category: 'drfun1tv_strimm',
     question: 'What is DrFun1TV linear playout and how does it relate to Strimm.com?',
     answer: 'DrFun1TV rebrands and elevates Strimm.com\'s proven linear TV channel sequencing technology. It allows creators to schedule video programs, clips, and live feeds into continuous 24/7 broadcast schedules, complete with on-screen corner logo bugs, real-time news crawl tickers, lower thirds, and scheduled commercial breaks.',
+    relatedToolId: 'strimm_drfun1tv',
   },
   {
     id: 'faq-st-2',
     category: 'drfun1tv_strimm',
     question: 'How does SCTE-35 digital ad insertion work in DrFun1TV?',
-    answer: 'SCTE-35 is the broadcast industry standard for signaling digital ad insertion cues. In DrFun1TV and the Cadjin Master Control deck, clicking "Inject SCTE-35 Ad" cues a 15-second sponsor overlay with a live countdown, then smoothly transitions back to the primary broadcast playout feed without dropping stream connections.',
+    answer: 'SCTE-35 is the broadcast industry standard for signaling digital ad insertion cues. In DrFun1TV and the Cadjin Master Control deck, clicking "Insert 15s SCTE-35 Commercial" cues a 15-second sponsor overlay with a live countdown, then smoothly transitions back to the primary broadcast playout feed without dropping stream connections.',
+    relatedToolId: 'cadjin_master_control',
   },
 
-  // Pillar 4: Restream.io
+  // ========================================================
+  // Pillar 4: Restream.io Multistream
+  // ========================================================
   {
     id: 'faq-rs-1',
     category: 'restream_io',
     question: 'How does DrFun1TV broadcast from Restream.io to multiple destinations simultaneously?',
     answer: 'DrFun1TV feeds its master video playout into the Restream.io cloud distribution core hosted at Switch SUPERNAP. The cloud matrix duplicates and transmuxes the stream to YouTube Live, Twitch, Kick, Facebook Live, X/Twitter, and custom RTMP endpoints with zero additional bandwidth overhead on the creator\'s local network.',
+    relatedToolId: 'restream_multistream',
+  },
+  {
+    id: 'faq-rs-2',
+    category: 'restream_io',
+    question: 'Can I stream simultaneously to both Twitch and Kick without violating partner terms?',
+    answer: 'Both Twitch and Kick officially allow non-exclusive multistreaming to other platforms provided the stream quality on Twitch is at least as good as other platforms and chat is not obscured. Restream.io and DrFun1TV allow dual-streaming to both Twitch and Kick at 1080p60.',
+    relatedToolId: 'restream_multistream',
   },
 
-  // Pillar 5: FCC & 1:1 IRC Channel
+  // ========================================================
+  // Pillar 5: FCC & 1:1 IRC Channels
+  // ========================================================
   {
     id: 'faq-fcc-1',
     category: 'fcc_irc',
     question: 'Why does every single TV channel have a dedicated 1-to-1 IRC room?',
     answer: 'Under DrFun1 ECOM\'s telecommunications architecture, every broadcast station (WDF1-TV, CBS, ABC, CNN, NBC, Starlink, etc.) is mapped 1:1 to an UnrealIRCd channel on irc.drfun1.com:6697 (SSL). This provides instant inter-network coordination between broadcasters, teleports, and audiences across global satellite and cellular feeds.',
+    relatedToolId: 'epg_guide',
+  },
+  {
+    id: 'faq-fcc-2',
+    category: 'fcc_irc',
+    question: 'How do I scan for Cable & Satellite stations owned by DrFun1 ECOM Inc.?',
+    answer: 'Click the "Scan Cable/Sat Stations" button in the top banner or EPG Guide. The integrated RF Demodulator & Transponder Scanner sweeps Ka, Ku, C, X, S, Optical Laser (1550nm DWDM), and QAM-256 digital cable headends across DrFun1 ECOM\'s FCC-licensed fleet (FRN 0034981290). Locked carriers can be imported in bulk or tuned directly with 1:1 dedicated IRC room synchronization.',
+    codeExample: `# Test transponder carrier lock via CLI:
+curl -X GET "https://stream.drfun1.com/api/rf/scan?band=all&owner=drfun1_ecom" \\
+  -H "X-DrFun1-FRN: 0034981290" \\
+  -H "X-License-Cert: RAW-SATCOM-2026-LIC-0881"`,
+    relatedToolId: 'epg_guide',
   },
 
-  // Pillar 6: Witt Law Firm Legal
+  // ========================================================
+  // Pillar 6: Troubleshooting & Performance
+  // ========================================================
+  {
+    id: 'faq-trouble-1',
+    category: 'troubleshooting',
+    question: 'How do I resolve audio loudness issues and comply with EBU R128 (-23.4 LUFS)?',
+    answer: 'Under the Cadjin Master Control switcher tab, monitor the real-time LUFS loudness meter. Broadcast standards (CALM Act in the US, EBU R128 in Europe) require integrated loudness to normalize at -24.0 LUFS ±1.0 LUFS. DrFun1TV applies an automated brickwall audio limiter at -1.0 dBTP to avoid digital clipping during program transitions.',
+    relatedToolId: 'cadjin_master_control',
+  },
+  {
+    id: 'faq-trouble-2',
+    category: 'troubleshooting',
+    question: 'What should I do if my Twitch or Kick stream shows "Disconnected" or drops frames?',
+    answer: '1. Verify your Stream Key in the dev.twitch.tv or dev.kick.com portal. 2. Ensure your keyframe interval is strictly set to 2.0 seconds (GOP = 120 frames at 60fps). 3. Check your uplink bitrate: for 1080p60, set CBR to 8,000 kbps. 4. Verify that TLS/SSL port 443 (RTMPS) and port 6697 (UnrealIRCd) are not blocked by local firewalls.',
+    relatedToolId: 'restream_multistream',
+  },
+
+  // ========================================================
+  // Pillar 7: Witt Law Firm Legal Licensing
+  // ========================================================
   {
     id: 'faq-witt-1',
     category: 'witt_legal',

@@ -6,7 +6,8 @@ export type EpgMediaGroup =
   | 'Comcast / Xfinity'
   | 'Dish Network'
   | 'SATCOM Satellite Feeds'
-  | 'Custom User Channels';
+  | 'Custom User Channels'
+  | 'DrFun1 Scanned Cable/Satellite';
 
 export type BroadcastEngineMode = 
   | 'strimm_drfun1tv'
@@ -14,6 +15,19 @@ export type BroadcastEngineMode =
   | 'cablecast_peg'
   | 'cadjin_master_control'
   | 'restream_multistream';
+
+export type EpgCategory = 
+  | 'Entertainment' 
+  | 'News' 
+  | 'Sports' 
+  | 'Movies & Drama' 
+  | 'Community PEG' 
+  | 'Science & Space' 
+  | 'Music & Radio' 
+  | 'Family & Kids'
+  | 'Satellite & Telecom'
+  | 'RF Engineering'
+  | 'Emergency & EAS';
 
 export interface MasterEpgChannel {
   id: string;
@@ -24,7 +38,7 @@ export interface MasterEpgChannel {
   fccFrn: string;
   fccRulePart: string;
   networkOwner: EpgMediaGroup;
-  category: 'Entertainment' | 'News' | 'Sports' | 'Movies & Drama' | 'Community PEG' | 'Science & Space' | 'Music & Radio' | 'Family & Kids';
+  category: EpgCategory | string;
   frequencyBand: string;
   carrierFrequency: string;
   transponder: string;
@@ -48,6 +62,15 @@ export interface MasterEpgChannel {
   cablecastAutomation: boolean;
   restreamDestinationsCount: number;
   isCustomChannel?: boolean;
+  // RF Cable / Satellite Scanned Fields
+  isScannedStation?: boolean;
+  scannedBand?: 'Ka-Band' | 'Ku-Band' | 'C-Band' | 'X-Band' | 'S-Band' | 'Optical Laser' | 'QAM Cable' | '5G NTN';
+  transponderSignalDbm?: number;
+  snrDb?: number;
+  fecRate?: string;
+  modulationType?: string;
+  polarization?: 'H' | 'V' | 'LHCP' | 'RHCP' | 'Circular' | 'Optical';
+  symbolRateKsym?: number;
 }
 
 export interface CustomChannelDraft {
@@ -65,4 +88,16 @@ export interface CustomChannelDraft {
   restreamDestinations: string[];
   initialProgramName: string;
   initialHost: string;
+}
+
+export interface CableSatelliteScanProgress {
+  isScanning: boolean;
+  frequencyCurrentMhz: number;
+  bandCurrent: string;
+  transponderCurrent: string;
+  progressPercent: number;
+  signalStrengthDbm: number;
+  signalQualitySnrDb: number;
+  carrierLock: boolean;
+  discoveredCount: number;
 }

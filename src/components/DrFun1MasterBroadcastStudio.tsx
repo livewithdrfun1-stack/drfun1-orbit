@@ -37,7 +37,10 @@ import { TwitchDevPortalPanel } from './studio/TwitchDevPortalPanel';
 import { KickDevPortalPanel } from './studio/KickDevPortalPanel';
 import { BroadcasterForumsPanel } from './studio/BroadcasterForumsPanel';
 import { StudioFaqPanel } from './studio/StudioFaqPanel';
+import { StudioFaqModal } from './studio/StudioFaqModal';
 import { UserProfileModal } from './studio/UserProfileModal';
+import { CableSatelliteScannerModal } from './studio/CableSatelliteScannerModal';
+import { DRFUN1_SCANNABLE_CABLE_SATELLITE_STATIONS } from '../data/drfun1ScannedStationsData';
 import { 
   Tv, 
   Radio, 
@@ -124,17 +127,34 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
   activeRank = 'op',
   onOpenIrcdAdmin,
 }) => {
-  // Master Channels List (Base EPG + User-Created Custom Channels)
+  // Master Channels List (Base EPG + Scanned Cable/Satellite Stations + User-Created Custom Channels)
   const [channels, setChannels] = useState<MasterEpgChannel[]>(() => {
     try {
-      const saved = localStorage.getItem('drfun1_custom_channels');
-      if (saved) {
-        const parsed: MasterEpgChannel[] = JSON.parse(saved);
-        return [...MASTER_EPG_CHANNELS, ...parsed];
+      const savedScanned = localStorage.getItem('drfun1_scanned_channels');
+      const savedCustom = localStorage.getItem('drfun1_custom_channels');
+      let list = [...MASTER_EPG_CHANNELS];
+      if (savedScanned) {
+        const parsedScanned: MasterEpgChannel[] = JSON.parse(savedScanned);
+        const existingIds = new Set(list.map(c => c.id));
+        const filteredScanned = parsedScanned.filter(s => !existingIds.has(s.id));
+        list = [...list, ...filteredScanned];
       }
+      if (savedCustom) {
+        const parsedCustom: MasterEpgChannel[] = JSON.parse(savedCustom);
+        const existingIds = new Set(list.map(c => c.id));
+        const filteredCustom = parsedCustom.filter(s => !existingIds.has(s.id));
+        list = [...list, ...filteredCustom];
+      }
+      return list;
     } catch (_) {}
     return MASTER_EPG_CHANNELS;
   });
+
+  // Cable & Satellite RF Transponder Scanner Modal State
+  const [isScannerModalOpen, setIsScannerModalOpen] = useState<boolean>(false);
+
+  // Dedicated Platform FAQ & Guidance Modal State
+  const [isFaqModalOpen, setIsFaqModalOpen] = useState<boolean>(false);
 
   // Selected Channel
   const [selectedChannelId, setSelectedChannelId] = useState<string>(channels[0].id);
@@ -243,6 +263,26 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
     try {
       localStorage.setItem('drfun1_forum_threads', JSON.stringify(updated));
     } catch (_) {}
+  };
+
+  // Handle Adding Scanned Cable & Satellite Stations
+  const handleAddScannedStations = (newStations: MasterEpgChannel[]) => {
+    setChannels(prev => {
+      const existingIds = new Set(prev.map(c => c.id));
+      const toAdd = newStations.filter(s => !existingIds.has(s.id));
+      const combined = [...prev, ...toAdd];
+      try {
+        const allScanned = combined.filter(c => c.isScannedStation);
+        localStorage.setItem('drfun1_scanned_channels', JSON.stringify(allScanned));
+      } catch (_) {}
+      return combined;
+    });
+
+    if (newStations.length > 0) {
+      setSelectedChannelId(newStations[0].id);
+      setCreatedSuccessAlert(`Scanned and imported ${newStations.length} DrFun1 ECOM Cable & Satellite stations with 1:1 dedicated IRC channels!`);
+      setTimeout(() => setCreatedSuccessAlert(null), 6000);
+    }
   };
 
   // EPG Browser Filters
@@ -475,7 +515,8 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
   // Filtered EPG channels
   const filteredEpgChannels = useMemo(() => {
     return channels.filter(channel => {
-      const matchesGroup = epgGroupFilter === 'All' || channel.networkOwner === epgGroupFilter;
+      const matchesGroup = epgGroupFilter === 'All' 
+        || (epgGroupFilter === 'DrFun1 Scanned Cable/Satellite' ? Boolean(channel.isScannedStation) : channel.networkOwner === epgGroupFilter);
       const matchesCategory = epgCategoryFilter === 'All' || channel.category === epgCategoryFilter;
       const searchLower = epgSearch.toLowerCase().trim();
       const matchesSearch = !searchLower || 
@@ -484,7 +525,10 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
         channel.fccFacilityId.toLowerCase().includes(searchLower) ||
         channel.currentProgram.toLowerCase().includes(searchLower) ||
         channel.currentHost.toLowerCase().includes(searchLower) ||
-        channel.unrealIrcChannel.toLowerCase().includes(searchLower);
+        channel.unrealIrcChannel.toLowerCase().includes(searchLower) ||
+        (channel.transponder && channel.transponder.toLowerCase().includes(searchLower)) ||
+        (channel.carrierFrequency && channel.carrierFrequency.toLowerCase().includes(searchLower)) ||
+        (channel.scannedBand && channel.scannedBand.toLowerCase().includes(searchLower));
 
       return matchesGroup && matchesCategory && matchesSearch;
     });
@@ -641,7 +685,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
               <span>Forums</span>
             </button>
 
-            {/* FAQ quick tab button */}
+            {/* FAQ Tab Switcher */}
             <button
               onClick={() => setActiveStudioTool('faq')}
               className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 ${
@@ -650,8 +694,34 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                   : 'bg-slate-800/90 hover:bg-slate-700/90 text-slate-300 border border-slate-700'
               }`}
             >
+              <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+              <span>Studio FAQ</span>
+            </button>
+
+            {/* Dedicated FAQ Guide Modal Button */}
+            <button
+              onClick={() => setIsFaqModalOpen(true)}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 bg-gradient-to-r from-purple-950/80 to-indigo-950/80 hover:from-purple-900/80 hover:to-indigo-900/80 text-purple-200 border border-purple-700/60 shadow-sm shadow-purple-500/10"
+              title="Open Dedicated Platform FAQ & Twitch/Kick Integration Guide Modal"
+            >
               <HelpCircle className="w-3.5 h-3.5 text-purple-400" />
-              <span>FAQ</span>
+              <span>FAQ Guide</span>
+              <span className="text-[9px] px-1 py-0.2 rounded bg-purple-500 text-white font-bold">
+                GUIDE
+              </span>
+            </button>
+
+            {/* Scan Cable / Satellite Stations Button */}
+            <button
+              onClick={() => setIsScannerModalOpen(true)}
+              className="px-3 py-1.5 bg-gradient-to-r from-sky-500/20 via-indigo-500/20 to-emerald-500/20 hover:from-sky-500/30 hover:to-emerald-500/30 text-sky-300 border border-sky-500/40 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 shadow-sm shadow-sky-500/10"
+              title="Scan all Cable & Satellite stations owned by DrFun1 ECOM Inc."
+            >
+              <AntennaIcon className="w-3.5 h-3.5 text-sky-400 animate-pulse" />
+              <span>Scan Cable/Sat Stations</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-sky-400 text-slate-950 font-extrabold">
+                RF SCAN
+              </span>
             </button>
 
             {/* Start Your Own Channel CTA */}
@@ -1142,11 +1212,19 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-mono text-slate-400">Current Station:</span>
                   <span className="font-bold text-white text-xs bg-slate-800 px-2.5 py-1 rounded">
                     {activeChannel.callSign} ({activeChannel.name})
                   </span>
+                  <button
+                    onClick={() => setIsScannerModalOpen(true)}
+                    className="px-2.5 py-1 bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 rounded text-xs font-mono transition-colors flex items-center gap-1.5"
+                    title="Scan Cable & Satellite feeds owned by DrFun1 ECOM Inc."
+                  >
+                    <AntennaIcon className="w-3 h-3 text-sky-400" />
+                    <span>Scan Cable/Sat Ingest</span>
+                  </button>
                 </div>
               </div>
 
@@ -1360,9 +1438,45 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 </div>
               </div>
 
+              {/* DrFun1 ECOM Cable & Satellite Transponder Scan Banner */}
+              <div className="bg-gradient-to-r from-sky-950/70 via-indigo-950/60 to-emerald-950/70 border border-sky-500/30 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/30">
+                    <AntennaIcon className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <span>RF Spectrum & Transponder Demodulator</span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        22+ STATIONS SCANNABLE
+                      </span>
+                    </h4>
+                    <p className="text-xs text-slate-300 mt-0.5">
+                      Scan all Cable & Satellite stations owned by DrFun1 ECOM Inc. across Ka, Ku, C, X, S, Optical Laser (1550nm), and QAM-256 cable headends with 1:1 dedicated UnrealIRCd channels.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => setEpgGroupFilter('DrFun1 Scanned Cable/Satellite')}
+                    className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded-lg text-xs font-mono font-medium transition-colors"
+                  >
+                    View Scanned ({channels.filter(c => c.isScannedStation).length})
+                  </button>
+                  <button
+                    onClick={() => setIsScannerModalOpen(true)}
+                    className="px-3.5 py-1.5 bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-slate-950 font-bold rounded-lg text-xs font-mono transition-all shadow-md shadow-sky-500/20 flex items-center gap-1.5"
+                  >
+                    <Zap className="w-3.5 h-3.5 fill-slate-950" />
+                    <span>Scan Cable/Sat Stations</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Group Category Filter Pills */}
               <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-                {(['All', 'DrFun1 ECOM (FCC Licensed)', 'Paramount Global', 'The Walt Disney Company', 'Warner Bros. Discovery', 'Comcast / Xfinity', 'Dish Network', 'SATCOM Satellite Feeds', 'Custom User Channels'] as const).map((grp) => (
+                {(['All', 'DrFun1 ECOM (FCC Licensed)', 'DrFun1 Scanned Cable/Satellite', 'Paramount Global', 'The Walt Disney Company', 'Warner Bros. Discovery', 'Comcast / Xfinity', 'Dish Network', 'SATCOM Satellite Feeds', 'Custom User Channels'] as const).map((grp) => (
                   <button
                     key={grp}
                     onClick={() => setEpgGroupFilter(grp)}
@@ -1401,9 +1515,16 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                               {ch.callSign}
                             </span>
                           </div>
-                          <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-1.5 py-0.5 rounded">
-                            {ch.status.toUpperCase()}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            {ch.isScannedStation && (
+                              <span className="text-[9px] font-mono font-bold text-sky-300 bg-sky-950/80 border border-sky-700/80 px-1.5 py-0.5 rounded">
+                                {ch.scannedBand || 'CABLE/SAT'}
+                              </span>
+                            )}
+                            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-1.5 py-0.5 rounded">
+                              {ch.status.toUpperCase()}
+                            </span>
+                          </div>
                         </div>
 
                         {/* Station Name & Owner */}
@@ -1432,6 +1553,18 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                             <span className="text-slate-500 block text-[10px]">BITRATE</span>
                             <span className="text-sky-300">{ch.bitrate}</span>
                           </div>
+                          {ch.transponderSignalDbm && (
+                            <div>
+                              <span className="text-slate-500 block text-[10px]">RF SIGNAL</span>
+                              <span className="text-emerald-400">{ch.transponderSignalDbm} dBm</span>
+                            </div>
+                          )}
+                          {ch.snrDb && (
+                            <div>
+                              <span className="text-slate-500 block text-[10px]">SNR LOCK</span>
+                              <span className="text-sky-400">+{ch.snrDb} dB SNR</span>
+                            </div>
+                          )}
                         </div>
 
                         {/* Current Show */}
@@ -1911,6 +2044,8 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
           {activeStudioTool === 'faq' && (
             <StudioFaqPanel
               faqItems={INITIAL_FAQ_ITEMS}
+              onOpenModal={() => setIsFaqModalOpen(true)}
+              onNavigateToTool={(toolId) => setActiveStudioTool(toolId as any)}
             />
           )}
 
@@ -2248,6 +2383,32 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
         onClose={() => setIsProfileModalOpen(false)}
         profile={userProfile}
         onSaveProfile={handleSaveUserProfile}
+      />
+
+      {/* ========================================================
+          MODAL: RF CABLE & SATELLITE TRANSPONDER SCANNER
+          ======================================================== */}
+      <CableSatelliteScannerModal
+        isOpen={isScannerModalOpen}
+        onClose={() => setIsScannerModalOpen(false)}
+        existingChannelIds={channels.map(c => c.id)}
+        onAddScannedStations={handleAddScannedStations}
+        onTuneStation={handleTuneStation}
+      />
+
+      {/* ========================================================
+          MODAL: PLATFORM FAQ & TWITCH/KICK INTEGRATION GUIDE
+          ======================================================== */}
+      <StudioFaqModal
+        isOpen={isFaqModalOpen}
+        onClose={() => setIsFaqModalOpen(false)}
+        faqItems={INITIAL_FAQ_ITEMS}
+        onNavigateToTool={(toolId) => setActiveStudioTool(toolId as any)}
+        onOpenScanner={() => setIsScannerModalOpen(true)}
+        onOpenWizard={() => {
+          setCreateStep(1);
+          setIsCreateChannelModalOpen(true);
+        }}
       />
 
       {/* ========================================================

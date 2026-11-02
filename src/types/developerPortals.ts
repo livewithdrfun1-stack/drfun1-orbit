@@ -99,12 +99,23 @@ export interface ForumThread {
   replies: ForumReply[];
 }
 
+export type FaqCategory = 
+  | 'platform_navigation'
+  | 'twitch_dev'
+  | 'kick_dev'
+  | 'drfun1tv_strimm'
+  | 'restream_io'
+  | 'fcc_irc'
+  | 'witt_legal'
+  | 'troubleshooting';
+
 export interface FaqItem {
   id: string;
-  category: 'twitch_dev' | 'kick_dev' | 'drfun1tv_strimm' | 'restream_io' | 'fcc_irc' | 'witt_legal';
+  category: FaqCategory | string;
   question: string;
   answer: string;
   codeExample?: string;
+  relatedToolId?: string;
   externalLink?: {
     label: string;
     url: string;

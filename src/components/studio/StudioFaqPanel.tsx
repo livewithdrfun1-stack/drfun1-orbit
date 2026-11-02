@@ -20,17 +20,27 @@ import {
   ShieldCheck, 
   Radio, 
   Tv, 
-  Sparkles 
+  Sparkles,
+  Maximize2,
+  Compass,
+  ArrowRight,
+  BookOpen
 } from 'lucide-react';
 
 interface StudioFaqPanelProps {
   faqItems: FaqItem[];
+  onOpenModal?: () => void;
+  onNavigateToTool?: (toolId: string) => void;
 }
 
-export const StudioFaqPanel: React.FC<StudioFaqPanelProps> = ({ faqItems }) => {
+export const StudioFaqPanel: React.FC<StudioFaqPanelProps> = ({ 
+  faqItems,
+  onOpenModal,
+  onNavigateToTool
+}) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(['faq-tw-1', 'faq-kck-1', 'faq-st-1']));
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(['faq-nav-1', 'faq-tw-1', 'faq-kck-1', 'faq-st-1']));
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
 
   const toggleExpand = (id: string) => {
@@ -56,7 +66,8 @@ export const StudioFaqPanel: React.FC<StudioFaqPanelProps> = ({ faqItems }) => {
     const queryLower = searchQuery.toLowerCase().trim();
     const matchesQuery = !queryLower ||
       item.question.toLowerCase().includes(queryLower) ||
-      item.answer.toLowerCase().includes(queryLower);
+      item.answer.toLowerCase().includes(queryLower) ||
+      (item.codeExample && item.codeExample.toLowerCase().includes(queryLower));
 
     return matchesCategory && matchesQuery;
   });
@@ -69,7 +80,7 @@ export const StudioFaqPanel: React.FC<StudioFaqPanelProps> = ({ faqItems }) => {
         <div>
           <div className="flex items-center gap-2">
             <span className="p-2 bg-purple-500/20 text-purple-400 border border-purple-500/40 rounded-xl font-bold text-xs flex items-center gap-1.5">
-              <HelpCircle className="w-4 h-4 text-purple-400" />
+              <BookOpen className="w-4 h-4 text-purple-400" />
               <span>Broadcast &amp; Developer FAQ Knowledge Base</span>
             </span>
             <span className="text-xs font-mono text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800">
@@ -84,16 +95,66 @@ export const StudioFaqPanel: React.FC<StudioFaqPanelProps> = ({ faqItems }) => {
           </p>
         </div>
 
-        {/* Search */}
-        <div className="relative w-full md:w-72">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search FAQs, API keywords, code..."
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
-          />
+        <div className="flex items-center gap-3">
+          {onOpenModal && (
+            <button
+              onClick={onOpenModal}
+              className="px-3 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/40 rounded-lg text-xs font-mono font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+              <span>Open in Dedicated Modal</span>
+            </button>
+          )}
+
+          {/* Search */}
+          <div className="relative w-full md:w-64">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search FAQs, API keywords, code..."
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Platform Navigation Quick Map */}
+      <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-slate-300 uppercase tracking-wider font-mono flex items-center gap-1.5">
+            <Compass className="w-3.5 h-3.5 text-sky-400" />
+            <span>Studio Systems Navigation Guide</span>
+          </span>
+          <span className="text-[10px] font-mono text-slate-500">
+            Quick jump to any studio sub-engine
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+          {[
+            { id: 'strimm_drfun1tv', label: '1. DrFun1TV Playout', sub: 'Strimm Sequencer' },
+            { id: 'epg_guide', label: '2. FCC Master EPG', sub: '1:1 IRC Rooms' },
+            { id: 'restream_multistream', label: '3. Restream.io', sub: 'Multistream Core' },
+            { id: 'dev_twitch', label: '4. dev.twitch.tv', sub: 'Helix & EventSub' },
+            { id: 'dev_kick', label: '5. dev.kick.com', sub: 'API v2 & Pusher' },
+            { id: 'tvu_networks', label: '6. TVU Networks', sub: 'Bonded Cellular' },
+            { id: 'cablecast_peg', label: '7. Cablecast PEG', sub: 'Carousel & EAS' },
+            { id: 'cadjin_master_control', label: '8. Cadjin Master', sub: 'PGM/PVW & LUFS' },
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => onNavigateToTool && onNavigateToTool(item.id)}
+              className="p-2 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 rounded text-left transition-colors group"
+            >
+              <div className="text-white font-medium text-[11px] group-hover:text-sky-300 truncate">
+                {item.label}
+              </div>
+              <div className="text-[10px] text-slate-500 truncate">
+                {item.sub}
+              </div>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -101,11 +162,13 @@ export const StudioFaqPanel: React.FC<StudioFaqPanelProps> = ({ faqItems }) => {
       <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-mono">
         {[
           { id: 'All', label: 'All FAQs' },
+          { id: 'platform_navigation', label: 'Platform Navigation' },
           { id: 'twitch_dev', label: 'dev.twitch.tv (Helix)' },
           { id: 'kick_dev', label: 'dev.kick.com (API v2)' },
           { id: 'drfun1tv_strimm', label: 'DrFun1TV & Strimm' },
           { id: 'restream_io', label: 'Restream.io Multistream' },
           { id: 'fcc_irc', label: 'FCC & 1:1 IRC Channels' },
+          { id: 'troubleshooting', label: 'Troubleshooting & Audio' },
           { id: 'witt_legal', label: 'Witt Law Firm Licensing' },
         ].map((cat) => (
           <button
@@ -177,19 +240,31 @@ export const StudioFaqPanel: React.FC<StudioFaqPanelProps> = ({ faqItems }) => {
                       </div>
                     )}
 
-                    {faq.externalLink && (
-                      <div className="pt-1">
-                        <a
-                          href={faq.externalLink.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 hover:underline font-mono text-[11px]"
+                    <div className="flex items-center justify-between gap-3 pt-2 border-t border-slate-900 flex-wrap">
+                      {faq.relatedToolId && onNavigateToTool ? (
+                        <button
+                          onClick={() => onNavigateToTool(faq.relatedToolId!)}
+                          className="px-2.5 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 rounded text-xs font-mono transition-colors flex items-center gap-1"
                         >
-                          <span>{faq.externalLink.label}</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                    )}
+                          <span>Open {faq.relatedToolId.replace('_', ' ')} in Studio</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+                      ) : <div />}
+
+                      {faq.externalLink && (
+                        <div>
+                          <a
+                            href={faq.externalLink.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 hover:underline font-mono text-[11px]"
+                          >
+                            <span>{faq.externalLink.label}</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
