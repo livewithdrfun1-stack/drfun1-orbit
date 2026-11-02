@@ -36,6 +36,7 @@ import { MpdBotControlView } from './components/MpdBotControlView';
 import { IrcDuplicatorView } from './components/IrcDuplicatorView';
 import { HostingResellerProgramModal } from './components/HostingResellerProgramModal';
 import { IrcdAdminPanelModal } from './components/IrcdAdminPanelModal';
+import { SwitchWittSatelliteFiberModal } from './components/SwitchWittSatelliteFiberModal';
 import { AnopeRankLevel } from './types/ircdAdmin';
 import { STORE_PRODUCTS } from './data/storeProducts';
 import { AppTab } from './components/Header';
@@ -122,6 +123,7 @@ export default function App() {
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [isLicenseModalOpen, setIsLicenseModalOpen] = useState(false);
   const [isSwitchMeshModalOpen, setIsSwitchMeshModalOpen] = useState(false);
+  const [isSwitchWittModalOpen, setIsSwitchWittModalOpen] = useState(false);
   const [isHostingResellerModalOpen, setIsHostingResellerModalOpen] = useState(false);
   const [isIrcdAdminOpen, setIsIrcdAdminOpen] = useState(false);
   const [activeOperRank, setActiveOperRank] = useState<AnopeRankLevel>(() => {
@@ -444,6 +446,7 @@ export default function App() {
         onOpenCompare={() => setIsCompareModalOpen(true)}
         onOpenLicense={() => setIsLicenseModalOpen(true)}
         onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+        onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
         onOpenResellerProgram={() => setIsHostingResellerModalOpen(true)}
         onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
         activeOperRank={activeOperRank}
@@ -498,6 +501,7 @@ export default function App() {
           onOpenIrc={() => setActiveTab('irc')}
           onOpenLicense={() => setIsLicenseModalOpen(true)}
           onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+          onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
           onOpenMpd={() => setActiveTab('mpd')}
           onOpenDuplicator={() => setActiveTab('duplicator')}
           activeRank={activeOperRank}
@@ -933,6 +937,7 @@ export default function App() {
             onOpenCart={() => setIsCartOpen(true)}
             onOpenLicenseModal={() => setIsLicenseModalOpen(true)}
             onOpenSwitchMeshModal={() => setIsSwitchMeshModalOpen(true)}
+            onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
           />
         )}
       </main>
@@ -1101,6 +1106,13 @@ export default function App() {
         onRankChange={setActiveOperRank}
         onNavigateToMpd={() => setActiveTab('mpd')}
         onNavigateToIrc={() => setActiveTab('irc')}
+      />
+
+      {/* Switch.com Owned Infrastructure & Witt Law Firm Satellite Fiber Interactive Portal Modal */}
+      <SwitchWittSatelliteFiberModal
+        isOpen={isSwitchWittModalOpen}
+        onClose={() => setIsSwitchWittModalOpen(false)}
+        onAddToCart={(product) => handleQuickAddToCart(product, true)}
       />
     </div>
   );

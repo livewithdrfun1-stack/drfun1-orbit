@@ -86,7 +86,8 @@ import {
   User,
   HelpCircle,
   Code2,
-  BookOpen
+  BookOpen,
+  Network
 } from 'lucide-react';
 
 interface DrFun1MasterBroadcastStudioProps {
@@ -94,6 +95,7 @@ interface DrFun1MasterBroadcastStudioProps {
   onOpenIrc?: () => void;
   onOpenLicense?: () => void;
   onOpenSwitchMesh?: () => void;
+  onOpenSwitchWittServices?: () => void;
   onOpenMpd?: () => void;
   onOpenDuplicator?: () => void;
   activeRank?: AnopeRankLevel;
@@ -122,6 +124,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
   onOpenIrc,
   onOpenLicense,
   onOpenSwitchMesh,
+  onOpenSwitchWittServices,
   onOpenMpd,
   onOpenDuplicator,
   activeRank = 'op',
@@ -685,29 +688,24 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
               <span>Forums</span>
             </button>
 
-            {/* FAQ Tab Switcher */}
+            {/* Unified Studio FAQ & Platform Guide Button (Both FAQs in Same Page) */}
             <button
-              onClick={() => setActiveStudioTool('faq')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 ${
+              onClick={() => {
+                setActiveStudioTool('faq');
+                const el = document.getElementById('studio-tools-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all flex items-center gap-1.5 shadow-sm ${
                 activeStudioTool === 'faq'
-                  ? 'bg-purple-600 text-white font-bold'
-                  : 'bg-slate-800/90 hover:bg-slate-700/90 text-slate-300 border border-slate-700'
+                  ? 'bg-purple-600 text-white font-bold shadow-purple-600/30'
+                  : 'bg-gradient-to-r from-purple-950/80 to-indigo-950/80 hover:from-purple-900/80 hover:to-indigo-900/80 text-purple-200 border border-purple-700/60'
               }`}
+              title="Studio FAQ & Platform Guide (Both FAQs Unified On This Page)"
             >
               <BookOpen className="w-3.5 h-3.5 text-purple-400" />
-              <span>Studio FAQ</span>
-            </button>
-
-            {/* Dedicated FAQ Guide Modal Button */}
-            <button
-              onClick={() => setIsFaqModalOpen(true)}
-              className="px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 bg-gradient-to-r from-purple-950/80 to-indigo-950/80 hover:from-purple-900/80 hover:to-indigo-900/80 text-purple-200 border border-purple-700/60 shadow-sm shadow-purple-500/10"
-              title="Open Dedicated Platform FAQ & Twitch/Kick Integration Guide Modal"
-            >
-              <HelpCircle className="w-3.5 h-3.5 text-purple-400" />
-              <span>FAQ Guide</span>
+              <span>Studio FAQ &amp; Guide</span>
               <span className="text-[9px] px-1 py-0.2 rounded bg-purple-500 text-white font-bold">
-                GUIDE
+                ALL IN ONE
               </span>
             </button>
 
@@ -740,10 +738,23 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
             <button
               onClick={onOpenLicense}
               className="px-3 py-1.5 bg-slate-800/90 hover:bg-slate-700/90 text-slate-300 border border-slate-700 rounded-lg text-xs transition-colors flex items-center gap-1.5"
+              title="View Witt Law Firm Certificate RAW-SATCOM-2026-LIC-0881"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="font-medium hidden sm:inline">Witt Law Firm Certified</span>
+              <span className="font-medium hidden sm:inline">Witt Law Certified</span>
             </button>
+
+            {/* Switch Owned Infrastructure & Witt Law Satellite Fiber Services */}
+            {onOpenSwitchWittServices && (
+              <button
+                onClick={onOpenSwitchWittServices}
+                className="px-3 py-1.5 bg-gradient-to-r from-emerald-950/80 to-teal-950/80 hover:from-emerald-900/80 hover:to-teal-900/80 text-emerald-300 border border-emerald-500/50 rounded-lg text-xs font-mono transition-all flex items-center gap-1.5 shadow-sm shadow-emerald-950/20"
+                title="Switch.com Owned Infrastructure & Witt Law Satellite Fiber Portal (Cert: RAW-SATCOM-2026-LIC-0881 | FCC FRN: 0034981290)"
+              >
+                <Network className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="font-bold">Switch &amp; Witt Fiber</span>
+              </button>
+            )}
 
             {/* Oper Admin Panel Link if op or higher */}
             {onOpenIrcdAdmin && (
@@ -1042,7 +1053,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
         </div>
 
         {/* ROW 2: ALL-IN-ONE STUDIO TOOLS SUITE (STRIMM / RESTREAM / TVU / CABLECAST / CADJIN / EPG) */}
-        <section className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <section id="studio-tools-section" className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
           
           {/* Navigation Bar for Studio Tools */}
           <div className="bg-slate-950/95 border-b border-slate-800 px-4 py-2 flex items-center justify-between gap-2 overflow-x-auto">
@@ -1168,7 +1179,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 <span>Forums &amp; Code</span>
               </button>
 
-              {/* Tool 10: FAQ Knowledge Base */}
+              {/* Tool 10: FAQ Knowledge Base & Platform Guide */}
               <button
                 onClick={() => setActiveStudioTool('faq')}
                 className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
@@ -1178,7 +1189,10 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 }`}
               >
                 <HelpCircle className="w-3.5 h-3.5 text-purple-400" />
-                <span>Studio FAQ</span>
+                <span>Studio FAQ &amp; Guide</span>
+                <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-purple-950 text-purple-300 font-bold border border-purple-800/60">
+                  All in One
+                </span>
               </button>
 
             </div>
@@ -2040,12 +2054,24 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
             />
           )}
 
-          {/* TOOL 10: BROADCASTER FAQ KNOWLEDGE BASE */}
+          {/* TOOL 10: BROADCASTER FAQ KNOWLEDGE BASE (BOTH FAQS IN SAME PAGE) */}
           {activeStudioTool === 'faq' && (
             <StudioFaqPanel
               faqItems={INITIAL_FAQ_ITEMS}
-              onOpenModal={() => setIsFaqModalOpen(true)}
-              onNavigateToTool={(toolId) => setActiveStudioTool(toolId as any)}
+              onNavigateToTool={(toolId) => {
+                setActiveStudioTool(toolId as any);
+                const el = document.getElementById('studio-tools-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              onOpenScanner={() => setIsScannerModalOpen(true)}
+              onOpenWizard={() => {
+                setCreateStep(1);
+                setIsCreateChannelModalOpen(true);
+              }}
+              onOpenLicense={onOpenLicense}
+              onOpenSwitchWittServices={onOpenSwitchWittServices}
+              onOpenIrc={onOpenIrc}
+              onOpenStore={onOpenStore}
             />
           )}
 

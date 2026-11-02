@@ -15,6 +15,8 @@ export type ProductCategory =
   | 'Phone Carrier Spectrum & Backhaul'
   | 'Dedicated IRCD & Transit Hosting'
   | 'Switch.com Fiber Optical & Teleport'
+  | 'Switch.com Owned Infrastructure & SuperLoop'
+  | 'Witt Law Firm Satellite Fiber Escrow'
   | 'Snapdragon Qualcomm Satellite & 5G';
 
 export interface StoreProduct {

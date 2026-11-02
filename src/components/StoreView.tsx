@@ -24,7 +24,8 @@ import {
   Cpu,
   Smartphone,
   Wifi,
-  Unlock
+  Unlock,
+  Network
 } from 'lucide-react';
 import { QuantumFiberResellerModal } from './QuantumFiberResellerModal';
 import { HostingResellerProgramModal } from './HostingResellerProgramModal';
@@ -37,6 +38,7 @@ interface StoreViewProps {
   onOpenCart: () => void;
   onOpenLicenseModal: () => void;
   onOpenSwitchMeshModal: () => void;
+  onOpenSwitchWittServices?: () => void;
 }
 
 export const StoreView: React.FC<StoreViewProps> = ({
@@ -46,6 +48,7 @@ export const StoreView: React.FC<StoreViewProps> = ({
   onOpenCart,
   onOpenLicenseModal,
   onOpenSwitchMeshModal,
+  onOpenSwitchWittServices,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedPartner, setSelectedPartner] = useState<string>('All Partners');
@@ -57,6 +60,8 @@ export const StoreView: React.FC<StoreViewProps> = ({
 
   const categories: (ProductCategory | 'All')[] = [
     'All',
+    'Switch.com Owned Infrastructure & SuperLoop',
+    'Witt Law Firm Satellite Fiber Escrow',
     'DrFun1 Wireless Unlocked Phones',
     'DrFun1 Wireless Satellite 5G Plans',
     'Switch.com Fiber Optical & Teleport',
@@ -78,12 +83,15 @@ export const StoreView: React.FC<StoreViewProps> = ({
 
   const partners: string[] = [
     'All Partners',
+    'Switch.com',
+    'The Law Office of Richard A. Witt LLC',
+    'Witt Law Firm',
+    'Owens Company',
     'DrFun1 Wireless',
     'Apple',
     'Samsung',
     'Google',
     'Snapdragon Qualcomm',
-    'Switch.com',
     'Quantum Fiber',
     'T-Mobile',
     'AT&T',
@@ -235,6 +243,17 @@ export const StoreView: React.FC<StoreViewProps> = ({
                 <Terminal className="w-3.5 h-3.5 text-sky-400" />
                 <span>irc.drfun1.com Peering</span>
               </button>
+
+              {onOpenSwitchWittServices && (
+                <button
+                  onClick={onOpenSwitchWittServices}
+                  className="text-xs text-emerald-300 hover:text-white bg-emerald-950/70 hover:bg-emerald-900/70 border border-emerald-500/50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-medium cursor-pointer shadow-sm shadow-emerald-950/20"
+                  title="Switch.com Owned Infrastructure & Witt Law Firm Satellite Fiber Services"
+                >
+                  <Network className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Switch &amp; Witt Satellite Fiber</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -466,11 +485,66 @@ export const StoreView: React.FC<StoreViewProps> = ({
           </button>
           <button
             onClick={onOpenSwitchMeshModal}
-            className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition-all shadow-md shadow-emerald-500/25 flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <Server className="w-4 h-4" />
+            <Server className="w-4 h-4 text-emerald-400" />
             <span>Switch Teleport &amp; 25 Leafs</span>
           </button>
+          {onOpenSwitchWittServices && (
+            <button
+              onClick={onOpenSwitchWittServices}
+              className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition-all shadow-md shadow-emerald-500/25 flex items-center gap-1.5 cursor-pointer"
+            >
+              <Network className="w-4 h-4" />
+              <span>Switch Owned &amp; Witt Escrow Portal</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Witt Law Firm Satellite Fiber Legal Escrow Banner */}
+      <div className="bg-gradient-to-r from-emerald-950/80 via-slate-900/90 to-teal-950/80 border border-emerald-500/40 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl shadow-emerald-950/30">
+        <div className="flex items-start gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5 shadow-lg shadow-emerald-500/20">
+            <ShieldCheck className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/40 uppercase tracking-wide">
+                www.wittlawfirm.com Satellite Fiber Escrow
+              </span>
+              <span className="text-slate-400 font-mono text-xs">
+                Cert: RAW-SATCOM-2026-LIC-0881 &bull; FCC FRN: 0034981290 &bull; Owens Company
+              </span>
+            </div>
+            <h3 className="text-base font-bold text-white mt-1">
+              Witt Law Firm Orbital Slot Escrow, FCC Part 25 &amp; 30-Year Fiber IRU Agreements
+            </h3>
+            <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              Institutional space telecom legal representation by <strong className="text-emerald-300 font-semibold">Richard Alan Witt, Esq. (www.wittlawfirm.com)</strong>. Secure orbital slot priority title holding, commercial teleport licensing, dark fiber 20-30 year indefeasible rights of use (IRU), and direct-to-cell carrier roaming agreements with complete statutory indemnification.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 font-mono text-xs flex-wrap">
+          <button
+            onClick={() => {
+              setSelectedCategory('Witt Law Firm Satellite Fiber Escrow');
+              setSelectedPartner('The Law Office of Richard A. Witt LLC');
+            }}
+            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/40 transition-colors cursor-pointer font-bold"
+          >
+            Filter Witt Law Services
+          </button>
+          {onOpenSwitchWittServices && (
+            <button
+              onClick={onOpenSwitchWittServices}
+              className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition-all shadow-md shadow-emerald-500/25 flex items-center gap-1.5 cursor-pointer"
+            >
+              <FileCheck className="w-4 h-4" />
+              <span>Launch Space-Fiber Portal</span>
+            </button>
+          )}
         </div>
       </div>
 

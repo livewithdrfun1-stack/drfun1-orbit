@@ -1,4 +1,5 @@
 import { StoreProduct } from '../types/store';
+import { SWITCH_WITT_STORE_PRODUCTS } from './switchWittServicesData';
 
 export const STORE_PRODUCTS: StoreProduct[] = [
   {
@@ -2306,5 +2307,6 @@ export const STORE_PRODUCTS: StoreProduct[] = [
     unrealIrcdEnabled: true,
     risingNetProtected: true,
   },
+  ...SWITCH_WITT_STORE_PRODUCTS,
 ];
 

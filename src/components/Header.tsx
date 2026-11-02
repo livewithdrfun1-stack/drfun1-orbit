@@ -9,7 +9,8 @@ import {
   Scale, 
   Server,
   TrendingUp,
-  ShieldCheck
+  ShieldCheck,
+  Network
 } from 'lucide-react';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 
@@ -25,6 +26,7 @@ interface HeaderProps {
   onOpenCompare: () => void;
   onOpenLicense: () => void;
   onOpenSwitchMesh: () => void;
+  onOpenSwitchWittServices?: () => void;
   onOpenResellerProgram?: () => void;
   onOpenIrcdAdmin?: () => void;
   activeOperRank?: AnopeRankLevel;
@@ -42,6 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCompare,
   onOpenLicense,
   onOpenSwitchMesh,
+  onOpenSwitchWittServices,
   onOpenResellerProgram,
   onOpenIrcdAdmin,
   activeOperRank,
@@ -99,11 +102,28 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onOpenSwitchMesh}
               className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-slate-900/80 text-slate-400 hover:text-emerald-300 border-slate-800 hover:border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer hidden md:flex font-sans"
+              title="Switch Colocation & UnrealIRCd 25 Leaf Node Telemetry"
             >
               <Server className="w-3.5 h-3.5 text-emerald-400" />
               <span>Switch Mesh</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             </button>
+
+            {/* Switch Owned Infrastructure & Witt Law Satellite Fiber Services */}
+            {onOpenSwitchWittServices && (
+              <button
+                onClick={onOpenSwitchWittServices}
+                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-emerald-950/70 to-teal-950/70 text-emerald-300 hover:text-white hover:bg-emerald-900/80 border-emerald-500/50 hover:border-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-emerald-950/30"
+                title="Switch.com Owned Infrastructure & Witt Law Firm Satellite Fiber Services (Cert: RAW-SATCOM-2026-LIC-0881 | FCC FRN: 0034981290)"
+              >
+                <Network className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">Switch &amp; Witt Fiber</span>
+                <span className="sm:hidden">Switch/Witt</span>
+                <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-emerald-400/20 text-emerald-300 font-bold hidden xl:inline">
+                  SuperLoop
+                </span>
+              </button>
+            )}
 
             {/* IRCD & Anope Ops Panel */}
             {onOpenIrcdAdmin && (

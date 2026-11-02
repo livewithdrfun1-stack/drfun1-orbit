@@ -500,9 +500,40 @@ curl -X GET "https://stream.drfun1.com/api/rf/scan?band=all&owner=drfun1_ecom" \
     id: 'faq-witt-1',
     category: 'witt_legal',
     question: 'How is this broadcast ecosystem licensed and certified via www.wittlawfirm.com?',
-    answer: 'The entire DrFun1TV suite, FCC station directory, carrier roaming agreements, and turnkey reseller program are certified and legally held by The Law Office of Richard A. Witt LLC (www.wittlawfirm.com / www.owenscompany.com) for Richard Alan Witt under Certificate ID RAW-SATCOM-2026-LIC-0881. Contact livewithdrfun1@gmail.com for questions.',
+    answer: 'The entire DrFun1TV suite, FCC station directory, carrier roaming agreements, and turnkey reseller program are certified and legally held by The Law Office of Richard A. Witt LLC (www.wittlawfirm.com / www.owenscompany.com) for Richard Alan Witt under Certificate ID RAW-SATCOM-2026-LIC-0881 and FCC FRN 0034981290. Contact livewithdrfun1@gmail.com for questions.',
     externalLink: {
       label: 'Witt Law Firm Official Portal',
+      url: 'https://www.wittlawfirm.com'
+    }
+  },
+  {
+    id: 'faq-switch-witt-1',
+    category: 'witt_legal',
+    question: 'What physical infrastructure does Switch (www.switch.com) own and how is it integrated?',
+    answer: 'Switch owns five Class 5 Platinum Tier-IV data center campuses: The Core (Las Vegas, 3.5M+ sq ft, 315MW solar), The Citadel (Tahoe Reno, 7.2M+ sq ft, 650MW solar), The Pyramid (Grand Rapids, 1.8M+ sq ft, 110MW wind/hydro), The Keep (Atlanta, 1.1M+ sq ft, 110MW solar), and The Rock (Austin, 1.5M+ sq ft, 185MW solar). These facilities feature on-site carrier-neutral teleport dish farms, 1550nm laser optical downlinks, and dedicated UnrealIRCd leaf nodes directly connected to irc.drfun1.com.',
+    externalLink: {
+      label: 'Switch Data Centers',
+      url: 'https://www.switch.com'
+    }
+  },
+  {
+    id: 'faq-switch-witt-2',
+    category: 'witt_legal',
+    question: 'What is the Switch CONNECT SuperLoop and what latencies does it offer?',
+    answer: 'The Switch SuperLoop is an active 400G / 800G DWDM optical fiber ring interconnecting Switch data centers and major carrier exchanges with sub-4.7ms roundtrip latency between Nevada and California. In combination with Witt Law Firm 20-30 year IRU contracts, broadcasters obtain uncompressed 8K video transport, multi-satellite teleport aggregation, and direct cloud cross-connects.',
+    relatedToolId: 'epg_guide',
+    externalLink: {
+      label: 'Switch SuperLoop Network',
+      url: 'https://www.switch.com/telecom/'
+    }
+  },
+  {
+    id: 'faq-switch-witt-3',
+    category: 'witt_legal',
+    question: 'What satellite and fiber legal services does The Law Office of Richard A. Witt LLC provide?',
+    answer: 'The Law Office of Richard A. Witt LLC (www.wittlawfirm.com / Owens Company) provides orbital slot title escrow, ITU Appendix 4 frequency priority filings, FCC Part 25 commercial earth station commissioning under FRN 0034981290, 20-30 year dark fiber optical IRU master agreements, direct-to-cell 3GPP NTN carrier roaming contracts, and turnkey wholesale franchise licensing with statutory indemnification under Certificate RAW-SATCOM-2026-LIC-0881.',
+    externalLink: {
+      label: 'Witt Law Telecom Escrow',
       url: 'https://www.wittlawfirm.com'
     }
   }
