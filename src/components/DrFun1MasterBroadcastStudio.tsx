@@ -87,10 +87,34 @@ import {
   HelpCircle,
   Code2,
   BookOpen,
-  Network
+  Network,
+  Headphones,
+  Disc,
+  Music
 } from 'lucide-react';
+import { WordPressIrcDuplicatorView } from './WordPressIrcDuplicatorView';
+import { MpdBotControlView } from './MpdBotControlView';
+import { IrcClientView } from './IrcClientView';
+import { IrcdStatsView } from './IrcdStatsView';
+import { RestreamStudioView } from './RestreamStudioView';
 
-interface DrFun1MasterBroadcastStudioProps {
+export type StudioToolId =
+  | 'strimm_drfun1tv'
+  | 'epg_guide'
+  | 'restream_multistream'
+  | 'wordpress_duplicator'
+  | 'mpd_bot'
+  | 'irc_client'
+  | 'ircd_stats'
+  | 'dev_twitch'
+  | 'dev_kick'
+  | 'tvu_networks'
+  | 'cablecast_peg'
+  | 'cadjin_master_control'
+  | 'forums'
+  | 'faq';
+
+export interface DrFun1MasterBroadcastStudioProps {
   onOpenStore?: () => void;
   onOpenIrc?: () => void;
   onOpenLicense?: () => void;
@@ -101,6 +125,8 @@ interface DrFun1MasterBroadcastStudioProps {
   activeRank?: AnopeRankLevel;
   onOpenIrcdAdmin?: () => void;
   onOpenIrcStats?: () => void;
+  initialTool?: StudioToolId;
+  onToolChange?: (tool: StudioToolId) => void;
 }
 
 const DEFAULT_CUSTOM_DRAFT: CustomChannelDraft = {
@@ -131,6 +157,8 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
   activeRank = 'op',
   onOpenIrcdAdmin,
   onOpenIrcStats,
+  initialTool,
+  onToolChange,
 }) => {
   // Master Channels List (Base EPG + Scanned Cable/Satellite Stations + User-Created Custom Channels)
   const [channels, setChannels] = useState<MasterEpgChannel[]>(() => {
@@ -173,19 +201,21 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
   const [volume, setVolume] = useState<number>(75);
   const [currentUptimeSeconds, setCurrentUptimeSeconds] = useState<number>(1420);
 
-  // Active Studio Mode Tab
-  const [activeStudioTool, setActiveStudioTool] = useState<
-    | 'strimm_drfun1tv'
-    | 'epg_guide'
-    | 'restream_multistream'
-    | 'dev_twitch'
-    | 'dev_kick'
-    | 'tvu_networks'
-    | 'cablecast_peg'
-    | 'cadjin_master_control'
-    | 'forums'
-    | 'faq'
-  >('strimm_drfun1tv');
+  // Active Studio Mode Tab (All Studio Broadcasting Tools Integrated)
+  const [activeStudioTool, setActiveStudioTool] = useState<StudioToolId>(initialTool || 'strimm_drfun1tv');
+
+  useEffect(() => {
+    if (initialTool) {
+      setActiveStudioTool(initialTool);
+    }
+  }, [initialTool]);
+
+  const handleSelectStudioTool = (tool: StudioToolId) => {
+    setActiveStudioTool(tool);
+    if (onToolChange) {
+      onToolChange(tool);
+    }
+  };
 
   // User Profile State
   const [userProfile, setUserProfile] = useState<BroadcasterUserProfile>(() => {
@@ -805,9 +835,88 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
               </span>
             </button>
 
+            {/* Quick Studio Tools Bar */}
+            <button
+              onClick={() => handleSelectStudioTool('epg_guide')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 ${
+                activeStudioTool === 'epg_guide'
+                  ? 'bg-sky-500 text-slate-950 font-bold shadow-md shadow-sky-500/20'
+                  : 'bg-slate-900/80 hover:bg-slate-800 text-sky-400 border border-slate-800'
+              }`}
+              title="Master EPG Guide (All 11 Networks)"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>EPG (11 Nets)</span>
+            </button>
+
+            <button
+              onClick={() => handleSelectStudioTool('restream_multistream')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 ${
+                activeStudioTool === 'restream_multistream'
+                  ? 'bg-red-500 text-slate-950 font-bold shadow-md shadow-red-500/20'
+                  : 'bg-slate-900/80 hover:bg-slate-800 text-red-400 border border-slate-800'
+              }`}
+              title="Restream.io Multi-Destination Studio"
+            >
+              <Radio className="w-3.5 h-3.5" />
+              <span>MultiStream</span>
+            </button>
+
+            <button
+              onClick={() => handleSelectStudioTool('wordpress_duplicator')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 ${
+                activeStudioTool === 'wordpress_duplicator'
+                  ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-600/20'
+                  : 'bg-purple-950/60 hover:bg-purple-900/60 text-purple-300 border border-purple-800/60'
+              }`}
+              title="WordPress 1:1 Media Player & IRC Duplicator"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>WP 1:1 Matrix</span>
+            </button>
+
+            <button
+              onClick={() => handleSelectStudioTool('mpd_bot')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 ${
+                activeStudioTool === 'mpd_bot'
+                  ? 'bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
+                  : 'bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-800/60'
+              }`}
+              title="MPD Music Player Daemon & DJ Control Deck"
+            >
+              <Headphones className="w-3.5 h-3.5" />
+              <span>MPD DJ Deck</span>
+            </button>
+
+            <button
+              onClick={() => handleSelectStudioTool('irc_client')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 ${
+                activeStudioTool === 'irc_client'
+                  ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-600/20'
+                  : 'bg-slate-900/80 hover:bg-slate-800 text-purple-300 border border-slate-800'
+              }`}
+              title="Live UnrealIRCd Studio Web Client"
+            >
+              <Terminal className="w-3.5 h-3.5" />
+              <span>Web IRC</span>
+            </button>
+
+            <button
+              onClick={() => handleSelectStudioTool('ircd_stats')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 ${
+                activeStudioTool === 'ircd_stats'
+                  ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-600/20'
+                  : 'bg-purple-950/60 hover:bg-purple-900/60 text-purple-300 border border-purple-800/60'
+              }`}
+              title="IRCD Server Stats & 25 Switch Node Telemetry"
+            >
+              <Activity className="w-3.5 h-3.5" />
+              <span>IRCD Stats</span>
+            </button>
+
             {/* dev.twitch.tv quick tab button */}
             <button
-              onClick={() => setActiveStudioTool('dev_twitch')}
+              onClick={() => handleSelectStudioTool('dev_twitch')}
               className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 ${
                 activeStudioTool === 'dev_twitch'
                   ? 'bg-purple-600 text-white font-bold'
@@ -820,7 +929,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
 
             {/* dev.kick.com quick tab button */}
             <button
-              onClick={() => setActiveStudioTool('dev_kick')}
+              onClick={() => handleSelectStudioTool('dev_kick')}
               className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 ${
                 activeStudioTool === 'dev_kick'
                   ? 'bg-emerald-500 text-slate-950 font-bold'
@@ -833,7 +942,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
 
             {/* Forums quick tab button */}
             <button
-              onClick={() => setActiveStudioTool('forums')}
+              onClick={() => handleSelectStudioTool('forums')}
               className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 ${
                 activeStudioTool === 'forums'
                   ? 'bg-sky-500 text-slate-950 font-bold'
@@ -1347,20 +1456,72 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
 
               {/* Tool 3: Restream.io Multistream Playout */}
               <button
-                onClick={() => setActiveStudioTool('restream_multistream')}
+                onClick={() => handleSelectStudioTool('restream_multistream')}
                 className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
                   activeStudioTool === 'restream_multistream'
-                    ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
+                    ? 'bg-red-500 text-slate-950 shadow-md shadow-red-500/20'
                     : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                 }`}
               >
                 <Radio className="w-3.5 h-3.5" />
-                <span>Restream.io Multi-Destination</span>
+                <span>MultiStream Studio</span>
               </button>
 
-              {/* Tool 4: dev.twitch.tv Portal */}
+              {/* Tool 4: WordPress 1:1 Media Player & IRC Duplicator */}
               <button
-                onClick={() => setActiveStudioTool('dev_twitch')}
+                onClick={() => handleSelectStudioTool('wordpress_duplicator')}
+                className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
+                  activeStudioTool === 'wordpress_duplicator'
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
+                    : 'text-purple-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Share2 className="w-3.5 h-3.5 text-purple-400" />
+                <span>WordPress 1:1 Player &amp; Matrix</span>
+              </button>
+
+              {/* Tool 5: MPD Music Player Daemon & Live DJ Booth */}
+              <button
+                onClick={() => handleSelectStudioTool('mpd_bot')}
+                className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
+                  activeStudioTool === 'mpd_bot'
+                    ? 'bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
+                    : 'text-emerald-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Headphones className="w-3.5 h-3.5 text-emerald-400" />
+                <span>MPD Bot &amp; DJ Booth</span>
+              </button>
+
+              {/* Tool 6: Live UnrealIRCd Web Studio Client */}
+              <button
+                onClick={() => handleSelectStudioTool('irc_client')}
+                className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
+                  activeStudioTool === 'irc_client'
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Terminal className="w-3.5 h-3.5 text-purple-400" />
+                <span>Web IRC Studio Client</span>
+              </button>
+
+              {/* Tool 7: IRCD Server Stats & 25 Switch Node Telemetry */}
+              <button
+                onClick={() => handleSelectStudioTool('ircd_stats')}
+                className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
+                  activeStudioTool === 'ircd_stats'
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
+                    : 'text-purple-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Activity className="w-3.5 h-3.5 text-purple-400" />
+                <span>IRCD Server Stats</span>
+              </button>
+
+              {/* Tool 8: dev.twitch.tv Portal */}
+              <button
+                onClick={() => handleSelectStudioTool('dev_twitch')}
                 className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
                   activeStudioTool === 'dev_twitch'
                     ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
@@ -1368,12 +1529,12 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 }`}
               >
                 <Code2 className="w-3.5 h-3.5 text-purple-400" />
-                <span>dev.twitch.tv Portal</span>
+                <span>dev.twitch.tv</span>
               </button>
 
-              {/* Tool 5: dev.kick.com Portal */}
+              {/* Tool 9: dev.kick.com Portal */}
               <button
-                onClick={() => setActiveStudioTool('dev_kick')}
+                onClick={() => handleSelectStudioTool('dev_kick')}
                 className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
                   activeStudioTool === 'dev_kick'
                     ? 'bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
@@ -1381,12 +1542,12 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 }`}
               >
                 <Code2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>dev.kick.com Portal</span>
+                <span>dev.kick.com</span>
               </button>
 
-              {/* Tool 6: TVU Networks Grid & Producer */}
+              {/* Tool 10: TVU Networks Grid & Producer */}
               <button
-                onClick={() => setActiveStudioTool('tvu_networks')}
+                onClick={() => handleSelectStudioTool('tvu_networks')}
                 className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
                   activeStudioTool === 'tvu_networks'
                     ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
@@ -1394,12 +1555,12 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 }`}
               >
                 <Video className="w-3.5 h-3.5" />
-                <span>TVU Networks Grid</span>
+                <span>TVU Grid</span>
               </button>
 
-              {/* Tool 7: Cablecast PEG Community Playout */}
+              {/* Tool 11: Cablecast PEG Community Playout */}
               <button
-                onClick={() => setActiveStudioTool('cablecast_peg')}
+                onClick={() => handleSelectStudioTool('cablecast_peg')}
                 className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
                   activeStudioTool === 'cablecast_peg'
                     ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
@@ -1407,12 +1568,12 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 }`}
               >
                 <Building2 className="w-3.5 h-3.5" />
-                <span>Cablecast PEG & EAS</span>
+                <span>Cablecast PEG &amp; EAS</span>
               </button>
 
-              {/* Tool 8: Cadjin Master Control Switcher */}
+              {/* Tool 12: Cadjin Master Control Switcher */}
               <button
-                onClick={() => setActiveStudioTool('cadjin_master_control')}
+                onClick={() => handleSelectStudioTool('cadjin_master_control')}
                 className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
                   activeStudioTool === 'cadjin_master_control'
                     ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
@@ -1420,12 +1581,12 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 }`}
               >
                 <Sliders className="w-3.5 h-3.5" />
-                <span>Cadjin Master Control</span>
+                <span>Cadjin Control</span>
               </button>
 
-              {/* Tool 9: Forums & Discussion */}
+              {/* Tool 13: Forums & Discussion */}
               <button
-                onClick={() => setActiveStudioTool('forums')}
+                onClick={() => handleSelectStudioTool('forums')}
                 className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
                   activeStudioTool === 'forums'
                     ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
@@ -1436,9 +1597,9 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 <span>Forums &amp; Code</span>
               </button>
 
-              {/* Tool 10: FAQ Knowledge Base & Platform Guide */}
+              {/* Tool 14: FAQ Knowledge Base & Platform Guide */}
               <button
-                onClick={() => setActiveStudioTool('faq')}
+                onClick={() => handleSelectStudioTool('faq')}
                 className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
                   activeStudioTool === 'faq'
                     ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
@@ -2330,7 +2491,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
             <StudioFaqPanel
               faqItems={INITIAL_FAQ_ITEMS}
               onNavigateToTool={(toolId) => {
-                setActiveStudioTool(toolId as any);
+                handleSelectStudioTool(toolId as any);
                 const el = document.getElementById('studio-tools-section');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
@@ -2344,6 +2505,142 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
               onOpenIrc={onOpenIrc}
               onOpenStore={onOpenStore}
             />
+          )}
+
+          {/* TOOL 11: WORDPRESS 1:1 MEDIA PLAYER & IRC DUPLICATOR */}
+          {activeStudioTool === 'wordpress_duplicator' && (
+            <div className="p-4 sm:p-6 space-y-4">
+              <div className="bg-slate-950/80 border border-purple-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-lg bg-purple-950/80 text-purple-400 border border-purple-800/80">
+                    <Share2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <span>WordPress 1:1 Media Player &amp; IRC Duplicator</span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-700/60 font-bold uppercase">
+                        1:1 Channel Sync
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Generate ready-to-deploy WordPress plugins with live HLS/RTMP players and 1:1 UnrealIRCd chat syndication.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-mono">
+                  <span className="text-slate-400">IRCD Hub:</span>
+                  <span className="text-emerald-400 font-bold">irc.drfun1.com:6697 (SSL)</span>
+                </div>
+              </div>
+              <WordPressIrcDuplicatorView />
+            </div>
+          )}
+
+          {/* TOOL 12: MPD MUSIC PLAYER DAEMON & LIVE DJ CONTROL DECK */}
+          {activeStudioTool === 'mpd_bot' && (
+            <div className="p-4 sm:p-6 space-y-4">
+              <div className="bg-slate-950/80 border border-emerald-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-lg bg-emerald-950/80 text-emerald-400 border border-emerald-800/80">
+                    <Headphones className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <span>MPD Music Player Daemon &amp; Live DJ Control Deck</span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700/60 font-bold uppercase">
+                        Live DJ Booth Active
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Direct automated Icecast music stream playout, playlist automation, and IRC bot commands.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-mono">
+                  <span className="text-slate-400">Stream:</span>
+                  <span className="text-emerald-400 font-bold">stream.drfun1.com:8000</span>
+                </div>
+              </div>
+              <MpdBotControlView
+                onOpenIrc={() => handleSelectStudioTool('irc_client')}
+                onOpenBroadcast={() => handleSelectStudioTool('strimm_drfun1tv')}
+                onOpenDuplicator={() => handleSelectStudioTool('wordpress_duplicator')}
+                activeRank={activeRank}
+                onOpenAdminPanel={onOpenIrcdAdmin}
+              />
+            </div>
+          )}
+
+          {/* TOOL 13: LIVE UNREALIRCD WEB STUDIO CLIENT & MODERATION */}
+          {activeStudioTool === 'irc_client' && (
+            <div className="p-4 sm:p-6 space-y-4">
+              <div className="bg-slate-950/80 border border-purple-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-lg bg-purple-950/80 text-purple-400 border border-purple-800/80">
+                    <Terminal className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <span>Live UnrealIRCd 6 Web Studio Client</span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-700/60 font-bold uppercase">
+                        WebIRC Online
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Full-featured web IRC client with auto-join to active broadcasting channel ({activeChannel.unrealIrcChannel}).
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-mono">
+                  <span className="text-slate-400">Tuned Room:</span>
+                  <span className="text-emerald-400 font-bold">{activeChannel.unrealIrcChannel}</span>
+                </div>
+              </div>
+              <IrcClientView
+                onOpenLicense={onOpenLicense || (() => {})}
+                onOpenSwitchMesh={onOpenSwitchMesh || (() => {})}
+                onNavigateToStore={onOpenStore}
+                onNavigateToStudio={() => handleSelectStudioTool('strimm_drfun1tv')}
+                activeRank={activeRank}
+                onOpenIrcdAdmin={onOpenIrcdAdmin}
+              />
+            </div>
+          )}
+
+          {/* TOOL 14: IRCD SERVER STATS & LEAF TELEMETRY */}
+          {activeStudioTool === 'ircd_stats' && (
+            <div className="p-4 sm:p-6 space-y-4">
+              <div className="bg-slate-950/80 border border-purple-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-lg bg-purple-950/80 text-purple-400 border border-purple-800/80">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <span>IRCD Server Stats &amp; Leaf Mesh Telemetry</span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-700/60 font-bold uppercase">
+                        25 Switch Nodes Active
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Live cluster metrics, Anope Services 2.1 state, latency monitors, and UnrealIRCd 6.1.4 engine status.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-mono">
+                  <span className="text-slate-400">Hub:</span>
+                  <span className="text-emerald-400 font-bold">irc.drfun1.com (Las Vegas Core)</span>
+                </div>
+              </div>
+              <IrcdStatsView
+                onNavigateToMedia={() => handleSelectStudioTool('strimm_drfun1tv')}
+                onNavigateToIrc={() => handleSelectStudioTool('irc_client')}
+                onOpenLicense={onOpenLicense}
+                onOpenSwitchMesh={onOpenSwitchMesh}
+                onOpenIrcdAdmin={onOpenIrcdAdmin}
+                activeRank={activeRank}
+              />
+            </div>
           )}
 
         </section>

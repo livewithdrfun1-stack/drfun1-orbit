@@ -469,49 +469,22 @@ export default function App() {
         </div>
       )}
 
-      {/* View routing: MultiStream Studio, SpaceBook Social, WebIRC Client, Radio & TV, Phone Carriers, or Standard Workspace */}
-      {activeTab === 'stream' ? (
-        <RestreamStudioView
-          onOpenLicense={() => setIsLicenseModalOpen(true)}
-          onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-          onNavigateToStore={() => setActiveTab('store')}
-          onNavigateToIrc={() => setActiveTab('irc')}
-          onAddToCart={handleQuickAddToCart}
-          activeRank={activeOperRank}
-          onOpenAdminPanel={() => setIsIrcdAdminOpen(true)}
-        />
-      ) : activeTab === 'social' ? (
-        <FacebookSocialView
-          onOpenLicense={() => setIsLicenseModalOpen(true)}
-          onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-          onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
-          onNavigateToStore={() => setActiveTab('store')}
-          onNavigateToStudio={() => setActiveTab('stream')}
-          onNavigateToMedia={() => setActiveTab('media')}
-          onNavigateToIrc={() => setActiveTab('irc')}
-        />
-      ) : activeTab === 'irc' ? (
-        <IrcClientView
-          onOpenLicense={() => setIsLicenseModalOpen(true)}
-          onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-          onNavigateToStore={() => setActiveTab('store')}
-          onNavigateToStudio={() => setActiveTab('stream')}
-          activeRank={activeOperRank}
-          onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
-        />
-      ) : activeTab === 'ircstats' ? (
-        <IrcdStatsView
-          onNavigateToMedia={(channelIrc) => {
-            setActiveTab('media');
-          }}
-          onNavigateToIrc={() => setActiveTab('irc')}
-          onOpenLicense={() => setIsLicenseModalOpen(true)}
-          onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-          onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
-          activeRank={activeOperRank}
-        />
-      ) : activeTab === 'media' ? (
+      {/* Unified Studio Broadcasting & Tools: Master Studio, Restream, MPD DJ Deck, WordPress 1:1 Duplicator, Web IRC & IRCD Stats */}
+      {activeTab === 'media' || activeTab === 'stream' || activeTab === 'mpd' || activeTab === 'duplicator' || activeTab === 'irc' || activeTab === 'ircstats' ? (
         <DrFun1MasterBroadcastStudio
+          initialTool={
+            activeTab === 'stream'
+              ? 'restream_multistream'
+              : activeTab === 'mpd'
+              ? 'mpd_bot'
+              : activeTab === 'duplicator'
+              ? 'wordpress_duplicator'
+              : activeTab === 'irc'
+              ? 'irc_client'
+              : activeTab === 'ircstats'
+              ? 'ircd_stats'
+              : 'strimm_drfun1tv'
+          }
           onOpenStore={() => setActiveTab('store')}
           onOpenIrc={() => setActiveTab('irc')}
           onOpenLicense={() => setIsLicenseModalOpen(true)}
@@ -522,29 +495,30 @@ export default function App() {
           activeRank={activeOperRank}
           onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
           onOpenIrcStats={() => setActiveTab('ircstats')}
+          onToolChange={(tool) => {
+            if (tool === 'restream_multistream') setActiveTab('stream');
+            else if (tool === 'mpd_bot') setActiveTab('mpd');
+            else if (tool === 'wordpress_duplicator') setActiveTab('duplicator');
+            else if (tool === 'irc_client') setActiveTab('irc');
+            else if (tool === 'ircd_stats') setActiveTab('ircstats');
+            else setActiveTab('media');
+          }}
+        />
+      ) : activeTab === 'social' ? (
+        <FacebookSocialView
+          onOpenLicense={() => setIsLicenseModalOpen(true)}
+          onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+          onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
+          onNavigateToStore={() => setActiveTab('store')}
+          onNavigateToStudio={() => setActiveTab('media')}
+          onNavigateToMedia={() => setActiveTab('media')}
+          onNavigateToIrc={() => setActiveTab('irc')}
         />
       ) : activeTab === 'carriers' ? (
         <PhoneCarriersView
           onOpenStore={() => setActiveTab('store')}
           onOpenLicense={() => setIsLicenseModalOpen(true)}
           onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-        />
-      ) : activeTab === 'mpd' ? (
-        <MpdBotControlView
-          onOpenIrc={() => setActiveTab('irc')}
-          onOpenBroadcast={() => setActiveTab('media')}
-          onOpenDuplicator={() => setActiveTab('duplicator')}
-          activeRank={activeOperRank}
-          onRankChange={setActiveOperRank}
-          onOpenAdminPanel={() => setIsIrcdAdminOpen(true)}
-        />
-      ) : activeTab === 'duplicator' ? (
-        <IrcDuplicatorView
-          onOpenLicense={() => setIsLicenseModalOpen(true)}
-          onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-          onOpenIrc={() => setActiveTab('irc')}
-          onOpenMpd={() => setActiveTab('mpd')}
-          onOpenMedia={() => setActiveTab('media')}
         />
       ) : (
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
