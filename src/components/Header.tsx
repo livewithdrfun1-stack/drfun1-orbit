@@ -10,7 +10,9 @@ import {
   Server,
   TrendingUp,
   ShieldCheck,
-  Network
+  Network,
+  Users,
+  Share2
 } from 'lucide-react';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 
@@ -124,6 +126,21 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </button>
             )}
+
+            {/* Social Media Link in Row 1 */}
+            <button
+              onClick={() => setActiveTab('social')}
+              className={`px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer font-sans ${
+                activeTab === 'social'
+                  ? 'bg-blue-500/20 text-blue-300 border-blue-500/40 shadow-sm shadow-blue-500/20'
+                  : 'bg-slate-900/80 text-slate-300 hover:text-white hover:border-blue-500/50 border-slate-800'
+              }`}
+              title="Open DrFun1 SpaceBook Social Media Network"
+            >
+              <Users className="w-3.5 h-3.5 text-blue-400" />
+              <span className="hidden sm:inline">Social Media</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse hidden sm:inline" />
+            </button>
 
             {/* IRCD & Anope Ops Panel */}
             {onOpenIrcdAdmin && (
@@ -244,6 +261,27 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
+          {/* Social Media Link in Main Navbar */}
+          <button
+            onClick={() => setActiveTab('social')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'social'
+                ? 'bg-blue-500/20 text-blue-300 border-blue-500/50 font-bold shadow-md shadow-blue-500/20 ring-1 ring-blue-500/30'
+                : 'text-slate-300 border-slate-800 hover:text-white hover:bg-slate-900/80 hover:border-blue-500/40'
+            }`}
+            title="DrFun1 SpaceBook Social Media Network"
+          >
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+            </span>
+            <Users className="w-3.5 h-3.5 text-blue-400" />
+            <span className="font-semibold text-slate-100">Social Media</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-blue-600/30 text-blue-200 font-bold border border-blue-500/30">
+              SpaceBook
+            </span>
+          </button>
+
           {/* MPD Bot */}
           <button
             onClick={() => setActiveTab('mpd')}
@@ -330,24 +368,6 @@ export const Header: React.FC<HeaderProps> = ({
             <span>MultiStream</span>
             <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-red-500/20 text-red-300 font-bold">
               Restream
-            </span>
-          </button>
-
-          {/* SpaceBook Social */}
-          <button
-            onClick={() => setActiveTab('social')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'social'
-                ? 'bg-blue-500/15 text-blue-400 border-blue-500/40 font-semibold shadow-sm shadow-blue-500/10'
-                : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-900/60'
-            }`}
-          >
-            <span className="w-3.5 h-3.5 rounded bg-blue-600 text-[9px] font-bold text-white flex items-center justify-center">
-              f
-            </span>
-            <span>SpaceBook</span>
-            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-blue-500/20 text-blue-300 font-bold">
-              Social
             </span>
           </button>
 

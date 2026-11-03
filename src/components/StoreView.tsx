@@ -68,6 +68,7 @@ export const StoreView: React.FC<StoreViewProps> = ({
     'Snapdragon Qualcomm Satellite & 5G',
     'Quantum Fiber & Terrestrial Optical',
     'Dedicated IRCD & Transit Hosting',
+    'RisingNet Web, VPS & Dedicated Hosting',
     'Terminals & User Hardware',
     'Bandwidth & Enterprise CIR',
     'Direct-to-Device (3GPP NTN)',

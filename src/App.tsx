@@ -482,8 +482,10 @@ export default function App() {
         <FacebookSocialView
           onOpenLicense={() => setIsLicenseModalOpen(true)}
           onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+          onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
           onNavigateToStore={() => setActiveTab('store')}
           onNavigateToStudio={() => setActiveTab('stream')}
+          onNavigateToMedia={() => setActiveTab('media')}
           onNavigateToIrc={() => setActiveTab('irc')}
         />
       ) : activeTab === 'irc' ? (

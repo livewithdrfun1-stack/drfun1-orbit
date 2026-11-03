@@ -1,5 +1,6 @@
 import { StoreProduct } from '../types/store';
 import { SWITCH_WITT_STORE_PRODUCTS } from './switchWittServicesData';
+import { RISINGNET_HOSTING_PRODUCTS } from './risingnetHostingData';
 
 export const STORE_PRODUCTS: StoreProduct[] = [
   {
@@ -2308,5 +2309,6 @@ export const STORE_PRODUCTS: StoreProduct[] = [
     risingNetProtected: true,
   },
   ...SWITCH_WITT_STORE_PRODUCTS,
+  ...RISINGNET_HOSTING_PRODUCTS,
 ];
 

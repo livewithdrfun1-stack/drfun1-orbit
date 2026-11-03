@@ -39,8 +39,8 @@ interface HostingResellerProgramModalProps {
 }
 
 type TabType = 'ezsetup' | 'matrix' | 'calculator' | 'whitelabel' | 'onboarding' | 'legal';
-type HostingCategoryFilter = 'all' | 'ircd' | 'baremetal' | 'wordpress' | 'broadcast' | 'fiber';
-type EzSetupNiche = 'all' | 'ircd' | 'wordpress' | 'broadcast' | 'fiber';
+type HostingCategoryFilter = 'all' | 'risingnet' | 'ircd' | 'baremetal' | 'wordpress' | 'broadcast' | 'fiber';
+type EzSetupNiche = 'all' | 'risingnet' | 'ircd' | 'wordpress' | 'broadcast' | 'fiber';
 
 interface PartnerRegistration {
   companyName: string;

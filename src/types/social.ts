@@ -47,6 +47,8 @@ export interface SocialPost {
   shares: number;
   privacy: 'public' | 'engineers' | 'switch_noc' | 'legal_witt';
   pinned?: boolean;
+  syndication?: string[];
+  channel?: 'all' | 'creators' | 'operators' | 'switch_noc' | 'legal';
 }
 
 export interface SocialStory {

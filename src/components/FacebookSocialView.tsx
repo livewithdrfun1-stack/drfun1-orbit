@@ -40,14 +40,22 @@ import {
   ExternalLink,
   ChevronRight,
   X as CloseIcon,
-  Bookmark
+  Bookmark,
+  MessageSquare,
+  TrendingUp,
+  Hash,
+  Video,
+  Network,
+  CheckCircle2
 } from 'lucide-react';
 
 interface FacebookSocialViewProps {
   onOpenLicense: () => void;
   onOpenSwitchMesh: () => void;
+  onOpenSwitchWittServices?: () => void;
   onNavigateToStore?: () => void;
   onNavigateToStudio?: () => void;
+  onNavigateToMedia?: () => void;
   onNavigateToIrc?: () => void;
 }
 
@@ -56,8 +64,10 @@ const STORAGE_KEY_SOCIAL_POSTS = 'drfun1_social_posts';
 export const FacebookSocialView: React.FC<FacebookSocialViewProps> = ({
   onOpenLicense,
   onOpenSwitchMesh,
+  onOpenSwitchWittServices,
   onNavigateToStore,
   onNavigateToStudio,
+  onNavigateToMedia,
   onNavigateToIrc,
 }) => {
   // Posts state initialized with persistence
@@ -75,13 +85,38 @@ export const FacebookSocialView: React.FC<FacebookSocialViewProps> = ({
   const [communities, setCommunities] = useState<SocialCommunity[]>(INITIAL_COMMUNITIES);
   const [activeStory, setActiveStory] = useState<SocialStory | null>(null);
 
+  // Direct Messaging / Chat State
+  const [activeChatContact, setActiveChatContact] = useState<SocialUser | null>(null);
+  const [chatMessages, setChatMessages] = useState<Record<string, { id: string; sender: string; text: string; time: string; isSelf: boolean }[]>>({
+    c_user_2: [
+      { id: 'm1', sender: 'Switch Las Vegas NOC', text: 'Telemetry uplink online at 100G. Core latency 1.4ms to SUPERNAP 8.', time: '10:15 AM', isSelf: false },
+      { id: 'm2', sender: 'Richard Alan Witt', text: 'Confirmed. Linking DrFun1 multi-transponder broadcast now.', time: '10:18 AM', isSelf: true },
+    ],
+    c_user_7: [
+      { id: 'm3', sender: 'Twitch Dev Stream Desk', text: 'dev.twitch.tv webhook ingest verified for DrFun1TV channel broadcast.', time: '11:02 AM', isSelf: false },
+    ],
+    c_user_8: [
+      { id: 'm4', sender: 'Kick Creator Relay NOC', text: 'dev.kick.com RTMP edge stream active. Ultra-low latency mode enabled.', time: '11:05 AM', isSelf: false },
+    ],
+  });
+  const [chatInputText, setChatInputText] = useState('');
+
+  // Syndication targets for new post
+  const [syndicateTargets, setSyndicateTargets] = useState<Record<string, boolean>>({
+    'SpaceBook': true,
+    'X/Twitter': true,
+    'Twitch': true,
+    'Kick': true,
+    'IRC #social': true,
+  });
+
   // New Post Form State
   const [newPostContent, setNewPostContent] = useState<string>('');
   const [newPostSatelliteTag, setNewPostSatelliteTag] = useState<string>('');
   const [newPostPrivacy, setNewPostPrivacy] = useState<SocialPost['privacy']>('public');
   const [showImagePrompt, setShowImagePrompt] = useState<boolean>(false);
   const [customImageUrl, setCustomImageUrl] = useState<string>('');
-  const [feedFilter, setFeedFilter] = useState<'all' | 'operators' | 'switch_noc' | 'legal'>('all');
+  const [feedFilter, setFeedFilter] = useState<'all' | 'creators' | 'operators' | 'switch_noc' | 'legal'>('all');
 
   // Comment input state per post
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
@@ -101,6 +136,10 @@ export const FacebookSocialView: React.FC<FacebookSocialViewProps> = ({
   const handleCreatePost = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPostContent.trim()) return;
+
+    const activeSyndications = Object.entries(syndicateTargets)
+      .filter(([_, active]) => active)
+      .map(([name]) => name);
 
     const newPost: SocialPost = {
       id: `post_${Date.now()}`,
@@ -124,6 +163,8 @@ export const FacebookSocialView: React.FC<FacebookSocialViewProps> = ({
       comments: [],
       shares: 0,
       privacy: newPostPrivacy,
+      syndication: activeSyndications,
+      channel: feedFilter === 'all' ? 'creators' : feedFilter,
     };
 
     setPosts([newPost, ...posts]);
@@ -131,6 +172,51 @@ export const FacebookSocialView: React.FC<FacebookSocialViewProps> = ({
     setNewPostSatelliteTag('');
     setCustomImageUrl('');
     setShowImagePrompt(false);
+  };
+
+  // Direct Message send
+  const handleSendChatMessage = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!activeChatContact || !chatInputText.trim()) return;
+
+    const contactId = activeChatContact.id;
+    const userMsg = {
+      id: `msg_${Date.now()}`,
+      sender: CURRENT_USER.name,
+      text: chatInputText.trim(),
+      time: 'Just now',
+      isSelf: true,
+    };
+
+    setChatMessages(prev => ({
+      ...prev,
+      [contactId]: [...(prev[contactId] || []), userMsg],
+    }));
+    const sentText = chatInputText.trim();
+    setChatInputText('');
+
+    // Simulate instant auto-reply after 800ms
+    setTimeout(() => {
+      let replyText = `Acknowledged from ${activeChatContact.name}. Teleport & mesh telemetry link operational.`;
+      if (activeChatContact.handle.includes('twitch')) {
+        replyText = `Twitch Dev API confirmed receipt: "${sentText}". Stream sync state OK at dev.twitch.tv.`;
+      } else if (activeChatContact.handle.includes('kick')) {
+        replyText = `Kick Relay NOC processed: "${sentText}". RTMP ingest bitrate stable on dev.kick.com.`;
+      } else if (activeChatContact.handle.includes('switch')) {
+        replyText = `Switch SUPERNAP Teleport: Signal verified at -47.8 dBm. Fiber cross-connect routing 100G.`;
+      }
+      const replyMsg = {
+        id: `reply_${Date.now()}`,
+        sender: activeChatContact.name,
+        text: replyText,
+        time: 'Just now',
+        isSelf: false,
+      };
+      setChatMessages(prev => ({
+        ...prev,
+        [contactId]: [...(prev[contactId] || []), replyMsg],
+      }));
+    }, 900);
   };
 
   // Reactions Handler
@@ -213,6 +299,52 @@ export const FacebookSocialView: React.FC<FacebookSocialViewProps> = ({
     return Object.values(reactions).reduce((a, b) => a + b, 0);
   };
 
+  const filteredPosts = posts.filter(post => {
+    if (feedFilter === 'all') return true;
+    if (feedFilter === 'creators') {
+      return (
+        post.channel === 'creators' ||
+        post.satelliteTag?.toLowerCase().includes('stream') ||
+        post.satelliteTag?.toLowerCase().includes('drfun1tv') ||
+        post.content.toLowerCase().includes('twitch') ||
+        post.content.toLowerCase().includes('kick') ||
+        post.content.toLowerCase().includes('broadcast') ||
+        (post.syndication && (post.syndication.includes('Twitch') || post.syndication.includes('Kick')))
+      );
+    }
+    if (feedFilter === 'operators') {
+      return (
+        post.channel === 'operators' ||
+        post.satelliteTag?.toLowerCase().includes('starlink') ||
+        post.satelliteTag?.toLowerCase().includes('ses') ||
+        post.satelliteTag?.toLowerCase().includes('eutelsat') ||
+        post.satelliteTag?.toLowerCase().includes('leo') ||
+        post.satelliteTag?.toLowerCase().includes('meo') ||
+        post.satelliteTag?.toLowerCase().includes('geo')
+      );
+    }
+    if (feedFilter === 'switch_noc') {
+      return (
+        post.channel === 'switch_noc' ||
+        post.content.toLowerCase().includes('switch') ||
+        post.groundStation?.toLowerCase().includes('switch') ||
+        post.content.toLowerCase().includes('supernap') ||
+        post.content.toLowerCase().includes('fiber')
+      );
+    }
+    if (feedFilter === 'legal') {
+      return (
+        post.channel === 'legal' ||
+        post.content.toLowerCase().includes('witt') ||
+        post.content.toLowerCase().includes('frn') ||
+        post.content.toLowerCase().includes('fcc') ||
+        post.content.toLowerCase().includes('itu') ||
+        post.content.toLowerCase().includes('escrow')
+      );
+    }
+    return true;
+  });
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       {/* SpaceBook App Bar (Iconic Rebranded Facebook Navigation) */}
@@ -233,87 +365,116 @@ export const FacebookSocialView: React.FC<FacebookSocialViewProps> = ({
             </div>
           </div>
 
-          {/* Center SpaceBook View Icons */}
-          <div className="flex items-center gap-1 sm:gap-2 bg-slate-950/70 p-1 rounded-xl border border-slate-800">
+          {/* Center SpaceBook View Icons & Multi-Channel Filter */}
+          <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-950/70 p-1 rounded-xl border border-slate-800 overflow-x-auto no-scrollbar">
             <button
               onClick={() => setFeedFilter('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer ${
                 feedFilter === 'all'
                   ? 'bg-blue-600 text-white shadow'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
               <Home className="w-4 h-4" />
-              <span className="hidden md:inline">Feed</span>
+              <span>All Feeds</span>
+            </button>
+
+            <button
+              onClick={() => setFeedFilter('creators')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer ${
+                feedFilter === 'creators'
+                  ? 'bg-purple-600 text-white shadow'
+                  : 'text-slate-400 hover:text-purple-300'
+              }`}
+              title="Twitch, Kick & DrFun1TV Broadcasters"
+            >
+              <Video className="w-4 h-4 text-purple-400" />
+              <span>Streamers &amp; Creators</span>
             </button>
 
             <button
               onClick={() => setFeedFilter('operators')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer ${
                 feedFilter === 'operators'
-                  ? 'bg-blue-600 text-white shadow'
+                  ? 'bg-sky-600 text-white shadow'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Satellite className="w-4 h-4" />
-              <span className="hidden md:inline">Constellations</span>
+              <Satellite className="w-4 h-4 text-sky-400" />
+              <span className="hidden sm:inline">Constellations</span>
             </button>
 
             <button
               onClick={() => setFeedFilter('switch_noc')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer ${
                 feedFilter === 'switch_noc'
-                  ? 'bg-blue-600 text-white shadow'
+                  ? 'bg-emerald-600 text-white shadow'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
               <Server className="w-4 h-4 text-emerald-400" />
-              <span className="hidden md:inline">Switch NOC</span>
+              <span className="hidden sm:inline">Switch NOC</span>
             </button>
 
-            {onNavigateToStudio && (
-              <button
-                onClick={onNavigateToStudio}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-sky-300 transition-colors"
-                title="Switch to MultiStream Live Studio"
-              >
-                <Radio className="w-4 h-4 text-sky-400" />
-                <span className="hidden md:inline">Live Studio</span>
-              </button>
-            )}
-
-            {onNavigateToStore && (
-              <button
-                onClick={onNavigateToStore}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-amber-300 transition-colors"
-                title="Space Marketplace"
-              >
-                <ShoppingBag className="w-4 h-4 text-amber-400" />
-                <span className="hidden md:inline">Marketplace</span>
-              </button>
-            )}
-
-            {onNavigateToIrc && (
-              <button
-                onClick={onNavigateToIrc}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-colors"
-                title="Open RisingNet Hosted WebIRC Terminal"
-              >
-                <Terminal className="w-4 h-4 text-purple-400" />
-                <span className="hidden md:inline">IRC Client</span>
-              </button>
-            )}
+            <button
+              onClick={() => setFeedFilter('legal')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer ${
+                feedFilter === 'legal'
+                  ? 'bg-indigo-600 text-white shadow'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4 text-indigo-400" />
+              <span className="hidden sm:inline">Witt Law</span>
+            </button>
           </div>
 
-          {/* Right User Bar */}
-          <div className="flex items-center gap-2.5">
+          {/* Right Action & User Bar */}
+          <div className="flex items-center gap-2">
+            {/* Quick Link to DrFun1TV & Studio */}
+            {(onNavigateToMedia || onNavigateToStudio) && (
+              <button
+                onClick={() => (onNavigateToMedia ? onNavigateToMedia() : onNavigateToStudio?.())}
+                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-purple-950/60 text-purple-300 hover:text-white hover:bg-purple-900 border border-purple-500/40 transition-colors shadow-sm hidden md:flex cursor-pointer"
+                title="Launch DrFun1TV Master Studio"
+              >
+                <Radio className="w-3.5 h-3.5 text-purple-400" />
+                <span>DrFun1TV Studio</span>
+              </button>
+            )}
+
+            {/* Quick Link to Switch & Witt Services */}
+            {onOpenSwitchWittServices && (
+              <button
+                onClick={onOpenSwitchWittServices}
+                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-emerald-950/60 text-emerald-300 hover:text-white hover:bg-emerald-900 border border-emerald-500/40 transition-colors shadow-sm hidden lg:flex cursor-pointer"
+                title="Open Switch & Witt Satellite Fiber Services"
+              >
+                <Network className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Switch &amp; Witt Fiber</span>
+              </button>
+            )}
+
+            {/* Messenger Quick Trigger */}
+            <button
+              onClick={() => {
+                const onlineContact = ONLINE_CONTACTS.find(c => c.isOnline) || ONLINE_CONTACTS[0];
+                setActiveChatContact(onlineContact);
+              }}
+              className="p-2 rounded-full bg-slate-800 hover:bg-blue-600/30 text-slate-300 hover:text-blue-300 transition-colors relative cursor-pointer"
+              title="Open Direct Messages & Messenger"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-slate-900" />
+            </button>
+
             <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-slate-800">
               <img
                 src={CURRENT_USER.avatar}
                 alt={CURRENT_USER.name}
                 className="w-8 h-8 rounded-full object-cover ring-2 ring-blue-500/50"
               />
-              <div className="text-left leading-tight hidden lg:block">
+              <div className="text-left leading-tight hidden xl:block">
                 <div className="text-xs font-bold text-white flex items-center gap-1">
                   <span>Richard Alan Witt</span>
                   <span className="text-[10px] text-blue-400">✓</span>
@@ -516,6 +677,34 @@ export const FacebookSocialView: React.FC<FacebookSocialViewProps> = ({
                   </div>
                 )}
 
+                {/* Multi-Platform Syndication Checkboxes */}
+                <div className="mt-2.5 pt-2 border-t border-slate-800/80">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                      <Share2 className="w-3 h-3 text-sky-400" />
+                      <span>Syndicate Post To:</span>
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-mono">Simultaneous Broadcast</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.entries(syndicateTargets).map(([target, enabled]) => (
+                      <button
+                        key={target}
+                        type="button"
+                        onClick={() => setSyndicateTargets(prev => ({ ...prev, [target]: !prev[target] }))}
+                        className={`text-[10px] font-mono px-2 py-0.5 rounded-full border transition-all flex items-center gap-1 cursor-pointer ${
+                          enabled
+                            ? 'bg-blue-600/20 text-blue-300 border-blue-500/50 font-bold'
+                            : 'bg-slate-950 text-slate-500 border-slate-800 hover:border-slate-700'
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${enabled ? 'bg-blue-400' : 'bg-slate-600'}`} />
+                        <span>{target}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between">
                   <div className="flex items-center gap-1 text-xs">
                     <button
@@ -549,7 +738,7 @@ export const FacebookSocialView: React.FC<FacebookSocialViewProps> = ({
                   <button
                     onClick={handleCreatePost}
                     disabled={!newPostContent.trim()}
-                    className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold rounded-lg text-xs transition-colors flex items-center gap-1 shadow-md shadow-blue-900/30"
+                    className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold rounded-lg text-xs transition-colors flex items-center gap-1 shadow-md shadow-blue-900/30 cursor-pointer"
                   >
                     <span>Post</span>
                   </button>
@@ -560,75 +749,106 @@ export const FacebookSocialView: React.FC<FacebookSocialViewProps> = ({
 
           {/* Post Feed */}
           <div className="space-y-4">
-            {posts.map(post => {
-              const userReact = post.userReaction;
-              const totalReactions = getReactionTotal(post.reactions);
-
-              return (
-                <div
-                  key={post.id}
-                  className="bg-slate-900 border border-slate-800 rounded-xl shadow-sm overflow-hidden"
+            {filteredPosts.length === 0 ? (
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center space-y-3">
+                <Users className="w-8 h-8 text-slate-600 mx-auto" />
+                <h4 className="text-sm font-bold text-slate-300">No posts in this channel filter</h4>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  There are no updates tagged under the selected channel. View All Feeds to see live broadcasts, constellations, and teleport posts.
+                </p>
+                <button
+                  onClick={() => setFeedFilter('all')}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
                 >
-                  {/* Post Header */}
-                  <div className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={post.author.avatar}
-                        alt={post.author.name}
-                        className="w-10 h-10 rounded-full object-cover ring-1 ring-slate-700"
-                      />
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-white">
-                            {post.author.name}
-                          </span>
-                          {post.author.verified && (
-                            <span className="text-blue-400 text-xs font-bold">✓</span>
+                  Show All Feeds
+                </button>
+              </div>
+            ) : (
+              filteredPosts.map(post => {
+                const userReact = post.userReaction;
+                const totalReactions = getReactionTotal(post.reactions);
+
+                return (
+                  <div
+                    key={post.id}
+                    className="bg-slate-900 border border-slate-800 rounded-xl shadow-sm overflow-hidden"
+                  >
+                    {/* Post Header */}
+                    <div className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={post.author.avatar}
+                          alt={post.author.name}
+                          className="w-10 h-10 rounded-full object-cover ring-1 ring-slate-700"
+                        />
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-white">
+                              {post.author.name}
+                            </span>
+                            {post.author.verified && (
+                              <span className="text-blue-400 text-xs font-bold">✓</span>
+                            )}
+                            {post.pinned && (
+                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 font-mono">
+                                PINNED
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                            <span>{post.timestamp}</span>
+                            <span>•</span>
+                            <span>{post.author.role}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button className="text-slate-500 hover:text-slate-300 p-1">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Post Content */}
+                    <div className="px-4 pb-3">
+                      <p className="text-xs sm:text-[13px] text-slate-200 whitespace-pre-line leading-relaxed">
+                        {post.content}
+                      </p>
+
+                      {/* Syndication Targets */}
+                      {post.syndication && post.syndication.length > 0 && (
+                        <div className="mt-2.5 flex flex-wrap items-center gap-1">
+                          <span className="text-[9px] font-mono text-slate-500">Syndicated to:</span>
+                          {post.syndication.map(t => (
+                            <span
+                              key={t}
+                              className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-blue-950/50 text-blue-300 border border-blue-500/30 flex items-center gap-1"
+                            >
+                              <CheckCircle2 className="w-2.5 h-2.5 text-blue-400" />
+                              <span>{t}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Metadata tags */}
+                      {(post.satelliteTag || post.groundStation) && (
+                        <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-mono">
+                          {post.satelliteTag && (
+                            <span className="px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30 text-sky-300 flex items-center gap-1">
+                              <Satellite className="w-3 h-3" />
+                              {post.satelliteTag}
+                            </span>
                           )}
-                          {post.pinned && (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 font-mono">
-                              PINNED
+                          {post.groundStation && (
+                            <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex items-center gap-1">
+                              <Server className="w-3 h-3" />
+                              {post.groundStation}
                             </span>
                           )}
                         </div>
-
-                        <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                          <span>{post.timestamp}</span>
-                          <span>•</span>
-                          <span>{post.author.role}</span>
-                        </div>
-                      </div>
+                      )}
                     </div>
-
-                    <button className="text-slate-500 hover:text-slate-300 p-1">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  {/* Post Content */}
-                  <div className="px-4 pb-3">
-                    <p className="text-xs sm:text-[13px] text-slate-200 whitespace-pre-line leading-relaxed">
-                      {post.content}
-                    </p>
-
-                    {/* Metadata tags */}
-                    {(post.satelliteTag || post.groundStation) && (
-                      <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-mono">
-                        {post.satelliteTag && (
-                          <span className="px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30 text-sky-300 flex items-center gap-1">
-                            <Satellite className="w-3 h-3" />
-                            {post.satelliteTag}
-                          </span>
-                        )}
-                        {post.groundStation && (
-                          <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex items-center gap-1">
-                            <Server className="w-3 h-3" />
-                            {post.groundStation}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
 
                   {/* Post Media (Image) */}
                   {post.mediaUrl && (
@@ -821,12 +1041,95 @@ export const FacebookSocialView: React.FC<FacebookSocialViewProps> = ({
                   </div>
                 </div>
               );
-            })}
+            }))}
           </div>
         </div>
 
-        {/* Right Sidebar (3 cols on lg): Online Contacts & Sponsored Ground Station Telemetry */}
+        {/* Right Sidebar (3 cols on lg): Online Contacts, Trending & Gateway Status */}
         <div className="hidden lg:block lg:col-span-3 space-y-4">
+          {/* Trending on DrFun1 Social Card */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
+                <span>Trending Topics</span>
+              </h4>
+              <span className="text-[10px] font-mono text-slate-500">Global SATCOM</span>
+            </div>
+
+            <div className="space-y-2">
+              {[
+                { tag: '#Switch100GSuperLoop', count: '4.8k posts', category: 'Fiber & Datacenter' },
+                { tag: '#TwitchKickBroadcast', count: '3.2k posts', category: 'MultiStream Live' },
+                { tag: '#WittLawEscrow', count: '1.9k posts', category: 'Spectrum Legal' },
+                { tag: '#DirectToCellular3GPP', count: '8.4k posts', category: 'LEO Satcom' },
+                { tag: '#UnrealIRCdLeafMesh', count: '1.5k posts', category: 'Chat Telemetry' },
+              ].map(item => (
+                <div
+                  key={item.tag}
+                  onClick={() => {
+                    setNewPostContent(prev => (prev ? `${prev} ${item.tag}` : item.tag));
+                  }}
+                  className="p-2 rounded-lg hover:bg-slate-800/80 transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-200 group-hover:text-blue-400 transition-colors flex items-center gap-1">
+                      <Hash className="w-3 h-3 text-slate-500 group-hover:text-blue-400" />
+                      <span>{item.tag.slice(1)}</span>
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-500">{item.count}</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">{item.category}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Multi-Platform Syndication Gateways Status */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                <Share2 className="w-3.5 h-3.5 text-purple-400" />
+                <span>Syndication Gateways</span>
+              </h4>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            </div>
+
+            <div className="space-y-1.5 text-xs font-mono">
+              <div className="p-2 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500" />
+                  <span className="text-slate-200 font-sans font-semibold">DrFun1 SpaceBook</span>
+                </div>
+                <span className="text-[10px] text-emerald-400 font-bold">CORE ONLINE</span>
+              </div>
+
+              <div className="p-2 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-purple-500" />
+                  <span className="text-slate-200 font-sans font-semibold">dev.twitch.tv</span>
+                </div>
+                <span className="text-[10px] text-purple-400">INGEST READY</span>
+              </div>
+
+              <div className="p-2 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="text-slate-200 font-sans font-semibold">dev.kick.com</span>
+                </div>
+                <span className="text-[10px] text-emerald-400">RTMP ACTIVE</span>
+              </div>
+
+              <div className="p-2 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-sky-500" />
+                  <span className="text-slate-200 font-sans font-semibold">UnrealIRCd #social</span>
+                </div>
+                <span className="text-[10px] text-sky-400">LEAF BRIDGED</span>
+              </div>
+            </div>
+          </div>
+
           {/* Sponsored Enterprise Card */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm space-y-2">
             <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold block">
@@ -867,28 +1170,35 @@ export const FacebookSocialView: React.FC<FacebookSocialViewProps> = ({
             </div>
           </div>
 
-          {/* Active Contacts & IRC Leaf Bots */}
+          {/* Active Contacts & Direct Messages */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold text-slate-400 tracking-wider uppercase">
-                Contacts Online ({ONLINE_CONTACTS.filter(c => c.isOnline).length})
+              <h4 className="text-xs font-bold text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-blue-400" />
+                <span>Contacts Online ({ONLINE_CONTACTS.filter(c => c.isOnline).length})</span>
               </h4>
               <button
                 onClick={onOpenSwitchMesh}
-                className="text-[10px] text-sky-400 hover:underline font-mono"
+                className="text-[10px] text-sky-400 hover:underline font-mono cursor-pointer"
               >
                 IRC Mesh
               </button>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               {ONLINE_CONTACTS.map(contact => (
                 <div
                   key={contact.id}
-                  className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-800/80 transition-colors cursor-pointer group"
+                  onClick={() => setActiveChatContact(contact)}
+                  className={`flex items-center justify-between p-2 rounded-lg transition-colors cursor-pointer group ${
+                    activeChatContact?.id === contact.id
+                      ? 'bg-blue-600/20 border border-blue-500/40'
+                      : 'hover:bg-slate-800/80 border border-transparent'
+                  }`}
+                  title="Click to open Direct Message"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="relative">
+                    <div className="relative shrink-0">
                       <img
                         src={contact.avatar}
                         alt={contact.name}
@@ -899,17 +1209,17 @@ export const FacebookSocialView: React.FC<FacebookSocialViewProps> = ({
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-slate-200 group-hover:text-white truncate">
+                      <p className="text-xs font-semibold text-slate-200 group-hover:text-blue-300 truncate">
                         {contact.name}
                       </p>
-                      <p className="text-[10px] text-slate-400 truncate">
+                      <p className="text-[10px] text-slate-400 truncate font-mono">
                         {contact.organization}
                       </p>
                     </div>
                   </div>
 
-                  <span className="text-[10px] font-mono text-slate-500 group-hover:text-sky-400">
-                    {contact.isOnline ? 'Online' : 'Offline'}
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 group-hover:text-white group-hover:bg-blue-600 transition-colors">
+                    Chat
                   </span>
                 </div>
               ))}
@@ -917,6 +1227,104 @@ export const FacebookSocialView: React.FC<FacebookSocialViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Direct Messaging Chat Modal / Drawer */}
+      {activeChatContact && (
+        <div className="fixed bottom-4 right-4 sm:right-6 z-50 w-80 sm:w-96 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4">
+          {/* Chat Header */}
+          <div className="bg-slate-800/90 border-b border-slate-700 px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="relative shrink-0">
+                <img
+                  src={activeChatContact.avatar}
+                  alt={activeChatContact.name}
+                  className="w-9 h-9 rounded-full object-cover ring-2 ring-blue-500/60"
+                />
+                {activeChatContact.isOnline && (
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-900" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <h5 className="text-xs font-bold text-white truncate flex items-center gap-1">
+                  <span>{activeChatContact.name}</span>
+                  {activeChatContact.verified && (
+                    <span className="text-blue-400 text-[10px]">✓</span>
+                  )}
+                </h5>
+                <p className="text-[10px] text-slate-400 truncate font-mono">
+                  {activeChatContact.role} · {activeChatContact.organization}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setActiveChatContact(null)}
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/60 transition-colors"
+            >
+              <CloseIcon className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Chat Messages Body */}
+          <div className="h-64 overflow-y-auto p-3 space-y-2.5 bg-slate-950/70 text-xs">
+            {/* Encryption & Relay Header */}
+            <div className="text-center py-1">
+              <span className="text-[9px] font-mono text-slate-500 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-full">
+                🔒 End-to-end relayed via Switch SUPERNAP 100G &amp; UnrealIRCd
+              </span>
+            </div>
+
+            {(chatMessages[activeChatContact.id] || [
+              {
+                id: 'welcome',
+                sender: activeChatContact.name,
+                text: `Hello Richard, this is ${activeChatContact.name} at ${activeChatContact.organization}. How can we assist with your SATCOM telemetry or broadcast stream today?`,
+                time: 'Just now',
+                isSelf: false,
+              }
+            ]).map(msg => (
+              <div
+                key={msg.id}
+                className={`flex flex-col ${msg.isSelf ? 'items-end' : 'items-start'}`}
+              >
+                <div
+                  className={`max-w-[82%] px-3 py-2 rounded-xl text-xs leading-relaxed ${
+                    msg.isSelf
+                      ? 'bg-blue-600 text-white rounded-br-none shadow-sm'
+                      : 'bg-slate-800 text-slate-200 border border-slate-700/80 rounded-bl-none shadow-sm'
+                  }`}
+                >
+                  <p>{msg.text}</p>
+                </div>
+                <span className="text-[9px] font-mono text-slate-500 mt-0.5 px-1">
+                  {msg.time}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Chat Input Footer */}
+          <form
+            onSubmit={handleSendChatMessage}
+            className="p-2.5 bg-slate-900 border-t border-slate-800 flex items-center gap-2"
+          >
+            <input
+              type="text"
+              value={chatInputText}
+              onChange={e => setChatInputText(e.target.value)}
+              placeholder={`Message ${activeChatContact.name}...`}
+              className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+            />
+            <button
+              type="submit"
+              disabled={!chatInputText.trim()}
+              className="p-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-lg transition-colors cursor-pointer"
+            >
+              <Send className="w-3.5 h-3.5" />
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Story Viewer Modal */}
       {activeStory && (
