@@ -356,9 +356,9 @@ export const IrcDuplicatorView: React.FC<IrcDuplicatorViewProps> = ({
               }`}
             >
               <Code2 className="w-3.5 h-3.5 text-purple-300" />
-              <span>WordPress &amp; HTML Duplicator Generator</span>
+              <span>WordPress Media Player &amp; 1:1 IRC Plugin</span>
               <span className="px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 text-[9px] uppercase font-bold border border-purple-500/30">
-                Plugin &amp; HTML5
+                1:1 RATIO
               </span>
             </button>
           </div>
@@ -369,7 +369,7 @@ export const IrcDuplicatorView: React.FC<IrcDuplicatorViewProps> = ({
               className="hidden sm:flex px-3 py-1.5 rounded-xl border bg-purple-950/80 hover:bg-purple-900 border-purple-500/40 text-purple-300 font-bold items-center gap-1.5 transition-colors cursor-pointer shrink-0"
             >
               <Code2 className="w-3.5 h-3.5 text-purple-400" />
-              <span>Generate WordPress / HTML Code ➔</span>
+              <span>WordPress Media Player &amp; 1:1 IRC Plugin ➔</span>
             </button>
           )}
         </div>
@@ -382,6 +382,7 @@ export const IrcDuplicatorView: React.FC<IrcDuplicatorViewProps> = ({
           <WordPressIrcDuplicatorView
             onBackToMesh={() => setViewMode('mesh_console')}
             onOpenIrc={onOpenIrc}
+            onOpenMedia={onOpenMedia}
           />
         ) : (
           <>

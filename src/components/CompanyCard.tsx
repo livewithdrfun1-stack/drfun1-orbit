@@ -32,7 +32,7 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({
   isCompared,
   onToggleCompare,
 }) => {
-  const primaryContact = company.contacts[0];
+  const primaryContact = company.contacts && company.contacts.length > 0 ? company.contacts[0] : null;
 
   return (
     <div className="bg-slate-900/40 hover:bg-slate-900/70 border border-slate-800/80 hover:border-slate-700/80 rounded-xl p-5 flex flex-col justify-between transition-all duration-150 group">
@@ -135,7 +135,7 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({
             Key Carrier & Satcom Services:
           </span>
           <ul className="space-y-1">
-            {company.satcomWholesaleOfferings.slice(0, 2).map((offering, idx) => (
+            {(company.satcomWholesaleOfferings || []).slice(0, 2).map((offering, idx) => (
               <li key={idx} className="text-xs text-slate-300 flex items-start gap-1.5">
                 <span className="text-sky-500 text-xs shrink-0 select-none">›</span>
                 <span className="line-clamp-1">{offering}</span>

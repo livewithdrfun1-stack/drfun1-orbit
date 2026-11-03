@@ -123,6 +123,8 @@ export const HostingResellerProgramModal: React.FC<HostingResellerProgramModalPr
     ircdDataPacket: number;
     ircdRisingNet: number;
     ircdTriMesh: number;
+    risingnetVps: number;
+    risingnetDedicated: number;
     baremetalGround: number;
     meshSuite25: number;
     wpDuplicator: number;
@@ -135,6 +137,8 @@ export const HostingResellerProgramModal: React.FC<HostingResellerProgramModalPr
     ircdDataPacket: 2,
     ircdRisingNet: 1,
     ircdTriMesh: 1,
+    risingnetVps: 4,
+    risingnetDedicated: 1,
     baremetalGround: 1,
     meshSuite25: 1,
     wpDuplicator: 15,
@@ -153,6 +157,7 @@ export const HostingResellerProgramModal: React.FC<HostingResellerProgramModalPr
     return STORE_PRODUCTS.filter((p) => {
       // Must be recurring monthly or infrastructure hosting
       const isHosting =
+        p.category === 'RisingNet Web, VPS & Dedicated Hosting' ||
         p.category === 'Dedicated IRCD & Transit Hosting' ||
         p.category === 'Bare-Metal & Teleport Hosting' ||
         p.category === 'Teleport & Switch Colocation' ||
@@ -163,6 +168,9 @@ export const HostingResellerProgramModal: React.FC<HostingResellerProgramModalPr
       if (!isHosting) return false;
 
       if (categoryFilter === 'all') return true;
+      if (categoryFilter === 'risingnet') {
+        return p.category === 'RisingNet Web, VPS & Dedicated Hosting';
+      }
       if (categoryFilter === 'ircd') return p.category === 'Dedicated IRCD & Transit Hosting';
       if (categoryFilter === 'baremetal') {
         return (
@@ -234,6 +242,8 @@ export const HostingResellerProgramModal: React.FC<HostingResellerProgramModalPr
       { id: 'ircdSwitch', wholesale: 650, retail: 980, count: calcCounts.ircdSwitch },
       { id: 'ircdDataPacket', wholesale: 750, retail: 1150, count: calcCounts.ircdDataPacket },
       { id: 'ircdRisingNet', wholesale: 590, retail: 890, count: calcCounts.ircdRisingNet },
+      { id: 'risingnetVps', wholesale: 180, retail: 290, count: calcCounts.risingnetVps },
+      { id: 'risingnetDedicated', wholesale: 340, retail: 520, count: calcCounts.risingnetDedicated },
       { id: 'ircdTriMesh', wholesale: 2450, retail: 3200, count: calcCounts.ircdTriMesh },
       { id: 'baremetalGround', wholesale: 3800, retail: 4900, count: calcCounts.baremetalGround },
       { id: 'meshSuite25', wholesale: 2200, retail: 3400, count: calcCounts.meshSuite25 },
@@ -749,6 +759,7 @@ link hub.drfun1.com {
                 </span>
                 {[
                   { id: 'all', label: 'All Hosting Packages' },
+                  { id: 'risingnet', label: 'RisingNet Web, VPS & Bare-Metal' },
                   { id: 'ircd', label: 'Dedicated IRCD (Switch/DataPacket/RisingNet)' },
                   { id: 'wordpress', label: 'WordPress IRC Duplicator Cloud' },
                   { id: 'broadcast', label: 'MPD DJ & Broadcast Icecast' },
@@ -1296,6 +1307,7 @@ link hub.drfun1.com {
                 <span className="text-xs font-mono text-slate-400 mr-2">Filter Hosting Types:</span>
                 {[
                   { id: 'all', label: 'All Hosting Packages' },
+                  { id: 'risingnet', label: 'RisingNet Hosting (risingnet.com)' },
                   { id: 'ircd', label: 'Dedicated IRCD & Transit' },
                   { id: 'baremetal', label: 'Bare-Metal & Teleport' },
                   { id: 'wordpress', label: 'WordPress & Web Chat' },
@@ -1574,6 +1586,38 @@ link hub.drfun1.com {
                         className="w-full accent-amber-400 cursor-pointer"
                       />
                     </div>
+
+                    {/* RisingNet Multi-IP VPS */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center text-xs font-mono">
+                        <span className="text-slate-300">RisingNet Multi-IP VPS (16-64 IPs) ($110 margin/mo)</span>
+                        <span className="text-amber-400 font-bold">{calcCounts.risingnetVps} VPS nodes</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="50"
+                        value={calcCounts.risingnetVps}
+                        onChange={(e) => setCalcCounts({ ...calcCounts, risingnetVps: parseInt(e.target.value) || 0 })}
+                        className="w-full accent-amber-400 cursor-pointer"
+                      />
+                    </div>
+
+                    {/* RisingNet Bare-Metal Dedicated */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center text-xs font-mono">
+                        <span className="text-slate-300">RisingNet EPYC/Xeon Dedicated ($180 margin/mo)</span>
+                        <span className="text-amber-400 font-bold">{calcCounts.risingnetDedicated} servers</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="30"
+                        value={calcCounts.risingnetDedicated}
+                        onChange={(e) => setCalcCounts({ ...calcCounts, risingnetDedicated: parseInt(e.target.value) || 0 })}
+                        className="w-full accent-amber-400 cursor-pointer"
+                      />
+                    </div>
                   </div>
 
                   {/* WordPress & Audio Stream Hosting */}
@@ -1657,6 +1701,8 @@ link hub.drfun1.com {
                         ircdSwitch: 2,
                         ircdDataPacket: 2,
                         ircdRisingNet: 1,
+                        risingnetVps: 4,
+                        risingnetDedicated: 1,
                         ircdTriMesh: 1,
                         baremetalGround: 1,
                         meshSuite25: 1,

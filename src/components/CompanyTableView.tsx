@@ -48,11 +48,11 @@ export const CompanyTableView: React.FC<CompanyTableViewProps> = ({
     if (sortField === 'name') {
       comparison = a.name.localeCompare(b.name);
     } else if (sortField === 'orbitType') {
-      comparison = a.orbitType.localeCompare(b.orbitType);
+      comparison = (a.orbitType || '').localeCompare(b.orbitType || '');
     } else if (sortField === 'satellites') {
-      comparison = (a.fleetSize.activeSatellites || 0) - (b.fleetSize.activeSatellites || 0);
+      comparison = (a.fleetSize?.activeSatellites || 0) - (b.fleetSize?.activeSatellites || 0);
     } else if (sortField === 'country') {
-      comparison = a.headquarters.country.localeCompare(b.headquarters.country);
+      comparison = (a.headquarters?.country || '').localeCompare(b.headquarters?.country || '');
     }
     return sortDirection === 'asc' ? comparison : -comparison;
   });
@@ -99,7 +99,7 @@ export const CompanyTableView: React.FC<CompanyTableViewProps> = ({
             {sortedCompanies.map((company) => {
               const isBookmarked = bookmarkedIds.has(company.id);
               const isCompared = comparedIds.has(company.id);
-              const primaryContact = company.contacts[0];
+              const primaryContact = company.contacts && company.contacts.length > 0 ? company.contacts[0] : null;
 
               return (
                 <tr
@@ -170,8 +170,8 @@ export const CompanyTableView: React.FC<CompanyTableViewProps> = ({
                   </td>
 
                   <td className="py-3 px-3 text-slate-300">
-                    <div>{company.headquarters.country}</div>
-                    <div className="text-[11px] text-slate-500">{company.headquarters.city}</div>
+                    <div>{company.headquarters?.country || 'Global'}</div>
+                    <div className="text-[11px] text-slate-500">{company.headquarters?.city || ''}</div>
                   </td>
 
                   <td className="py-3 px-4">

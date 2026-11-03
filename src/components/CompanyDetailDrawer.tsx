@@ -48,7 +48,7 @@ export const CompanyDetailDrawer: React.FC<CompanyDetailDrawerProps> = ({
   const [activeTab, setActiveTab] = useState<'overview' | 'wholesale' | 'switch-irc' | 'contacts' | 'notes'>('overview');
   const [copiedText, setCopiedText] = useState<string | null>(null);
 
-  const switchProfile = company.switchInterconnect || getSwitchInterconnectForCompany(company.name, company.id, company.headquarters.region);
+  const switchProfile = company.switchInterconnect || getSwitchInterconnectForCompany(company.name, company.id, company.headquarters?.region || 'Global');
 
   // Local state for editable user notes
   const [ndaStatus, setNdaStatus] = useState(userNote?.ndaStatus || 'Not Signed');

@@ -287,7 +287,7 @@ export const BroadcastMediaView: React.FC<BroadcastMediaViewProps> = ({
           break;
       }
 
-      const targetGain = isMuted ? 0 : (volume / 100) * 0.04; // Gentle background level
+      const targetGain = isMuted ? 0 : Math.max(0.01, (volume / 100) * 0.16); // High-fidelity audible broadcast level
       gain.gain.setValueAtTime(targetGain, ctx.currentTime);
 
       osc.connect(gain);

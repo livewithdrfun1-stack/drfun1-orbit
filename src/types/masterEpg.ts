@@ -1,5 +1,9 @@
 export type EpgMediaGroup = 
   | 'DrFun1 ECOM (FCC Licensed)'
+  | 'Whitehouse.gov (Executive Pool)'
+  | 'FCC.gov (Federal Regulatory)'
+  | 'Dish.com (Dish Network DBS)'
+  | 'Fubo.tv (Live Sports & Entertainment)'
   | 'Paramount Global'
   | 'The Walt Disney Company'
   | 'Warner Bros. Discovery'

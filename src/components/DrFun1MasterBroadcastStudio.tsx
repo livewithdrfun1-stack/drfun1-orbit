@@ -100,6 +100,7 @@ interface DrFun1MasterBroadcastStudioProps {
   onOpenDuplicator?: () => void;
   activeRank?: AnopeRankLevel;
   onOpenIrcdAdmin?: () => void;
+  onOpenIrcStats?: () => void;
 }
 
 const DEFAULT_CUSTOM_DRAFT: CustomChannelDraft = {
@@ -129,6 +130,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
   onOpenDuplicator,
   activeRank = 'op',
   onOpenIrcdAdmin,
+  onOpenIrcStats,
 }) => {
   // Master Channels List (Base EPG + Scanned Cable/Satellite Stations + User-Created Custom Channels)
   const [channels, setChannels] = useState<MasterEpgChannel[]>(() => {
@@ -303,6 +305,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
   const [showLowerThirds, setShowLowerThirds] = useState<boolean>(true);
   const [scte35AdBreakActive, setScte35AdBreakActive] = useState<boolean>(false);
   const [scte35Countdown, setScte35Countdown] = useState<number>(0);
+  const [mobileStudioTab, setMobileStudioTab] = useState<'both' | 'player' | 'chat'>('both');
 
   // Restream.io Multistream Playout State
   const [isRestreamBroadcasting, setIsRestreamBroadcasting] = useState<boolean>(true);
@@ -343,11 +346,24 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
     setNewsTickerText(activeChannel.newsTickerCrawl);
   }, [activeChannel]);
 
-  // Video Canvas & Web Audio synth for broadcast tone/visuals
+  // Video Canvas, Audio Context & Musical Sequencer
   const videoCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const oscNodeRef = useRef<OscillatorNode | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
+  const synthNodesRef = useRef<{
+    osc1: OscillatorNode | null;
+    osc2: OscillatorNode | null;
+    filter: BiquadFilterNode | null;
+    gain: GainNode | null;
+    compressor: DynamicsCompressorNode | null;
+  }>({
+    osc1: null,
+    osc2: null,
+    filter: null,
+    gain: null,
+    compressor: null,
+  });
+  const audioStepTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isStationVoiceEnabled, setIsStationVoiceEnabled] = useState<boolean>(true);
 
   // Live Uptime Timer
   useEffect(() => {
@@ -373,7 +389,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
     }
   }, [scte35AdBreakActive, scte35Countdown]);
 
-  // Canvas visual rendering loop for live broadcast screen
+  // Enhanced Video Canvas rendering loop with live audio-reactive spectrum analyzer & telemetry
   useEffect(() => {
     const canvas = videoCanvasRef.current;
     if (!canvas) return;
@@ -389,11 +405,11 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
       const h = canvas.height;
 
       // Dark studio background
-      ctx.fillStyle = '#050811';
+      ctx.fillStyle = '#030712';
       ctx.fillRect(0, 0, w, h);
 
-      // Animated background grid & telemetry pulses
-      ctx.strokeStyle = 'rgba(14, 165, 233, 0.12)';
+      // Grid lines
+      ctx.strokeStyle = 'rgba(14, 165, 233, 0.08)';
       ctx.lineWidth = 1;
       const gridSize = 32;
       for (let x = 0; x < w; x += gridSize) {
@@ -411,12 +427,12 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
 
       // Dynamic central radar / constellation orbit rings
       const cx = w / 2;
-      const cy = h / 2 - 20;
-      const radius = 90 + Math.sin(frame * 0.03) * 12;
+      const cy = h / 2 - 25;
+      const radius = 80 + Math.sin(frame * 0.03) * 10;
 
       const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, radius * 1.5);
-      grad.addColorStop(0, 'rgba(14, 165, 233, 0.25)');
-      grad.addColorStop(0.5, 'rgba(99, 102, 241, 0.1)');
+      grad.addColorStop(0, 'rgba(168, 85, 247, 0.22)');
+      grad.addColorStop(0.5, 'rgba(56, 189, 248, 0.1)');
       grad.addColorStop(1, 'transparent');
       ctx.fillStyle = grad;
       ctx.beginPath();
@@ -439,15 +455,58 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
       ctx.fill();
 
       // Station Watermark in Center Screen
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
-      ctx.font = 'bold 54px monospace';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
+      ctx.font = 'bold 50px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(activeChannel.callSign, cx, cy + 20);
+      ctx.fillText(activeChannel.callSign, cx, cy + 18);
 
-      // Video Source tag
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '12px monospace';
-      ctx.fillText(`FCC: ${activeChannel.fccFacilityId} | ${activeChannel.resolution} | ${activeChannel.carrierFrequency}`, cx, cy + 50);
+      // Audio-Reactive Equalizer Spectrum Bars along bottom of display
+      const barCount = 36;
+      const barWidth = (w - 60) / barCount;
+      const baseY = h - 55;
+
+      for (let i = 0; i < barCount; i++) {
+        const freqMultiplier = Math.sin(i * 0.28 + frame * 0.08) * 0.5 + 0.5;
+        const bounce = isPlaying ? Math.abs(Math.sin((frame * 0.09) + (i * 0.35))) * 45 * (freqMultiplier + 0.3) : 3;
+        const barHeight = Math.max(3, bounce);
+        const bx = 30 + i * barWidth;
+        const by = baseY - barHeight;
+
+        // Gradient for equalizer bars
+        const barGrad = ctx.createLinearGradient(0, by, 0, baseY);
+        barGrad.addColorStop(0, '#c084fc');
+        barGrad.addColorStop(0.5, '#38bdf8');
+        barGrad.addColorStop(1, 'rgba(14, 165, 233, 0.3)');
+        ctx.fillStyle = barGrad;
+        ctx.fillRect(bx, by, barWidth - 3, barHeight);
+      }
+
+      // Top Left: "LIVE ON-AIR" indicator
+      ctx.fillStyle = isPlaying ? '#ef4444' : '#64748b';
+      ctx.beginPath();
+      ctx.arc(42, 28, 5, 0, Math.PI * 2);
+      ctx.fill();
+      if (isPlaying) {
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(42, 28, 8 + Math.sin(frame * 0.1) * 3, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 11px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(isPlaying ? 'LIVE BROADCAST' : 'PAUSED', 56, 32);
+
+      // Top Right: Channel & 1:1 IRC Room HUD
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+      ctx.fillRect(w - 260, 16, 235, 28);
+      ctx.strokeStyle = 'rgba(168, 85, 247, 0.3)';
+      ctx.strokeRect(w - 260, 16, 235, 28);
+      ctx.fillStyle = '#a855f7';
+      ctx.font = 'bold 11px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(`CH ${activeChannel.channelNumber} | ${activeChannel.unrealIrcChannel}`, w - 35, 34);
 
       animId = requestAnimationFrame(render);
     };
@@ -457,13 +516,17 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [activeChannel]);
+  }, [activeChannel, isPlaying]);
 
-  // Audio tone synthesizer for simulated live feed
+  // High-Fidelity Multi-Voice Audio Synthesizer & Harmonic Engine
   useEffect(() => {
     if (!isPlaying) {
       if (audioContextRef.current && audioContextRef.current.state === 'running') {
         audioContextRef.current.suspend().catch(() => {});
+      }
+      if (audioStepTimerRef.current) {
+        clearInterval(audioStepTimerRef.current);
+        audioStepTimerRef.current = null;
       }
       return;
     }
@@ -478,36 +541,106 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
         ctx.resume().catch(() => {});
       }
 
-      if (oscNodeRef.current) {
-        try { oscNodeRef.current.stop(); } catch (_) {}
-        try { oscNodeRef.current.disconnect(); } catch (_) {}
+      // Cleanup prior synth nodes
+      if (synthNodesRef.current.osc1) {
+        try { synthNodesRef.current.osc1.stop(); } catch (_) {}
+        try { synthNodesRef.current.osc1.disconnect(); } catch (_) {}
       }
-      if (gainNodeRef.current) {
-        try { gainNodeRef.current.disconnect(); } catch (_) {}
+      if (synthNodesRef.current.osc2) {
+        try { synthNodesRef.current.osc2.stop(); } catch (_) {}
+        try { synthNodesRef.current.osc2.disconnect(); } catch (_) {}
+      }
+      if (synthNodesRef.current.gain) {
+        try { synthNodesRef.current.gain.disconnect(); } catch (_) {}
+      }
+      if (audioStepTimerRef.current) {
+        clearInterval(audioStepTimerRef.current);
       }
 
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+      // Master Compressor to prevent distortion and ensure warm sound
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.setValueAtTime(-20, ctx.currentTime);
+      compressor.knee.setValueAtTime(40, ctx.currentTime);
+      compressor.ratio.setValueAtTime(8, ctx.currentTime);
+      compressor.attack.setValueAtTime(0.005, ctx.currentTime);
+      compressor.release.setValueAtTime(0.2, ctx.currentTime);
+      compressor.connect(ctx.destination);
 
-      osc.type = 'sine';
-      // Harmonic pleasant station tone
-      osc.frequency.setValueAtTime(432, ctx.currentTime);
-      gain.gain.setValueAtTime(isMuted ? 0 : (volume / 100) * 0.012, ctx.currentTime);
+      // Master Gain
+      const masterGain = ctx.createGain();
+      const targetGainLevel = isMuted ? 0 : Math.max(0.01, (volume / 100) * 0.16);
+      masterGain.gain.setValueAtTime(targetGainLevel, ctx.currentTime);
+      masterGain.connect(compressor);
 
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
+      // Lowpass Filter for Warm Analog Tone
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1200, ctx.currentTime);
+      filter.Q.setValueAtTime(2.0, ctx.currentTime);
+      filter.connect(masterGain);
 
-      oscNodeRef.current = osc;
-      gainNodeRef.current = gain;
+      // Voice 1: Warm Sub-Bass (Sine / Triangle)
+      const osc1 = ctx.createOscillator();
+      osc1.type = 'triangle';
+
+      // Voice 2: Harmonic Arpeggiator Lead
+      const osc2 = ctx.createOscillator();
+      osc2.type = 'sawtooth';
+
+      const leadGain = ctx.createGain();
+      leadGain.gain.setValueAtTime(0.35, ctx.currentTime);
+      osc2.connect(leadGain);
+      leadGain.connect(filter);
+      osc1.connect(filter);
+
+      // Harmonic chords based on channel category
+      let chordNotes: number[] = [130.81, 164.81, 196.00, 246.94, 261.63]; // C Pentatonic Default
+      if (activeChannel.category === 'Science & Space') {
+        chordNotes = [130.81, 196.00, 261.63, 311.13, 392.00, 523.25]; // Space C-minor
+      } else if (activeChannel.category === 'News') {
+        chordNotes = [146.83, 220.00, 293.66, 370.00, 440.00]; // Broadcast D-major
+      } else if (activeChannel.name.includes('Radio') || activeChannel.name.includes('FM')) {
+        chordNotes = [110.00, 164.81, 220.00, 261.63, 329.63, 440.00]; // 80s Synthwave A-minor
+      }
+
+      osc1.frequency.setValueAtTime(chordNotes[0] * 0.5, ctx.currentTime);
+      osc2.frequency.setValueAtTime(chordNotes[0], ctx.currentTime);
+
+      osc1.start();
+      osc2.start();
+
+      let step = 0;
+      audioStepTimerRef.current = setInterval(() => {
+        if (!ctx || ctx.state !== 'running') return;
+        step = (step + 1) % chordNotes.length;
+        const currentFreq = chordNotes[step];
+        const now = ctx.currentTime;
+        osc2.frequency.setTargetAtTime(currentFreq, now, 0.08);
+        filter.frequency.setTargetAtTime(800 + Math.sin(step) * 500, now, 0.12);
+      }, 420);
+
+      synthNodesRef.current = {
+        osc1,
+        osc2,
+        filter,
+        gain: masterGain,
+        compressor,
+      };
     } catch (_) {}
 
     return () => {
-      if (oscNodeRef.current) {
-        try { oscNodeRef.current.stop(); } catch (_) {}
+      if (audioStepTimerRef.current) {
+        clearInterval(audioStepTimerRef.current);
+        audioStepTimerRef.current = null;
+      }
+      if (synthNodesRef.current.osc1) {
+        try { synthNodesRef.current.osc1.stop(); } catch (_) {}
+      }
+      if (synthNodesRef.current.osc2) {
+        try { synthNodesRef.current.osc2.stop(); } catch (_) {}
       }
     };
-  }, [isPlaying, isMuted, volume]);
+  }, [isPlaying, isMuted, volume, activeChannel]);
 
   // Handle Trigger SCTE-35 Commercial Ad Insertion
   const handleTriggerScte35 = () => {
@@ -519,7 +652,10 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
   const filteredEpgChannels = useMemo(() => {
     return channels.filter(channel => {
       const matchesGroup = epgGroupFilter === 'All' 
-        || (epgGroupFilter === 'DrFun1 Scanned Cable/Satellite' ? Boolean(channel.isScannedStation) : channel.networkOwner === epgGroupFilter);
+        || (epgGroupFilter === 'DrFun1 Scanned Cable/Satellite' ? Boolean(channel.isScannedStation) 
+           : (epgGroupFilter === 'Dish.com (Dish Network DBS)' || epgGroupFilter === 'Dish Network')
+             ? (channel.networkOwner === 'Dish.com (Dish Network DBS)' || channel.networkOwner === 'Dish Network')
+           : channel.networkOwner === epgGroupFilter);
       const matchesCategory = epgCategoryFilter === 'All' || channel.category === epgCategoryFilter;
       const searchLower = epgSearch.toLowerCase().trim();
       const matchesSearch = !searchLower || 
@@ -537,9 +673,29 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
     });
   }, [channels, epgGroupFilter, epgCategoryFilter, epgSearch]);
 
-  // Handle Tune to Station & Sync IRC
+  // Handle Tune to Station & Sync 1:1 IRC Channel
   const handleTuneStation = (channel: MasterEpgChannel) => {
     setSelectedChannelId(channel.id);
+    setIsPlaying(true);
+    if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume().catch(() => {});
+    }
+    if (isStationVoiceEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(
+          `Tuned to DrFun1 Media: Channel ${channel.channelNumber}, ${channel.name}, call sign ${channel.callSign}. Connecting to 1 to 1 IRC room ${channel.unrealIrcChannel} on irc.drfun1.com.`
+        );
+        utterance.rate = 1.05;
+        utterance.pitch = 1.0;
+        utterance.volume = isMuted ? 0 : Math.min(1, volume / 100);
+        window.speechSynthesis.speak(utterance);
+      } catch (_) {}
+    }
+    setCreatedSuccessAlert(
+      `Now playing CH ${channel.channelNumber} — ${channel.name} (${channel.callSign}) | Joined 1:1 IRC Room ${channel.unrealIrcChannel} on irc.drfun1.com!`
+    );
+    setTimeout(() => setCreatedSuccessAlert(null), 5000);
   };
 
   // Handle Create Channel
@@ -791,11 +947,50 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
           ======================================================== */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1 space-y-6">
         
+        {/* Mobile Viewport Toggle (Visible on < lg screens) */}
+        <div className="lg:hidden flex items-center justify-between p-1.5 bg-slate-900 border border-slate-800 rounded-xl font-mono text-xs shadow-md">
+          <button
+            onClick={() => setMobileStudioTab('player')}
+            className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 min-h-[44px] transition-all cursor-pointer ${
+              mobileStudioTab === 'player'
+                ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-600/30'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Tv className="w-3.5 h-3.5" />
+            <span>Video Stream</span>
+          </button>
+          <button
+            onClick={() => setMobileStudioTab('chat')}
+            className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 min-h-[44px] transition-all cursor-pointer ${
+              mobileStudioTab === 'chat'
+                ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-600/30'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span className="truncate">1:1 Room ({activeChannel.unrealIrcChannel})</span>
+          </button>
+          <button
+            onClick={() => setMobileStudioTab('both')}
+            className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 min-h-[44px] transition-all cursor-pointer ${
+              mobileStudioTab === 'both'
+                ? 'bg-slate-800 text-white font-bold shadow-inner'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Stacked</span>
+          </button>
+        </div>
+
         {/* ROW 1: MASTER CANVAS PLAYER & HUD + DOCKED 1-TO-1 IRC CHAT */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
           {/* LEFT 8 COLS: BROADCAST CANVAS PLAYER WITH ON-SCREEN GRAPHICS */}
-          <div className="lg:col-span-8 bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+          <div className={`lg:col-span-8 bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col ${
+            mobileStudioTab === 'chat' ? 'hidden lg:flex' : 'flex'
+          }`}>
             
             {/* Player Header Bar: Tuned Station Title, Call Sign & Dedicated IRC Indicator */}
             <div className="bg-slate-950/90 border-b border-slate-800/90 px-4 py-2.5 flex items-center justify-between gap-3 text-xs flex-wrap">
@@ -813,13 +1008,23 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 </span>
               </div>
 
-              {/* Dedicated 1-to-1 IRC Channel Tag */}
+              {/* Dedicated 1-to-1 IRC Channel Tag & IRCD Stats Link */}
               <div className="flex items-center gap-2 font-mono text-[11px]">
                 <span className="text-slate-400">1:1 IRC Room:</span>
                 <span className="text-emerald-400 bg-emerald-950/80 border border-emerald-800/70 px-2 py-0.5 rounded font-bold flex items-center gap-1">
                   <MessageSquare className="w-3 h-3 text-emerald-400" />
                   <span>{activeChannel.unrealIrcChannel}</span>
                 </span>
+                {onOpenIrcStats && (
+                  <button
+                    onClick={onOpenIrcStats}
+                    className="px-2 py-0.5 rounded bg-purple-950/80 hover:bg-purple-900/80 text-purple-300 border border-purple-500/40 font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                    title="View live irc.drfun1.com IRCD server stats"
+                  >
+                    <Activity className="w-3 h-3 text-purple-400" />
+                    <span>IRCD Stats</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -982,12 +1187,32 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 <span className="text-sky-400">{activeChannel.frequencyBand}</span>
               </div>
 
-              {/* Trigger SCTE-35 Commercial Ad Insertion Button */}
               <div className="flex items-center gap-2">
+                {/* Station Voice ID Announcement Toggle */}
+                <button
+                  onClick={() => {
+                    const next = !isStationVoiceEnabled;
+                    setIsStationVoiceEnabled(next);
+                    if (next) {
+                      handleTuneStation(activeChannel);
+                    }
+                  }}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                    isStationVoiceEnabled
+                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+                      : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
+                  }`}
+                  title={isStationVoiceEnabled ? 'Station Voice ID is Active (Click to Test/Disable)' : 'Enable Voice Station ID Announcements'}
+                >
+                  <Radio className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Voice ID {isStationVoiceEnabled ? 'ON' : 'OFF'}</span>
+                </button>
+
+                {/* Trigger SCTE-35 Commercial Ad Insertion Button */}
                 <button
                   onClick={handleTriggerScte35}
                   disabled={scte35AdBreakActive}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
                     scte35AdBreakActive 
                       ? 'bg-amber-950/80 border border-amber-600/60 text-amber-400 cursor-not-allowed'
                       : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30'
@@ -1001,10 +1226,42 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
 
             </div>
 
+            {/* DrFun1 Media Inc All-Channels Quick Switcher Strip with 1:1 IRC Room Indicator */}
+            <div className="bg-slate-950/95 border-t border-slate-800/80 px-4 py-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar text-xs font-mono">
+              <span className="text-[11px] text-slate-400 font-bold shrink-0 flex items-center gap-1.5 mr-1">
+                <Tv className="w-3.5 h-3.5 text-purple-400" />
+                <span>DrFun1 Channels:</span>
+              </span>
+              {channels.map((ch) => {
+                const isSelected = ch.id === selectedChannelId;
+                return (
+                  <button
+                    key={ch.id}
+                    onClick={() => handleTuneStation(ch)}
+                    className={`px-2.5 py-1.5 rounded-lg shrink-0 flex items-center gap-1.5 transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-900/30 ring-1 ring-purple-400'
+                        : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                    }`}
+                    title={`Tune CH ${ch.channelNumber} — ${ch.name} (1:1 IRC: ${ch.unrealIrcChannel})`}
+                  >
+                    {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />}
+                    <span>CH {ch.channelNumber}</span>
+                    <span className="text-[10px] opacity-80">{ch.callSign}</span>
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-slate-950/60 text-emerald-300 font-bold">
+                      {ch.unrealIrcChannel}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
           </div>
 
           {/* RIGHT 4 COLS: DOCKED 1-TO-1 MULTISTREAM IRC CHAT ROOM */}
-          <div className="lg:col-span-4 bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[520px]">
+          <div className={`lg:col-span-4 bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[520px] ${
+            mobileStudioTab === 'player' ? 'hidden lg:flex' : 'flex'
+          }`}>
             
             {/* IRC Room Header */}
             <div className="bg-slate-950/90 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between text-xs">
@@ -1490,7 +1747,21 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
 
               {/* Group Category Filter Pills */}
               <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-                {(['All', 'DrFun1 ECOM (FCC Licensed)', 'DrFun1 Scanned Cable/Satellite', 'Paramount Global', 'The Walt Disney Company', 'Warner Bros. Discovery', 'Comcast / Xfinity', 'Dish Network', 'SATCOM Satellite Feeds', 'Custom User Channels'] as const).map((grp) => (
+                {([
+                  'All', 
+                  'DrFun1 ECOM (FCC Licensed)', 
+                  'Whitehouse.gov (Executive Pool)',
+                  'FCC.gov (Federal Regulatory)',
+                  'Dish.com (Dish Network DBS)',
+                  'Fubo.tv (Live Sports & Entertainment)',
+                  'DrFun1 Scanned Cable/Satellite', 
+                  'Paramount Global', 
+                  'The Walt Disney Company', 
+                  'Warner Bros. Discovery', 
+                  'Comcast / Xfinity', 
+                  'SATCOM Satellite Feeds', 
+                  'Custom User Channels'
+                ] as const).map((grp) => (
                   <button
                     key={grp}
                     onClick={() => setEpgGroupFilter(grp)}

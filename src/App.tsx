@@ -29,6 +29,7 @@ import { CartDrawer } from './components/CartDrawer';
 import { RestreamStudioView } from './components/RestreamStudioView';
 import { FacebookSocialView } from './components/FacebookSocialView';
 import { IrcClientView } from './components/IrcClientView';
+import { IrcdStatsView } from './components/IrcdStatsView';
 import { BroadcastMediaView } from './components/BroadcastMediaView';
 import { DrFun1MasterBroadcastStudio } from './components/DrFun1MasterBroadcastStudio';
 import { PhoneCarriersView } from './components/PhoneCarriersView';
@@ -37,6 +38,7 @@ import { IrcDuplicatorView } from './components/IrcDuplicatorView';
 import { HostingResellerProgramModal } from './components/HostingResellerProgramModal';
 import { IrcdAdminPanelModal } from './components/IrcdAdminPanelModal';
 import { SwitchWittSatelliteFiberModal } from './components/SwitchWittSatelliteFiberModal';
+import { SatelliteRssNewsSection } from './components/SatelliteRssNewsSection';
 import { AnopeRankLevel } from './types/ircdAdmin';
 import { STORE_PRODUCTS } from './data/storeProducts';
 import { AppTab } from './components/Header';
@@ -497,6 +499,17 @@ export default function App() {
           activeRank={activeOperRank}
           onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
         />
+      ) : activeTab === 'ircstats' ? (
+        <IrcdStatsView
+          onNavigateToMedia={(channelIrc) => {
+            setActiveTab('media');
+          }}
+          onNavigateToIrc={() => setActiveTab('irc')}
+          onOpenLicense={() => setIsLicenseModalOpen(true)}
+          onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+          onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
+          activeRank={activeOperRank}
+        />
       ) : activeTab === 'media' ? (
         <DrFun1MasterBroadcastStudio
           onOpenStore={() => setActiveTab('store')}
@@ -508,6 +521,7 @@ export default function App() {
           onOpenDuplicator={() => setActiveTab('duplicator')}
           activeRank={activeOperRank}
           onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
+          onOpenIrcStats={() => setActiveTab('ircstats')}
         />
       ) : activeTab === 'carriers' ? (
         <PhoneCarriersView
@@ -661,6 +675,9 @@ export default function App() {
         {/* Tab 1: Directory (Cards / Table) */}
         {activeTab === 'directory' && (
           <div className="space-y-6">
+            {/* Live RSS Headlines from FCC.gov & Major Satellite Outlets with Background Polling */}
+            <SatelliteRssNewsSection />
+
             {/* Filter Toolbar */}
             <FilterToolbar
               filters={filters}
@@ -950,10 +967,12 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Satellite className="w-4 h-4 text-sky-400" />
-              <span className="text-slate-300 font-semibold">DrFun1 Orbit</span>
+              <Satellite className="w-4 h-4 text-purple-400" />
+              <span className="text-white font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-sky-400 bg-clip-text text-transparent">
+                DrFun1 Media
+              </span>
               <span>—</span>
-              <span>Commercial Satellite Operator Directory, Resale Store & Contact Portal</span>
+              <span>Global Broadcasting, TV &amp; Radio Streaming, Satcom Directory &amp; Resale Store</span>
             </div>
 
             <div className="flex items-center gap-4 font-mono text-[11px] text-slate-400">
