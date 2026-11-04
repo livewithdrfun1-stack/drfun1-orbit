@@ -57,6 +57,7 @@ interface IrcClientViewProps {
   onNavigateToStudio?: () => void;
   activeRank?: AnopeRankLevel;
   onOpenIrcdAdmin?: () => void;
+  onOpenZncWebAdmin?: () => void;
 }
 
 export const IrcClientView: React.FC<IrcClientViewProps> = ({
@@ -66,6 +67,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
   onNavigateToStudio,
   activeRank = 'op',
   onOpenIrcdAdmin,
+  onOpenZncWebAdmin,
 }) => {
   // Connection state
   const [activeNodeId, setActiveNodeId] = useState<string>('switch_node_1');
@@ -483,6 +485,17 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-red-400" />
                 <span>IRCD Admin</span>
+              </button>
+            )}
+
+            {onOpenZncWebAdmin && (
+              <button
+                onClick={onOpenZncWebAdmin}
+                className="px-3 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-700/60 text-emerald-200 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm"
+                title="Open ZNC 1.9.1 Web Control Panel (Port 5000)"
+              >
+                <Server className="w-3.5 h-3.5 text-emerald-400" />
+                <span>ZNC WebAdmin (:5000)</span>
               </button>
             )}
           </div>

@@ -38,7 +38,7 @@ import {
   Download,
   AlertCircle
 } from 'lucide-react';
-import { UNREAL_HUB_DETAILS, SWITCH_DEDICATED_NODES, ALL_DRFUN1_MEDIA_CHANNELS } from '../data/ircData';
+import { UNREAL_HUB_DETAILS, SWITCH_DEDICATED_NODES, ALL_DRFUN1_MEDIA_CHANNELS, ZNC_BOUNCER_CONFIG, STATS_DRFUN1IRCD_PORTAL } from '../data/ircData';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 
 interface IrcdStatsViewProps {
@@ -47,6 +47,7 @@ interface IrcdStatsViewProps {
   onOpenLicense?: () => void;
   onOpenSwitchMesh?: () => void;
   onOpenIrcdAdmin?: () => void;
+  onOpenZncWebAdmin?: () => void;
   activeRank?: AnopeRankLevel;
 }
 
@@ -56,11 +57,12 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
   onOpenLicense,
   onOpenSwitchMesh,
   onOpenIrcdAdmin,
+  onOpenZncWebAdmin,
   activeRank = 'op',
 }) => {
   // Live uptime counter in seconds (starting from 148 days, 12 hours)
   const [uptimeSeconds, setUptimeSeconds] = useState(148 * 86400 + 12 * 3600 + 1420);
-  const [activeStatsTab, setActiveStatsTab] = useState<'overview' | 'nodes' | 'stats_cmd' | 'anope' | 'channels'>('overview');
+  const [activeStatsTab, setActiveStatsTab] = useState<'overview' | 'nodes' | 'znc' | 'stats_cmd' | 'anope' | 'channels'>('overview');
   const [selectedStatsQuery, setSelectedStatsQuery] = useState<'u' | 'm' | 'l' | 'c' | 'k' | 'T' | 'z'>('u');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [searchNode, setSearchNode] = useState('');
@@ -223,6 +225,72 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
   return (
     <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       
+      {/* ========================================================
+          OFFICIAL STATS PORTAL BANNER: stats.drfun1ircd.com
+          ======================================================== */}
+      <div className="bg-gradient-to-r from-purple-900/60 via-slate-900/90 to-indigo-950/70 border border-purple-500/40 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="p-3 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/40 shrink-0">
+              <Globe className="w-6 h-6 text-purple-400" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-purple-300 font-bold">
+                  Official Telemetry Portal
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  JSON-RPC 2.0 &bull; LIVE SYNC
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                  Switch SUPERNAP NV Core
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <a
+                  href="https://stats.drfun1ircd.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xl sm:text-2xl font-mono font-black text-white hover:text-purple-300 transition-colors flex items-center gap-2 group"
+                >
+                  <span className="underline decoration-purple-500/50 decoration-2 underline-offset-4">stats.drfun1ircd.com</span>
+                  <ExternalLink className="w-4 h-4 text-purple-400 group-hover:translate-x-0.5 transition-transform" />
+                </a>
+                <button
+                  onClick={() => handleCopy('https://stats.drfun1ircd.com', 'statsPortal')}
+                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors text-xs flex items-center gap-1 cursor-pointer"
+                  title="Copy Portal URL"
+                >
+                  {copiedKey === 'statsPortal' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span className="font-mono text-[10px]">Copy URL</span>
+                </button>
+              </div>
+              <p className="text-xs text-slate-300 mt-1 max-w-2xl font-sans">
+                {STATS_DRFUN1IRCD_PORTAL.description}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 font-mono text-xs shrink-0">
+            <div className="p-2.5 rounded-xl bg-slate-950/80 border border-purple-500/30 flex flex-col min-w-[170px]">
+              <span className="text-[10px] text-slate-400 uppercase font-semibold">Master Hub (SID 001)</span>
+              <span className="text-purple-300 font-bold flex items-center gap-1">
+                <span>irc.drfun1.com:6697</span>
+              </span>
+              <span className="text-[10px] text-emerald-400">Las Vegas SUPERNAP</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-950/80 border border-emerald-500/30 flex flex-col min-w-[180px]">
+              <span className="text-[10px] text-slate-400 uppercase font-semibold">Media Leaf &amp; ZNC (SID 026)</span>
+              <span className="text-emerald-300 font-bold flex items-center gap-1">
+                <span>irc.drfun1media.com</span>
+              </span>
+              <span className="text-[10px] text-sky-400">UnrealIRCd + ZNC 1.9.1</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ========================================================
           HERO BANNER: irc.drfun1.com TELEMETRY & NETWORK STATUS
           ======================================================== */}
@@ -408,8 +476,9 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
       <div className="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto no-scrollbar font-mono text-xs">
         {[
           { id: 'overview', label: 'Network Overview & Security', icon: Activity },
+          { id: 'znc', label: 'ZNC 1.9.1 Bouncer (znc.git)', icon: Layers },
+          { id: 'nodes', label: `26 Switch Leaf Nodes (${SWITCH_DEDICATED_NODES.length})`, icon: Server },
           { id: 'stats_cmd', label: 'Live /STATS Engine Terminal', icon: Terminal },
-          { id: 'nodes', label: `25 Switch Leaf Nodes (${SWITCH_DEDICATED_NODES.length})`, icon: Server },
           { id: 'channels', label: `1:1 Media Broadcast Channels (${ALL_DRFUN1_MEDIA_CHANNELS.length})`, icon: Hash },
           { id: 'anope', label: 'Anope 2.1 Services Health', icon: ShieldCheck },
         ].map((tab) => {
@@ -516,6 +585,201 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
             </div>
 
           </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          TAB: ZNC 1.9.1 BOUNCER & PERSISTENT BUFFER (github.com/znc/znc.git)
+          ======================================================== */}
+      {activeStatsTab === 'znc' && (
+        <div className="space-y-6">
+          {/* ZNC Hero / Status Banner */}
+          <div className="bg-slate-900/90 border border-emerald-500/40 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-2.5 py-1 rounded-md text-xs font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    <span>ZNC 1.9.1 BOUNCER ACTIVE</span>
+                  </span>
+                  <a
+                    href="https://github.com/znc/znc.git"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2.5 py-1 rounded-md text-xs font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>github.com/znc/znc.git</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-slate-800 text-slate-300 border border-slate-700">
+                    Host: irc.drfun1media.com
+                  </span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                  <span>ZNC IRC Bouncer Engine</span>
+                  <span className="text-emerald-400 font-mono text-base font-normal">&bull; Leafed to irc.drfun1.com:6697</span>
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 max-w-3xl">
+                  High-performance IRC bouncer compiled from <strong className="text-white">https://github.com/znc/znc.git</strong> running inside <strong className="text-emerald-300">irc.drfun1media.com</strong>. Maintains continuous 24/7 presence across all 70 1:1 broadcasting channels with buffer playback, SASL authentication, and web administration.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap lg:flex-col gap-2 shrink-0 font-mono text-xs">
+                <div className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
+                  <span className="text-slate-400">IRC Client Port:</span>
+                  <span className="text-emerald-300 font-bold">6697 (SSL)</span>
+                </div>
+                <div className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
+                  <span className="text-slate-400">WebAdmin Port:</span>
+                  <span className="text-sky-300 font-bold">5000 (HTTPS)</span>
+                </div>
+                <div className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
+                  <span className="text-slate-400">Upstream Hub:</span>
+                  <span className="text-purple-300 font-bold">irc.drfun1.com:6697</span>
+                </div>
+
+                {onOpenZncWebAdmin && (
+                  <button
+                    onClick={onOpenZncWebAdmin}
+                    className="w-full mt-1 py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition cursor-pointer"
+                  >
+                    <Server className="w-3.5 h-3.5" />
+                    <span>Open ZNC Web Control Panel (:5000)</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Stat Bar */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-800">
+              <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                <span className="text-[10px] font-mono text-slate-400 block">Loaded Modules</span>
+                <span className="text-lg font-bold font-mono text-emerald-400">{ZNC_BOUNCER_CONFIG.loadedModules.length} Modules</span>
+                <span className="text-[10px] font-mono text-slate-500 block">playback, buffextras, sasl</span>
+              </div>
+              <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                <span className="text-[10px] font-mono text-slate-400 block">Active Bouncer Users</span>
+                <span className="text-lg font-bold font-mono text-white">{ZNC_BOUNCER_CONFIG.activeUsers} Sessions</span>
+                <span className="text-[10px] font-mono text-slate-500 block">Multi-Client Attached</span>
+              </div>
+              <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                <span className="text-[10px] font-mono text-slate-400 block">Channel Playback Buffers</span>
+                <span className="text-lg font-bold font-mono text-sky-400">{ZNC_BOUNCER_CONFIG.totalBuffers} Channels</span>
+                <span className="text-[10px] font-mono text-slate-500 block">1:1 Sync with irc.drfun1.com</span>
+              </div>
+              <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                <span className="text-[10px] font-mono text-slate-400 block">SASL Security Mode</span>
+                <span className="text-lg font-bold font-mono text-purple-300">ECDSA-256</span>
+                <span className="text-[10px] font-mono text-slate-500 block">Certificate &amp; Pass Challenge</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid: Modules & Active Sessions */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Loaded Modules */}
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2 text-sm font-bold text-white">
+                  <Layers className="w-4 h-4 text-emerald-400" />
+                  <span>Loaded ZNC Modules ({ZNC_BOUNCER_CONFIG.loadedModules.length})</span>
+                </div>
+                <span className="text-[10px] font-mono text-slate-400">irc.drfun1media.com</span>
+              </div>
+
+              <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+                {ZNC_BOUNCER_CONFIG.loadedModules.map((mod) => (
+                  <div key={mod.name} className="p-3 bg-slate-950/80 rounded-xl border border-slate-800/80 hover:border-slate-700 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-emerald-300 text-xs">{mod.name}</span>
+                        <span className="text-[9px] font-mono uppercase px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">
+                          {mod.type}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                        <span>{mod.status}</span>
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 mt-1">{mod.description}</p>
+                    {mod.args && (
+                      <div className="text-[10px] font-mono text-purple-400 mt-1 bg-slate-900/90 px-2 py-0.5 rounded inline-block">
+                        args: {mod.args}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Active User Sessions & Buffers */}
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2 text-sm font-bold text-white">
+                  <Users className="w-4 h-4 text-sky-400" />
+                  <span>Active ZNC User Sessions &amp; Backlog Buffers</span>
+                </div>
+                <span className="text-[10px] font-mono text-emerald-400">Live Attached</span>
+              </div>
+
+              <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                {ZNC_BOUNCER_CONFIG.userSessions.map((session) => (
+                  <div key={session.username} className="p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-white text-xs">{session.username}</span>
+                        <span className="text-[10px] font-mono text-slate-400">({session.bindHost})</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-sky-300 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800/50">
+                        {session.connectedClients} Client(s)
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-400">{session.realname}</div>
+                    <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-slate-400">
+                      <span>Buffer: <strong className="text-emerald-400">{session.bufferSize} lines</strong></span>
+                      <span>&bull;</span>
+                      <span>Channels: <strong className="text-purple-300">{session.channelsCount}</strong></span>
+                      <span>&bull;</span>
+                      <span>Active: <strong className="text-slate-200">{session.lastActive}</strong></span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {session.bufferedChannels.map((chan) => (
+                        <span key={chan} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+                          {chan}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+          {/* znc.conf Configuration Code Inspector */}
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="bg-slate-900 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2 font-mono text-xs">
+                <Terminal className="w-4 h-4 text-emerald-400" />
+                <span className="font-bold text-white">/etc/znc/configs/znc.conf &bull; irc.drfun1media.com</span>
+                <span className="text-slate-500">|</span>
+                <span className="text-slate-400">Leafing to irc.drfun1.com:6697</span>
+              </div>
+              <button
+                onClick={() => handleCopy(ZNC_BOUNCER_CONFIG.zncConfSnippet, 'zncConf')}
+                className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1.5 text-xs font-mono cursor-pointer"
+              >
+                {copiedKey === 'zncConf' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>Copy znc.conf</span>
+              </button>
+            </div>
+            <pre className="p-4 bg-slate-950 text-emerald-300 font-mono text-xs overflow-x-auto max-h-[320px] leading-relaxed">
+              {ZNC_BOUNCER_CONFIG.zncConfSnippet}
+            </pre>
+          </div>
+
         </div>
       )}
 

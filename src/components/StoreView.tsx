@@ -68,6 +68,7 @@ export const StoreView: React.FC<StoreViewProps> = ({
     'Snapdragon Qualcomm Satellite & 5G',
     'Quantum Fiber & Terrestrial Optical',
     'Dedicated IRCD & Transit Hosting',
+    'DataPacket.com VPS, IRCd & Dedicated Hosting',
     'RisingNet Web, VPS & Dedicated Hosting',
     'Terminals & User Hardware',
     'Bandwidth & Enterprise CIR',
@@ -84,6 +85,7 @@ export const StoreView: React.FC<StoreViewProps> = ({
 
   const partners: string[] = [
     'All Partners',
+    'DataPacket (www.datapacket.com)',
     'Switch.com',
     'The Law Office of Richard A. Witt LLC',
     'Witt Law Firm',

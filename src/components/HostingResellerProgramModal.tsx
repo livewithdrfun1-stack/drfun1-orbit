@@ -39,8 +39,8 @@ interface HostingResellerProgramModalProps {
 }
 
 type TabType = 'ezsetup' | 'matrix' | 'calculator' | 'whitelabel' | 'onboarding' | 'legal';
-type HostingCategoryFilter = 'all' | 'risingnet' | 'ircd' | 'baremetal' | 'wordpress' | 'broadcast' | 'fiber';
-type EzSetupNiche = 'all' | 'risingnet' | 'ircd' | 'wordpress' | 'broadcast' | 'fiber';
+type HostingCategoryFilter = 'all' | 'datapacket' | 'risingnet' | 'ircd' | 'baremetal' | 'wordpress' | 'broadcast' | 'fiber';
+type EzSetupNiche = 'all' | 'datapacket' | 'risingnet' | 'ircd' | 'wordpress' | 'broadcast' | 'fiber';
 
 interface PartnerRegistration {
   companyName: string;
@@ -123,6 +123,8 @@ export const HostingResellerProgramModal: React.FC<HostingResellerProgramModalPr
     ircdDataPacket: number;
     ircdRisingNet: number;
     ircdTriMesh: number;
+    datapacketVps: number;
+    datapacketDedicated: number;
     risingnetVps: number;
     risingnetDedicated: number;
     baremetalGround: number;
@@ -137,6 +139,8 @@ export const HostingResellerProgramModal: React.FC<HostingResellerProgramModalPr
     ircdDataPacket: 2,
     ircdRisingNet: 1,
     ircdTriMesh: 1,
+    datapacketVps: 5,
+    datapacketDedicated: 2,
     risingnetVps: 4,
     risingnetDedicated: 1,
     baremetalGround: 1,
@@ -157,6 +161,7 @@ export const HostingResellerProgramModal: React.FC<HostingResellerProgramModalPr
     return STORE_PRODUCTS.filter((p) => {
       // Must be recurring monthly or infrastructure hosting
       const isHosting =
+        p.category === 'DataPacket.com VPS, IRCd & Dedicated Hosting' ||
         p.category === 'RisingNet Web, VPS & Dedicated Hosting' ||
         p.category === 'Dedicated IRCD & Transit Hosting' ||
         p.category === 'Bare-Metal & Teleport Hosting' ||
@@ -168,14 +173,23 @@ export const HostingResellerProgramModal: React.FC<HostingResellerProgramModalPr
       if (!isHosting) return false;
 
       if (categoryFilter === 'all') return true;
+      if (categoryFilter === 'datapacket') {
+        return p.category === 'DataPacket.com VPS, IRCd & Dedicated Hosting';
+      }
       if (categoryFilter === 'risingnet') {
         return p.category === 'RisingNet Web, VPS & Dedicated Hosting';
       }
-      if (categoryFilter === 'ircd') return p.category === 'Dedicated IRCD & Transit Hosting';
+      if (categoryFilter === 'ircd') {
+        return (
+          p.category === 'Dedicated IRCD & Transit Hosting' ||
+          (p.category === 'DataPacket.com VPS, IRCd & Dedicated Hosting' && p.id.includes('ircd'))
+        );
+      }
       if (categoryFilter === 'baremetal') {
         return (
           p.category === 'Bare-Metal & Teleport Hosting' ||
-          p.category === 'Teleport & Switch Colocation'
+          p.category === 'Teleport & Switch Colocation' ||
+          (p.category === 'DataPacket.com VPS, IRCd & Dedicated Hosting' && p.id.includes('dedicated'))
         );
       }
       if (categoryFilter === 'wordpress') {
@@ -242,6 +256,8 @@ export const HostingResellerProgramModal: React.FC<HostingResellerProgramModalPr
       { id: 'ircdSwitch', wholesale: 650, retail: 980, count: calcCounts.ircdSwitch },
       { id: 'ircdDataPacket', wholesale: 750, retail: 1150, count: calcCounts.ircdDataPacket },
       { id: 'ircdRisingNet', wholesale: 590, retail: 890, count: calcCounts.ircdRisingNet },
+      { id: 'datapacketVps', wholesale: 69, retail: 119, count: calcCounts.datapacketVps },
+      { id: 'datapacketDedicated', wholesale: 289, retail: 399, count: calcCounts.datapacketDedicated },
       { id: 'risingnetVps', wholesale: 180, retail: 290, count: calcCounts.risingnetVps },
       { id: 'risingnetDedicated', wholesale: 340, retail: 520, count: calcCounts.risingnetDedicated },
       { id: 'ircdTriMesh', wholesale: 2450, retail: 3200, count: calcCounts.ircdTriMesh },
@@ -330,18 +346,22 @@ This Master Wholesale Reseller Agreement ("Agreement") is executed between DrFun
 
 ### SECTION 1: RESELLER SCOPE & COVERED HOSTING INFRASTRUCTURE
 Carrier Provider grants Reseller an unbundled, non-exclusive worldwide master license to market, rebrand, and resell the following core hosting tiers:
-1. **Dedicated IRCD & Transit Hosting Nodes**:
+1. **DataPacket.com Reseller Hosting Suite (www.datapacket.com)**:
+   - DataPacket 10G / 20G / 40G Unmetered KVM NVMe Cloud VPS (AMD EPYC Genoa)
+   - DataPacket Turnkey UnrealIRCd 6.1.4 + Anope 2.1 + ZNC 1.9.1 Leaf & Hub Nodes (auto-leafed to irc.drfun1.com)
+   - DataPacket High-Bandwidth Dedicated Bare-Metal Servers (32-Core to 256-Core, 10Gbps, 40Gbps & 100Gbps QSFP28 line rate)
+2. **Dedicated IRCD & Transit Hosting Nodes**:
    - Switch SUPERNAP Las Vegas Bare-Metal (Tier 5 Redundancy, 100% Green Power)
    - DataPacket HyperStream 40Gbps unmetered IRC nodes (www.datapacket.com)
    - RisingNet CleanPipe multi-terabit DDoS filtered IP transit (www.risingnet.com)
    - TriMesh Imperium multi-carrier clusters with automatic failover
-2. **WordPress & Web Chat Duplicator Hosting**:
+3. **WordPress & Web Chat Duplicator Hosting**:
    - Turnkey managed cloud instances for the DrFun1 WordPress IRC Duplicator
    - Bidirectional Redis 7.2 packet caching and REST API websocket distribution
-3. **MPD Bot & Broadcast Media Hosting**:
+4. **MPD Bot & Broadcast Media Hosting**:
    - Automated 320kbps Icecast2 DJ streaming servers and web decks
    - DrFun1 Broadcast Engine Pro and TVU-Edge Cloud Transcoding infrastructure
-4. **Quantum Fiber Optical Internet**:
+5. **Quantum Fiber Optical Internet**:
    - Co-branded symmetrical fiber internet (500M, 1G, 2G, 3G, 8G, and QuantumBiz Enterprise with /29 static IP allocations)
 
 ### SECTION 2: WHOLESALE PRICING & MARGIN RETENTION
@@ -1307,6 +1327,7 @@ link hub.drfun1.com {
                 <span className="text-xs font-mono text-slate-400 mr-2">Filter Hosting Types:</span>
                 {[
                   { id: 'all', label: 'All Hosting Packages' },
+                  { id: 'datapacket', label: 'DataPacket.com 10G/40G (VPS / IRCd / Dedicated)' },
                   { id: 'risingnet', label: 'RisingNet Hosting (risingnet.com)' },
                   { id: 'ircd', label: 'Dedicated IRCD & Transit' },
                   { id: 'baremetal', label: 'Bare-Metal & Teleport' },
@@ -1571,6 +1592,38 @@ link hub.drfun1.com {
                       />
                     </div>
 
+                    {/* DataPacket 10G/20G Cloud VPS */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center text-xs font-mono">
+                        <span className="text-slate-300">DataPacket 10G/20G Cloud VPS ($50 margin/mo)</span>
+                        <span className="text-amber-400 font-bold">{calcCounts.datapacketVps} VPS nodes</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="50"
+                        value={calcCounts.datapacketVps}
+                        onChange={(e) => setCalcCounts({ ...calcCounts, datapacketVps: parseInt(e.target.value) || 0 })}
+                        className="w-full accent-amber-400 cursor-pointer"
+                      />
+                    </div>
+
+                    {/* DataPacket AMD EPYC Dedicated */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center text-xs font-mono">
+                        <span className="text-slate-300">DataPacket AMD EPYC Dedicated ($110 margin/mo)</span>
+                        <span className="text-amber-400 font-bold">{calcCounts.datapacketDedicated} servers</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="30"
+                        value={calcCounts.datapacketDedicated}
+                        onChange={(e) => setCalcCounts({ ...calcCounts, datapacketDedicated: parseInt(e.target.value) || 0 })}
+                        className="w-full accent-amber-400 cursor-pointer"
+                      />
+                    </div>
+
                     {/* TriMesh Imperium Cluster */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center text-xs font-mono">
@@ -1701,9 +1754,11 @@ link hub.drfun1.com {
                         ircdSwitch: 2,
                         ircdDataPacket: 2,
                         ircdRisingNet: 1,
+                        ircdTriMesh: 1,
+                        datapacketVps: 5,
+                        datapacketDedicated: 2,
                         risingnetVps: 4,
                         risingnetDedicated: 1,
-                        ircdTriMesh: 1,
                         baremetalGround: 1,
                         meshSuite25: 1,
                         wpDuplicator: 15,

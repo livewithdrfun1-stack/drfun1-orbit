@@ -18,7 +18,8 @@ export type ProductCategory =
   | 'Switch.com Owned Infrastructure & SuperLoop'
   | 'Witt Law Firm Satellite Fiber Escrow'
   | 'Snapdragon Qualcomm Satellite & 5G'
-  | 'RisingNet Web, VPS & Dedicated Hosting';
+  | 'RisingNet Web, VPS & Dedicated Hosting'
+  | 'DataPacket.com VPS, IRCd & Dedicated Hosting';
 
 export interface StoreProduct {
   id: string;

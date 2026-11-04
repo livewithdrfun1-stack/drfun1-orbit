@@ -97,6 +97,7 @@ import { MpdBotControlView } from './MpdBotControlView';
 import { IrcClientView } from './IrcClientView';
 import { IrcdStatsView } from './IrcdStatsView';
 import { RestreamStudioView } from './RestreamStudioView';
+import { ZncWebControlPanelView } from './ZncWebControlPanelView';
 
 export type StudioToolId =
   | 'strimm_drfun1tv'
@@ -106,6 +107,7 @@ export type StudioToolId =
   | 'mpd_bot'
   | 'irc_client'
   | 'ircd_stats'
+  | 'znc_webadmin'
   | 'dev_twitch'
   | 'dev_kick'
   | 'tvu_networks'
@@ -914,6 +916,20 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
               <span>IRCD Stats</span>
             </button>
 
+            {/* ZNC 1.9.1 Web Control Panel button */}
+            <button
+              onClick={() => handleSelectStudioTool('znc_webadmin')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 ${
+                activeStudioTool === 'znc_webadmin'
+                  ? 'bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
+                  : 'bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-800/60'
+              }`}
+              title="ZNC 1.9.1 Web Control Panel (webadmin module on Port 5000)"
+            >
+              <Server className="w-3.5 h-3.5 text-emerald-400" />
+              <span>ZNC WebAdmin</span>
+            </button>
+
             {/* dev.twitch.tv quick tab button */}
             <button
               onClick={() => handleSelectStudioTool('dev_twitch')}
@@ -1506,7 +1522,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 <span>Web IRC Studio Client</span>
               </button>
 
-              {/* Tool 7: IRCD Server Stats & 25 Switch Node Telemetry */}
+              {/* Tool 7: stats.drfun1ircd.com & ZNC Telemetry */}
               <button
                 onClick={() => handleSelectStudioTool('ircd_stats')}
                 className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
@@ -1516,7 +1532,26 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 }`}
               >
                 <Activity className="w-3.5 h-3.5 text-purple-400" />
-                <span>IRCD Server Stats</span>
+                <span>IRCD Stats &amp; ZNC</span>
+                <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-purple-950 text-purple-300 font-bold border border-purple-800/60">
+                  stats.drfun1ircd.com
+                </span>
+              </button>
+
+              {/* Tool: ZNC 1.9.1 Web Control Panel (webadmin Port 5000) */}
+              <button
+                onClick={() => handleSelectStudioTool('znc_webadmin')}
+                className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
+                  activeStudioTool === 'znc_webadmin'
+                    ? 'bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
+                    : 'text-emerald-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Server className="w-3.5 h-3.5 text-emerald-400" />
+                <span>ZNC Web Control Panel</span>
+                <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-emerald-950 text-emerald-300 font-bold border border-emerald-800/60">
+                  :5000 SSL
+                </span>
               </button>
 
               {/* Tool 8: dev.twitch.tv Portal */}
@@ -2603,6 +2638,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 onNavigateToStudio={() => handleSelectStudioTool('strimm_drfun1tv')}
                 activeRank={activeRank}
                 onOpenIrcdAdmin={onOpenIrcdAdmin}
+                onOpenZncWebAdmin={() => handleSelectStudioTool('znc_webadmin')}
               />
             </div>
           )}
@@ -2617,19 +2653,22 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <span>IRCD Server Stats &amp; Leaf Mesh Telemetry</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-700/60 font-bold uppercase">
-                        25 Switch Nodes Active
+                      <span>stats.drfun1ircd.com Telemetry &amp; ZNC Bouncer Engine</span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700/60 font-bold uppercase">
+                        UnrealIRCd 6.1.4 + ZNC 1.9.1 Synced
                       </span>
                     </h3>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Live cluster metrics, Anope Services 2.1 state, latency monitors, and UnrealIRCd 6.1.4 engine status.
+                      Live cluster metrics, irc.drfun1media.com broadcast leaf node, ZNC bouncer backlog playback, and 26 Switch SUPERNAP nodes.
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs font-mono">
-                  <span className="text-slate-400">Hub:</span>
-                  <span className="text-emerald-400 font-bold">irc.drfun1.com (Las Vegas Core)</span>
+                  <span className="text-slate-400">Portal:</span>
+                  <span className="text-purple-300 font-bold">stats.drfun1ircd.com</span>
+                  <span className="text-slate-600">|</span>
+                  <span className="text-slate-400">Leaf:</span>
+                  <span className="text-emerald-400 font-bold">irc.drfun1media.com</span>
                 </div>
               </div>
               <IrcdStatsView
@@ -2638,7 +2677,19 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 onOpenLicense={onOpenLicense}
                 onOpenSwitchMesh={onOpenSwitchMesh}
                 onOpenIrcdAdmin={onOpenIrcdAdmin}
+                onOpenZncWebAdmin={() => handleSelectStudioTool('znc_webadmin')}
                 activeRank={activeRank}
+              />
+            </div>
+          )}
+
+          {/* TOOL 15: ZNC 1.9.1 WEB CONTROL PANEL (webadmin Port 5000) */}
+          {activeStudioTool === 'znc_webadmin' && (
+            <div className="p-4 sm:p-6 space-y-4">
+              <ZncWebControlPanelView
+                onNavigateToIrc={() => handleSelectStudioTool('irc_client')}
+                onNavigateToStats={() => handleSelectStudioTool('ircd_stats')}
+                onOpenLicense={onOpenLicense}
               />
             </div>
           )}

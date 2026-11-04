@@ -21,11 +21,13 @@ import {
   ChevronRight,
   Hash,
   Terminal,
-  Globe
+  Globe,
+  Crown
 } from 'lucide-react';
 import { AnopeRankLevel } from '../types/ircdAdmin';
+import { UserMembershipState } from '../types/membership';
 
-export type AppTab = 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'stream' | 'social' | 'irc' | 'ircstats' | 'media' | 'carriers' | 'mpd' | 'duplicator';
+export type AppTab = 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'stream' | 'social' | 'irc' | 'ircstats' | 'media' | 'carriers' | 'mpd' | 'duplicator' | 'community' | 'znc';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -40,9 +42,12 @@ interface HeaderProps {
   onOpenSwitchWittServices?: () => void;
   onOpenResellerProgram?: () => void;
   onOpenIrcdAdmin?: () => void;
+  onOpenZncWebAdmin?: () => void;
   activeOperRank?: AnopeRankLevel;
   cartCount?: number;
   onOpenCart?: () => void;
+  userMembership?: UserMembershipState;
+  onOpenMembershipModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -58,9 +63,12 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSwitchWittServices,
   onOpenResellerProgram,
   onOpenIrcdAdmin,
+  onOpenZncWebAdmin,
   activeOperRank,
   cartCount = 0,
   onOpenCart,
+  userMembership,
+  onOpenMembershipModal,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
@@ -75,8 +83,8 @@ export const Header: React.FC<HeaderProps> = ({
       {/* ========================================================
           ROW 1: Brand Wordmark, Status Utilities & Global Actions
           ======================================================== */}
-      <div className="border-b border-slate-800/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
+      <div className="border-b border-slate-800/80 overflow-x-auto custom-nav-scrollbar">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4 min-w-max">
           
           {/* Brand Wordmark & Logo: DrFun1 Media */}
           <div className="flex items-center gap-3 shrink-0">
@@ -155,21 +163,6 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {/* Social Media Link in Row 1 */}
-            <button
-              onClick={() => setActiveTab('social')}
-              className={`px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer font-sans ${
-                activeTab === 'social'
-                  ? 'bg-blue-500/20 text-blue-300 border-blue-500/40 shadow-sm shadow-blue-500/20'
-                  : 'bg-slate-900/80 text-slate-300 hover:text-white hover:border-blue-500/50 border-slate-800'
-              }`}
-              title="Open DrFun1 SpaceBook Social Media Network"
-            >
-              <Users className="w-3.5 h-3.5 text-blue-400" />
-              <span className="hidden sm:inline">Social Media</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse hidden sm:inline" />
-            </button>
-
             {/* IRCD & Anope Ops Panel */}
             {onOpenIrcdAdmin && (
               <button
@@ -186,6 +179,22 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
+            {/* ZNC 1.9.1 Web Control Panel (Port 5000) */}
+            {onOpenZncWebAdmin && (
+              <button
+                onClick={onOpenZncWebAdmin}
+                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-emerald-950/40 text-emerald-300 hover:text-white hover:bg-emerald-900/60 border-emerald-500/40 hover:border-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-emerald-950/30"
+                title="ZNC 1.9.1 Web Control Panel (Port 5000) - Bouncer Accounts, Channels, Buffers & Upstream Leaf (znc.git)"
+              >
+                <Server className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">ZNC WebAdmin</span>
+                <span className="sm:hidden">ZNC</span>
+                <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-emerald-400/20 text-emerald-300 font-bold">
+                  :5000
+                </span>
+              </button>
+            )}
+
             {/* Hosting Reseller Program */}
             {onOpenResellerProgram && (
               <button
@@ -196,6 +205,27 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="hidden sm:inline">Turnkey Reseller</span>
                 <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 font-bold">
                   Co-Brand / Resell
+                </span>
+              </button>
+            )}
+
+            {/* Free & Paid Broadcaster Membership Tier Button */}
+            {onOpenMembershipModal && (
+              <button
+                onClick={onOpenMembershipModal}
+                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-purple-950/60 to-cyan-950/60 text-cyan-300 hover:text-white hover:border-cyan-400 border-cyan-500/40 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-cyan-950/30"
+                title="DRFUN1 Broadcaster Membership Status & Subscription Management"
+              >
+                <Crown className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="hidden sm:inline font-bold">Membership</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-400/20 text-cyan-300 font-bold uppercase">
+                  {userMembership?.tierId === 'cadet_free'
+                    ? 'Cadet (Free)'
+                    : userMembership?.tierId === 'broadcaster_pro'
+                    ? 'Pro'
+                    : userMembership?.tierId === 'satcom_enterprise'
+                    ? 'Enterprise'
+                    : 'VIP Council'}
                 </span>
               </button>
             )}
@@ -265,8 +295,8 @@ export const Header: React.FC<HeaderProps> = ({
       {/* ========================================================
           ROW 2: Main Nav Links & Category Tabs (Full-Width Strip)
           ======================================================== */}
-      <div className="bg-slate-950">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-11 flex items-center gap-2 overflow-x-auto no-scrollbar text-xs font-medium text-slate-400">
+      <div className="bg-slate-950 overflow-x-auto custom-nav-scrollbar">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-11 flex items-center gap-2 text-xs font-medium text-slate-400 min-w-max">
           
           {/* Directory */}
           <button
@@ -320,41 +350,20 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
-          {/* MPD Bot */}
+          {/* Community & Members */}
           <button
-            onClick={() => setActiveTab('mpd')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'mpd'
-                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40 font-semibold shadow-sm shadow-emerald-500/10'
-                : 'text-slate-400 border-transparent hover:text-emerald-300 hover:bg-slate-900/60'
+            onClick={() => setActiveTab('community')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'community'
+                ? 'bg-gradient-to-r from-cyan-500/20 to-indigo-500/20 text-cyan-300 border-cyan-500/60 font-bold shadow-md shadow-cyan-950/30 ring-1 ring-cyan-500/40'
+                : 'text-slate-300 border-slate-800 hover:text-white hover:bg-slate-900/80 hover:border-cyan-500/40'
             }`}
+            title="DRFUN1 Community Hub, Broadcaster Lounge & Free/Paid Membership Tiers"
           >
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <span>MPD Bot</span>
-            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold">
-              DJ Deck
-            </span>
-          </button>
-
-          {/* IRC Duplicator */}
-          <button
-            onClick={() => setActiveTab('duplicator')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'duplicator'
-                ? 'bg-sky-500/15 text-sky-400 border-sky-500/40 font-semibold shadow-sm shadow-sky-500/10'
-                : 'text-slate-400 border-transparent hover:text-sky-300 hover:bg-slate-900/60'
-            }`}
-          >
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500" />
-            </span>
-            <span>WP Player &amp; 1:1 IRC</span>
-            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">
-              1:1 Sync
+            <Crown className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="font-semibold text-slate-100">Community &amp; Members</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
+              Hub
             </span>
           </button>
 
@@ -390,42 +399,7 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
-          {/* MultiStream */}
-          <button
-            onClick={() => setActiveTab('stream')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'stream'
-                ? 'bg-red-500/15 text-red-400 border-red-500/40 font-semibold shadow-sm shadow-red-500/10'
-                : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-900/60'
-            }`}
-          >
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-            </span>
-            <span>MultiStream</span>
-            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-red-500/20 text-red-300 font-bold">
-              Restream
-            </span>
-          </button>
-
-          {/* IRC Client */}
-          <button
-            onClick={() => setActiveTab('irc')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'irc'
-                ? 'bg-purple-500/15 text-purple-400 border-purple-500/40 font-semibold shadow-sm shadow-purple-500/10'
-                : 'text-slate-400 border-transparent hover:text-purple-300 hover:bg-slate-900/60'
-            }`}
-          >
-            <span className="font-mono text-purple-400 font-bold text-xs">&gt;_</span>
-            <span>IRC Client</span>
-            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">
-              RisingNet
-            </span>
-          </button>
-
-          {/* IRCD Stats Page (irc.drfun1.com) */}
+          {/* IRCD Stats Page (stats.drfun1ircd.com) */}
           <button
             onClick={() => setActiveTab('ircstats')}
             className={`whitespace-nowrap shrink-0 transition-all py-1 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
@@ -433,7 +407,7 @@ export const Header: React.FC<HeaderProps> = ({
                 ? 'bg-purple-600/25 text-purple-200 border-purple-500/60 font-bold shadow-md shadow-purple-900/30 ring-1 ring-purple-500/40'
                 : 'text-slate-300 border-slate-800 hover:text-white hover:bg-slate-900/80 hover:border-purple-500/40'
             }`}
-            title="irc.drfun1.com UnrealIRCd 6 & Anope 2.1 Live Server Stats & Leaf Telemetry"
+            title="stats.drfun1ircd.com - UnrealIRCd 6.1.4 & ZNC 1.9.1 Live Cluster Stats & Leaf Telemetry"
           >
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
@@ -442,7 +416,30 @@ export const Header: React.FC<HeaderProps> = ({
             <Activity className="w-3.5 h-3.5 text-purple-400" />
             <span className="font-semibold text-slate-100">IRCD Stats</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/25 text-purple-300 font-bold border border-purple-500/30">
-              irc.drfun1.com
+              stats.drfun1ircd.com
+            </span>
+          </button>
+
+          {/* ZNC Web Control Panel (Port 5000) */}
+          <button
+            onClick={() => {
+              if (onOpenZncWebAdmin) {
+                onOpenZncWebAdmin();
+              } else {
+                setActiveTab('znc');
+              }
+            }}
+            className={`whitespace-nowrap shrink-0 transition-all py-1 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'znc'
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 font-bold shadow-md shadow-emerald-950/30 ring-1 ring-emerald-500/40'
+                : 'text-slate-300 border-slate-800 hover:text-white hover:bg-slate-900/80 hover:border-emerald-500/40'
+            }`}
+            title="ZNC 1.9.1 Web Control Panel (Port 5000 SSL) - Bouncer User Accounts, Channels, Buffers & Upstream Leaf Sync"
+          >
+            <Server className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="font-semibold text-slate-100">ZNC WebAdmin</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+              :5000
             </span>
           </button>
 
@@ -494,6 +491,19 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
+            {onOpenZncWebAdmin && (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onOpenZncWebAdmin();
+                }}
+                className="p-2.5 rounded-xl bg-emerald-950/50 hover:bg-emerald-900/50 text-emerald-200 border border-emerald-500/40 flex items-center gap-2 cursor-pointer"
+              >
+                <Server className="w-4 h-4 text-emerald-400" />
+                <span className="font-bold">ZNC WebAdmin</span>
+              </button>
+            )}
+
             {onOpenResellerProgram && (
               <button
                 onClick={() => {
@@ -528,10 +538,8 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {[
-                { id: 'media', label: 'DrFun1TV & Master Studio', badge: 'LIVE 4K', color: 'purple', icon: Tv },
-                { id: 'stream', label: 'MultiStream Broadcaster', badge: 'Restream', color: 'red', icon: Share2 },
-                { id: 'mpd', label: 'MPD Bot DJ Audio Deck', badge: 'Icecast2', color: 'emerald', icon: Radio },
-                { id: 'duplicator', label: 'WP Broadcast Player & 1:1 IRC', badge: '1:1 Player', color: 'purple', icon: Tv },
+                { id: 'media', label: 'DrFun1TV & Master Studio', badge: '14 Tools', color: 'purple', icon: Tv },
+                { id: 'ircstats', label: 'stats.drfun1ircd.com', badge: 'Telemetry', color: 'purple', icon: Activity },
               ].map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -558,16 +566,15 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Group 2: Communications, IRC & Social */}
+          {/* Group 2: Communications & Social */}
           <div className="space-y-1.5">
             <span className="text-[10px] font-mono uppercase tracking-wider text-sky-400 font-bold block">
-              Communications, IRCD &amp; Social
+              Communications &amp; Social
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {[
-                { id: 'ircstats', label: 'IRCD Stats (irc.drfun1.com)', badge: 'Telemetry', color: 'purple', icon: Activity },
-                { id: 'irc', label: 'WebIRC Client (RisingNet)', badge: 'Unreal6', color: 'purple', icon: Terminal },
-                { id: 'social', label: 'SpaceBook Social Network', badge: 'DrFun1 Feed', color: 'blue', icon: Users },
+                { id: 'community', label: 'Community & Memberships', badge: 'Hub & Tiers', color: 'cyan', icon: Crown },
+                { id: 'social', label: 'SpaceBook Social Network', badge: 'Live Feed', color: 'blue', icon: Users },
                 { id: 'carriers', label: 'Phone Carriers (5G NTN)', badge: '3GPP NTN', color: 'sky', icon: Smartphone },
               ].map((item) => {
                 const Icon = item.icon;

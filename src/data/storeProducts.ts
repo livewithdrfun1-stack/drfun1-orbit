@@ -1,6 +1,7 @@
 import { StoreProduct } from '../types/store';
 import { SWITCH_WITT_STORE_PRODUCTS } from './switchWittServicesData';
 import { RISINGNET_HOSTING_PRODUCTS } from './risingnetHostingData';
+import { DATAPACKET_HOSTING_PRODUCTS } from './datapacketHostingData';
 
 export const STORE_PRODUCTS: StoreProduct[] = [
   {
@@ -2310,5 +2311,6 @@ export const STORE_PRODUCTS: StoreProduct[] = [
   },
   ...SWITCH_WITT_STORE_PRODUCTS,
   ...RISINGNET_HOSTING_PRODUCTS,
+  ...DATAPACKET_HOSTING_PRODUCTS,
 ];
 

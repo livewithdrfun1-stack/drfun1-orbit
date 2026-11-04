@@ -45,11 +45,11 @@ export const SwitchIrcMeshModal: React.FC<SwitchIrcMeshModalProps> = ({
   };
 
   const masterHubConfig = `/* ====================================================================
- * Master Hub Configuration on irc.drfun1.com (UnrealIRCd 6.1+)
+ * Master Hub Configuration on irc.drfun1.com (UnrealIRCd 6.1.4+)
  * Core Teleport Colocation: Switch SUPERNAP (www.switch.com)
  * Tier-1 Carrier IP Transit: RisingNet BGP Transit (www.risingnet.com)
  * Licensed to: Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com)
- * All 25 Dedicated Switch Nodes Leafed to irc.drfun1.com:
+ * All ${SWITCH_DEDICATED_NODES.length} Dedicated Switch Nodes Leafed to irc.drfun1.com:
 ${SWITCH_DEDICATED_NODES.map((n, i) => ` *   ${i + 1 < 10 ? ' ' : ''}${i + 1}. ${n.host} (SID ${n.sid}) - ${n.location.split(',')[0]}`).join('\n')}
  * Total Connected Satcom Leaf Nodes: \${companies.length} Carriers
  * ==================================================================== */
@@ -69,13 +69,13 @@ listen {
 
 /* Global Satcom Carrier Coordination Channels */
 set {
-    auto-join "#drfun1-media,#all-bands,#switch-teleport-noc,#risingnet-transit,#wittlaw-spectrum";
+    auto-join "#drfun1-primetv,#drfun1-media,#all-bands,#switch-teleport-noc,#risingnet-transit,#wittlaw-spectrum";
     network-name "DrFun1-Orbit-Mesh";
     default-server "irc.drfun1.com";
 };
 
 /* ====================================================================
- * 25 Dedicated Switch Datacenter Leaf Blocks (Leafed to irc.drfun1.com)
+ * ${SWITCH_DEDICATED_NODES.length} Dedicated Switch Datacenter Leaf Blocks (Leafed to irc.drfun1.com)
  * ==================================================================== */
 ${SWITCH_DEDICATED_NODES.map((node, i) => `link ${node.host} {
     incoming { mask *.drfun1.com; };

@@ -92,3 +92,56 @@ export interface WebIrcConnectionState {
   licenseHolder: 'Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com)';
 }
 
+export interface ZncModule {
+  name: string;
+  description: string;
+  type: 'global' | 'user' | 'network';
+  status: 'loaded' | 'built_in';
+  args?: string;
+}
+
+export interface ZncUserSession {
+  username: string;
+  realname: string;
+  bindHost: string;
+  bufferSize: number;
+  channelsCount: number;
+  connectedClients: number;
+  lastActive: string;
+  networks: string[];
+  bufferedChannels: string[];
+}
+
+export interface ZncBouncerConfig {
+  version: string;
+  repoUrl: string;
+  serverHost: string;
+  listenPort: number;
+  webAdminPort: number;
+  ssl: boolean;
+  upstreamHub: string;
+  upstreamPort: number;
+  activeUsers: number;
+  totalBuffers: number;
+  status: 'active' | 'syncing' | 'reconnecting';
+  loadedModules: ZncModule[];
+  userSessions: ZncUserSession[];
+  zncConfSnippet: string;
+}
+
+export interface StatsPortalInfo {
+  domain: string;
+  portalUrl: string;
+  title: string;
+  description: string;
+  primaryHub: string;
+  mediaLeaf: string;
+  zncBouncer: string;
+  lastTelemetrySync: string;
+  globalUptime: string;
+  totalClients: number;
+  totalServers: number;
+  totalChannels: number;
+}
+
+

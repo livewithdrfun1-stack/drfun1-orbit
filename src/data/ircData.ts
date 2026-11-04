@@ -1,4 +1,4 @@
-import { SwitchDedicatedNode, UnrealIrcdHub, IrcChannel, IrcUser, IrcMessage } from '../types/irc';
+import { SwitchDedicatedNode, UnrealIrcdHub, IrcChannel, IrcUser, IrcMessage, ZncBouncerConfig, StatsPortalInfo } from '../types/irc';
 
 export const UNREAL_HUB_DETAILS: UnrealIrcdHub = {
   host: 'irc.drfun1.com',
@@ -10,6 +10,7 @@ export const UNREAL_HUB_DETAILS: UnrealIrcdHub = {
   colocation: 'Switch SUPERNAP Core Campus (www.switch.com)',
   licensee: 'Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com)',
   leafNodes: [
+    'irc.drfun1media.com',
     'node1.lasvegas.switch.drfun1.com',
     'node2.tahoereno.switch.drfun1.com',
     'node3.grandrapids.switch.drfun1.com',
@@ -42,6 +43,54 @@ export const UNREAL_HUB_DETAILS: UnrealIrcdHub = {
 };
 
 export const SWITCH_DEDICATED_NODES: SwitchDedicatedNode[] = [
+  {
+    id: 'drfun1media_leaf_node',
+    name: 'DrFun1 Media UnrealIRCd & ZNC Broadcast Node (irc.drfun1media.com)',
+    subdomain: 'irc.drfun1media.com',
+    host: 'irc.drfun1media.com',
+    port: 6697,
+    location: 'Las Vegas Switch SUPERNAP Broadcast Teleport',
+    campusName: 'Switch SUPERNAP Media Facility (100% Renewable)',
+    tier: 'Tier 5 Platinum Dedicated Broadcast & Media Host',
+    fiberCapacity: '100 Gbps Low-Latency Optical Cross-Connect + ZNC Engine',
+    status: 'active',
+    latencyMs: 1.8,
+    usersOnline: 1420,
+    leafPeers: 26,
+    unrealVersion: 'UnrealIRCd 6.1.4 (unrealircd.org) + ZNC 1.9.1 (znc.git)',
+    sslFingerprint: 'SHA256:8C:F3:11:A9:72:DE:4B:90:3A:C1:55:88:19:FA:44:EE:02:60',
+    transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '026',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 70,
+      syncedNicks: 1420,
+      syncLatencyMs: 1.8,
+      lastBurst: '0.4s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* UnrealIRCd 6.1.4 Leaf Link Block for irc.drfun1media.com -> irc.drfun1.com */
+link irc.drfun1.com {
+    incoming {
+        mask *.drfun1.com;
+    };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Leaf_DrFun1Media_Sync_2026";
+    class servers;
+    type leaf;
+};
+
+/* ZNC 1.9.1 (github.com/znc/znc.git) Bouncer Listen Block on irc.drfun1media.com */
+// Listening SSL Port 6697 for Bounced IRC Clients & Port 5000 for ZNC WebAdmin
+// Upstream Uplink -> irc.drfun1.com:6697 with SASL ECDSA-NIST256P-CHALLENGE`,
+  },
   {
     id: 'switch_node_1',
     name: 'Switch SUPERNAP Las Vegas Core (Node 01)',
@@ -2643,3 +2692,216 @@ export const INITIAL_IRC_MESSAGES: Record<string, IrcMessage[]> = {
     },
   ],
 };
+
+export const ZNC_BOUNCER_CONFIG: ZncBouncerConfig = {
+  version: 'ZNC 1.9.1 (git hash #e5b9f71 - https://github.com/znc/znc.git)',
+  repoUrl: 'https://github.com/znc/znc.git',
+  serverHost: 'irc.drfun1media.com',
+  listenPort: 6697,
+  webAdminPort: 5000,
+  ssl: true,
+  upstreamHub: 'irc.drfun1.com',
+  upstreamPort: 6697,
+  activeUsers: 84,
+  totalBuffers: 70,
+  status: 'active',
+  loadedModules: [
+    {
+      name: 'playback',
+      description: 'Buffer playback engine: sends backlog upon client reconnection with timestamp tags',
+      type: 'user',
+      status: 'loaded',
+      args: 'play_on_attach = true',
+    },
+    {
+      name: 'buffextras',
+      description: 'Adds joines, parts, modes, and nick changes into channel playback buffer',
+      type: 'user',
+      status: 'loaded',
+    },
+    {
+      name: 'sasl',
+      description: 'Authenticates securely to UnrealIRCd 6.1.4 upstream hub via SASL ECDSA-NIST256P',
+      type: 'network',
+      status: 'loaded',
+      args: 'mechanism = ECDSA-NIST256P-CHALLENGE',
+    },
+    {
+      name: 'chansaver',
+      description: 'Keeps all 1:1 broadcast channels saved to config when added/removed',
+      type: 'user',
+      status: 'loaded',
+    },
+    {
+      name: 'autoattach',
+      description: 'Re-attaches client to channels automatically when activity is detected',
+      type: 'network',
+      status: 'loaded',
+    },
+    {
+      name: 'route_replies',
+      description: 'Routes server replies back specifically to the client query sender',
+      type: 'user',
+      status: 'loaded',
+    },
+    {
+      name: 'controlpanel',
+      description: 'Dynamic in-IRC control panel (/msg *controlpanel help) for runtime management',
+      type: 'global',
+      status: 'loaded',
+    },
+    {
+      name: 'webadmin',
+      description: 'HTTPS Web administration GUI listening on port 5000 with Let\'s Encrypt SSL',
+      type: 'global',
+      status: 'loaded',
+      args: 'Port = 5000, SSL = true',
+    },
+    {
+      name: 'cert',
+      description: 'Use client SSL certificate fingerprint for automated passwordless authentication',
+      type: 'user',
+      status: 'loaded',
+    },
+    {
+      name: 'keepnick',
+      description: 'Keeps trying for primary registered nickname if lost during hub split',
+      type: 'network',
+      status: 'loaded',
+    },
+  ],
+  userSessions: [
+    {
+      username: 'drfun1_admin',
+      realname: 'DrFun1 Media Broadcast Ops (Richard Alan Witt)',
+      bindHost: 'irc.drfun1media.com',
+      bufferSize: 5000,
+      channelsCount: 70,
+      connectedClients: 4,
+      lastActive: 'Just now',
+      networks: ['DrFun1-Mesh'],
+      bufferedChannels: [
+        '#drfun1-primetv',
+        '#c-band-space',
+        '#ku-band',
+        '#ka-band',
+        '#5g-ntn',
+        '#fcc-broadcast-reg',
+        '#switch-teleport-noc',
+      ],
+    },
+    {
+      username: 'whitehouse_pool',
+      realname: 'WhiteHouse.gov Media Press Pool Syndicate',
+      bindHost: 'irc.drfun1media.com',
+      bufferSize: 2000,
+      channelsCount: 12,
+      connectedClients: 2,
+      lastActive: '2m ago',
+      networks: ['DrFun1-Mesh'],
+      bufferedChannels: ['#whitehouse-briefings', '#wh-presspool', '#drfun1-primetv'],
+    },
+    {
+      username: 'fcc_telecom_bot',
+      realname: 'FCC.gov Spectrum & Broadcast Alert Daemon',
+      bindHost: 'irc.drfun1media.com',
+      bufferSize: 1000,
+      channelsCount: 8,
+      connectedClients: 1,
+      lastActive: '5m ago',
+      networks: ['DrFun1-Mesh'],
+      bufferedChannels: ['#fcc-spectrum-alerts', '#fcc-broadcast-reg', '#wittlaw-spectrum'],
+    },
+    {
+      username: 'dj_mpd_automation',
+      realname: 'Icecast MPD DJ Automation Bot',
+      bindHost: 'irc.drfun1media.com',
+      bufferSize: 500,
+      channelsCount: 5,
+      connectedClients: 1,
+      lastActive: 'Just now',
+      networks: ['DrFun1-Mesh'],
+      bufferedChannels: ['#mpd-dj-booth', '#drfun1-music-fm', '#drfun1-primetv'],
+    },
+  ],
+  zncConfSnippet: `// ==============================================================
+// ZNC 1.9.1 Configuration for irc.drfun1media.com
+// Upstream Hub: irc.drfun1.com:6697 (UnrealIRCd 6.1.4 leafed node)
+// Cloned & built from: https://github.com/znc/znc.git
+// Licensed to: Richard Alan Witt (www.wittlawfirm.com)
+// ==============================================================
+
+Version = 1.9.1
+<Listener l-irc>
+    Port = 6697
+    SSL = true
+    IPv4 = true
+    IPv6 = true
+</Listener>
+
+<Listener l-web>
+    Port = 5000
+    SSL = true
+    IPv4 = true
+    IPv6 = true
+</Listener>
+
+LoadModule = webadmin
+LoadModule = controlpanel
+
+<User drfun1_admin>
+    Admin = true
+    Nick = DrFun1Media
+    AltNick = DrFun1_Media2
+    Ident = drfun1
+    RealName = DrFun1 Media Operator
+    Buffer = 5000
+    AutoClearChanBuffer = false
+    AutoClearQueryBuffer = false
+    QuitMsg = DrFun1 Media ZNC Bouncer Persist (irc.drfun1media.com)
+    
+    LoadModule = chansaver
+    LoadModule = playback
+    LoadModule = buffextras
+    LoadModule = route_replies
+
+    <Network DrFun1-Mesh>
+        Server = irc.drfun1.com +6697 WittLaw_Switch_Leaf_DrFun1Media_Sync_2026
+        LoadModule = sasl
+        LoadModule = autoattach
+        LoadModule = keepnick
+        
+        <Chan #drfun1-primetv>
+            Buffer = 5000
+        </Chan>
+        <Chan #c-band-space>
+            Buffer = 2000
+        </Chan>
+        <Chan #ku-band>
+            Buffer = 2000
+        </Chan>
+        <Chan #ka-band>
+            Buffer = 2000
+        </Chan>
+        <Chan #5g-ntn>
+            Buffer = 2000
+        </Chan>
+    </Network>
+</User>`,
+};
+
+export const STATS_DRFUN1IRCD_PORTAL: StatsPortalInfo = {
+  domain: 'stats.drfun1ircd.com',
+  portalUrl: 'https://stats.drfun1ircd.com',
+  title: 'DrFun1IRCD Global Telemetry & Network Health Portal',
+  description: 'Official UnrealIRCd 6.1.4 and ZNC 1.9.1 cluster monitor for irc.drfun1.com & irc.drfun1media.com across 26 Switch SUPERNAP Leaf Nodes.',
+  primaryHub: 'irc.drfun1.com (SID: 001 - Switch Las Vegas Core)',
+  mediaLeaf: 'irc.drfun1media.com (SID: 026 - UnrealIRCd 6.1.4 + ZNC 1.9.1)',
+  zncBouncer: 'irc.drfun1media.com:6697 (SSL) / WebAdmin :5000',
+  lastTelemetrySync: 'Live WebSocket / JSON-RPC Sync',
+  globalUptime: '148d 12h 23m 40s (99.999% SLA)',
+  totalClients: 8838,
+  totalServers: 26,
+  totalChannels: 70,
+};
+

@@ -39,6 +39,12 @@ import { HostingResellerProgramModal } from './components/HostingResellerProgram
 import { IrcdAdminPanelModal } from './components/IrcdAdminPanelModal';
 import { SwitchWittSatelliteFiberModal } from './components/SwitchWittSatelliteFiberModal';
 import { SatelliteRssNewsSection } from './components/SatelliteRssNewsSection';
+import { CommunityHubView } from './components/CommunityHubView';
+import { MembershipPlansModal } from './components/MembershipPlansModal';
+import { ZncWebControlPanelView } from './components/ZncWebControlPanelView';
+import { ZncWebAdminModal } from './components/ZncWebAdminModal';
+import { UserMembershipState } from './types/membership';
+import { DEFAULT_MEMBERSHIP_STATE } from './data/membershipData';
 import { AnopeRankLevel } from './types/ircdAdmin';
 import { STORE_PRODUCTS } from './data/storeProducts';
 import { AppTab } from './components/Header';
@@ -59,6 +65,7 @@ const STORAGE_KEY_CUSTOM_COMPANIES = 'satcom_directory_custom_companies';
 const STORAGE_KEY_BOOKMARKS = 'satcom_directory_bookmarks';
 const STORAGE_KEY_NOTES = 'satcom_directory_user_notes';
 const STORAGE_KEY_CART = 'drfun1_store_cart_items';
+const STORAGE_KEY_MEMBERSHIP = 'drfun1_user_membership';
 
 export default function App() {
   // Tab state
@@ -128,6 +135,27 @@ export default function App() {
   const [isSwitchWittModalOpen, setIsSwitchWittModalOpen] = useState(false);
   const [isHostingResellerModalOpen, setIsHostingResellerModalOpen] = useState(false);
   const [isIrcdAdminOpen, setIsIrcdAdminOpen] = useState(false);
+  const [isZncWebAdminOpen, setIsZncWebAdminOpen] = useState(false);
+  const [isMembershipModalOpen, setIsMembershipModalOpen] = useState(false);
+  const [userMembership, setUserMembership] = useState<UserMembershipState>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_MEMBERSHIP);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error loading membership state', e);
+    }
+    return DEFAULT_MEMBERSHIP_STATE;
+  });
+
+  const handleUpdateMembership = (updated: UserMembershipState) => {
+    setUserMembership(updated);
+    try {
+      localStorage.setItem(STORAGE_KEY_MEMBERSHIP, JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error saving membership state', e);
+    }
+  };
+
   const [activeOperRank, setActiveOperRank] = useState<AnopeRankLevel>(() => {
     try {
       const saved = localStorage.getItem('drfun1_active_anope_rank');
@@ -451,9 +479,12 @@ export default function App() {
         onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
         onOpenResellerProgram={() => setIsHostingResellerModalOpen(true)}
         onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
+        onOpenZncWebAdmin={() => setIsZncWebAdminOpen(true)}
         activeOperRank={activeOperRank}
         cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
         onOpenCart={() => setIsCartOpen(true)}
+        userMembership={userMembership}
+        onOpenMembershipModal={() => setIsMembershipModalOpen(true)}
       />
 
       {/* Real-time Telemetry Stats Banner */}
@@ -469,8 +500,8 @@ export default function App() {
         </div>
       )}
 
-      {/* Unified Studio Broadcasting & Tools: Master Studio, Restream, MPD DJ Deck, WordPress 1:1 Duplicator, Web IRC & IRCD Stats */}
-      {activeTab === 'media' || activeTab === 'stream' || activeTab === 'mpd' || activeTab === 'duplicator' || activeTab === 'irc' || activeTab === 'ircstats' ? (
+      {/* Unified Studio Broadcasting & Tools: Master Studio, Restream, MPD DJ Deck, WordPress 1:1 Duplicator, Web IRC, IRCD Stats & ZNC WebAdmin */}
+      {activeTab === 'media' || activeTab === 'stream' || activeTab === 'mpd' || activeTab === 'duplicator' || activeTab === 'irc' || activeTab === 'ircstats' || activeTab === 'znc' ? (
         <DrFun1MasterBroadcastStudio
           initialTool={
             activeTab === 'stream'
@@ -483,6 +514,8 @@ export default function App() {
               ? 'irc_client'
               : activeTab === 'ircstats'
               ? 'ircd_stats'
+              : activeTab === 'znc'
+              ? 'znc_webadmin'
               : 'strimm_drfun1tv'
           }
           onOpenStore={() => setActiveTab('store')}
@@ -501,6 +534,7 @@ export default function App() {
             else if (tool === 'wordpress_duplicator') setActiveTab('duplicator');
             else if (tool === 'irc_client') setActiveTab('irc');
             else if (tool === 'ircd_stats') setActiveTab('ircstats');
+            else if (tool === 'znc_webadmin') setActiveTab('znc');
             else setActiveTab('media');
           }}
         />
@@ -520,6 +554,21 @@ export default function App() {
           onOpenLicense={() => setIsLicenseModalOpen(true)}
           onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
         />
+      ) : activeTab === 'community' ? (
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <CommunityHubView
+            userMembership={userMembership}
+            onUpdateMembership={handleUpdateMembership}
+            onOpenMembershipModal={() => setIsMembershipModalOpen(true)}
+            onOpenHostingModal={() => setIsHostingResellerModalOpen(true)}
+            onOpenLegalCenter={() => setIsLicenseModalOpen(true)}
+            onOpenZncWebAdmin={() => setIsZncWebAdminOpen(true)}
+            onJoinIrcChannel={(channel) => {
+              setActiveTab('irc');
+            }}
+            onNavigateToTab={(tab) => setActiveTab(tab)}
+          />
+        </main>
       ) : (
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
           {/* Editorial Domain Title & Description */}
@@ -1108,6 +1157,25 @@ export default function App() {
         isOpen={isSwitchWittModalOpen}
         onClose={() => setIsSwitchWittModalOpen(false)}
         onAddToCart={(product) => handleQuickAddToCart(product, true)}
+      />
+
+      {/* Free & Paid Broadcaster Memberships & Subscription Modal */}
+      <MembershipPlansModal
+        isOpen={isMembershipModalOpen}
+        onClose={() => setIsMembershipModalOpen(false)}
+        userMembership={userMembership}
+        onUpdateMembership={handleUpdateMembership}
+        onOpenLegalCenter={() => setIsLicenseModalOpen(true)}
+        onNavigateToTab={(tab) => setActiveTab(tab)}
+      />
+
+      {/* Official ZNC 1.9.1 Web Control Panel (webadmin Port 5000) Modal */}
+      <ZncWebAdminModal
+        isOpen={isZncWebAdminOpen}
+        onClose={() => setIsZncWebAdminOpen(false)}
+        onNavigateToIrc={() => setActiveTab('irc')}
+        onNavigateToStats={() => setActiveTab('ircstats')}
+        onOpenLicense={() => setIsLicenseModalOpen(true)}
       />
     </div>
   );
