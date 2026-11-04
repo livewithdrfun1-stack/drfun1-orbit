@@ -27,7 +27,7 @@ import {
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { UserMembershipState } from '../types/membership';
 
-export type AppTab = 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'stream' | 'social' | 'irc' | 'ircstats' | 'media' | 'carriers' | 'mpd' | 'duplicator' | 'community' | 'znc';
+export type AppTab = 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'stream' | 'social' | 'irc' | 'ircstats' | 'media' | 'carriers' | 'mpd' | 'duplicator' | 'community' | 'znc' | 'integrations';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -443,6 +443,27 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
+          {/* Integration Hub (Public Satellite Telemetry APIs) */}
+          <button
+            onClick={() => setActiveTab('integrations')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'integrations'
+                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/60 font-bold shadow-md shadow-cyan-950/30 ring-1 ring-cyan-500/40'
+                : 'text-slate-300 border-slate-800 hover:text-white hover:bg-slate-900/80 hover:border-cyan-500/40'
+            }`}
+            title="Satellite Telemetry Integration Hub - Connect CelesTrak, NASA DONKI, NOAA SWPC, SatNOGS & OpenNotify via Secure Ingestion Form"
+          >
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
+            </span>
+            <Radio className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="font-semibold text-slate-100">Integration Hub</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
+              Telemetry
+            </span>
+          </button>
+
           {/* Orbital Fleets */}
           <button
             onClick={() => setActiveTab('orbits')}
@@ -540,6 +561,7 @@ export const Header: React.FC<HeaderProps> = ({
               {[
                 { id: 'media', label: 'DrFun1TV & Master Studio', badge: '14 Tools', color: 'purple', icon: Tv },
                 { id: 'ircstats', label: 'stats.drfun1ircd.com', badge: 'Telemetry', color: 'purple', icon: Activity },
+                { id: 'integrations', label: 'Integration Hub (Telemetry APIs)', badge: 'API Hub', color: 'cyan', icon: Radio },
               ].map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;

@@ -11,7 +11,9 @@ export type EpgMediaGroup =
   | 'Dish Network'
   | 'SATCOM Satellite Feeds'
   | 'Custom User Channels'
-  | 'DrFun1 Scanned Cable/Satellite';
+  | 'DrFun1 Scanned Cable/Satellite'
+  | 'Mediacomcable.com (Mediacom Xtream)'
+  | string;
 
 export type BroadcastEngineMode = 
   | 'strimm_drfun1tv'

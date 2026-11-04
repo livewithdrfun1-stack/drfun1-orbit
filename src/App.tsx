@@ -43,6 +43,7 @@ import { CommunityHubView } from './components/CommunityHubView';
 import { MembershipPlansModal } from './components/MembershipPlansModal';
 import { ZncWebControlPanelView } from './components/ZncWebControlPanelView';
 import { ZncWebAdminModal } from './components/ZncWebAdminModal';
+import { IntegrationHubView } from './components/IntegrationHubView';
 import { UserMembershipState } from './types/membership';
 import { DEFAULT_MEMBERSHIP_STATE } from './data/membershipData';
 import { AnopeRankLevel } from './types/ircdAdmin';
@@ -567,6 +568,18 @@ export default function App() {
               setActiveTab('irc');
             }}
             onNavigateToTab={(tab) => setActiveTab(tab)}
+          />
+        </main>
+      ) : activeTab === 'integrations' ? (
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <IntegrationHubView
+            onNavigateToIrc={(chan) => {
+              setActiveTab('irc');
+            }}
+            onNavigateToOrbits={() => setActiveTab('orbits')}
+            onNavigateToStudio={() => setActiveTab('media')}
+            onOpenLicense={() => setIsLicenseModalOpen(true)}
+            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
           />
         </main>
       ) : (
