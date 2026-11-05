@@ -19,6 +19,7 @@ import { CompanyDetailDrawer } from './components/CompanyDetailDrawer';
 import { OrbitVisualizer } from './components/OrbitVisualizer';
 import { RfqOutreachModal } from './components/RfqOutreachModal';
 import { CompareModal } from './components/CompareModal';
+import { LatencyTrendChart } from './components/LatencyTrendChart';
 import { AddCompanyModal } from './components/AddCompanyModal';
 import { LicenseModal } from './components/LicenseModal';
 import { SwitchIrcMeshModal } from './components/SwitchIrcMeshModal';
@@ -44,6 +45,10 @@ import { MembershipPlansModal } from './components/MembershipPlansModal';
 import { ZncWebControlPanelView } from './components/ZncWebControlPanelView';
 import { ZncWebAdminModal } from './components/ZncWebAdminModal';
 import { IntegrationHubView } from './components/IntegrationHubView';
+import { UnrealIrcdSearchEngineModal } from './components/UnrealIrcdSearchEngineModal';
+import { SlaCalculatorModal } from './components/SlaCalculatorModal';
+import { DomainSearchView } from './components/DomainSearchView';
+import { DomainSearchModal } from './components/DomainSearchModal';
 import { UserMembershipState } from './types/membership';
 import { DEFAULT_MEMBERSHIP_STATE } from './data/membershipData';
 import { AnopeRankLevel } from './types/ircdAdmin';
@@ -59,7 +64,8 @@ import {
   Check,
   ExternalLink,
   Server,
-  Terminal
+  Terminal,
+  Calculator
 } from 'lucide-react';
 
 const STORAGE_KEY_CUSTOM_COMPANIES = 'satcom_directory_custom_companies';
@@ -138,6 +144,10 @@ export default function App() {
   const [isIrcdAdminOpen, setIsIrcdAdminOpen] = useState(false);
   const [isZncWebAdminOpen, setIsZncWebAdminOpen] = useState(false);
   const [isMembershipModalOpen, setIsMembershipModalOpen] = useState(false);
+  const [isUnrealSearchOpen, setIsUnrealSearchOpen] = useState(false);
+  const [isSlaCalculatorOpen, setIsSlaCalculatorOpen] = useState(false);
+  const [slaSelectedCompany, setSlaSelectedCompany] = useState<SatelliteCompany | null>(null);
+  const [isDomainSearchModalOpen, setIsDomainSearchModalOpen] = useState(false);
   const [userMembership, setUserMembership] = useState<UserMembershipState>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_MEMBERSHIP);
@@ -322,8 +332,8 @@ export default function App() {
       if (next.has(id)) {
         next.delete(id);
       } else {
-        if (next.size >= 4) {
-          setExportNotice('You can compare a maximum of 4 satellite operators simultaneously.');
+        if (next.size >= 6) {
+          setExportNotice('You can compare a maximum of 6 satellite operators simultaneously.');
           setTimeout(() => setExportNotice(null), 3500);
           return prev;
         }
@@ -368,6 +378,12 @@ export default function App() {
   const handleOpenRfq = (company?: SatelliteCompany) => {
     setRfqPreSelectedCompany(company || null);
     setIsRfqOpen(true);
+  };
+
+  // Open SLA Calculator modal handler
+  const handleOpenSlaCalculator = (company?: SatelliteCompany) => {
+    setSlaSelectedCompany(company || comparedCompaniesList[0] || companies[0] || null);
+    setIsSlaCalculatorOpen(true);
   };
 
   // CSV Export handler
@@ -486,6 +502,8 @@ export default function App() {
         onOpenCart={() => setIsCartOpen(true)}
         userMembership={userMembership}
         onOpenMembershipModal={() => setIsMembershipModalOpen(true)}
+        onOpenUnrealSearch={() => setIsUnrealSearchOpen(true)}
+        onOpenDomainSearch={() => setIsDomainSearchModalOpen(true)}
       />
 
       {/* Real-time Telemetry Stats Banner */}
@@ -529,6 +547,7 @@ export default function App() {
           activeRank={activeOperRank}
           onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
           onOpenIrcStats={() => setActiveTab('ircstats')}
+          onOpenUnrealSearch={() => setIsUnrealSearchOpen(true)}
           onToolChange={(tool) => {
             if (tool === 'restream_multistream') setActiveTab('stream');
             else if (tool === 'mpd_bot') setActiveTab('mpd');
@@ -796,31 +815,55 @@ export default function App() {
             <OrbitVisualizer
               companies={companies}
               onSelectCompany={(c) => setSelectedCompany(c)}
+              onOpenLicense={() => setIsLicenseModalOpen(true)}
+              onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
             />
           </div>
         )}
 
-        {/* Tab 3: Compare Operators Matrix */}
+        {/* Tab 3: Compare Operators Matrix & D3 Latency Visualizer */}
         {activeTab === 'compare' && (
           <div className="space-y-6">
+            {/* D3-based Latency Trends Over Time Chart */}
+            <LatencyTrendChart
+              companies={comparedCompaniesList}
+              allCompanies={companies}
+              onRemoveCompany={handleRemoveFromCompare}
+              onAddCompany={handleToggleCompare}
+              onOpenRfq={handleOpenRfq}
+              onOpenSlaCalculator={handleOpenSlaCalculator}
+            />
+
             <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-5">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div>
                   <h3 className="text-base font-bold text-white tracking-tight">
-                    Multi-Operator Technical Comparison
+                    Multi-Operator Technical Comparison Matrix
                   </h3>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Select up to 4 satellite operators from the Directory using the "VS" button to compare technical parameters side-by-side.
+                    Side-by-side technical, orbital, and carrier interconnect parameters for selected satellite operators.
                   </p>
                 </div>
-                {comparedIds.size > 0 && (
+                
+                <div className="flex items-center gap-2 shrink-0">
                   <button
-                    onClick={() => setComparedIds(new Set())}
-                    className="text-xs text-rose-400 hover:text-rose-300 transition-colors"
+                    onClick={() => handleOpenSlaCalculator()}
+                    className="px-3 py-1.5 bg-gradient-to-r from-emerald-950/80 to-teal-950/80 hover:from-emerald-900/80 hover:to-teal-900/80 border border-emerald-500/50 hover:border-emerald-400 text-emerald-300 hover:text-white rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 shadow-sm shadow-emerald-950/30 cursor-pointer"
+                    title="Estimate monthly uptime outage credits and carrier rebates"
                   >
-                    Clear Comparison
+                    <Calculator className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>SLA Calculator</span>
                   </button>
-                )}
+
+                  {comparedIds.size > 0 && (
+                    <button
+                      onClick={() => setComparedIds(new Set())}
+                      className="text-xs text-rose-400 hover:text-rose-300 transition-colors px-2 py-1 rounded bg-rose-950/30 border border-rose-500/20"
+                    >
+                      Clear Comparison
+                    </button>
+                  )}
+                </div>
               </div>
 
               {comparedCompaniesList.length === 0 ? (
@@ -993,6 +1036,18 @@ export default function App() {
             onOpenLicenseModal={() => setIsLicenseModalOpen(true)}
             onOpenSwitchMeshModal={() => setIsSwitchMeshModalOpen(true)}
             onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
+            onOpenDomainSearch={() => setIsDomainSearchModalOpen(true)}
+          />
+        )}
+
+        {/* Tab 6: Domain Name Search & Anycast DNS Registrar */}
+        {activeTab === 'domains' && (
+          <DomainSearchView
+            onAddToCart={(product) => handleQuickAddToCart(product, true)}
+            onOpenCart={() => setIsCartOpen(true)}
+            onOpenLicense={() => setIsLicenseModalOpen(true)}
+            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+            onNavigateToStudio={() => setActiveTab('media')}
           />
         )}
       </main>
@@ -1096,6 +1151,10 @@ export default function App() {
           setIsCompareModalOpen(false);
           handleOpenRfq(c);
         }}
+        onOpenSlaCalculator={(c) => {
+          setIsCompareModalOpen(false);
+          handleOpenSlaCalculator(c);
+        }}
       />
 
       {/* Add Custom Company Modal */}
@@ -1189,6 +1248,36 @@ export default function App() {
         onNavigateToIrc={() => setActiveTab('irc')}
         onNavigateToStats={() => setActiveTab('ircstats')}
         onOpenLicense={() => setIsLicenseModalOpen(true)}
+      />
+
+      {/* UnrealIRCd.org Search Engine - Ask users to leaf to irc.drfun1.com before listing */}
+      <UnrealIrcdSearchEngineModal
+        isOpen={isUnrealSearchOpen}
+        onClose={() => setIsUnrealSearchOpen(false)}
+        onNavigateToIrc={(chan) => {
+          setActiveTab('irc');
+        }}
+        onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+      />
+
+      {/* Satellite Carrier SLA Uptime Credit Calculator Modal */}
+      <SlaCalculatorModal
+        isOpen={isSlaCalculatorOpen}
+        onClose={() => setIsSlaCalculatorOpen(false)}
+        companies={comparedCompaniesList.length > 0 ? comparedCompaniesList : companies}
+        initialSelectedCompany={slaSelectedCompany}
+        onOpenRfq={handleOpenRfq}
+      />
+
+      {/* Domain Name Search & Purchase Modal */}
+      <DomainSearchModal
+        isOpen={isDomainSearchModalOpen}
+        onClose={() => setIsDomainSearchModalOpen(false)}
+        onAddToCart={(product) => handleQuickAddToCart(product, true)}
+        onOpenCart={() => setIsCartOpen(true)}
+        onOpenLicense={() => setIsLicenseModalOpen(true)}
+        onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+        onNavigateToStudio={() => setActiveTab('media')}
       />
     </div>
   );

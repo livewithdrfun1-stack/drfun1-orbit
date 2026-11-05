@@ -22,12 +22,13 @@ import {
   Hash,
   Terminal,
   Globe,
-  Crown
+  Crown,
+  Search
 } from 'lucide-react';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { UserMembershipState } from '../types/membership';
 
-export type AppTab = 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'stream' | 'social' | 'irc' | 'ircstats' | 'media' | 'carriers' | 'mpd' | 'duplicator' | 'community' | 'znc' | 'integrations';
+export type AppTab = 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'stream' | 'social' | 'irc' | 'ircstats' | 'media' | 'carriers' | 'mpd' | 'duplicator' | 'community' | 'znc' | 'integrations' | 'domains';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -48,6 +49,8 @@ interface HeaderProps {
   onOpenCart?: () => void;
   userMembership?: UserMembershipState;
   onOpenMembershipModal?: () => void;
+  onOpenUnrealSearch?: () => void;
+  onOpenDomainSearch?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -64,6 +67,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenResellerProgram,
   onOpenIrcdAdmin,
   onOpenZncWebAdmin,
+  onOpenUnrealSearch,
+  onOpenDomainSearch,
   activeOperRank,
   cartCount = 0,
   onOpenCart,
@@ -195,6 +200,22 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
+            {/* UnrealIRCd.org Search Engine - Enforces leafing to irc.drfun1.com */}
+            {onOpenUnrealSearch && (
+              <button
+                onClick={onOpenUnrealSearch}
+                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-purple-950/60 to-indigo-950/60 text-indigo-300 hover:text-white hover:bg-indigo-900/70 border-indigo-500/40 hover:border-indigo-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-indigo-950/30"
+                title="unrealircd.org Search Engine - Discover Networks & Leaf to irc.drfun1.com"
+              >
+                <Search className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="hidden sm:inline">UnrealIRCd Search</span>
+                <span className="sm:hidden">Unreal</span>
+                <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-indigo-400/20 text-indigo-300 font-bold">
+                  Leaf Required
+                </span>
+              </button>
+            )}
+
             {/* Hosting Reseller Program */}
             {onOpenResellerProgram && (
               <button
@@ -205,6 +226,21 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="hidden sm:inline">Turnkey Reseller</span>
                 <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 font-bold">
                   Co-Brand / Resell
+                </span>
+              </button>
+            )}
+
+            {/* Domain Name Search & ICANN Registrar */}
+            {onOpenDomainSearch && (
+              <button
+                onClick={onOpenDomainSearch}
+                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-sky-950/60 to-teal-950/60 text-sky-300 hover:text-white hover:bg-sky-900/70 border-sky-500/40 hover:border-sky-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-sky-950/30"
+                title="Search & Register Custom Domains with Anycast DNS"
+              >
+                <Globe className="w-3.5 h-3.5 text-sky-400" />
+                <span className="hidden sm:inline">Domains</span>
+                <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-sky-400/20 text-sky-300 font-bold hidden xl:inline">
+                  .tv / .com
                 </span>
               </button>
             )}
@@ -399,6 +435,23 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
+          {/* Domain Names & Anycast DNS */}
+          <button
+            onClick={() => setActiveTab('domains')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'domains'
+                ? 'bg-gradient-to-r from-sky-500/20 to-teal-500/20 text-sky-300 border-sky-500/60 font-bold shadow-md shadow-sky-950/30 ring-1 ring-sky-500/40'
+                : 'text-slate-300 border-slate-800 hover:text-white hover:bg-slate-900/80 hover:border-sky-500/40'
+            }`}
+            title="Search, Register & Link Custom Domains with Switch SUPERNAP Anycast DNS"
+          >
+            <Globe className="w-3.5 h-3.5 text-sky-400" />
+            <span className="font-semibold text-slate-100">Domain Search &amp; DNS</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold border border-sky-500/30">
+              Registrar
+            </span>
+          </button>
+
           {/* IRCD Stats Page (stats.drfun1ircd.com) */}
           <button
             onClick={() => setActiveTab('ircstats')}
@@ -525,6 +578,22 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
+            {onOpenUnrealSearch && (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onOpenUnrealSearch();
+                }}
+                className="p-2.5 rounded-xl bg-indigo-950/50 hover:bg-indigo-900/50 text-indigo-200 border border-indigo-500/40 flex items-center gap-2 cursor-pointer col-span-2 sm:col-span-1"
+              >
+                <Search className="w-4 h-4 text-indigo-400" />
+                <span className="font-bold">UnrealIRCd Search</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 ml-auto">
+                  Leaf Required
+                </span>
+              </button>
+            )}
+
             {onOpenResellerProgram && (
               <button
                 onClick={() => {
@@ -633,6 +702,7 @@ export const Header: React.FC<HeaderProps> = ({
               {[
                 { id: 'directory', label: 'Operator Directory', badge: 'Global', color: 'sky', icon: Satellite },
                 { id: 'store', label: 'Store & Resell Marketplace', badge: 'Wholesale', color: 'amber', icon: Sparkles },
+                { id: 'domains', label: 'Domain Search & DNS', badge: 'Registrar', color: 'sky', icon: Globe },
                 { id: 'orbits', label: 'Orbital Fleets Visualizer', badge: '3D Orbit', color: 'sky', icon: Globe },
                 { id: 'compare', label: 'Compare Operators Matrix', badge: 'VS', color: 'sky', icon: Scale },
                 { id: 'rfq', label: 'Outreach & RFQ Builder', badge: 'Inquiries', color: 'sky', icon: Share2 },

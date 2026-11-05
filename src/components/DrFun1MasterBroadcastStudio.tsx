@@ -127,6 +127,7 @@ export interface DrFun1MasterBroadcastStudioProps {
   activeRank?: AnopeRankLevel;
   onOpenIrcdAdmin?: () => void;
   onOpenIrcStats?: () => void;
+  onOpenUnrealSearch?: () => void;
   initialTool?: StudioToolId;
   onToolChange?: (tool: StudioToolId) => void;
 }
@@ -159,6 +160,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
   activeRank = 'op',
   onOpenIrcdAdmin,
   onOpenIrcStats,
+  onOpenUnrealSearch,
   initialTool,
   onToolChange,
 }) => {
@@ -2678,6 +2680,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 onOpenSwitchMesh={onOpenSwitchMesh}
                 onOpenIrcdAdmin={onOpenIrcdAdmin}
                 onOpenZncWebAdmin={() => handleSelectStudioTool('znc_webadmin')}
+                onOpenUnrealSearch={onOpenUnrealSearch}
                 activeRank={activeRank}
               />
             </div>

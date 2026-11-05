@@ -1,6 +1,6 @@
-import React from 'react';
 import { SatelliteCompany } from '../types/satellite';
 import { X, Check, Mail, ExternalLink, ArrowRight, Trash2 } from 'lucide-react';
+import { LatencyTrendChart } from './LatencyTrendChart';
 
 interface CompareModalProps {
   isOpen: boolean;
@@ -9,6 +9,7 @@ interface CompareModalProps {
   onRemoveFromCompare: (id: string) => void;
   onSelectCompany: (company: SatelliteCompany) => void;
   onOpenRfq: (company: SatelliteCompany) => void;
+  onOpenSlaCalculator?: (company?: SatelliteCompany) => void;
 }
 
 export const CompareModal: React.FC<CompareModalProps> = ({
@@ -18,6 +19,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
   onRemoveFromCompare,
   onSelectCompany,
   onOpenRfq,
+  onOpenSlaCalculator,
 }) => {
   if (!isOpen) return null;
 
@@ -43,8 +45,8 @@ export const CompareModal: React.FC<CompareModalProps> = ({
           </button>
         </div>
 
-        {/* Comparison Table */}
-        <div className="flex-1 overflow-auto p-6">
+        {/* Comparison Table & D3 Visualizer */}
+        <div className="flex-1 overflow-auto p-6 space-y-6">
           {comparedCompanies.length === 0 ? (
             <div className="py-16 text-center text-slate-400">
               <p className="text-sm">No satellite companies selected for comparison.</p>
@@ -53,11 +55,20 @@ export const CompareModal: React.FC<CompareModalProps> = ({
               </p>
             </div>
           ) : (
-            <div className="min-w-[700px]">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-800">
-                    <th className="py-3 px-4 w-44 text-slate-500 font-mono uppercase text-[11px] bg-slate-950/40">
+            <div className="space-y-6 min-w-[700px]">
+              {/* D3 Latency Trends Line Chart */}
+              <LatencyTrendChart
+                companies={comparedCompanies}
+                onRemoveCompany={onRemoveFromCompare}
+                onOpenRfq={onOpenRfq}
+                onOpenSlaCalculator={onOpenSlaCalculator}
+              />
+
+              <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-800">
+                      <th className="py-3 px-4 w-44 text-slate-500 font-mono uppercase text-[11px] bg-slate-950/40">
                       Criteria
                     </th>
                     {comparedCompanies.map((c) => (
@@ -238,8 +249,9 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
       </div>
     </div>
   );

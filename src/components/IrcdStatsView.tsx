@@ -48,6 +48,7 @@ interface IrcdStatsViewProps {
   onOpenSwitchMesh?: () => void;
   onOpenIrcdAdmin?: () => void;
   onOpenZncWebAdmin?: () => void;
+  onOpenUnrealSearch?: () => void;
   activeRank?: AnopeRankLevel;
 }
 
@@ -58,6 +59,7 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
   onOpenSwitchMesh,
   onOpenIrcdAdmin,
   onOpenZncWebAdmin,
+  onOpenUnrealSearch,
   activeRank = 'op',
 }) => {
   // Live uptime counter in seconds (starting from 148 days, 12 hours)
@@ -287,6 +289,22 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
               </span>
               <span className="text-[10px] text-sky-400">UnrealIRCd + ZNC 1.9.1</span>
             </div>
+            {onOpenUnrealSearch && (
+              <button
+                onClick={onOpenUnrealSearch}
+                className="p-2.5 rounded-xl bg-gradient-to-r from-purple-950/90 to-indigo-950/90 border border-indigo-500/50 hover:border-indigo-400 text-indigo-200 hover:text-white flex flex-col min-w-[180px] transition-all cursor-pointer shadow-md group text-left"
+                title="UnrealIRCd.org Search Engine: Ask users to leaf to irc.drfun1.com before listing"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-[10px] text-indigo-300 uppercase font-bold tracking-wide">Search Engine</span>
+                  <Search className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform" />
+                </div>
+                <span className="text-white font-bold flex items-center gap-1 text-xs mt-0.5">
+                  <span>unrealircd.org</span>
+                </span>
+                <span className="text-[10px] text-emerald-400 font-mono font-medium">Leaf to irc.drfun1.com &rarr;</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

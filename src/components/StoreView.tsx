@@ -25,7 +25,8 @@ import {
   Smartphone,
   Wifi,
   Unlock,
-  Network
+  Network,
+  Globe
 } from 'lucide-react';
 import { QuantumFiberResellerModal } from './QuantumFiberResellerModal';
 import { HostingResellerProgramModal } from './HostingResellerProgramModal';
@@ -39,6 +40,7 @@ interface StoreViewProps {
   onOpenLicenseModal: () => void;
   onOpenSwitchMeshModal: () => void;
   onOpenSwitchWittServices?: () => void;
+  onOpenDomainSearch?: () => void;
 }
 
 export const StoreView: React.FC<StoreViewProps> = ({
@@ -49,6 +51,7 @@ export const StoreView: React.FC<StoreViewProps> = ({
   onOpenLicenseModal,
   onOpenSwitchMeshModal,
   onOpenSwitchWittServices,
+  onOpenDomainSearch,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedPartner, setSelectedPartner] = useState<string>('All Partners');
@@ -229,6 +232,16 @@ export const StoreView: React.FC<StoreViewProps> = ({
                 <Zap className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Quantum Fiber</span>
               </button>
+
+              {onOpenDomainSearch && (
+                <button
+                  onClick={onOpenDomainSearch}
+                  className="text-xs text-sky-300 hover:text-white bg-gradient-to-r from-sky-950/90 to-teal-950/90 hover:from-sky-900 hover:to-teal-900 border border-sky-500/60 px-3.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-bold shadow-md shadow-sky-500/20 cursor-pointer"
+                >
+                  <Globe className="w-3.5 h-3.5 text-sky-400" />
+                  <span>Domain Search &amp; DNS (.tv / .com)</span>
+                </button>
+              )}
 
               <button
                 onClick={onOpenLicenseModal}
