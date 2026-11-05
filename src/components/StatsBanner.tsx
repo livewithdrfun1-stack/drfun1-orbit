@@ -4,9 +4,10 @@ import { Radio, Satellite, Layers, PhoneCall } from 'lucide-react';
 
 interface StatsBannerProps {
   companies: SatelliteCompany[];
+  onOpenOrbitMap?: () => void;
 }
 
-export const StatsBanner: React.FC<StatsBannerProps> = ({ companies }) => {
+export const StatsBanner: React.FC<StatsBannerProps> = ({ companies, onOpenOrbitMap }) => {
   const totalSatellites = companies.reduce(
     (sum, c) => sum + (c.fleetSize?.activeSatellites || 0),
     0
@@ -83,6 +84,21 @@ export const StatsBanner: React.FC<StatsBannerProps> = ({ companies }) => {
               Carrier Desks & NOCs
             </span>
           </div>
+
+          {onOpenOrbitMap && (
+            <>
+              <span className="text-slate-700 hidden lg:inline" aria-hidden="true">|</span>
+              <button
+                onClick={onOpenOrbitMap}
+                className="px-2 py-0.5 rounded bg-cyan-950/60 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-500/40 hover:border-cyan-400 transition-colors flex items-center gap-1.5 font-mono text-[11px] font-bold cursor-pointer shadow-sm"
+                title="Launch Live Orbit Tracking Map Fullscreen / Dialog"
+              >
+                <Satellite className="w-3 h-3 text-cyan-400 animate-pulse" />
+                <span>Orbit Tracking Map</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

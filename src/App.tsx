@@ -49,6 +49,7 @@ import { UnrealIrcdSearchEngineModal } from './components/UnrealIrcdSearchEngine
 import { SlaCalculatorModal } from './components/SlaCalculatorModal';
 import { DomainSearchView } from './components/DomainSearchView';
 import { DomainSearchModal } from './components/DomainSearchModal';
+import { OrbitTrackingMapModal } from './components/OrbitTrackingMapModal';
 import { UserMembershipState } from './types/membership';
 import { DEFAULT_MEMBERSHIP_STATE } from './data/membershipData';
 import { AnopeRankLevel } from './types/ircdAdmin';
@@ -65,7 +66,8 @@ import {
   ExternalLink,
   Server,
   Terminal,
-  Calculator
+  Calculator,
+  Smartphone
 } from 'lucide-react';
 
 const STORAGE_KEY_CUSTOM_COMPANIES = 'satcom_directory_custom_companies';
@@ -77,6 +79,34 @@ const STORAGE_KEY_MEMBERSHIP = 'drfun1_user_membership';
 export default function App() {
   // Tab state
   const [activeTab, setActiveTab] = useState<AppTab>('directory');
+  const [directorySubView, setDirectorySubView] = useState<'operators' | 'carriers'>('operators');
+  const [storeSubTab, setStoreSubTab] = useState<'catalog' | 'domains'>('catalog');
+  const [orbitsSubTab, setOrbitsSubTab] = useState<'tracker' | 'altitude_ladder' | 'telemetry_apis'>('tracker');
+  const [communitySubTab, setCommunitySubTab] = useState<'discussions' | 'memberships' | 'showcase' | 'events' | 'roster' | 'spacebook'>('discussions');
+
+  const handleNavigateTab = (tab: AppTab) => {
+    if (tab === 'domains') {
+      setActiveTab('store');
+      setStoreSubTab('domains');
+    } else if (tab === 'integrations') {
+      setActiveTab('orbits');
+      setOrbitsSubTab('telemetry_apis');
+    } else if (tab === 'social') {
+      setActiveTab('community');
+      setCommunitySubTab('spacebook');
+    } else if (tab === 'carriers') {
+      setActiveTab('directory');
+      setDirectorySubView('carriers');
+    } else if (tab === 'rfq') {
+      handleOpenRfq();
+    } else {
+      if (tab === 'directory') setDirectorySubView('operators');
+      if (tab === 'store') setStoreSubTab('catalog');
+      if (tab === 'orbits') setOrbitsSubTab('tracker');
+      if (tab === 'community') setCommunitySubTab('discussions');
+      setActiveTab(tab);
+    }
+  };
 
   // Companies state (initial dataset + custom additions)
   const [companies, setCompanies] = useState<SatelliteCompany[]>(() => {
@@ -148,6 +178,7 @@ export default function App() {
   const [isSlaCalculatorOpen, setIsSlaCalculatorOpen] = useState(false);
   const [slaSelectedCompany, setSlaSelectedCompany] = useState<SatelliteCompany | null>(null);
   const [isDomainSearchModalOpen, setIsDomainSearchModalOpen] = useState(false);
+  const [isOrbitMapModalOpen, setIsOrbitMapModalOpen] = useState(false);
   const [userMembership, setUserMembership] = useState<UserMembershipState>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_MEMBERSHIP);
@@ -485,7 +516,7 @@ export default function App() {
       {/* Top Header */}
       <Header
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleNavigateTab}
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onExport={handleExportCsv}
         savedCount={bookmarkedIds.size}
@@ -503,12 +534,19 @@ export default function App() {
         userMembership={userMembership}
         onOpenMembershipModal={() => setIsMembershipModalOpen(true)}
         onOpenUnrealSearch={() => setIsUnrealSearchOpen(true)}
-        onOpenDomainSearch={() => setIsDomainSearchModalOpen(true)}
+        onOpenDomainSearch={() => {
+          setActiveTab('store');
+          setStoreSubTab('domains');
+        }}
+        onOpenOrbitMapModal={() => setIsOrbitMapModalOpen(true)}
       />
 
       {/* Real-time Telemetry Stats Banner */}
       {(activeTab === 'directory' || activeTab === 'orbits' || activeTab === 'compare') && (
-        <StatsBanner companies={companies} />
+        <StatsBanner 
+          companies={companies} 
+          onOpenOrbitMap={() => setIsOrbitMapModalOpen(true)}
+        />
       )}
 
       {/* Export Toast Notification */}
@@ -558,23 +596,7 @@ export default function App() {
             else setActiveTab('media');
           }}
         />
-      ) : activeTab === 'social' ? (
-        <FacebookSocialView
-          onOpenLicense={() => setIsLicenseModalOpen(true)}
-          onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-          onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
-          onNavigateToStore={() => setActiveTab('store')}
-          onNavigateToStudio={() => setActiveTab('media')}
-          onNavigateToMedia={() => setActiveTab('media')}
-          onNavigateToIrc={() => setActiveTab('irc')}
-        />
-      ) : activeTab === 'carriers' ? (
-        <PhoneCarriersView
-          onOpenStore={() => setActiveTab('store')}
-          onOpenLicense={() => setIsLicenseModalOpen(true)}
-          onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-        />
-      ) : activeTab === 'community' ? (
+      ) : activeTab === 'community' || activeTab === 'social' ? (
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <CommunityHubView
             userMembership={userMembership}
@@ -583,22 +605,25 @@ export default function App() {
             onOpenHostingModal={() => setIsHostingResellerModalOpen(true)}
             onOpenLegalCenter={() => setIsLicenseModalOpen(true)}
             onOpenZncWebAdmin={() => setIsZncWebAdminOpen(true)}
+            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+            onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
             onJoinIrcChannel={(channel) => {
-              setActiveTab('irc');
+              handleNavigateTab('irc');
             }}
-            onNavigateToTab={(tab) => setActiveTab(tab)}
+            onNavigateToTab={(tab) => handleNavigateTab(tab)}
+            initialSubTab={activeTab === 'social' ? 'spacebook' : communitySubTab}
           />
         </main>
       ) : activeTab === 'integrations' ? (
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <IntegrationHubView
-            onNavigateToIrc={(chan) => {
-              setActiveTab('irc');
-            }}
-            onNavigateToOrbits={() => setActiveTab('orbits')}
-            onNavigateToStudio={() => setActiveTab('media')}
+          <OrbitVisualizer
+            companies={companies}
+            onSelectCompany={(c) => setSelectedCompany(c)}
             onOpenLicense={() => setIsLicenseModalOpen(true)}
             onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+            onNavigateToIrc={(chan) => handleNavigateTab('irc')}
+            onNavigateToStudio={() => handleNavigateTab('media')}
+            initialMode="telemetry_apis"
           />
         </main>
       ) : (
@@ -727,84 +752,131 @@ export default function App() {
           </div>
         </div>
 
-        {/* Tab 1: Directory (Cards / Table) */}
-        {activeTab === 'directory' && (
+        {/* Tab 1: Directory (Satellite Fleets & Constellations vs 3GPP 5G NTN Carriers) */}
+        {(activeTab === 'directory' || activeTab === 'carriers') && (
           <div className="space-y-6">
-            {/* Live RSS Headlines from FCC.gov & Major Satellite Outlets with Background Polling */}
-            <SatelliteRssNewsSection />
-
-            {/* Filter Toolbar */}
-            <FilterToolbar
-              filters={filters}
-              setFilters={setFilters}
-              viewMode={viewMode}
-              setViewMode={(mode) => {
-                if (mode === 'orbit') {
-                  setActiveTab('orbits');
-                } else {
-                  setViewMode(mode);
-                }
-              }}
-              filteredCount={filteredCompanies.length}
-              totalCount={companies.length}
-              savedCount={bookmarkedIds.size}
-            />
-
-            {/* Empty state */}
-            {filteredCompanies.length === 0 ? (
-              <div className="py-20 text-center bg-slate-900/20 border border-slate-800/80 rounded-xl p-8">
-                <Search className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-                <h3 className="text-base font-semibold text-slate-300">
-                  No matching satellite operators found
-                </h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                  Try broadening your search term, clearing band filters, or resetting orbital selections.
-                </p>
+            {/* Directory Sub-View Switcher: Satellite Operators vs 5G NTN Phone Carriers */}
+            <div className="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-lg">
+              <div className="flex items-center space-x-2">
                 <button
-                  onClick={() =>
-                    setFilters({
-                      searchQuery: '',
-                      orbit: 'All',
-                      band: 'All',
-                      category: 'All',
-                      region: 'All',
-                      status: 'All',
-                      bookmarkedOnly: false,
-                    })
-                  }
-                  className="mt-4 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg transition-colors inline-flex items-center gap-1.5"
+                  onClick={() => setDirectorySubView('operators')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center space-x-2 transition cursor-pointer ${
+                    directorySubView === 'operators'
+                      ? 'bg-sky-500 text-slate-950 shadow-md font-extrabold'
+                      : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                  }`}
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Reset All Filters</span>
+                  <Satellite className={`w-4 h-4 ${directorySubView === 'operators' ? 'text-slate-950' : 'text-sky-400'}`} />
+                  <span>Satellite Fleets &amp; Operators ({companies.length})</span>
+                </button>
+
+                <button
+                  onClick={() => setDirectorySubView('carriers')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center space-x-2 transition cursor-pointer ${
+                    directorySubView === 'carriers'
+                      ? 'bg-sky-500 text-slate-950 shadow-md font-extrabold'
+                      : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  <Smartphone className={`w-4 h-4 ${directorySubView === 'carriers' ? 'text-slate-950' : 'text-sky-400'}`} />
+                  <span>3GPP 5G NTN Phone Carriers</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold ml-1">
+                    Direct-to-Device
+                  </span>
                 </button>
               </div>
-            ) : viewMode === 'cards' ? (
-              /* Grid of Cards */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filteredCompanies.map((company) => (
-                  <CompanyCard
-                    key={company.id}
-                    company={company}
-                    isBookmarked={bookmarkedIds.has(company.id)}
+
+              <div className="text-xs font-mono text-slate-400 flex items-center space-x-2 self-end sm:self-auto">
+                <span className="text-[11px] text-slate-500">Verified RF Teleports &amp; Spectrum Backhaul</span>
+              </div>
+            </div>
+
+            {directorySubView === 'carriers' ? (
+              <PhoneCarriersView
+                onOpenStore={() => handleNavigateTab('store')}
+                onOpenLicense={() => setIsLicenseModalOpen(true)}
+                onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+                onOpenRfqWithCarrier={() => handleOpenRfq()}
+              />
+            ) : (
+              <>
+                {/* Live RSS Headlines from FCC.gov & Major Satellite Outlets with Background Polling */}
+                <SatelliteRssNewsSection />
+
+                {/* Filter Toolbar */}
+                <FilterToolbar
+                  filters={filters}
+                  setFilters={setFilters}
+                  viewMode={viewMode}
+                  setViewMode={(mode) => {
+                    if (mode === 'orbit') {
+                      handleNavigateTab('orbits');
+                    } else {
+                      setViewMode(mode);
+                    }
+                  }}
+                  filteredCount={filteredCompanies.length}
+                  totalCount={companies.length}
+                  savedCount={bookmarkedIds.size}
+                />
+
+                {/* Empty state */}
+                {filteredCompanies.length === 0 ? (
+                  <div className="py-20 text-center bg-slate-900/20 border border-slate-800/80 rounded-xl p-8">
+                    <Search className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+                    <h3 className="text-base font-semibold text-slate-300">
+                      No matching satellite operators found
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                      Try broadening your search term, clearing band filters, or resetting orbital selections.
+                    </p>
+                    <button
+                      onClick={() =>
+                        setFilters({
+                          searchQuery: '',
+                          orbit: 'All',
+                          band: 'All',
+                          category: 'All',
+                          region: 'All',
+                          status: 'All',
+                          bookmarkedOnly: false,
+                        })
+                      }
+                      className="mt-4 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg transition-colors inline-flex items-center gap-1.5"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Reset All Filters</span>
+                    </button>
+                  </div>
+                ) : viewMode === 'cards' ? (
+                  /* Grid of Cards */
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {filteredCompanies.map((company) => (
+                      <CompanyCard
+                        key={company.id}
+                        company={company}
+                        isBookmarked={bookmarkedIds.has(company.id)}
+                        onToggleBookmark={handleToggleBookmark}
+                        onSelectCompany={(c) => setSelectedCompany(c)}
+                        onQuickContact={(c) => handleOpenRfq(c)}
+                        isCompared={comparedIds.has(company.id)}
+                        onToggleCompare={handleToggleCompare}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  /* High-Density Data Table */
+                  <CompanyTableView
+                    companies={filteredCompanies}
+                    bookmarkedIds={bookmarkedIds}
                     onToggleBookmark={handleToggleBookmark}
                     onSelectCompany={(c) => setSelectedCompany(c)}
                     onQuickContact={(c) => handleOpenRfq(c)}
-                    isCompared={comparedIds.has(company.id)}
+                    comparedIds={comparedIds}
                     onToggleCompare={handleToggleCompare}
                   />
-                ))}
-              </div>
-            ) : (
-              /* High-Density Data Table */
-              <CompanyTableView
-                companies={filteredCompanies}
-                bookmarkedIds={bookmarkedIds}
-                onToggleBookmark={handleToggleBookmark}
-                onSelectCompany={(c) => setSelectedCompany(c)}
-                onQuickContact={(c) => handleOpenRfq(c)}
-                comparedIds={comparedIds}
-                onToggleCompare={handleToggleCompare}
-              />
+                )}
+              </>
             )}
           </div>
         )}
@@ -817,6 +889,9 @@ export default function App() {
               onSelectCompany={(c) => setSelectedCompany(c)}
               onOpenLicense={() => setIsLicenseModalOpen(true)}
               onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+              onNavigateToIrc={(chan) => handleNavigateTab('irc')}
+              onNavigateToStudio={() => handleNavigateTab('media')}
+              initialMode={orbitsSubTab}
             />
           </div>
         )}
@@ -1026,8 +1101,8 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 5: Store & Resale Marketplace (DrFun1 Rebranded Ecosystem) */}
-        {activeTab === 'store' && (
+        {/* Tab 5: Store & Resale Marketplace (DrFun1 Rebranded Ecosystem + Domain Registrar) */}
+        {(activeTab === 'store' || activeTab === 'domains') && (
           <StoreView
             onOpenProductConfig={handleOpenProductConfig}
             onQuickAddToCart={handleQuickAddToCart}
@@ -1036,18 +1111,8 @@ export default function App() {
             onOpenLicenseModal={() => setIsLicenseModalOpen(true)}
             onOpenSwitchMeshModal={() => setIsSwitchMeshModalOpen(true)}
             onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
-            onOpenDomainSearch={() => setIsDomainSearchModalOpen(true)}
-          />
-        )}
-
-        {/* Tab 6: Domain Name Search & Anycast DNS Registrar */}
-        {activeTab === 'domains' && (
-          <DomainSearchView
-            onAddToCart={(product) => handleQuickAddToCart(product, true)}
-            onOpenCart={() => setIsCartOpen(true)}
-            onOpenLicense={() => setIsLicenseModalOpen(true)}
-            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-            onNavigateToStudio={() => setActiveTab('media')}
+            onOpenDomainSearch={() => setStoreSubTab('domains')}
+            initialSubTab={activeTab === 'domains' ? 'domains' : storeSubTab}
           />
         )}
       </main>
@@ -1125,6 +1190,7 @@ export default function App() {
         userNote={selectedCompany ? userNotes[selectedCompany.id] : undefined}
         onSaveNote={handleSaveNote}
         onOpenRfq={(c) => handleOpenRfq(c)}
+        onOpenOrbitMap={() => setIsOrbitMapModalOpen(true)}
       />
 
       {/* Floating Standalone RFQ Modal */}
@@ -1278,6 +1344,14 @@ export default function App() {
         onOpenLicense={() => setIsLicenseModalOpen(true)}
         onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
         onNavigateToStudio={() => setActiveTab('media')}
+      />
+
+      {/* Orbit Tracking Map Fullscreen / Dialog Modal */}
+      <OrbitTrackingMapModal
+        isOpen={isOrbitMapModalOpen}
+        onClose={() => setIsOrbitMapModalOpen(false)}
+        onOpenLicense={() => setIsLicenseModalOpen(true)}
+        onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
       />
     </div>
   );

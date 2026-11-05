@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { StoreProduct, ProductCategory, CartItem } from '../types/store';
 import { STORE_PRODUCTS } from '../data/storeProducts';
 import { StoreProductCard } from './StoreProductCard';
@@ -31,6 +31,7 @@ import {
 import { QuantumFiberResellerModal } from './QuantumFiberResellerModal';
 import { HostingResellerProgramModal } from './HostingResellerProgramModal';
 import { DrFun1WirelessModal } from './DrFun1WirelessModal';
+import { DomainSearchView } from './DomainSearchView';
 
 interface StoreViewProps {
   onOpenProductConfig: (product: StoreProduct, isDrfun1Branded: boolean) => void;
@@ -41,6 +42,7 @@ interface StoreViewProps {
   onOpenSwitchMeshModal: () => void;
   onOpenSwitchWittServices?: () => void;
   onOpenDomainSearch?: () => void;
+  initialSubTab?: 'catalog' | 'domains';
 }
 
 export const StoreView: React.FC<StoreViewProps> = ({
@@ -52,7 +54,9 @@ export const StoreView: React.FC<StoreViewProps> = ({
   onOpenSwitchMeshModal,
   onOpenSwitchWittServices,
   onOpenDomainSearch,
+  initialSubTab = 'catalog',
 }) => {
+  const [activeSubTab, setActiveSubTab] = useState<'catalog' | 'domains'>(initialSubTab);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedPartner, setSelectedPartner] = useState<string>('All Partners');
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,6 +64,12 @@ export const StoreView: React.FC<StoreViewProps> = ({
   const [isQuantumResellerModalOpen, setIsQuantumResellerModalOpen] = useState(false);
   const [isHostingResellerModalOpen, setIsHostingResellerModalOpen] = useState(false);
   const [isWirelessModalOpen, setIsWirelessModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (initialSubTab) {
+      setActiveSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
 
   const categories: (ProductCategory | 'All')[] = [
     'All',
@@ -195,8 +205,50 @@ export const StoreView: React.FC<StoreViewProps> = ({
 
   return (
     <div className="space-y-8">
-      {/* Reseller & Interconnect Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40 border border-slate-800 p-6 sm:p-8">
+      {/* Primary Sub-Tab Switcher: Wholesale Marketplace vs Custom Domain Registrar */}
+      <div className="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-lg">
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setActiveSubTab('catalog')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center space-x-2 transition cursor-pointer ${
+              activeSubTab === 'catalog'
+                ? 'bg-amber-500 text-slate-950 shadow-md font-extrabold'
+                : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+            }`}
+          >
+            <ShoppingBag className={`w-4 h-4 ${activeSubTab === 'catalog' ? 'text-slate-950' : 'text-amber-400'}`} />
+            <span>Satcom & Hardware Wholesale Marketplace</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('domains')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center space-x-2 transition cursor-pointer ${
+              activeSubTab === 'domains'
+                ? 'bg-sky-500 text-slate-950 shadow-md font-extrabold'
+                : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+            }`}
+          >
+            <Globe className={`w-4 h-4 ${activeSubTab === 'domains' ? 'text-slate-950' : 'text-sky-400'}`} />
+            <span>Custom Domain Registrar & Anycast DNS (.tv / .com)</span>
+          </button>
+        </div>
+
+        <div className="flex items-center space-x-2 text-xs text-slate-400 font-mono">
+          <span className="hidden md:inline text-[11px] text-slate-500">drfun1 ECOM inc &bull; Anycast DNS &bull; Switch Colocation</span>
+        </div>
+      </div>
+
+      {activeSubTab === 'domains' ? (
+        <DomainSearchView
+          onAddToCart={(product) => onQuickAddToCart(product, true)}
+          onOpenCart={onOpenCart}
+          onOpenLicense={onOpenLicenseModal}
+          onOpenSwitchMesh={onOpenSwitchMeshModal}
+        />
+      ) : (
+        <>
+          {/* Reseller & Interconnect Hero Banner */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40 border border-slate-800 p-6 sm:p-8">
         <div className="absolute top-0 right-0 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -857,6 +909,8 @@ export const StoreView: React.FC<StoreViewProps> = ({
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* Quantum Fiber Reseller Modal */}
       <QuantumFiberResellerModal

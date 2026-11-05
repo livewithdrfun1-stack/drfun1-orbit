@@ -51,6 +51,7 @@ interface HeaderProps {
   onOpenMembershipModal?: () => void;
   onOpenUnrealSearch?: () => void;
   onOpenDomainSearch?: () => void;
+  onOpenOrbitMapModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -69,6 +70,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenZncWebAdmin,
   onOpenUnrealSearch,
   onOpenDomainSearch,
+  onOpenOrbitMapModal,
   activeOperRank,
   cartCount = 0,
   onOpenCart,
@@ -245,6 +247,30 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
+            {/* Dedicated Orbit Tracking Map Quick Launcher */}
+            <button
+              onClick={() => {
+                if (onOpenOrbitMapModal) {
+                  onOpenOrbitMapModal();
+                } else {
+                  setActiveTab('orbits');
+                }
+              }}
+              className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-blue-950/70 via-indigo-950/70 to-cyan-950/70 text-cyan-300 hover:text-white hover:border-cyan-400 border-cyan-500/40 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-cyan-950/40"
+              title="Real-Time Orbit Tracking Map, Ground Station Radar & Day/Night Terminator"
+            >
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
+              </span>
+              <Satellite className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden sm:inline font-bold">Orbit Map</span>
+              <span className="sm:hidden font-bold">Orbit</span>
+              <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-cyan-400/20 text-cyan-300 font-bold hidden md:inline">
+                SGP4 Live
+              </span>
+            </button>
+
             {/* Free & Paid Broadcaster Membership Tier Button */}
             {onOpenMembershipModal && (
               <button
@@ -330,215 +356,117 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* ========================================================
           ROW 2: Main Nav Links & Category Tabs (Full-Width Strip)
+          6 Core Unified Hubs
           ======================================================== */}
-      <div className="bg-slate-950 overflow-x-auto custom-nav-scrollbar">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-11 flex items-center gap-2 text-xs font-medium text-slate-400 min-w-max">
+      <div className="bg-slate-950 overflow-x-auto custom-nav-scrollbar border-b border-slate-800/50">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-11 flex items-center justify-between gap-1 sm:gap-2 text-xs font-medium text-slate-400 min-w-max">
           
-          {/* Directory */}
+          {/* 1. Directory & NTN Fleets */}
           <button
             onClick={() => setActiveTab('directory')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-2.5 rounded-lg border cursor-pointer ${
-              activeTab === 'directory'
-                ? 'bg-sky-500/15 text-sky-400 border-sky-500/40 font-semibold shadow-sm shadow-sky-500/10'
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'directory' || activeTab === 'carriers'
+                ? 'bg-sky-500/15 text-sky-400 border-sky-500/40 font-semibold shadow-sm shadow-sky-500/10 ring-1 ring-sky-500/20'
                 : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-900/60'
             }`}
           >
-            Directory
-          </button>
-
-          {/* DrFun1TV & Master Studio */}
-          <button
-            onClick={() => setActiveTab('media')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'media'
-                ? 'bg-purple-500/15 text-purple-400 border-purple-500/40 font-semibold shadow-sm shadow-purple-500/10'
-                : 'text-slate-400 border-transparent hover:text-purple-300 hover:bg-slate-900/60'
-            }`}
-          >
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
-            </span>
-            <span>DrFun1TV &amp; Studio</span>
-            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">
-              DrFun1TV
+            <Satellite className="w-3.5 h-3.5 text-sky-400" />
+            <span>Satcom &amp; NTN Directory</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold hidden sm:inline">
+              Fleets &amp; NTN
             </span>
           </button>
 
-          {/* Social Media Link in Main Navbar */}
+          {/* 2. Orbits & Telemetry Hub */}
           <button
-            onClick={() => setActiveTab('social')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'social'
-                ? 'bg-blue-500/20 text-blue-300 border-blue-500/50 font-bold shadow-md shadow-blue-500/20 ring-1 ring-blue-500/30'
-                : 'text-slate-300 border-slate-800 hover:text-white hover:bg-slate-900/80 hover:border-blue-500/40'
-            }`}
-            title="DrFun1 SpaceBook Social Media Network"
-          >
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
-            </span>
-            <Users className="w-3.5 h-3.5 text-blue-400" />
-            <span className="font-semibold text-slate-100">Social Media</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-blue-600/30 text-blue-200 font-bold border border-blue-500/30">
-              SpaceBook
-            </span>
-          </button>
-
-          {/* Community & Members */}
-          <button
-            onClick={() => setActiveTab('community')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'community'
-                ? 'bg-gradient-to-r from-cyan-500/20 to-indigo-500/20 text-cyan-300 border-cyan-500/60 font-bold shadow-md shadow-cyan-950/30 ring-1 ring-cyan-500/40'
-                : 'text-slate-300 border-slate-800 hover:text-white hover:bg-slate-900/80 hover:border-cyan-500/40'
-            }`}
-            title="DRFUN1 Community Hub, Broadcaster Lounge & Free/Paid Membership Tiers"
-          >
-            <Crown className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="font-semibold text-slate-100">Community &amp; Members</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
-              Hub
-            </span>
-          </button>
-
-          {/* Phone Carriers */}
-          <button
-            onClick={() => setActiveTab('carriers')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'carriers'
-                ? 'bg-sky-500/15 text-sky-400 border-sky-500/40 font-semibold shadow-sm shadow-sky-500/10'
-                : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-900/60'
-            }`}
-          >
-            <Smartphone className="w-3.5 h-3.5 text-sky-400" />
-            <span>Phone Carriers</span>
-            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold">
-              NTN
-            </span>
-          </button>
-
-          {/* Store & Resell */}
-          <button
-            onClick={() => setActiveTab('store')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-2.5 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'store'
-                ? 'bg-amber-500/15 text-amber-400 border-amber-500/40 font-semibold shadow-sm shadow-amber-500/10'
-                : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-900/60'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Store &amp; Resell</span>
-            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-amber-400/20 text-amber-300 font-bold">
-              ECOM
-            </span>
-          </button>
-
-          {/* Domain Names & Anycast DNS */}
-          <button
-            onClick={() => setActiveTab('domains')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'domains'
-                ? 'bg-gradient-to-r from-sky-500/20 to-teal-500/20 text-sky-300 border-sky-500/60 font-bold shadow-md shadow-sky-950/30 ring-1 ring-sky-500/40'
-                : 'text-slate-300 border-slate-800 hover:text-white hover:bg-slate-900/80 hover:border-sky-500/40'
-            }`}
-            title="Search, Register & Link Custom Domains with Switch SUPERNAP Anycast DNS"
-          >
-            <Globe className="w-3.5 h-3.5 text-sky-400" />
-            <span className="font-semibold text-slate-100">Domain Search &amp; DNS</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold border border-sky-500/30">
-              Registrar
-            </span>
-          </button>
-
-          {/* IRCD Stats Page (stats.drfun1ircd.com) */}
-          <button
-            onClick={() => setActiveTab('ircstats')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'ircstats'
-                ? 'bg-purple-600/25 text-purple-200 border-purple-500/60 font-bold shadow-md shadow-purple-900/30 ring-1 ring-purple-500/40'
-                : 'text-slate-300 border-slate-800 hover:text-white hover:bg-slate-900/80 hover:border-purple-500/40'
-            }`}
-            title="stats.drfun1ircd.com - UnrealIRCd 6.1.4 & ZNC 1.9.1 Live Cluster Stats & Leaf Telemetry"
-          >
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
-            </span>
-            <Activity className="w-3.5 h-3.5 text-purple-400" />
-            <span className="font-semibold text-slate-100">IRCD Stats</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/25 text-purple-300 font-bold border border-purple-500/30">
-              stats.drfun1ircd.com
-            </span>
-          </button>
-
-          {/* ZNC Web Control Panel (Port 5000) */}
-          <button
-            onClick={() => {
-              if (onOpenZncWebAdmin) {
-                onOpenZncWebAdmin();
-              } else {
-                setActiveTab('znc');
-              }
-            }}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'znc'
-                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 font-bold shadow-md shadow-emerald-950/30 ring-1 ring-emerald-500/40'
-                : 'text-slate-300 border-slate-800 hover:text-white hover:bg-slate-900/80 hover:border-emerald-500/40'
-            }`}
-            title="ZNC 1.9.1 Web Control Panel (Port 5000 SSL) - Bouncer User Accounts, Channels, Buffers & Upstream Leaf Sync"
-          >
-            <Server className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="font-semibold text-slate-100">ZNC WebAdmin</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
-              :5000
-            </span>
-          </button>
-
-          {/* Integration Hub (Public Satellite Telemetry APIs) */}
-          <button
-            onClick={() => setActiveTab('integrations')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'integrations'
+            onClick={() => setActiveTab('orbits')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'orbits' || activeTab === 'integrations'
                 ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/60 font-bold shadow-md shadow-cyan-950/30 ring-1 ring-cyan-500/40'
-                : 'text-slate-300 border-slate-800 hover:text-white hover:bg-slate-900/80 hover:border-cyan-500/40'
+                : 'text-slate-400 border-transparent hover:text-cyan-300 hover:bg-slate-900/60'
             }`}
-            title="Satellite Telemetry Integration Hub - Connect CelesTrak, NASA DONKI, NOAA SWPC, SatNOGS & OpenNotify via Secure Ingestion Form"
+            title="Global Interactive Orbit Tracking Map, Satellite Ground Tracks, Day/Night Terminator & Public Telemetry APIs"
           >
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
             </span>
-            <Radio className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="font-semibold text-slate-100">Integration Hub</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
-              Telemetry
+            <span>Orbit Tracking &amp; Telemetry</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold">
+              Live SGP4
             </span>
           </button>
 
-          {/* Orbital Fleets */}
+          {/* 3. Compare Matrix & SLA Calculator */}
           <button
-            onClick={() => setActiveTab('orbits')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-2.5 rounded-lg border cursor-pointer ${
-              activeTab === 'orbits'
-                ? 'bg-sky-500/15 text-sky-400 border-sky-500/40 font-semibold shadow-sm shadow-sky-500/10'
-                : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-900/60'
+            onClick={() => setActiveTab('compare')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'compare'
+                ? 'bg-sky-500/20 text-sky-300 border-sky-500/50 font-bold shadow-md shadow-sky-500/20 ring-1 ring-sky-500/30'
+                : 'text-slate-400 border-transparent hover:text-sky-300 hover:bg-slate-900/60'
             }`}
+            title="Multi-Operator Technical Comparison Matrix, D3 Latency Visualizer & SLA Uptime Credit Calculator"
           >
-            Orbital Fleets
+            <Scale className="w-3.5 h-3.5 text-sky-400" />
+            <span>Compare &amp; SLA Calculator</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold hidden sm:inline">
+              Matrix &amp; D3
+            </span>
           </button>
 
-          {/* RFQ Builder */}
+          {/* 4. DrFun1 Master Broadcast Playout & IRC Suite */}
           <button
-            onClick={() => setActiveTab('rfq')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1 px-2.5 rounded-lg border cursor-pointer ${
-              activeTab === 'rfq'
-                ? 'bg-sky-500/15 text-sky-400 border-sky-500/40 font-semibold shadow-sm shadow-sky-500/10'
-                : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-900/60'
+            onClick={() => setActiveTab('media')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'media' || activeTab === 'stream' || activeTab === 'mpd' || activeTab === 'duplicator' || activeTab === 'irc' || activeTab === 'ircstats' || activeTab === 'znc'
+                ? 'bg-purple-500/20 text-purple-300 border-purple-500/50 font-bold shadow-md shadow-purple-500/20 ring-1 ring-purple-500/30'
+                : 'text-slate-400 border-transparent hover:text-purple-300 hover:bg-slate-900/60'
             }`}
+            title="DrFun1 Master Studio Suite: Linear TV Playout, Restream Multistream, MPD DJ Deck, WordPress 1:1 Duplicator, WebIRC, stats.drfun1ircd.com & ZNC WebAdmin"
           >
-            RFQ Builder
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
+            </span>
+            <Tv className="w-3.5 h-3.5 text-purple-400" />
+            <span>DrFun1 TV &amp; Studio Suite</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">
+              DrFun1TV
+            </span>
+          </button>
+
+          {/* 5. Wholesale Store & Custom Domain Registrar */}
+          <button
+            onClick={() => setActiveTab('store')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'store' || activeTab === 'domains'
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold shadow-md shadow-amber-500/20 ring-1 ring-amber-500/30'
+                : 'text-slate-400 border-transparent hover:text-amber-300 hover:bg-slate-900/60'
+            }`}
+            title="DrFun1 Wholesale Store & Resell Marketplace, Unlocked Phones, and Domain Name Registrar & Anycast DNS (.tv / .com)"
+          >
+            <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
+            <span>Store &amp; Domain Registrar</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 font-bold">
+              ECOM &amp; DNS
+            </span>
+          </button>
+
+          {/* 6. Community Hub & SpaceBook Social Network */}
+          <button
+            onClick={() => setActiveTab('community')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'community' || activeTab === 'social'
+                ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border-cyan-500/60 font-bold shadow-md shadow-cyan-950/30 ring-1 ring-cyan-500/40'
+                : 'text-slate-400 border-transparent hover:text-cyan-300 hover:bg-slate-900/60'
+            }`}
+            title="DRFUN1 Community Hub, Broadcaster Lounge, Member Tiers & SpaceBook Social Feed"
+          >
+            <Users className="w-3.5 h-3.5 text-blue-400" />
+            <span>Community &amp; SpaceBook</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 font-bold">
+              Hub &amp; Social
+            </span>
           </button>
 
         </nav>
@@ -621,52 +549,61 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Group 1: Broadcasting & Media Networks */}
-          <div className="space-y-1.5">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-purple-400 font-bold block">
-              Broadcasting &amp; Media Networks
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-              {[
-                { id: 'media', label: 'DrFun1TV & Master Studio', badge: '14 Tools', color: 'purple', icon: Tv },
-                { id: 'ircstats', label: 'stats.drfun1ircd.com', badge: 'Telemetry', color: 'purple', icon: Activity },
-                { id: 'integrations', label: 'Integration Hub (Telemetry APIs)', badge: 'API Hub', color: 'cyan', icon: Radio },
-              ].map((item) => {
-                const Icon = item.icon;
-                const isActive = activeTab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleSelectMobileTab(item.id as AppTab)}
-                    className={`p-2.5 rounded-xl text-xs flex items-center justify-between border transition-all cursor-pointer min-h-[44px] ${
-                      isActive
-                        ? 'bg-purple-600/20 text-purple-200 border-purple-500 font-bold shadow'
-                        : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:bg-slate-800'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-4 h-4 text-purple-400" />
-                      <span>{item.label}</span>
-                    </div>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-400">
-                      {item.badge}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Group 2: Communications & Social */}
+          {/* The 6 Core Unified Hubs for Mobile */}
           <div className="space-y-1.5">
             <span className="text-[10px] font-mono uppercase tracking-wider text-sky-400 font-bold block">
-              Communications &amp; Social
+              Core Platforms &amp; Unified Hubs
             </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-1 gap-2">
               {[
-                { id: 'community', label: 'Community & Memberships', badge: 'Hub & Tiers', color: 'cyan', icon: Crown },
-                { id: 'social', label: 'SpaceBook Social Network', badge: 'Live Feed', color: 'blue', icon: Users },
-                { id: 'carriers', label: 'Phone Carriers (5G NTN)', badge: '3GPP NTN', color: 'sky', icon: Smartphone },
+                { 
+                  id: 'directory', 
+                  label: 'Satcom & NTN Directory', 
+                  desc: 'Satellite Fleets, 3GPP 5G Carriers & RFQ Composer',
+                  badge: 'Fleets & NTN', 
+                  color: 'sky', 
+                  icon: Satellite 
+                },
+                { 
+                  id: 'orbits', 
+                  label: 'Orbit Tracking & Telemetry Hub', 
+                  desc: 'Leaflet SGP4 Map, Ground Radar & NASA/NOAA APIs',
+                  badge: 'Live Radar', 
+                  color: 'cyan', 
+                  icon: Radio 
+                },
+                { 
+                  id: 'compare', 
+                  label: 'Compare Matrix & SLA Calculator', 
+                  desc: 'Operator Matrix, D3 Latency Trends & Outage Rebates',
+                  badge: 'Matrix & SLA', 
+                  color: 'sky', 
+                  icon: Scale 
+                },
+                { 
+                  id: 'media', 
+                  label: 'DrFun1 TV & Studio Suite', 
+                  desc: 'Linear Playout, Restream, DJ Deck, WebIRC, NeoStats & ZNC',
+                  badge: 'DrFun1TV', 
+                  color: 'purple', 
+                  icon: Tv 
+                },
+                { 
+                  id: 'store', 
+                  label: 'Wholesale Store & Domain Registrar', 
+                  desc: 'Hardware Catalog, Unlocked Phones & .tv/.com Anycast DNS',
+                  badge: 'ECOM & DNS', 
+                  color: 'amber', 
+                  icon: ShoppingBag 
+                },
+                { 
+                  id: 'community', 
+                  label: 'Community Hub & SpaceBook Social', 
+                  desc: 'Broadcaster Lounge, Member Tiers & Social Feed',
+                  badge: 'Hub & Social', 
+                  color: 'blue', 
+                  icon: Users 
+                },
               ].map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -674,58 +611,24 @@ export const Header: React.FC<HeaderProps> = ({
                   <button
                     key={item.id}
                     onClick={() => handleSelectMobileTab(item.id as AppTab)}
-                    className={`p-2.5 rounded-xl text-xs flex items-center justify-between border transition-all cursor-pointer min-h-[44px] ${
+                    className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
                       isActive
-                        ? 'bg-sky-600/20 text-sky-200 border-sky-500 font-bold shadow'
+                        ? 'bg-sky-500/15 text-white border-sky-500 font-bold shadow-lg'
                         : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:bg-slate-800'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-4 h-4 text-sky-400" />
-                      <span>{item.label}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <Icon className="w-4 h-4 text-sky-400" />
+                        <span className="font-bold text-xs">{item.label}</span>
+                      </div>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 text-sky-300">
+                        {item.badge}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-400">
-                      {item.badge}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Group 3: Satcom Directory, Store & Resell */}
-          <div className="space-y-1.5">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold block">
-              Satcom Fleet &amp; Wholesale Store
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-              {[
-                { id: 'directory', label: 'Operator Directory', badge: 'Global', color: 'sky', icon: Satellite },
-                { id: 'store', label: 'Store & Resell Marketplace', badge: 'Wholesale', color: 'amber', icon: Sparkles },
-                { id: 'domains', label: 'Domain Search & DNS', badge: 'Registrar', color: 'sky', icon: Globe },
-                { id: 'orbits', label: 'Orbital Fleets Visualizer', badge: '3D Orbit', color: 'sky', icon: Globe },
-                { id: 'compare', label: 'Compare Operators Matrix', badge: 'VS', color: 'sky', icon: Scale },
-                { id: 'rfq', label: 'Outreach & RFQ Builder', badge: 'Inquiries', color: 'sky', icon: Share2 },
-              ].map((item) => {
-                const Icon = item.icon;
-                const isActive = activeTab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleSelectMobileTab(item.id as AppTab)}
-                    className={`p-2.5 rounded-xl text-xs flex items-center justify-between border transition-all cursor-pointer min-h-[44px] ${
-                      isActive
-                        ? 'bg-amber-600/20 text-amber-200 border-amber-500 font-bold shadow'
-                        : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:bg-slate-800'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-4 h-4 text-amber-400" />
-                      <span>{item.label}</span>
-                    </div>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-400">
-                      {item.badge}
-                    </span>
+                    <p className="text-[11px] text-slate-400 mt-1 pl-6">
+                      {item.desc}
+                    </p>
                   </button>
                 );
               })}

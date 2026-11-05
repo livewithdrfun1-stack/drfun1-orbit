@@ -36,9 +36,13 @@ import {
   Sparkles,
   Network,
   Download,
-  AlertCircle
+  AlertCircle,
+  BarChart3,
+  GitFork,
+  GitBranch,
+  Database
 } from 'lucide-react';
-import { UNREAL_HUB_DETAILS, SWITCH_DEDICATED_NODES, ALL_DRFUN1_MEDIA_CHANNELS, ZNC_BOUNCER_CONFIG, STATS_DRFUN1IRCD_PORTAL } from '../data/ircData';
+import { UNREAL_HUB_DETAILS, SWITCH_DEDICATED_NODES, ALL_DRFUN1_MEDIA_CHANNELS, ZNC_BOUNCER_CONFIG, STATS_DRFUN1IRCD_PORTAL, NEOSTATS_CONFIG } from '../data/ircData';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 
 interface IrcdStatsViewProps {
@@ -64,8 +68,21 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
 }) => {
   // Live uptime counter in seconds (starting from 148 days, 12 hours)
   const [uptimeSeconds, setUptimeSeconds] = useState(148 * 86400 + 12 * 3600 + 1420);
-  const [activeStatsTab, setActiveStatsTab] = useState<'overview' | 'nodes' | 'znc' | 'stats_cmd' | 'anope' | 'channels'>('overview');
+  const [activeStatsTab, setActiveStatsTab] = useState<'overview' | 'neostats' | 'nodes' | 'znc' | 'stats_cmd' | 'anope' | 'channels'>('overview');
   const [selectedStatsQuery, setSelectedStatsQuery] = useState<'u' | 'm' | 'l' | 'c' | 'k' | 'T' | 'z'>('u');
+  const [selectedNeoStatsCmd, setSelectedNeoStatsCmd] = useState<string>('STATS');
+  const [selectedNeoStatsConfTab, setSelectedNeoStatsConfTab] = useState<'neostats_conf' | 'unreal_link' | 'git_build'>('neostats_conf');
+  const [neoStatsLogs, setNeoStatsLogs] = useState<string[]>([
+    ':StatServ!services@services.drfun1.com NOTICE Guest :=== NeoStats 3.0.2 StatServ Network Report ===',
+    ':StatServ!services@services.drfun1.com NOTICE Guest :Current Global Clients : 8,838 (Peak: 14,290 on 2026-11-04)',
+    ':StatServ!services@services.drfun1.com NOTICE Guest :Current Channels       : 74 formed (100% broadcast synchronized)',
+    ':StatServ!services@services.drfun1.com NOTICE Guest :Current Servers        : 26 online (Switch SUPERNAP Leaf Mesh)',
+    ':StatServ!services@services.drfun1.com NOTICE Guest :Total Connects Logged  : 3,491,820 since boot',
+    ':StatServ!services@services.drfun1.com NOTICE Guest :Active Network Uptime  : 148 days, 12 hours, 19 mins',
+    ':StatServ!services@services.drfun1.com NOTICE Guest :Network Link Health    : 0 netsplits detected in last 30 days',
+    ':StatServ!services@services.drfun1.com NOTICE Guest :Source Repository      : https://github.com/Macs/NeoStats.git',
+    ':StatServ!services@services.drfun1.com NOTICE Guest :End of /msg StatServ STATS report.'
+  ]);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [searchNode, setSearchNode] = useState('');
   const [channelSearch, setChannelSearch] = useState('');
@@ -224,6 +241,100 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
     setConsoleLogs(newLines);
   };
 
+  // Handle running NeoStats service commands
+  const handleRunNeoStatsCommand = (cmd: string) => {
+    setSelectedNeoStatsCmd(cmd);
+    let lines: string[] = [];
+    switch (cmd) {
+      case 'STATS':
+        lines = [
+          `:StatServ!services@services.drfun1.com NOTICE Guest :=== NeoStats 3.0.2 StatServ Network Report ===`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :Current Global Clients : 8,838 (Peak: 14,290 on 2026-11-04)`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :Current Channels       : 74 formed (100% broadcast synchronized)`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :Current Servers        : 26 online (Switch SUPERNAP Leaf Mesh)`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :Total Connects Logged  : 3,491,820 since boot`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :Active Network Uptime  : ${formattedUptime}`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :Network Link Health    : 0 netsplits detected in last 30 days`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :Source Repository      : https://github.com/Macs/NeoStats.git`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :End of /msg StatServ STATS report.`
+        ];
+        break;
+      case 'PEAK':
+        lines = [
+          `:StatServ!services@services.drfun1.com NOTICE Guest :=== NeoStats StatServ All-Time Network Peaks ===`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :Maximum Users Online   : 14,290 (Set during White House Live Briefing)`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :Maximum Channels Formed: 74 (Full DrFun1 Media TV/Radio Carrier Grid)`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :Maximum Servers Linked : 26 (All Switch SUPERNAP Leaf Nodes active)`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :Busiest 1-Hour Window  : 8,838 connects (18:00 - 19:00 UTC)`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :Average Connect Rate   : 41.2 connects/min`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :End of /msg StatServ PEAK report.`
+        ];
+        break;
+      case 'CHANS':
+        lines = [
+          `:StatServ!services@services.drfun1.com NOTICE Guest :=== Top Active Broadcast Channels (by Traffic Volume) ===`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :1. #drfun1-primetv       : 1,840 users, 42.4 msgs/sec (+sntk 100G)`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :2. #whitehouse-briefings : 1,290 users, 28.1 msgs/sec (+sntk 100G)`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :3. #c-band-space         :   840 users, 18.6 msgs/sec (+sntk 100G)`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :4. #5g-ntn               :   780 users, 14.2 msgs/sec (+sntk 100G)`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :5. #fcc-spectrum-alerts  :   620 users,  9.4 msgs/sec (+sntk 100G)`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :6. #switch-supernap      :   540 users, 12.0 msgs/sec (+sntk 100G)`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :End of /msg StatServ CHANS report.`
+        ];
+        break;
+      case 'CONNECTSERV':
+        lines = [
+          `:ConnectServ!services@services.drfun1.com NOTICE Guest :=== NeoStats ConnectServ Routing & Lag Matrix ===`,
+          `:ConnectServ!services@services.drfun1.com NOTICE Guest :Hub irc.drfun1.com [001] -> node1.lasvegas (0.4ms) [0 splits]`,
+          `:ConnectServ!services@services.drfun1.com NOTICE Guest :Hub irc.drfun1.com [001] -> node2.tahoereno (3.8ms) [0 splits]`,
+          `:ConnectServ!services@services.drfun1.com NOTICE Guest :Hub irc.drfun1.com [001] -> node4.atlanta (14.2ms) [0 splits]`,
+          `:ConnectServ!services@services.drfun1.com NOTICE Guest :Hub irc.drfun1.com [001] -> node10.london (68.1ms) [0 splits]`,
+          `:ConnectServ!services@services.drfun1.com NOTICE Guest :Hub irc.drfun1.com [001] -> node11.tokyo (88.4ms) [0 splits]`,
+          `:ConnectServ!services@services.drfun1.com NOTICE Guest :Hub irc.drfun1.com [001] -> irc.drfun1media.com (1.8ms) [0 splits]`,
+          `:ConnectServ!services@services.drfun1.com NOTICE Guest :Average Global Inter-Leaf Round-Trip: 24.1 ms`,
+          `:ConnectServ!services@services.drfun1.com NOTICE Guest :End of /msg ConnectServ LAG report.`
+        ];
+        break;
+      case 'SECURESERV':
+        lines = [
+          `:SecureServ!services@services.drfun1.com NOTICE Guest :=== NeoStats SecureServ Sentry Report ===`,
+          `:SecureServ!services@services.drfun1.com NOTICE Guest :Monitored DNSBL Zones   : dronebl.org, dnsbl.dronebl.org, tor.dan.me.uk`,
+          `:SecureServ!services@services.drfun1.com NOTICE Guest :Proxies Scanned Today   : 148,910 connection attempts`,
+          `:SecureServ!services@services.drfun1.com NOTICE Guest :Threats Neutralized     : 8,420 automated drone/proxy blocks`,
+          `:SecureServ!services@services.drfun1.com NOTICE Guest :Active Enforced K-Lines : 4 temporary 24h holds`,
+          `:SecureServ!services@services.drfun1.com NOTICE Guest :Tor Exit Node Policy    : Read-only guest mode (+M mode)`,
+          `:SecureServ!services@services.drfun1.com NOTICE Guest :End of /msg SecureServ STATS report.`
+        ];
+        break;
+      case 'SEENSERV':
+        lines = [
+          `:SeenServ!services@services.drfun1.com NOTICE Guest :=== NeoStats SeenServ User Query ===`,
+          `:SeenServ!services@services.drfun1.com NOTICE Guest :Target: DrFun1Admin`,
+          `:SeenServ!services@services.drfun1.com NOTICE Guest :Status: ONLINE now on irc.drfun1.com (Switch SUPERNAP Las Vegas Core)`,
+          `:SeenServ!services@services.drfun1.com NOTICE Guest :Channels: #drfun1-primetv (+qo), #c-band-space (+o), #switch-supernap (+o)`,
+          `:SeenServ!services@services.drfun1.com NOTICE Guest :Signed on: 148 days, 12 hours ago (Zero reconnects)`,
+          `:SeenServ!services@services.drfun1.com NOTICE Guest :End of /msg SeenServ SEEN report.`
+        ];
+        break;
+      case 'MODULES':
+        lines = [
+          `:StatServ!services@services.drfun1.com NOTICE Guest :=== NeoStats 3.0.2 Loaded Dynamic Modules ===`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :[01] statserv.so   (v3.0.2) - Network statistics & peak tracker [Active]`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :[02] connectserv.so(v3.0.2) - Server routing lag & net-split auditor [Active]`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :[03] secureserv.so (v3.0.2) - DroneBL automated security shield [Active]`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :[04] seenserv.so   (v3.0.2) - Persistent user nick presence database [Active]`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :[05] webstats.so   (v3.0.2) - HTML & JSON-RPC stats.drfun1ircd.com feeder [Active]`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :[06] hostserv.so   (v3.0.2) - Virtual hostmask manager (*.drfun1media.com) [Active]`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :Source Code: https://github.com/Macs/NeoStats.git`,
+          `:StatServ!services@services.drfun1.com NOTICE Guest :End of /msg StatServ MODULES report.`
+        ];
+        break;
+      default:
+        break;
+    }
+    setNeoStatsLogs(lines);
+  };
+
   return (
     <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       
@@ -288,6 +399,25 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
                 <span>irc.drfun1media.com</span>
               </span>
               <span className="text-[10px] text-sky-400">UnrealIRCd + ZNC 1.9.1</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-950/80 border border-cyan-500/30 flex flex-col min-w-[170px]">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-slate-400 uppercase font-semibold">NeoStats (SID 099)</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              </div>
+              <span className="text-cyan-300 font-bold flex items-center gap-1">
+                <span>neostats.drfun1.com</span>
+              </span>
+              <a
+                href="https://github.com/Macs/NeoStats.git"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                title="NeoStats Official Git Repository (https://github.com/Macs/NeoStats.git)"
+              >
+                <span>github.com/Macs/NeoStats</span>
+                <ExternalLink className="w-2.5 h-2.5" />
+              </a>
             </div>
             {onOpenUnrealSearch && (
               <button
@@ -494,6 +624,7 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
       <div className="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto no-scrollbar font-mono text-xs">
         {[
           { id: 'overview', label: 'Network Overview & Security', icon: Activity },
+          { id: 'neostats', label: 'NeoStats 3.0 (github.com/Macs/NeoStats.git)', icon: BarChart3 },
           { id: 'znc', label: 'ZNC 1.9.1 Bouncer (znc.git)', icon: Layers },
           { id: 'nodes', label: `26 Switch Leaf Nodes (${SWITCH_DEDICATED_NODES.length})`, icon: Server },
           { id: 'stats_cmd', label: 'Live /STATS Engine Terminal', icon: Terminal },
@@ -802,6 +933,563 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
       )}
 
       {/* ========================================================
+          TAB: NEOSTATS 3.0 MODULAR IRC SERVICES & TELEMETRY (github.com/Macs/NeoStats.git)
+          ======================================================== */}
+      {activeStatsTab === 'neostats' && (
+        <div className="space-y-6">
+          {/* NeoStats Hero / Status Banner */}
+          <div className="bg-slate-900/90 border border-cyan-500/40 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-2.5 py-1 rounded-md text-xs font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                    <span>NEOSTATS 3.0.2 STATSERV ACTIVE</span>
+                  </span>
+                  <a
+                    href="https://github.com/Macs/NeoStats.git"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2.5 py-1 rounded-md text-xs font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 transition-colors flex items-center gap-1.5 cursor-pointer"
+                    title="Official NeoStats Git Repository: https://github.com/Macs/NeoStats.git"
+                  >
+                    <GitBranch className="w-3.5 h-3.5 text-purple-400" />
+                    <span>github.com/Macs/NeoStats.git</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-slate-800 text-slate-300 border border-slate-700">
+                    SID: 099 &bull; neostats.drfun1.com
+                  </span>
+                  <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                    U-lines Verified
+                  </span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                  <span>NeoStats 3.0.2 Modular IRC Services &amp; StatServ</span>
+                  <span className="text-cyan-400 font-mono text-base font-normal">&bull; Linked to irc.drfun1.com:6697</span>
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 max-w-3xl">
+                  High-performance modular IRC services and network telemetry engine cloned and built from <strong className="text-white">https://github.com/Macs/NeoStats.git</strong> (developed by Justin &quot;Macs&quot; and the NeoStats Development Team). Connected directly to <strong className="text-cyan-300">irc.drfun1.com</strong> via TLS 1.3 U-lines with StatServ network analytics, ConnectServ routing lag auditor, SecureServ DNSBL drone guard, and WebStats live feeds.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap lg:flex-col gap-2 shrink-0 font-mono text-xs">
+                <div className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
+                  <span className="text-slate-400">Database Engine:</span>
+                  <span className="text-cyan-300 font-bold">SQLite3 / TimescaleDB</span>
+                </div>
+                <div className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
+                  <span className="text-slate-400">Services Server:</span>
+                  <span className="text-emerald-300 font-bold">neostats.drfun1.com</span>
+                </div>
+                <div className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
+                  <span className="text-slate-400">Upstream Hub:</span>
+                  <span className="text-purple-300 font-bold">irc.drfun1.com:6697</span>
+                </div>
+
+                <div className="flex items-center gap-2 mt-1">
+                  <a
+                    href="https://github.com/Macs/NeoStats.git"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold flex items-center justify-center gap-1.5 transition text-center"
+                  >
+                    <GitFork className="w-3.5 h-3.5" />
+                    <span>View Repository</span>
+                  </a>
+                  <button
+                    onClick={() => handleCopy('git clone https://github.com/Macs/NeoStats.git', 'gitCloneNeoStats')}
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition cursor-pointer"
+                    title="Copy Git Clone Command"
+                  >
+                    {copiedKey === 'gitCloneNeoStats' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>git clone</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Key Telemetry Metrics Cards Row */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <div className="text-slate-400 text-xs font-mono flex items-center justify-between">
+                <span>Peak Clients</span>
+                <Users className="w-3.5 h-3.5 text-purple-400" />
+              </div>
+              <div className="text-xl sm:text-2xl font-bold font-mono text-white">
+                {NEOSTATS_CONFIG.peakUsers.toLocaleString()}
+              </div>
+              <div className="text-[10px] font-mono text-emerald-400">
+                All-Time Peak Recorded
+              </div>
+            </div>
+
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <div className="text-slate-400 text-xs font-mono flex items-center justify-between">
+                <span>Channels Tracked</span>
+                <Hash className="w-3.5 h-3.5 text-cyan-400" />
+              </div>
+              <div className="text-xl sm:text-2xl font-bold font-mono text-cyan-300">
+                {NEOSTATS_CONFIG.peakChannels}
+              </div>
+              <div className="text-[10px] font-mono text-cyan-400">
+                100% Broadcast Synced
+              </div>
+            </div>
+
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <div className="text-slate-400 text-xs font-mono flex items-center justify-between">
+                <span>Connects Logged</span>
+                <Database className="w-3.5 h-3.5 text-emerald-400" />
+              </div>
+              <div className="text-xl sm:text-2xl font-bold font-mono text-emerald-400">
+                {NEOSTATS_CONFIG.totalConnectionsLogged.toLocaleString()}
+              </div>
+              <div className="text-[10px] font-mono text-slate-400">
+                TimescaleDB Time-Series
+              </div>
+            </div>
+
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <div className="text-slate-400 text-xs font-mono flex items-center justify-between">
+                <span>NetSplits (30d)</span>
+                <Activity className="w-3.5 h-3.5 text-sky-400" />
+              </div>
+              <div className="text-xl sm:text-2xl font-bold font-mono text-sky-300">
+                {NEOSTATS_CONFIG.statServMetrics.splitEvents} Splits
+              </div>
+              <div className="text-[10px] font-mono text-emerald-400">
+                Zero Routing Drops
+              </div>
+            </div>
+
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <div className="text-slate-400 text-xs font-mono flex items-center justify-between">
+                <span>DroneBL Blocks</span>
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              </div>
+              <div className="text-xl sm:text-2xl font-bold font-mono text-amber-300">
+                {NEOSTATS_CONFIG.statServMetrics.dnsblBlocks.toLocaleString()}
+              </div>
+              <div className="text-[10px] font-mono text-slate-400">
+                SecureServ Automated
+              </div>
+            </div>
+
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <div className="text-slate-400 text-xs font-mono flex items-center justify-between">
+                <span>NeoStats Uptime</span>
+                <Clock className="w-3.5 h-3.5 text-indigo-400" />
+              </div>
+              <div className="text-base sm:text-lg font-bold font-mono text-indigo-300 truncate" title={NEOSTATS_CONFIG.uptime}>
+                {NEOSTATS_CONFIG.uptime}
+              </div>
+              <div className="text-[10px] font-mono text-emerald-400">
+                U-lines Verified
+              </div>
+            </div>
+          </div>
+
+          {/* Core Dynamic Modules Grid */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold font-mono text-white flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-cyan-400" />
+                <span>NeoStats 3.0 Dynamic Services Modules</span>
+              </h3>
+              <span className="text-xs font-mono text-slate-400">
+                {NEOSTATS_CONFIG.modules.length} Modules Loaded &bull; C Plugin Architecture
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {NEOSTATS_CONFIG.modules.map(mod => (
+                <div
+                  key={mod.name}
+                  className="bg-slate-900/70 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3 shadow-md hover:border-slate-700 transition"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+                        <span className="font-mono font-bold text-white text-sm">
+                          {mod.serviceNick}
+                        </span>
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">
+                          {mod.name}.so
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        {mod.status}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                      {mod.description}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono">
+                    <div className="text-slate-400 text-[11px]">
+                      <span>{mod.commandCount.toLocaleString()} calls</span>
+                      <span className="text-slate-600 mx-1.5">&bull;</span>
+                      <span>{(mod.memoryUsageKb / 1024).toFixed(1)} MB RAM</span>
+                    </div>
+
+                    <button
+                      onClick={() => handleRunNeoStatsCommand(
+                        mod.name === 'statserv' ? 'STATS' :
+                        mod.name === 'connectserv' ? 'CONNECTSERV' :
+                        mod.name === 'secureserv' ? 'SECURESERV' :
+                        mod.name === 'seenserv' ? 'SEENSERV' : 'MODULES'
+                      )}
+                      className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"
+                    >
+                      <Terminal className="w-3 h-3 text-cyan-400" />
+                      <span>Query</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Interactive StatServ Command Terminal & Query Inspector */}
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="p-4 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Terminal className="w-4 h-4 text-cyan-400" />
+                <span className="font-mono font-bold text-white text-xs">
+                  StatServ Interactive Service Console (/msg StatServ)
+                </span>
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
+                  neostats.drfun1.com
+                </span>
+              </div>
+
+              {/* Command Quick Selector Buttons */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar font-mono text-xs">
+                {[
+                  { cmd: 'STATS', label: 'STATS' },
+                  { cmd: 'PEAK', label: 'PEAK' },
+                  { cmd: 'CHANS', label: 'CHANS' },
+                  { cmd: 'CONNECTSERV', label: 'ConnectServ LAG' },
+                  { cmd: 'SECURESERV', label: 'SecureServ SENTRY' },
+                  { cmd: 'SEENSERV', label: 'SeenServ SEEN' },
+                  { cmd: 'MODULES', label: 'MODULES' }
+                ].map(item => (
+                  <button
+                    key={item.cmd}
+                    onClick={() => handleRunNeoStatsCommand(item.cmd)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                      selectedNeoStatsCmd === item.cmd
+                        ? 'bg-cyan-500 text-slate-950 font-black shadow-md'
+                        : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => handleCopy(neoStatsLogs.join('\n'), 'neoStatsLogs')}
+                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs flex items-center gap-1 cursor-pointer ml-1"
+                  title="Copy Console Output"
+                >
+                  {copiedKey === 'neoStatsLogs' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Terminal Output Area */}
+            <pre className="p-4 bg-slate-950 text-cyan-300 font-mono text-xs overflow-x-auto min-h-[160px] max-h-[280px] leading-relaxed custom-nav-scrollbar selection:bg-cyan-900 selection:text-white">
+              {neoStatsLogs.map((line, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <span className="text-slate-600 select-none">[{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}]</span>
+                  <span className={line.includes('===') ? 'text-amber-400 font-bold' : line.includes('Active') || line.includes('Peak') ? 'text-emerald-300 font-semibold' : 'text-cyan-200'}>
+                    {line}
+                  </span>
+                </div>
+              ))}
+            </pre>
+          </div>
+
+          {/* 24-Hour Connection Volume Chart */}
+          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+              <div>
+                <h4 className="font-mono font-bold text-white text-sm flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-purple-400" />
+                  <span>24-Hour Global Connection Frequency (NeoStats Timescale Engine)</span>
+                </h4>
+                <p className="text-xs text-slate-400 mt-0.5 font-sans">
+                  Hourly client connect activity curve logged across all 26 Switch SUPERNAP leaf nodes via NeoStats StatServ.
+                </p>
+              </div>
+              <div className="text-right font-mono text-xs text-slate-400">
+                Peak Hour: <strong className="text-cyan-400">18:00 UTC (8,838 clients)</strong>
+              </div>
+            </div>
+
+            {/* SVG Hourly Bar Chart */}
+            <div className="relative h-44 sm:h-52 w-full pt-4">
+              <svg className="w-full h-full" viewBox="0 0 800 160" preserveAspectRatio="none">
+                {/* Horizontal Guide Lines */}
+                <line x1="0" y1="40" x2="800" y2="40" stroke="#334155" strokeDasharray="3,3" strokeWidth="1" />
+                <line x1="0" y1="80" x2="800" y2="80" stroke="#334155" strokeDasharray="3,3" strokeWidth="1" />
+                <line x1="0" y1="120" x2="800" y2="120" stroke="#334155" strokeDasharray="3,3" strokeWidth="1" />
+
+                {/* Bars */}
+                {NEOSTATS_CONFIG.statServMetrics.hourlyConnects.map((val, idx) => {
+                  const maxVal = 9000;
+                  const barHeight = Math.max(6, (val / maxVal) * 130);
+                  const x = idx * (800 / 24) + 6;
+                  const barWidth = 800 / 24 - 12;
+                  const y = 145 - barHeight;
+                  const isPeak = val > 8000;
+
+                  return (
+                    <g key={idx} className="group cursor-pointer">
+                      <rect
+                        x={x}
+                        y={y}
+                        width={barWidth}
+                        height={barHeight}
+                        rx="3"
+                        fill={isPeak ? '#06b6d4' : '#6366f1'}
+                        opacity={isPeak ? 0.95 : 0.75}
+                        className="transition-all hover:opacity-100 hover:fill-cyan-300"
+                      />
+                      <text
+                        x={x + barWidth / 2}
+                        y="158"
+                        textAnchor="middle"
+                        fill="#94a3b8"
+                        fontSize="9"
+                        fontFamily="ui-monospace, monospace"
+                      >
+                        {idx < 10 ? `0${idx}` : idx}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-2 border-t border-slate-800">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded bg-indigo-500" />
+                  <span>Standard Traffic</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded bg-cyan-400" />
+                  <span>Broadcast Peak (&gt;8,000 Connects)</span>
+                </span>
+              </div>
+              <span className="text-slate-500">Source: SQLite / TimescaleDB Engine</span>
+            </div>
+          </div>
+
+          {/* Two-Column Matrix: Top Channels & Top NetAdmin Actions */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Top Channels Table */}
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h4 className="font-mono font-bold text-white text-xs flex items-center gap-2">
+                  <Hash className="w-4 h-4 text-cyan-400" />
+                  <span>Top Active Channels by Message Velocity</span>
+                </h4>
+                <span className="text-[10px] font-mono text-cyan-400">Real-Time StatServ</span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left font-mono text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-500 text-[10px] uppercase">
+                      <th className="pb-2">Channel</th>
+                      <th className="pb-2 text-right">Users</th>
+                      <th className="pb-2 text-right">Message Rate</th>
+                      <th className="pb-2 text-right">Sync</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {NEOSTATS_CONFIG.statServMetrics.topChannels.map(ch => (
+                      <tr key={ch.channel} className="hover:bg-slate-800/40 transition">
+                        <td className="py-2 font-bold text-white flex items-center gap-1.5">
+                          <span className="text-cyan-400">#</span>
+                          <span>{ch.channel.replace('#', '')}</span>
+                        </td>
+                        <td className="py-2 text-right text-slate-300">
+                          {ch.users.toLocaleString()}
+                        </td>
+                        <td className="py-2 text-right font-bold text-emerald-400">
+                          {ch.msgRate}
+                        </td>
+                        <td className="py-2 text-right">
+                          <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[10px]">
+                            100G
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Top Oper Activity Table */}
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h4 className="font-mono font-bold text-white text-xs flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span>NetAdmin &amp; Sentry Activity Audit</span>
+                </h4>
+                <span className="text-[10px] font-mono text-emerald-400">OperServ / SecureServ</span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left font-mono text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-500 text-[10px] uppercase">
+                      <th className="pb-2">Operator Nick</th>
+                      <th className="pb-2">Origin Server</th>
+                      <th className="pb-2 text-right">Actions</th>
+                      <th className="pb-2 text-right">Rank</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {NEOSTATS_CONFIG.statServMetrics.topOpers.map(op => (
+                      <tr key={op.nick} className="hover:bg-slate-800/40 transition">
+                        <td className="py-2 font-bold text-purple-300 flex items-center gap-1.5">
+                          <span>~</span>
+                          <span>{op.nick}</span>
+                        </td>
+                        <td className="py-2 text-slate-400 text-[11px] truncate max-w-[140px]">
+                          {op.server}
+                        </td>
+                        <td className="py-2 text-right font-bold text-amber-400">
+                          {op.actions}
+                        </td>
+                        <td className="py-2 text-right">
+                          <span className="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 text-[10px]">
+                            NetAdmin
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Production Configuration & Build Center */}
+          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="p-4 bg-slate-950 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Server className="w-4 h-4 text-purple-400" />
+                <span className="font-mono font-bold text-white text-xs">
+                  NeoStats 3.0 Production Config &amp; Git Build Architecture
+                </span>
+              </div>
+
+              {/* Snippet Tabs */}
+              <div className="flex items-center gap-1.5 bg-slate-900 p-0.5 rounded-lg border border-slate-800 font-mono text-xs">
+                <button
+                  onClick={() => setSelectedNeoStatsConfTab('neostats_conf')}
+                  className={`px-2.5 py-1 rounded text-[11px] font-bold transition cursor-pointer ${
+                    selectedNeoStatsConfTab === 'neostats_conf'
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  neostats.conf
+                </button>
+                <button
+                  onClick={() => setSelectedNeoStatsConfTab('unreal_link')}
+                  className={`px-2.5 py-1 rounded text-[11px] font-bold transition cursor-pointer ${
+                    selectedNeoStatsConfTab === 'unreal_link'
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  UnrealIRCd Link Block
+                </button>
+                <button
+                  onClick={() => setSelectedNeoStatsConfTab('git_build')}
+                  className={`px-2.5 py-1 rounded text-[11px] font-bold transition cursor-pointer ${
+                    selectedNeoStatsConfTab === 'git_build'
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Git Clone &amp; Compile
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  const content = selectedNeoStatsConfTab === 'neostats_conf'
+                    ? NEOSTATS_CONFIG.confSnippet
+                    : selectedNeoStatsConfTab === 'unreal_link'
+                    ? NEOSTATS_CONFIG.unrealLinkSnippet
+                    : `# Git Clone & Compilation Instructions for NeoStats 3.0\ngit clone https://github.com/Macs/NeoStats.git\ncd NeoStats\n./configure --prefix=/opt/neostats --enable-epoll --with-unreal --with-openssl\nmake\nsudo make install\n# Verify binary\n/opt/neostats/bin/neostats -v`;
+                  handleCopy(content, 'neoStatsSnippet');
+                }}
+                className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1.5 text-xs font-mono cursor-pointer"
+              >
+                {copiedKey === 'neoStatsSnippet' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>Copy Code</span>
+              </button>
+            </div>
+
+            <pre className="p-4 bg-slate-950 text-cyan-300 font-mono text-xs overflow-x-auto max-h-[320px] leading-relaxed custom-nav-scrollbar selection:bg-cyan-900 selection:text-white">
+              {selectedNeoStatsConfTab === 'neostats_conf' && NEOSTATS_CONFIG.confSnippet}
+              {selectedNeoStatsConfTab === 'unreal_link' && NEOSTATS_CONFIG.unrealLinkSnippet}
+              {selectedNeoStatsConfTab === 'git_build' && `# ==============================================================
+# NeoStats 3.0 Installation from Official Git Repository
+# Source Repository: https://github.com/Macs/NeoStats.git
+# Authors: Justin "Macs" and the NeoStats Development Team
+# ==============================================================
+
+# 1. Install prerequisites (Debian/Ubuntu/CentOS/RHEL)
+sudo apt update && sudo apt install -y build-essential autoconf automake libtool libssl-dev libsqlite3-dev
+
+# 2. Clone NeoStats repository from GitHub
+git clone https://github.com/Macs/NeoStats.git
+cd NeoStats
+
+# 3. Configure build for UnrealIRCd protocol with epoll event loop & OpenSSL
+./configure \\
+    --prefix=/opt/neostats \\
+    --enable-epoll \\
+    --with-unreal \\
+    --with-openssl \\
+    --with-sqlite3
+
+# 4. Compile dynamic service modules (StatServ, ConnectServ, SecureServ, SeenServ, WebStats)
+make -j$(nproc)
+
+# 5. Install to /opt/neostats
+sudo make install
+
+# 6. Verify binary version and linked modules
+/opt/neostats/bin/neostats --version
+# Output: NeoStats 3.0.2 (Protocol: UnrealIRCd 6.1.x, SSL: OpenSSL 3.0)
+
+# 7. Start daemon in foreground for test
+/opt/neostats/bin/neostats -n -f /opt/neostats/etc/neostats.conf`}
+            </pre>
+          </div>
+
+        </div>
+      )}
+
+      {/* ========================================================
           TAB 2: NETWORK OVERVIEW & SECURITY
           ======================================================== */}
       {activeStatsTab === 'overview' && (
@@ -831,6 +1519,18 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
                 <div className="flex justify-between items-center py-1 border-b border-slate-800/60">
                   <span className="text-slate-400">Services Daemon:</span>
                   <span className="text-indigo-300">Anope 2.1.1 (Modular DB)</span>
+                </div>
+                <div className="flex justify-between items-center py-1 border-b border-slate-800/60">
+                  <span className="text-slate-400">Telemetry Daemon:</span>
+                  <a
+                    href="https://github.com/Macs/NeoStats.git"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-bold"
+                  >
+                    <span>NeoStats 3.0 (SID 099)</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
                 <div className="flex justify-between items-center py-1 border-b border-slate-800/60">
                   <span className="text-slate-400">Listen Ports:</span>

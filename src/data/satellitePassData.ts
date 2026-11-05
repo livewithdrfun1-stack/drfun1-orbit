@@ -349,3 +349,97 @@ export function computeGroundTrackCoordinates(
 
   return coords;
 }
+
+/**
+ * Calculates the Day/Night Solar Terminator polygon coordinates.
+ * Returns an array of [lat, lon] tuples representing the night polygon boundary.
+ */
+export function computeSolarTerminatorPolygon(date: Date = new Date()): [number, number][] {
+  const startOfYear = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const dayOfYear = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 3600 * 1000));
+  
+  // Solar declination in radians (-23.44° to +23.44°)
+  const declinationRad = (-23.44 * (Math.PI / 180)) * Math.cos(((2 * Math.PI) / 365) * (dayOfYear + 10));
+  
+  // Subsolar longitude in degrees (-180 to 180)
+  const utcHours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
+  const subSolarLon = -((utcHours - 12) * 15);
+  
+  const terminatorPoints: [number, number][] = [];
+  const lonStep = 2; // smooth 2-degree increments
+  
+  const tanDelta = Math.tan(declinationRad);
+  const safeTanDelta = Math.abs(tanDelta) < 1e-4 ? (tanDelta >= 0 ? 1e-4 : -1e-4) : tanDelta;
+
+  for (let lon = -180; lon <= 180; lon += lonStep) {
+    const lonDeltaRad = ((lon - subSolarLon) * Math.PI) / 180;
+    const latRad = Math.atan(-Math.cos(lonDeltaRad) / safeTanDelta);
+    let latDeg = (latRad * 180) / Math.PI;
+    latDeg = Math.max(-85, Math.min(85, latDeg));
+    terminatorPoints.push([latDeg, lon]);
+  }
+
+  // Determine night polar cap to close the polygon
+  const darkPoleLat = declinationRad >= 0 ? -85 : 85;
+
+  const polygon: [number, number][] = [
+    ...terminatorPoints,
+    [darkPoleLat, 180],
+    [darkPoleLat, -180],
+    terminatorPoints[0]
+  ];
+
+  return polygon;
+}
+
+/**
+ * Calculates slant range distance, elevation, and radio link line-of-sight between an observer and satellite
+ */
+export function calculateGroundStationLink(
+  observer: ObserverStation,
+  satellite: TrackedSatellite
+): {
+  distanceKm: number;
+  elevationDeg: number;
+  azimuthDeg: number;
+  isInFootprint: boolean;
+  propagationDelayMs: number;
+} {
+  const R = 6371; // Earth radius km
+  const lat1 = (observer.lat * Math.PI) / 180;
+  const lon1 = (observer.lon * Math.PI) / 180;
+  const lat2 = (satellite.currentLat * Math.PI) / 180;
+  const lon2 = (satellite.currentLon * Math.PI) / 180;
+
+  const dLat = lat2 - lat1;
+  const dLon = lon2 - lon1;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1) * Math.cos(lat2) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const groundDistanceKm = R * c;
+
+  const slantRangeKm = Math.sqrt(
+    groundDistanceKm * groundDistanceKm + satellite.altitudeKm * satellite.altitudeKm
+  );
+
+  const elRad = Math.atan2(satellite.altitudeKm, Math.max(1, groundDistanceKm)) - (c / 2);
+  let elDeg = (elRad * 180) / Math.PI;
+  if (elDeg > 90) elDeg = 90;
+
+  const y = Math.sin(dLon) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+  let azDeg = (Math.atan2(y, x) * 180) / Math.PI;
+  if (azDeg < 0) azDeg += 360;
+
+  const isInFootprint = groundDistanceKm <= satellite.footprintRadiusKm;
+  const propagationDelayMs = parseFloat(((slantRangeKm / 299792) * 1000).toFixed(2));
+
+  return {
+    distanceKm: Math.round(slantRangeKm),
+    elevationDeg: parseFloat(elDeg.toFixed(1)),
+    azimuthDeg: Math.round(azDeg),
+    isInFootprint,
+    propagationDelayMs
+  };
+}

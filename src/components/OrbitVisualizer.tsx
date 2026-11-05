@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SatelliteCompany, OrbitType } from '../types/satellite';
 import { Orbit, Radio, Globe, ArrowRight, Layers, Satellite, Compass } from 'lucide-react';
 import { LeafletSatelliteTracker } from './LeafletSatelliteTracker';
+import { IntegrationHubView } from './IntegrationHubView';
 
 interface OrbitVisualizerProps {
   companies: SatelliteCompany[];
   onSelectCompany: (company: SatelliteCompany) => void;
   onOpenLicense?: () => void;
   onOpenSwitchMesh?: () => void;
+  onNavigateToIrc?: (channel?: string) => void;
+  onNavigateToStudio?: () => void;
+  initialMode?: 'tracker' | 'altitude_ladder' | 'telemetry_apis';
 }
 
 export const OrbitVisualizer: React.FC<OrbitVisualizerProps> = ({
@@ -15,9 +19,18 @@ export const OrbitVisualizer: React.FC<OrbitVisualizerProps> = ({
   onSelectCompany,
   onOpenLicense,
   onOpenSwitchMesh,
+  onNavigateToIrc,
+  onNavigateToStudio,
+  initialMode = 'tracker',
 }) => {
-  const [activeViewMode, setActiveViewMode] = useState<'tracker' | 'altitude_ladder'>('tracker');
+  const [activeViewMode, setActiveViewMode] = useState<'tracker' | 'altitude_ladder' | 'telemetry_apis'>(initialMode);
   const [selectedOrbitFilter, setSelectedOrbitFilter] = useState<OrbitType | 'All'>('All');
+
+  useEffect(() => {
+    if (initialMode) {
+      setActiveViewMode(initialMode);
+    }
+  }, [initialMode]);
 
   const leoCompanies = companies.filter((c) => c.orbitType === 'LEO');
   const meoCompanies = companies.filter((c) => c.orbitType === 'MEO');
@@ -33,8 +46,8 @@ export const OrbitVisualizer: React.FC<OrbitVisualizerProps> = ({
     <div className="space-y-6">
       
       {/* Top View Mode Switcher */}
-      <div className="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-lg">
-        <div className="flex items-center space-x-2">
+      <div className="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 shadow-lg">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setActiveViewMode('tracker')}
             className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center space-x-2 transition cursor-pointer ${
@@ -43,8 +56,8 @@ export const OrbitVisualizer: React.FC<OrbitVisualizerProps> = ({
                 : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
             }`}
           >
-            <Globe className="w-4 h-4 text-slate-950" />
-            <span>Interactive Global Satellite Tracker (Leaflet)</span>
+            <Satellite className={`w-4 h-4 ${activeViewMode === 'tracker' ? 'text-slate-950' : 'text-cyan-400'}`} />
+            <span>Orbit Tracking Map (Leaflet SGP4)</span>
           </button>
 
           <button
@@ -58,9 +71,21 @@ export const OrbitVisualizer: React.FC<OrbitVisualizerProps> = ({
             <Orbit className="w-4 h-4 text-purple-400" />
             <span>Orbital Regimes Altitude Distribution (GEO / MEO / LEO)</span>
           </button>
+
+          <button
+            onClick={() => setActiveViewMode('telemetry_apis')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center space-x-2 transition cursor-pointer ${
+              activeViewMode === 'telemetry_apis'
+                ? 'bg-emerald-500 text-slate-950 shadow-md font-extrabold'
+                : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+            }`}
+          >
+            <Radio className={`w-4 h-4 ${activeViewMode === 'telemetry_apis' ? 'text-slate-950' : 'text-emerald-400'}`} />
+            <span>Public Telemetry APIs (CelesTrak / NASA / NOAA / SatNOGS)</span>
+          </button>
         </div>
 
-        <div className="text-xs font-mono text-slate-400 flex items-center space-x-2 self-end sm:self-auto">
+        <div className="text-xs font-mono text-slate-400 flex items-center space-x-2 self-end xl:self-auto shrink-0">
           <span>Active Telemetry: <strong className="text-emerald-400">10 Global Birds Online</strong></span>
         </div>
       </div>
@@ -257,6 +282,17 @@ export const OrbitVisualizer: React.FC<OrbitVisualizerProps> = ({
           )}
         </div>
       </div>
+      )}
+
+      {/* View 3: Public Satellite Telemetry APIs (CelesTrak / NASA / NOAA / SatNOGS / OpenNotify) */}
+      {activeViewMode === 'telemetry_apis' && (
+        <IntegrationHubView
+          onNavigateToOrbits={() => setActiveViewMode('tracker')}
+          onNavigateToIrc={onNavigateToIrc}
+          onNavigateToStudio={onNavigateToStudio}
+          onOpenLicense={onOpenLicense}
+          onOpenSwitchMesh={onOpenSwitchMesh}
+        />
       )}
     </div>
   );

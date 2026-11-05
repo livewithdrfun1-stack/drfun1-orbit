@@ -21,7 +21,8 @@ import {
   Server,
   Terminal,
   Cpu,
-  Send
+  Send,
+  Satellite
 } from 'lucide-react';
 
 interface CompanyDetailDrawerProps {
@@ -32,6 +33,7 @@ interface CompanyDetailDrawerProps {
   userNote?: UserNote;
   onSaveNote: (note: UserNote) => void;
   onOpenRfq: (company: SatelliteCompany) => void;
+  onOpenOrbitMap?: () => void;
 }
 
 export const CompanyDetailDrawer: React.FC<CompanyDetailDrawerProps> = ({
@@ -42,6 +44,7 @@ export const CompanyDetailDrawer: React.FC<CompanyDetailDrawerProps> = ({
   userNote,
   onSaveNote,
   onOpenRfq,
+  onOpenOrbitMap,
 }) => {
   if (!company) return null;
 
@@ -107,6 +110,16 @@ export const CompanyDetailDrawer: React.FC<CompanyDetailDrawerProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {onOpenOrbitMap && (
+              <button
+                onClick={onOpenOrbitMap}
+                className="px-2.5 py-1.5 text-xs font-medium text-cyan-300 bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-500/40 hover:border-cyan-400 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="Launch Orbit Tracking Map"
+              >
+                <Satellite className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="hidden sm:inline">Orbit Map</span>
+              </button>
+            )}
             <button
               onClick={() => onOpenRfq(company)}
               className="px-3 py-1.5 text-xs font-medium text-slate-950 bg-sky-400 hover:bg-sky-300 rounded-lg transition-colors flex items-center gap-1.5"

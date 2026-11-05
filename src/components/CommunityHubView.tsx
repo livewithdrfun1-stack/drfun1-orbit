@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users,
   MessageSquare,
@@ -42,6 +42,7 @@ import {
   COMMUNITY_CHANNEL_SPOTLIGHTS,
   COMMUNITY_EVENTS
 } from '../data/membershipData';
+import { FacebookSocialView } from './FacebookSocialView';
 
 interface CommunityHubViewProps {
   userMembership: UserMembershipState;
@@ -50,11 +51,14 @@ interface CommunityHubViewProps {
   onOpenHostingModal?: () => void;
   onOpenLegalCenter?: () => void;
   onOpenZncWebAdmin?: () => void;
+  onOpenSwitchMesh?: () => void;
+  onOpenSwitchWittServices?: () => void;
   onJoinIrcChannel?: (channel: string) => void;
   onNavigateToTab?: (tab: any) => void;
+  initialSubTab?: SubTab;
 }
 
-type SubTab = 'discussions' | 'memberships' | 'showcase' | 'events' | 'roster';
+type SubTab = 'discussions' | 'memberships' | 'showcase' | 'events' | 'roster' | 'spacebook';
 
 export const CommunityHubView: React.FC<CommunityHubViewProps> = ({
   userMembership,
@@ -63,10 +67,19 @@ export const CommunityHubView: React.FC<CommunityHubViewProps> = ({
   onOpenHostingModal,
   onOpenLegalCenter,
   onOpenZncWebAdmin,
+  onOpenSwitchMesh,
+  onOpenSwitchWittServices,
   onJoinIrcChannel,
-  onNavigateToTab
+  onNavigateToTab,
+  initialSubTab = 'discussions',
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<SubTab>('discussions');
+  const [activeSubTab, setActiveSubTab] = useState<SubTab>(initialSubTab);
+
+  useEffect(() => {
+    if (initialSubTab) {
+      setActiveSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
 
   // Discussions State
   const [topics, setTopics] = useState<CommunityDiscussionTopic[]>(INITIAL_COMMUNITY_TOPICS);
@@ -381,6 +394,21 @@ export const CommunityHubView: React.FC<CommunityHubViewProps> = ({
           >
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Certified Roster & Code of Conduct</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('spacebook')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all flex items-center space-x-2 cursor-pointer ${
+              activeSubTab === 'spacebook'
+                ? 'bg-blue-600 text-white shadow-md font-extrabold ring-1 ring-blue-400'
+                : 'bg-slate-900/60 text-slate-300 hover:text-white hover:bg-slate-800/60 border border-slate-800'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5 text-blue-400" />
+            <span>SpaceBook Social Network</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30">
+              Live Feed
+            </span>
           </button>
         </div>
       </div>
@@ -1088,6 +1116,23 @@ export const CommunityHubView: React.FC<CommunityHubViewProps> = ({
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SUBTAB 6: SPACEBOOK SOCIAL NETWORK */}
+      {/* ========================================================================= */}
+      {activeSubTab === 'spacebook' && (
+        <div className="pt-2">
+          <FacebookSocialView
+            onOpenLicense={onOpenLegalCenter || (() => {})}
+            onOpenSwitchMesh={onOpenSwitchMesh || (() => {})}
+            onOpenSwitchWittServices={onOpenSwitchWittServices}
+            onNavigateToStore={() => onNavigateToTab?.('store')}
+            onNavigateToStudio={() => onNavigateToTab?.('media')}
+            onNavigateToMedia={() => onNavigateToTab?.('media')}
+            onNavigateToIrc={() => onJoinIrcChannel?.('#drfun1')}
+          />
         </div>
       )}
 

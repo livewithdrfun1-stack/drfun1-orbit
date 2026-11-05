@@ -1,4 +1,4 @@
-import { SwitchDedicatedNode, UnrealIrcdHub, IrcChannel, IrcUser, IrcMessage, ZncBouncerConfig, StatsPortalInfo } from '../types/irc';
+import { SwitchDedicatedNode, UnrealIrcdHub, IrcChannel, IrcUser, IrcMessage, ZncBouncerConfig, StatsPortalInfo, NeoStatsConfig, NeoStatsModule } from '../types/irc';
 
 export const UNREAL_HUB_DETAILS: UnrealIrcdHub = {
   host: 'irc.drfun1.com',
@@ -2894,14 +2894,212 @@ export const STATS_DRFUN1IRCD_PORTAL: StatsPortalInfo = {
   domain: 'stats.drfun1ircd.com',
   portalUrl: 'https://stats.drfun1ircd.com',
   title: 'DrFun1IRCD Global Telemetry & Network Health Portal',
-  description: 'Official UnrealIRCd 6.1.4 and ZNC 1.9.1 cluster monitor for irc.drfun1.com & irc.drfun1media.com across 26 Switch SUPERNAP Leaf Nodes.',
+  description: 'Official UnrealIRCd 6.1.4, NeoStats 3.0 (github.com/Macs/NeoStats.git), and ZNC 1.9.1 cluster monitor for irc.drfun1.com & irc.drfun1media.com across 26 Switch SUPERNAP Leaf Nodes.',
   primaryHub: 'irc.drfun1.com (SID: 001 - Switch Las Vegas Core)',
   mediaLeaf: 'irc.drfun1media.com (SID: 026 - UnrealIRCd 6.1.4 + ZNC 1.9.1)',
   zncBouncer: 'irc.drfun1media.com:6697 (SSL) / WebAdmin :5000',
+  neostatsService: 'neostats.drfun1.com (SID: 099 - StatServ / ConnectServ / SecureServ)',
+  neostatsRepo: 'https://github.com/Macs/NeoStats.git',
   lastTelemetrySync: 'Live WebSocket / JSON-RPC Sync',
   globalUptime: '148d 12h 23m 40s (99.999% SLA)',
   totalClients: 8838,
   totalServers: 26,
   totalChannels: 70,
+};
+
+export const NEOSTATS_CONFIG: NeoStatsConfig = {
+  version: 'NeoStats 3.0.2',
+  gitRepo: 'https://github.com/Macs/NeoStats.git',
+  serverName: 'neostats.drfun1.com',
+  sid: '099',
+  hubServer: 'irc.drfun1.com',
+  hubPort: 6697,
+  ssl: true,
+  dbBackend: 'SQLite3 / MySQL 8.0 Cluster with TimescaleDB Time-Series Metric Engine',
+  status: 'active',
+  uptime: '148d 12h 19m 14s',
+  peakUsers: 14290,
+  peakChannels: 74,
+  peakServers: 26,
+  totalConnectionsLogged: 3491820,
+  modules: [
+    {
+      name: 'statserv',
+      description: 'Network-wide statistics engine tracking concurrent user peaks, daily connection rates, netsplit history, and broadcast channel message frequencies.',
+      serviceNick: 'StatServ',
+      version: '3.0.2',
+      status: 'active',
+      commandCount: 142904,
+      memoryUsageKb: 14280
+    },
+    {
+      name: 'connectserv',
+      description: 'Real-time server link telemetry, routing latency monitor, sync burst analyzer, and automatic lag alert system across the 26 Switch SUPERNAP leaf nodes.',
+      serviceNick: 'ConnectServ',
+      version: '3.0.2',
+      status: 'active',
+      commandCount: 38410,
+      memoryUsageKb: 8192
+    },
+    {
+      name: 'secureserv',
+      description: 'Automated drone/botnet shield, DNSBL real-time blocklist verification, open proxy scanner, and Tor exit node tracking with instant OperServ alert integration.',
+      serviceNick: 'SecureServ',
+      version: '3.0.2',
+      status: 'active',
+      commandCount: 92450,
+      memoryUsageKb: 18450
+    },
+    {
+      name: 'seenserv',
+      description: 'Persistent user presence tracker monitoring last seen timestamp, quit message, and active channels across the entire DrFun1 Media broadcast network.',
+      serviceNick: 'SeenServ',
+      version: '3.0.2',
+      status: 'active',
+      commandCount: 48920,
+      memoryUsageKb: 9200
+    },
+    {
+      name: 'webstats',
+      description: 'Live HTML & JSON-RPC telemetry generator serving real-time statistics feeds to stats.drfun1ircd.com and NOC monitoring dashboards.',
+      serviceNick: 'WebStats',
+      version: '3.0.2',
+      status: 'active',
+      commandCount: 284100,
+      memoryUsageKb: 6144
+    },
+    {
+      name: 'hostserv',
+      description: 'Broadcaster virtual host (vHost) manager assigning verified *.drfun1media.com and *.wittlawfirm.com cryptographic hostmasks to studio anchors.',
+      serviceNick: 'HostServ',
+      version: '3.0.2',
+      status: 'loaded',
+      commandCount: 12410,
+      memoryUsageKb: 4096
+    }
+  ],
+  statServMetrics: {
+    hourlyConnects: [
+      120, 184, 210, 340, 480, 720, 950, 1420, 1850, 2410, 3120, 3890,
+      4210, 4820, 5600, 6800, 7420, 8100, 8838, 8640, 7920, 7200, 6400, 5800
+    ],
+    topChannels: [
+      { channel: '#drfun1-primetv', users: 1840, msgRate: '42.4 msg/s' },
+      { channel: '#whitehouse-briefings', users: 1290, msgRate: '28.1 msg/s' },
+      { channel: '#c-band-space', users: 840, msgRate: '18.6 msg/s' },
+      { channel: '#5g-ntn', users: 780, msgRate: '14.2 msg/s' },
+      { channel: '#fcc-spectrum-alerts', users: 620, msgRate: '9.4 msg/s' },
+      { channel: '#switch-supernap', users: 540, msgRate: '12.0 msg/s' },
+      { channel: '#ku-band', users: 510, msgRate: '8.1 msg/s' },
+      { channel: '#mpd-dj-booth', users: 490, msgRate: '16.5 msg/s' }
+    ],
+    topOpers: [
+      { nick: 'DrFun1Admin', server: 'irc.drfun1.com', actions: 142 },
+      { nick: 'WittLaw_NetAdmin', server: 'node1.lasvegas.switch.drfun1.com', actions: 98 },
+      { nick: 'Switch_NOC_Lead', server: 'node2.tahoereno.switch.drfun1.com', actions: 64 },
+      { nick: 'SpaceTeleport_Oper', server: 'node5.space-teleport.switch.drfun1.com', actions: 41 }
+    ],
+    splitEvents: 0,
+    dnsblBlocks: 8420
+  },
+  confSnippet: `/* ==============================================================
+ * NeoStats 3.0.2 Configuration for irc.drfun1.com Network
+ * Source Repository: https://github.com/Macs/NeoStats.git
+ * Authors: Justin "Macs" and NeoStats Development Team
+ * Licensed to: Richard Alan Witt (www.wittlawfirm.com)
+ * ============================================================== */
+
+// Git Clone & Build Instructions:
+// $ git clone https://github.com/Macs/NeoStats.git
+// $ cd NeoStats
+// $ ./configure --prefix=/opt/neostats --enable-epoll --with-unreal --with-openssl
+// $ make && make install
+
+serverinfo {
+    name "neostats.drfun1.com";
+    sid "099";
+    description "Official NeoStats 3.0 Telemetry & StatServ Daemon for irc.drfun1.com";
+    network "DrFun1-Orbit-Mesh";
+};
+
+uplink irc.drfun1.com {
+    host "127.0.0.1";
+    port 6697;
+    password "WittLaw_Switch_NeoStats_Sync_2026";
+    ssl yes;
+    protocol "unreal";
+};
+
+database {
+    driver "sqlite3";
+    file "/opt/neostats/data/neostats.db";
+    sync_interval 60;
+};
+
+module "statserv" {
+    nick "StatServ";
+    user "stats";
+    host "services.drfun1.com";
+    realname "NeoStats StatServ Telemetry Engine (github.com/Macs/NeoStats.git)";
+    log_traffic yes;
+    track_peaks yes;
+};
+
+module "connectserv" {
+    nick "ConnectServ";
+    user "connect";
+    host "services.drfun1.com";
+    realname "NeoStats ConnectServ Link & Ping Monitor";
+    lag_check_interval 30;
+    max_split_threshold 180;
+};
+
+module "secureserv" {
+    nick "SecureServ";
+    user "secure";
+    host "services.drfun1.com";
+    realname "NeoStats SecureServ Drone & DNSBL Sentry";
+    dnsbl "dronebl.org";
+    dnsbl "dnsbl.dronebl.org";
+    action "kline";
+    kline_duration 86400;
+};
+
+module "seenserv" {
+    nick "SeenServ";
+    user "seen";
+    host "services.drfun1.com";
+    realname "NeoStats SeenServ Nick Activity Tracker";
+};
+
+module "webstats" {
+    html_output "/var/www/stats.drfun1ircd.com/html";
+    json_output "/var/www/stats.drfun1ircd.com/telemetry.json";
+    refresh_rate 10;
+};`,
+  unrealLinkSnippet: `/* ==============================================================
+ * UnrealIRCd 6.1.4 Link Block for NeoStats 3.0 (github.com/Macs/NeoStats.git)
+ * Place this block into unrealircd.conf on irc.drfun1.com
+ * ============================================================== */
+
+link neostats.drfun1.com {
+    incoming {
+        mask 127.0.0.1;
+        mask *.drfun1.com;
+    };
+    outgoing {
+        hostname "127.0.0.1";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_NeoStats_Sync_2026";
+    class servers;
+    type services;
+};
+
+/* NeoStats U-lines Configuration */
+ulines {
+    neostats.drfun1.com;
+};`
 };
 

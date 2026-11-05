@@ -137,11 +137,50 @@ export interface StatsPortalInfo {
   primaryHub: string;
   mediaLeaf: string;
   zncBouncer: string;
+  neostatsService?: string;
+  neostatsRepo?: string;
   lastTelemetrySync: string;
   globalUptime: string;
   totalClients: number;
   totalServers: number;
   totalChannels: number;
+}
+
+export interface NeoStatsModule {
+  name: string;
+  description: string;
+  serviceNick: string;
+  version: string;
+  status: 'active' | 'loaded' | 'monitoring';
+  commandCount: number;
+  memoryUsageKb: number;
+}
+
+export interface NeoStatsConfig {
+  version: string;
+  gitRepo: string;
+  serverName: string;
+  sid: string;
+  hubServer: string;
+  hubPort: number;
+  ssl: boolean;
+  dbBackend: string;
+  status: 'linked' | 'synced' | 'active';
+  uptime: string;
+  peakUsers: number;
+  peakChannels: number;
+  peakServers: number;
+  totalConnectionsLogged: number;
+  modules: NeoStatsModule[];
+  statServMetrics: {
+    hourlyConnects: number[];
+    topChannels: { channel: string; users: number; msgRate: string }[];
+    topOpers: { nick: string; server: string; actions: number }[];
+    splitEvents: number;
+    dnsblBlocks: number;
+  };
+  confSnippet: string;
+  unrealLinkSnippet: string;
 }
 
 
