@@ -139,6 +139,8 @@ export interface StatsPortalInfo {
   zncBouncer: string;
   neostatsService?: string;
   neostatsRepo?: string;
+  denoraService?: string;
+  denoraRepo?: string;
   lastTelemetrySync: string;
   globalUptime: string;
   totalClients: number;
@@ -182,5 +184,182 @@ export interface NeoStatsConfig {
   confSnippet: string;
   unrealLinkSnippet: string;
 }
+
+export interface DenoraTldStat {
+  tld: string;
+  country: string;
+  userCount: number;
+  percentage: number;
+  flag: string;
+}
+
+export interface DenoraClientStat {
+  clientName: string;
+  category: 'Desktop' | 'CLI' | 'Web' | 'Bouncer' | 'Mobile';
+  userCount: number;
+  percentage: number;
+}
+
+export interface DenoraChannelStat {
+  channel: string;
+  users: number;
+  linesToday: number;
+  wordsToday: number;
+  topicChanges: number;
+  msgRate: string;
+  modes: string;
+}
+
+export interface DenoraChatterStat {
+  nick: string;
+  lines: number;
+  words: number;
+  smileys: number;
+  kicks: number;
+  modes: number;
+  lastActive: string;
+}
+
+export interface DenoraConfig {
+  version: string;
+  gitRepo: string;
+  serverName: string;
+  sid: string;
+  hubServer: string;
+  hubPort: number;
+  ssl: boolean;
+  dbBackend: string;
+  status: 'linked' | 'synced' | 'active';
+  uptime: string;
+  peakUsersAllTime: number;
+  peakUsersAllTimeDate: string;
+  peakUsersToday: number;
+  peakChannelsAllTime: number;
+  currentChannels: number;
+  totalConnectionsLogged: number;
+  syncIntervalSeconds: number;
+  tldStats: DenoraTldStat[];
+  clientStats: DenoraClientStat[];
+  topChannels: DenoraChannelStat[];
+  topChatters: DenoraChatterStat[];
+  confSnippet: string;
+  unrealLinkSnippet: string;
+  sqlSchemaSnippet: string;
+  gitBuildInstructions: string;
+}
+
+export interface IrcLoginCredentials {
+  nick: string;
+  ident: string;
+  realname: string;
+  serverHost: string;
+  serverPort: number;
+  useSsl: boolean;
+  channel: string;
+  password?: string;
+  autoConnectOnStartup?: boolean;
+  activeNodeId?: string;
+}
+
+export interface IrcLoginSession extends IrcLoginCredentials {
+  connectedAt: number;
+  isConnected: boolean;
+}
+
+export type WittLawStaffRole = 
+  | 'netadmin_root' 
+  | 'head_regulatory_counsel' 
+  | 'systems_architect' 
+  | 'ip_copyright_counsel' 
+  | 'secops_security_admin' 
+  | 'automated_audit_daemon';
+
+export interface WittLawAdminMod {
+  id: string;
+  nick: string;
+  name: string;
+  title: string;
+  firm: string;
+  firmUrl: string;
+  email: string;
+  role: WittLawStaffRole;
+  rankBadge: string;
+  prefix: '~' | '&' | '@' | '%' | '+';
+  hostmask: string;
+  operFlags: string;
+  fccFrn: string;
+  pgpKeyId: string;
+  permissions: string[];
+  assignedChannels: string[];
+  dutyStatus: 'on_duty' | 'active_audit' | 'standby';
+  bio: string;
+  lastActive: string;
+  isBot?: boolean;
+}
+
+export interface DevPlatformApiEndpoint {
+  id: string;
+  name: string;
+  method: 'GET' | 'POST' | 'WS' | 'RPC';
+  endpoint: string;
+  description: string;
+  category: 'unreal_ircd' | 'stats_denora' | 'broadcast_stream' | 'auth_wittlaw';
+  authType: 'Bearer Token' | 'TLS Client Cert' | 'WittLaw PGP Sign';
+  samplePayload?: string;
+  sampleResponse: string;
+}
+
+export interface DevSandboxEnvironment {
+  id: string;
+  name: string;
+  branch: string;
+  gitCommit: string;
+  status: 'online' | 'compiling' | 'testing';
+  port: number;
+  unrealVersion: string;
+  activeDevelopers: number;
+  assignedAdmins: string[];
+  deployTimestamp: string;
+  memoryUsageMb: number;
+}
+
+export interface ModerationAuditAction {
+  id: string;
+  timestamp: string;
+  adminNick: string;
+  adminTitle: string;
+  actionType: 'KICK' | 'KILL' | 'MODE' | 'GLINE' | 'COMPLIANCE_AUDIT' | 'API_KEY_REVOKE' | 'DMCA_TAKEDOWN_REVIEW';
+  target: string;
+  channel?: string;
+  reason: string;
+  legalBasis: string;
+  statutoryReference: string;
+  severity: 'notice' | 'advisory' | 'enforcement' | 'critical';
+}
+
+export interface DevPlatformConfig {
+  platformName: string;
+  platformDomain: 'dev.drfun1media.com';
+  sid: '007';
+  sslPort: 6697;
+  webSocketPort: 8087;
+  httpApiPort: 8443;
+  sshPort: 2202;
+  environment: 'development_staging_sandbox';
+  transitProvider: string;
+  colocation: string;
+  licensee: string;
+  counselOfRecord: 'Richard Alan Witt, Esq. (FRN: 0034981290 / RAW-SATCOM-2026-LIC-0881)';
+  gitRepository: 'git@dev.drfun1media.com:wittlaw/satcom-platform.git';
+  activeBranch: 'main-dev';
+  unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2-dev';
+  totalActiveDevs: number;
+  sandboxEnvironments: DevSandboxEnvironment[];
+  apiEndpoints: DevPlatformApiEndpoint[];
+  wittLawAdmins: WittLawAdminMod[];
+  recentAuditActions: ModerationAuditAction[];
+}
+
+
 
 

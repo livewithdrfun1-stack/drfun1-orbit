@@ -28,3 +28,40 @@
 .custom-nav-scrollbar::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(90deg, rgba(168, 85, 247, 0.95), rgba(56, 189, 248, 0.95));
 }
+
+/* Real-time Scrolling Ticker for Latest Alerts */
+@keyframes tickerMarquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ticker-marquee {
+  display: flex;
+  width: max-content;
+  animation: tickerMarquee 38s linear infinite;
+}
+
+.animate-ticker-marquee:hover {
+  animation-play-state: paused;
+}
+
+.ticker-paused {
+  animation-play-state: paused !important;
+}
+
+.ticker-speed-slow {
+  animation-duration: 55s;
+}
+
+.ticker-speed-normal {
+  animation-duration: 38s;
+}
+
+.ticker-speed-fast {
+  animation-duration: 22s;
+}
+

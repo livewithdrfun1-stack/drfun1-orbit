@@ -50,6 +50,11 @@ import { SlaCalculatorModal } from './components/SlaCalculatorModal';
 import { DomainSearchView } from './components/DomainSearchView';
 import { DomainSearchModal } from './components/DomainSearchModal';
 import { OrbitTrackingMapModal } from './components/OrbitTrackingMapModal';
+import { IrcStartupLoginModal } from './components/IrcStartupLoginModal';
+import { IndexIrcFloatingClient } from './components/IndexIrcFloatingClient';
+import { UnifiedAllInOneIndexHub } from './components/UnifiedAllInOneIndexHub';
+import { DevPlatformWittLawModal } from './components/DevPlatformWittLawModal';
+import { IrcLoginCredentials, IrcLoginSession } from './types/irc';
 import { UserMembershipState } from './types/membership';
 import { DEFAULT_MEMBERSHIP_STATE } from './data/membershipData';
 import { AnopeRankLevel } from './types/ircdAdmin';
@@ -67,7 +72,8 @@ import {
   Server,
   Terminal,
   Calculator,
-  Smartphone
+  Smartphone,
+  User
 } from 'lucide-react';
 
 const STORAGE_KEY_CUSTOM_COMPANIES = 'satcom_directory_custom_companies';
@@ -75,6 +81,7 @@ const STORAGE_KEY_BOOKMARKS = 'satcom_directory_bookmarks';
 const STORAGE_KEY_NOTES = 'satcom_directory_user_notes';
 const STORAGE_KEY_CART = 'drfun1_store_cart_items';
 const STORAGE_KEY_MEMBERSHIP = 'drfun1_user_membership';
+const STORAGE_KEY_IRC_SESSION = 'drfun1_irc_session';
 
 export default function App() {
   // Tab state
@@ -83,6 +90,62 @@ export default function App() {
   const [storeSubTab, setStoreSubTab] = useState<'catalog' | 'domains'>('catalog');
   const [orbitsSubTab, setOrbitsSubTab] = useState<'tracker' | 'altitude_ladder' | 'telemetry_apis'>('tracker');
   const [communitySubTab, setCommunitySubTab] = useState<'discussions' | 'memberships' | 'showcase' | 'events' | 'roster' | 'spacebook'>('discussions');
+
+  // IRC Client Session & Startup Login State
+  const [ircSession, setIrcSession] = useState<IrcLoginSession>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_IRC_SESSION);
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return {
+      nick: 'RichardAlanWitt',
+      ident: 'satcom_web',
+      realname: 'DrFun1 Satcom WebIRC Client (dev.drfun1media.com)',
+      serverHost: 'dev.drfun1media.com',
+      serverPort: 6697,
+      useSsl: true,
+      channel: '#lobby',
+      autoConnectOnStartup: true,
+      activeNodeId: 'dev_drfun1media_node',
+      connectedAt: Date.now(),
+      isConnected: true,
+    };
+  });
+
+  // Prompt login on startup on index unless session dismissed in current tab
+  const [isIrcStartupLoginOpen, setIsIrcStartupLoginOpen] = useState<boolean>(() => {
+    try {
+      const dismissed = sessionStorage.getItem('drfun1_irc_startup_dismissed');
+      return !dismissed;
+    } catch (_) {
+      return true;
+    }
+  });
+
+  const handleIrcLogin = (credentials: IrcLoginCredentials, openFullTab?: boolean) => {
+    const updated: IrcLoginSession = {
+      ...credentials,
+      connectedAt: Date.now(),
+      isConnected: true,
+    };
+    setIrcSession(updated);
+    try {
+      localStorage.setItem(STORAGE_KEY_IRC_SESSION, JSON.stringify(updated));
+      sessionStorage.setItem('drfun1_irc_startup_dismissed', 'true');
+    } catch (_) {}
+    setIsIrcStartupLoginOpen(false);
+
+    if (openFullTab) {
+      handleNavigateTab('irc');
+    }
+  };
+
+  const handleCloseIrcStartupLogin = () => {
+    try {
+      sessionStorage.setItem('drfun1_irc_startup_dismissed', 'true');
+    } catch (_) {}
+    setIsIrcStartupLoginOpen(false);
+  };
 
   const handleNavigateTab = (tab: AppTab) => {
     if (tab === 'domains') {
@@ -179,6 +242,8 @@ export default function App() {
   const [slaSelectedCompany, setSlaSelectedCompany] = useState<SatelliteCompany | null>(null);
   const [isDomainSearchModalOpen, setIsDomainSearchModalOpen] = useState(false);
   const [isOrbitMapModalOpen, setIsOrbitMapModalOpen] = useState(false);
+  const [isDevPlatformOpen, setIsDevPlatformOpen] = useState(false);
+  const [isNewsFeedExpanded, setIsNewsFeedExpanded] = useState(false);
   const [userMembership, setUserMembership] = useState<UserMembershipState>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_MEMBERSHIP);
@@ -539,6 +604,10 @@ export default function App() {
           setStoreSubTab('domains');
         }}
         onOpenOrbitMapModal={() => setIsOrbitMapModalOpen(true)}
+        onOpenIrcLogin={() => setIsIrcStartupLoginOpen(true)}
+        onOpenDevPlatform={() => setIsDevPlatformOpen(true)}
+        ircNick={ircSession.nick}
+        isIrcConnected={ircSession.isConnected}
       />
 
       {/* Real-time Telemetry Stats Banner */}
@@ -628,8 +697,38 @@ export default function App() {
         </main>
       ) : (
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          {/* 1. Real-Time Headline News Ticker from FCC.gov & Major Satellite Outlets */}
+          <SatelliteRssNewsSection
+            mode="ticker-only"
+            onOpenFullNewsroom={() => setIsNewsFeedExpanded((prev) => !prev)}
+          />
+
+          {/* 2. DrFun1 Media Unified Broadcast & IRCD Command Center (Directly under the news ticker) */}
+          <UnifiedAllInOneIndexHub
+            ircSession={ircSession}
+            onUpdateSession={(newSession) => {
+              const updated: IrcLoginSession = { ...ircSession, ...newSession };
+              setIrcSession(updated);
+              try {
+                localStorage.setItem(STORAGE_KEY_IRC_SESSION, JSON.stringify(updated));
+              } catch (_) {}
+            }}
+            onOpenLoginModal={() => setIsIrcStartupLoginOpen(true)}
+            onNavigateToFullIrc={() => handleNavigateTab('irc')}
+          />
+
+          {/* Optional Expanded RSS Newsroom & Archives if toggled from ticker */}
+          {isNewsFeedExpanded && (
+            <div className="animate-in fade-in duration-200">
+              <SatelliteRssNewsSection
+                mode="feed-only"
+                onOpenFullNewsroom={() => setIsNewsFeedExpanded(false)}
+              />
+            </div>
+          )}
+
           {/* Editorial Domain Title & Description */}
-        <div className="border-b border-slate-800/80 pb-6 space-y-3.5">
+          <div className="border-b border-slate-800/80 pb-6 space-y-3.5">
           {/* License Holder Ribbon */}
           <div className="bg-slate-900/60 border border-slate-800 rounded-lg px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex flex-wrap items-center gap-2">
@@ -800,9 +899,6 @@ export default function App() {
               />
             ) : (
               <>
-                {/* Live RSS Headlines from FCC.gov & Major Satellite Outlets with Background Polling */}
-                <SatelliteRssNewsSection />
-
                 {/* Filter Toolbar */}
                 <FilterToolbar
                   filters={filters}
@@ -875,6 +971,13 @@ export default function App() {
                     comparedIds={comparedIds}
                     onToggleCompare={handleToggleCompare}
                   />
+                )}
+
+                {/* FCC & Global Satellite Industry RSS Newsroom Feed & Dockets Archive */}
+                {!isNewsFeedExpanded && (
+                  <div className="pt-4 border-t border-slate-800/80">
+                    <SatelliteRssNewsSection mode="feed-only" />
+                  </div>
                 )}
               </>
             )}
@@ -1353,6 +1456,38 @@ export default function App() {
         onOpenLicense={() => setIsLicenseModalOpen(true)}
         onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
       />
+
+      {/* IRC Network Client Startup Login Modal */}
+      <IrcStartupLoginModal
+        isOpen={isIrcStartupLoginOpen}
+        onClose={handleCloseIrcStartupLogin}
+        onLogin={handleIrcLogin}
+        initialCredentials={ircSession}
+      />
+
+      {/* dev.drfun1media.com Developer Platform & WittLaw Moderation Modal */}
+      <DevPlatformWittLawModal
+        isOpen={isDevPlatformOpen}
+        onClose={() => setIsDevPlatformOpen(false)}
+        onDispatchIrcQuery={(nick) => {
+          handleNavigateTab('irc');
+        }}
+        onJoinDevChannel={(chan) => {
+          handleNavigateTab('irc');
+        }}
+      />
+
+      {/* Persistent Floating / Docked Live IRC Client on Index */}
+      {activeTab === 'directory' && (
+        <IndexIrcFloatingClient
+          session={ircSession}
+          onOpenLoginModal={() => setIsIrcStartupLoginOpen(true)}
+          onOpenFullIrcTab={() => handleNavigateTab('irc')}
+          onDisconnect={() => {
+            setIrcSession((prev) => ({ ...prev, isConnected: false }));
+          }}
+        />
+      )}
     </div>
   );
 }

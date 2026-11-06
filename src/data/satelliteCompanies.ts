@@ -63,6 +63,8 @@ const RAW_SATELLITE_COMPANIES: SatelliteCompany[] = [
     ],
     teleportLocations: ['Over 150 ground stations globally interconnected with major IXPs'],
     regulatoryFilingCountry: 'United States (FCC license authorized)',
+    isGold: true,
+    isPremium: true,
   },
   {
     id: 'eutelsat-oneweb',
@@ -126,6 +128,7 @@ const RAW_SATELLITE_COMPANIES: SatelliteCompany[] = [
     ],
     teleportLocations: ['Rambouillet (France)', 'Caceres (Spain)', 'Makarios (Cyprus)', 'Svalbard (Norway)', 'Yellowknife (Canada)'],
     regulatoryFilingCountry: 'United Kingdom / France (ITU filings and UK Space Agency / ARCEP licenses)',
+    isGold: true,
   },
   {
     id: 'ses',
@@ -189,6 +192,8 @@ const RAW_SATELLITE_COMPANIES: SatelliteCompany[] = [
     ],
     teleportLocations: ['Betzdorf (Luxembourg)', 'Manassas, VA (USA)', 'Hawley, PA (USA)', 'Fuchsstadt (Germany)', 'Perth (Australia)'],
     regulatoryFilingCountry: 'Luxembourg (ITU filings with ILR Luxembourg)',
+    isGold: true,
+    isPremium: true,
   },
   {
     id: 'intelsat',
@@ -252,6 +257,7 @@ const RAW_SATELLITE_COMPANIES: SatelliteCompany[] = [
     ],
     teleportLocations: ['Hagerstown, MD (USA)', 'Riverside, CA (USA)', 'Fuchsstadt (Germany)', 'Castle Rock, CO (USA)'],
     regulatoryFilingCountry: 'United States (FCC license authorized)',
+    isGold: true,
   },
   {
     id: 'viasat-inmarsat',
@@ -315,6 +321,7 @@ const RAW_SATELLITE_COMPANIES: SatelliteCompany[] = [
     ],
     teleportLocations: ['Carlsbad, CA (USA)', 'Burum (Netherlands)', 'Auckland (New Zealand)', 'Fucino (Italy)', 'Perth (Australia)'],
     regulatoryFilingCountry: 'United States & United Kingdom (FCC and Ofcom licenses)',
+    isPremium: true,
   },
   {
     id: 'iridium',
@@ -378,6 +385,7 @@ const RAW_SATELLITE_COMPANIES: SatelliteCompany[] = [
     ],
     teleportLocations: ['Tempe, AZ (USA)', 'Fairbanks, AK (USA)', 'Svalbard (Norway)', 'Punta Arenas (Chile)'],
     regulatoryFilingCountry: 'United States (FCC license authorized)',
+    isPremium: true,
   },
   {
     id: 'telesat',

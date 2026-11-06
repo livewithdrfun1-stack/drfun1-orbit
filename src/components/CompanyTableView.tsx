@@ -6,7 +6,9 @@ import {
   ExternalLink, 
   Bookmark, 
   ArrowRight,
-  Check
+  Check,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 
 interface CompanyTableViewProps {
@@ -121,11 +123,31 @@ export const CompanyTableView: React.FC<CompanyTableViewProps> = ({
                   </td>
 
                   <td className="py-3 px-4 font-medium text-slate-200">
-                    <div 
-                      onClick={() => onSelectCompany(company)}
-                      className="cursor-pointer hover:text-sky-400 font-semibold"
-                    >
-                      {company.name}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <div 
+                        onClick={() => onSelectCompany(company)}
+                        className="cursor-pointer hover:text-sky-400 font-semibold"
+                      >
+                        {company.name}
+                      </div>
+                      {Boolean(company.isGold || company.isVerifiedGold) && (
+                        <span
+                          title="Verified Gold Tier Provider"
+                          className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/40 font-mono"
+                        >
+                          <ShieldCheck className="w-2.5 h-2.5 text-amber-400" />
+                          <span>Gold</span>
+                        </span>
+                      )}
+                      {Boolean(company.isPremium || company.isVerifiedPremium) && (
+                        <span
+                          title="Verified Premium Provider"
+                          className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-purple-500/15 text-purple-300 border border-purple-500/40 font-mono"
+                        >
+                          <Sparkles className="w-2.5 h-2.5 text-purple-400" />
+                          <span>Premium</span>
+                        </span>
+                      )}
                     </div>
                     <div className="text-[11px] text-slate-500 truncate max-w-xs">
                       {company.legalName}

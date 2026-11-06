@@ -82,6 +82,13 @@ export interface SatelliteCompany {
   regulatoryFilingCountry: string;
   isCustom?: boolean;
   switchInterconnect?: SwitchInterconnectProfile;
+  isGold?: boolean;
+  isPremium?: boolean;
+  isVerifiedGold?: boolean;
+  isVerifiedPremium?: boolean;
+  isVerified?: boolean;
+  isTopTier?: boolean;
+  tier?: 'Gold' | 'Premium' | string;
 }
 
 export interface CompanyFilterState {

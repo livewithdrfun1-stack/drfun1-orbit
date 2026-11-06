@@ -10,7 +10,9 @@ import {
   ArrowRight,
   Radio,
   Layers,
-  Phone
+  Phone,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 
 interface CompanyCardProps {
@@ -34,18 +36,60 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({
 }) => {
   const primaryContact = company.contacts && company.contacts.length > 0 ? company.contacts[0] : null;
 
+  const isGold = Boolean(
+    company.isGold ||
+    company.isVerifiedGold ||
+    (company.isVerified && company.tier === 'Gold')
+  );
+
+  const isPremium = Boolean(
+    company.isPremium ||
+    company.isVerifiedPremium ||
+    (company.isVerified && company.tier === 'Premium')
+  );
+
   return (
     <div className="bg-slate-900/40 hover:bg-slate-900/70 border border-slate-800/80 hover:border-slate-700/80 rounded-xl p-5 flex flex-col justify-between transition-all duration-150 group">
       <div>
         {/* Top Header: Title & Quick Actions */}
         <div className="flex items-start justify-between gap-3 mb-2">
           <div className="flex-1 min-w-0">
-            <h3 
-              onClick={() => onSelectCompany(company)}
-              className="text-base font-semibold text-slate-100 hover:text-sky-400 cursor-pointer truncate transition-colors"
-            >
-              {company.name}
-            </h3>
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <h3 
+                onClick={() => onSelectCompany(company)}
+                className="text-base font-semibold text-slate-100 hover:text-sky-400 cursor-pointer truncate transition-colors"
+              >
+                {company.name}
+              </h3>
+
+              {/* Verified Gold Status Badge */}
+              {isGold && (
+                <span
+                  data-testid="badge-gold"
+                  aria-label="Verified Gold Status"
+                  title="Verified Gold Tier Provider: Certified fleet infrastructure & verified SLA availability"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10 font-mono"
+                >
+                  <ShieldCheck className="w-3 h-3 text-amber-400" />
+                  <span className="text-amber-400/90 font-medium">Verified</span>
+                  <span>Gold</span>
+                </span>
+              )}
+
+              {/* Verified Premium Status Badge */}
+              {isPremium && (
+                <span
+                  data-testid="badge-premium"
+                  aria-label="Verified Premium Status"
+                  title="Verified Premium Provider: Priority bandwidth routing & VIP NOC teleport interconnect"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-500/15 text-purple-300 border border-purple-500/40 shadow-sm shadow-purple-500/10 font-mono"
+                >
+                  <Sparkles className="w-3 h-3 text-purple-400" />
+                  <span className="text-purple-400/90 font-medium">Verified</span>
+                  <span>Premium</span>
+                </span>
+              )}
+            </div>
             <p className="text-xs text-slate-500 truncate mt-0.5">
               {company.legalName}
             </p>

@@ -69,10 +69,21 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
   onOpenIrcdAdmin,
   onOpenZncWebAdmin,
 }) => {
-  // Connection state
   const [activeNodeId, setActiveNodeId] = useState<string>('switch_node_1');
-  const [currentNick, setCurrentNick] = useState<string>('RichardAlanWitt');
-  const [currentChannel, setCurrentChannel] = useState<string>('#drfun1-media');
+  const [currentNick, setCurrentNick] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('drfun1_irc_session');
+      if (saved) return JSON.parse(saved).nick || 'RichardAlanWitt';
+    } catch (_) {}
+    return 'RichardAlanWitt';
+  });
+  const [currentChannel, setCurrentChannel] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('drfun1_irc_session');
+      if (saved) return JSON.parse(saved).channel || '#lobby';
+    } catch (_) {}
+    return '#lobby';
+  });
   const [isMultistreamCombinedMode, setIsMultistreamCombinedMode] = useState<boolean>(false);
   const [isConnected, setIsConnected] = useState<boolean>(true);
   const [isReconnecting, setIsReconnecting] = useState<boolean>(false);

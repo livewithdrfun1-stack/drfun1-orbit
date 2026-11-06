@@ -23,7 +23,8 @@ import {
   Terminal,
   Globe,
   Crown,
-  Search
+  Search,
+  Cpu
 } from 'lucide-react';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { UserMembershipState } from '../types/membership';
@@ -52,6 +53,10 @@ interface HeaderProps {
   onOpenUnrealSearch?: () => void;
   onOpenDomainSearch?: () => void;
   onOpenOrbitMapModal?: () => void;
+  onOpenIrcLogin?: () => void;
+  onOpenDevPlatform?: () => void;
+  ircNick?: string;
+  isIrcConnected?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -71,6 +76,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenUnrealSearch,
   onOpenDomainSearch,
   onOpenOrbitMapModal,
+  onOpenIrcLogin,
+  onOpenDevPlatform,
+  ircNick,
+  isIrcConnected = true,
   activeOperRank,
   cartCount = 0,
   onOpenCart,
@@ -246,6 +255,39 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </button>
             )}
+
+            {/* dev.drfun1media.com Developer Platform & WittLaw Moderation */}
+            {onOpenDevPlatform && (
+              <button
+                onClick={onOpenDevPlatform}
+                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-purple-950/70 via-indigo-950/70 to-sky-950/70 text-sky-300 hover:text-white hover:border-sky-400 border-sky-500/40 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-purple-950/30"
+                title="dev.drfun1media.com Developer Platform - Supervised by The Law Office of Richard A. Witt LLC (www.wittlawfirm.com)"
+              >
+                <Cpu className="w-3.5 h-3.5 text-sky-400" />
+                <span className="hidden sm:inline font-bold">Dev Platform</span>
+                <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-purple-400/20 text-purple-300 font-bold">
+                  WittLaw
+                </span>
+              </button>
+            )}
+
+            {/* IRC Client Status & Startup Login Action */}
+            <button
+              onClick={() => {
+                if (onOpenIrcLogin) {
+                  onOpenIrcLogin();
+                } else {
+                  setActiveTab('irc');
+                }
+              }}
+              className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 text-purple-300 hover:text-white hover:bg-purple-900/80 border-purple-500/50 hover:border-purple-400 transition-colors flex items-center gap-1.5 cursor-pointer font-mono shadow-sm shadow-purple-950/30"
+              title="UnrealIRCd 6.1.4 Client - irc.drfun1.com:6697 (SSL) - Click to Login or Open Chat"
+            >
+              <Terminal className="w-3.5 h-3.5 text-purple-400" />
+              <span className="hidden sm:inline font-bold">IRC Client:</span>
+              <span className="text-emerald-300 font-bold max-w-[100px] truncate">{ircNick || 'RichardAlanWitt'}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+            </button>
 
             {/* Dedicated Orbit Tracking Map Quick Launcher */}
             <button

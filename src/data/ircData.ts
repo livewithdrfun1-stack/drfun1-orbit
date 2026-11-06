@@ -1,4 +1,4 @@
-import { SwitchDedicatedNode, UnrealIrcdHub, IrcChannel, IrcUser, IrcMessage, ZncBouncerConfig, StatsPortalInfo, NeoStatsConfig, NeoStatsModule } from '../types/irc';
+import { SwitchDedicatedNode, UnrealIrcdHub, IrcChannel, IrcUser, IrcMessage, ZncBouncerConfig, StatsPortalInfo, NeoStatsConfig, NeoStatsModule, DenoraConfig, WittLawAdminMod, DevPlatformConfig, DevPlatformApiEndpoint, DevSandboxEnvironment, ModerationAuditAction } from '../types/irc';
 
 export const UNREAL_HUB_DETAILS: UnrealIrcdHub = {
   host: 'irc.drfun1.com',
@@ -10,6 +10,7 @@ export const UNREAL_HUB_DETAILS: UnrealIrcdHub = {
   colocation: 'Switch SUPERNAP Core Campus (www.switch.com)',
   licensee: 'Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com)',
   leafNodes: [
+    'dev.drfun1media.com',
     'irc.drfun1media.com',
     'node1.lasvegas.switch.drfun1.com',
     'node2.tahoereno.switch.drfun1.com',
@@ -43,6 +44,50 @@ export const UNREAL_HUB_DETAILS: UnrealIrcdHub = {
 };
 
 export const SWITCH_DEDICATED_NODES: SwitchDedicatedNode[] = [
+  {
+    id: 'dev_drfun1media_node',
+    name: 'DrFun1 Media Development Gateway & Broadcast Hub (dev.drfun1media.com)',
+    subdomain: 'dev.drfun1media.com',
+    host: 'dev.drfun1media.com',
+    port: 6697,
+    location: 'Las Vegas Switch SUPERNAP Core Teleport & Cloud Gateway',
+    campusName: 'Switch SUPERNAP Dev & Broadcast Array (100% Green Energy)',
+    tier: 'Tier 5 Platinum Development & Live Streaming Ingest',
+    fiberCapacity: '100 Gbps Low-Latency Optical Cross-Connect + WebSocket Bridge',
+    status: 'active',
+    latencyMs: 1.2,
+    usersOnline: 8838,
+    leafPeers: 27,
+    unrealVersion: 'UnrealIRCd 6.1.4-dev + WebSocket Bridge + Fubo/Twitch Sync',
+    sslFingerprint: 'SHA256:7D:E4:22:B8:81:CF:5A:91:4B:D2:66:99:20:EB:55:FF:01:77',
+    transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: '007',
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 74,
+      syncedNicks: 8838,
+      syncLatencyMs: 1.2,
+      lastBurst: '0.2s ago',
+      linkProtocol: 'Unreal6104-TLS',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384',
+    },
+    unrealLinkBlock: `/* UnrealIRCd 6.1.4 Leaf Link Block for dev.drfun1media.com -> irc.drfun1.com */
+link irc.drfun1.com {
+    incoming {
+        mask *.drfun1.com;
+    };
+    outgoing {
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Leaf_DevDrFun1Media_Sync_2026";
+    class servers;
+    type leaf;
+};`,
+  },
   {
     id: 'drfun1media_leaf_node',
     name: 'DrFun1 Media UnrealIRCd & ZNC Broadcast Node (irc.drfun1media.com)',
@@ -1145,6 +1190,42 @@ link irc.drfun1.com {
 
 
 export const ALL_DRFUN1_MEDIA_CHANNELS: IrcChannel[] = [
+  {
+    name: '#lobby',
+    topic: 'Official DrFun1 Media Flagship Network Lobby | Fubo.tv Live Sports & Twitch.tv Stream Relay | dev.drfun1media.com:6697 (SSL)',
+    category: 'media_channels',
+    frequencyBand: 'All-Band Flagship / 400G DWDM',
+    userCount: 8838,
+    modes: '+sntk 100G',
+    isStreamActive: true,
+    mediaType: 'Fubo.tv Sports & Twitch.tv Stream Relay',
+    mediaBitrate: 'Uncompressed SMPTE 2110 / 4K UHD',
+    unrealLeafSync: true,
+  },
+  {
+    name: '#dev-platform',
+    topic: 'dev.drfun1media.com Development Platform, Sandbox CI/CD & API Gateway | UnrealIRCd 6.1 WebSocket JSON-RPC | WittLaw Admins & Mods On-Duty (www.wittlawfirm.com)',
+    category: 'teleport_infrastructure',
+    frequencyBand: '100G Optical WebSocket & SSH Dev Port 2202',
+    userCount: 1420,
+    modes: '+sntk 100G',
+    isStreamActive: true,
+    mediaType: 'Development Sandbox Live Console & JSON-RPC Stream',
+    mediaBitrate: 'Real-Time WebRTC / WebSocket Stream',
+    unrealLeafSync: true,
+  },
+  {
+    name: '#wittlaw-admins',
+    topic: 'The Law Office of Richard A. Witt LLC (www.wittlawfirm.com) Executive Legal, FCC Compliance & Network Moderation Center | NetAdmin & Oper Roster',
+    category: 'legal_spectrum',
+    frequencyBand: 'Encrypted Legal Teleport Ring / TLS 1.3',
+    userCount: 65,
+    modes: '+sntik 100G',
+    isStreamActive: true,
+    mediaType: 'Encrypted Administrative Audit Trail & Moderation Dispatch',
+    mediaBitrate: 'AES-256 Encrypted Telemetry',
+    unrealLeafSync: true,
+  },
   {
     name: '#drfun1-primetv',
     topic: 'DrFun1 Media Prime TV 4K (WDF1-TV) Official Broadcast Room | FCC Part 73/25 | Ka-Band Laser Teleport',
@@ -2325,8 +2406,49 @@ export const INITIAL_IRC_USERS: IrcUser[] = [
     prefix: '~',
     role: 'Licensed Administrator & NetAdmin Master DJ (SRA)',
     hostmask: 'richard@wittlawfirm.com/licensee',
-    organization: 'The Law Office of Richard A. Witt LLC',
-    channels: ['#drfun1-media', '#all-bands', '#wittlaw-spectrum', '#switch-supernap', '#drfun1-tv', '#drfun1-radio', '#starlink', '#tmobile-direct'],
+    organization: 'The Law Office of Richard A. Witt LLC (www.wittlawfirm.com)',
+    channels: ['#lobby', '#dev-platform', '#wittlaw-admins', '#drfun1-media', '#all-bands', '#wittlaw-spectrum', '#switch-supernap', '#drfun1-tv', '#drfun1-radio', '#starlink', '#tmobile-direct'],
+  },
+  {
+    nick: 'EleanorVance_Esq',
+    prefix: '&',
+    role: 'Head FCC Regulatory Counsel & Lead Network Moderator',
+    hostmask: 'vance@wittlawfirm.com/regulatory-lead',
+    organization: 'The Law Office of Richard A. Witt LLC (www.wittlawfirm.com)',
+    channels: ['#lobby', '#dev-platform', '#wittlaw-admins', '#drfun1-media', '#wittlaw-spectrum'],
+  },
+  {
+    nick: 'MarcusWitt_PE',
+    prefix: '&',
+    role: 'Principal Satcom Systems Architect & DevOps Lead',
+    hostmask: 'marcus@wittlawfirm.com/devops-lead',
+    organization: 'The Law Office of Richard A. Witt LLC (www.wittlawfirm.com)',
+    channels: ['#lobby', '#dev-platform', '#wittlaw-admins', '#switch-supernap', '#c-band', '#ka-band'],
+  },
+  {
+    nick: 'SarahJenkins_Esq',
+    prefix: '@',
+    role: 'IP, Copyright & Digital Media Counsel (DMCA/Moderation)',
+    hostmask: 'jenkins@wittlawfirm.com/dmca-counsel',
+    organization: 'The Law Office of Richard A. Witt LLC (www.wittlawfirm.com)',
+    channels: ['#lobby', '#dev-platform', '#wittlaw-admins', '#drfun1-media', '#fubo-sports'],
+  },
+  {
+    nick: 'DavidChen_CISSP',
+    prefix: '@',
+    role: 'Lead Network Security & Cryptographic Auditor',
+    hostmask: 'dchen@wittlawfirm.com/secops-mod',
+    organization: 'The Law Office of Richard A. Witt LLC (www.wittlawfirm.com)',
+    channels: ['#lobby', '#dev-platform', '#wittlaw-admins', '#switch-supernap', '#risingnet'],
+  },
+  {
+    nick: 'WittLaw_AuditBot',
+    prefix: '@',
+    role: 'WittLaw Compliance & Spectrum Audit Daemon',
+    hostmask: 'audit@bot.wittlawfirm.com',
+    isBot: true,
+    organization: 'The Law Office of Richard A. Witt LLC (www.wittlawfirm.com)',
+    channels: ['#lobby', '#dev-platform', '#wittlaw-admins', '#all-bands', '#wittlaw-spectrum'],
   },
   {
     nick: 'DrFun1_Admin',
@@ -2334,7 +2456,7 @@ export const INITIAL_IRC_USERS: IrcUser[] = [
     role: 'Station Founder & Executive DJ (~q)',
     hostmask: 'founder@drfun1.com/admin',
     organization: 'DrFun1 Media Inc.',
-    channels: ['#drfun1-media', '#drfun1-tv', '#drfun1-radio', '#switch-supernap', '#qualcomm-snapdragon'],
+    channels: ['#lobby', '#dev-platform', '#drfun1-media', '#drfun1-tv', '#drfun1-radio', '#switch-supernap', '#qualcomm-snapdragon'],
   },
   {
     nick: 'DJ_OrbitNova',
@@ -2342,7 +2464,7 @@ export const INITIAL_IRC_USERS: IrcUser[] = [
     role: 'Channel Operator & Resident DJ (@o)',
     hostmask: 'orbitnova@dj.drfun1.com',
     organization: 'DrFun1 Radio DJ Roster',
-    channels: ['#drfun1-radio', '#drfun1-media', '#drfun1-tv', '#all-bands'],
+    channels: ['#lobby', '#drfun1-radio', '#drfun1-media', '#drfun1-tv', '#all-bands'],
   },
   {
     nick: 'DrFun1_Tech',
@@ -2350,7 +2472,7 @@ export const INITIAL_IRC_USERS: IrcUser[] = [
     role: 'IRCOp & Services Operator DJ (SO / @o)',
     hostmask: 'tech@oper.drfun1.com',
     organization: 'DrFun1 Operations & Teleport Engineering',
-    channels: ['#drfun1-media', '#switch-supernap', '#risingnet', '#starlink', '#drfun1-radio'],
+    channels: ['#lobby', '#dev-platform', '#drfun1-media', '#switch-supernap', '#risingnet', '#starlink', '#drfun1-radio'],
   },
   {
     nick: 'DJ_VinylKev',
@@ -2358,7 +2480,7 @@ export const INITIAL_IRC_USERS: IrcUser[] = [
     role: 'Super Operator & Live DJ (&a)',
     hostmask: 'vinylkev@dj.drfun1.com',
     organization: 'DrFun1 DJ Deck Roster',
-    channels: ['#drfun1-radio', '#drfun1-media', '#fubo-sports'],
+    channels: ['#lobby', '#drfun1-radio', '#drfun1-media', '#fubo-sports'],
   },
   {
     nick: 'Switch_NOC_Bot',
@@ -2367,7 +2489,7 @@ export const INITIAL_IRC_USERS: IrcUser[] = [
     hostmask: 'daemon@node1.lasvegas.switch.drfun1.com',
     isBot: true,
     organization: 'Switch SUPERNAP (www.switch.com)',
-    channels: ['#drfun1-media', '#switch-supernap', '#all-bands', '#ka-band', '#5g-ntn'],
+    channels: ['#lobby', '#drfun1-media', '#switch-supernap', '#all-bands', '#ka-band', '#5g-ntn'],
   },
   {
     nick: 'RisingNet_Transit_Bot',
@@ -2376,7 +2498,7 @@ export const INITIAL_IRC_USERS: IrcUser[] = [
     hostmask: 'bot@backbone.risingnet.com',
     isBot: true,
     organization: 'RisingNet (www.risingnet.com)',
-    channels: ['#drfun1-media', '#risingnet', '#all-bands'],
+    channels: ['#lobby', '#drfun1-media', '#risingnet', '#all-bands'],
   },
   {
     nick: 'Starlink_Mission_Bot',
@@ -2385,7 +2507,7 @@ export const INITIAL_IRC_USERS: IrcUser[] = [
     hostmask: 'relay@starlink.drfun1.com',
     isBot: true,
     organization: 'Starlink (SpaceX)',
-    channels: ['#starlink', '#tmobile-direct', '#all-bands'],
+    channels: ['#lobby', '#starlink', '#tmobile-direct', '#all-bands'],
   },
   {
     nick: 'Carrier_NTN_Bridge',
@@ -2394,7 +2516,7 @@ export const INITIAL_IRC_USERS: IrcUser[] = [
     hostmask: 'bridge@ntn.drfun1.com',
     isBot: true,
     organization: '3GPP Non-Terrestrial Network Alliance',
-    channels: ['#tmobile-direct', '#att-spacemobile', '#verizon-satcom', '#5g-ntn'],
+    channels: ['#lobby', '#tmobile-direct', '#att-spacemobile', '#verizon-satcom', '#5g-ntn'],
   },
   {
     nick: 'SatcomGuru',
@@ -2402,7 +2524,7 @@ export const INITIAL_IRC_USERS: IrcUser[] = [
     role: 'Senior RF Payload Engineer',
     hostmask: 'guru@satcom.space/ops',
     organization: 'Space RF Labs',
-    channels: ['#drfun1-media', '#ka-band', '#ku-band', '#optical-laser', '#starlink'],
+    channels: ['#lobby', '#drfun1-media', '#ka-band', '#ku-band', '#optical-laser', '#starlink'],
   },
   {
     nick: 'OrbitFlightDirector',
@@ -2410,7 +2532,7 @@ export const INITIAL_IRC_USERS: IrcUser[] = [
     role: 'LEO Mission Flight Director',
     hostmask: 'flight@orbit.space/ops',
     organization: 'LEO Constellation Ops',
-    channels: ['#drfun1-media', '#all-bands', '#telesat', '#ast-spacemobile'],
+    channels: ['#lobby', '#drfun1-media', '#all-bands', '#telesat', '#ast-spacemobile'],
   },
   {
     nick: 'TeleportDutyEng',
@@ -2418,7 +2540,7 @@ export const INITIAL_IRC_USERS: IrcUser[] = [
     role: 'Ground Station Engineer',
     hostmask: 'duty@switch.teleport.earth',
     organization: 'Switch Earth Station',
-    channels: ['#switch-supernap', '#c-band', '#x-band', '#quantum-fiber'],
+    channels: ['#lobby', '#switch-supernap', '#c-band', '#x-band', '#quantum-fiber'],
   },
   {
     nick: 'WirelessCarrierOps',
@@ -2426,11 +2548,441 @@ export const INITIAL_IRC_USERS: IrcUser[] = [
     role: '3GPP NTN Carrier Engineer',
     hostmask: 'ops@5g-carrier.drfun1.com',
     organization: 'DrFun1 Wireless Carrier',
-    channels: ['#5g-ntn', '#s-band', '#tmobile-direct', '#att-spacemobile'],
+    channels: ['#lobby', '#5g-ntn', '#s-band', '#tmobile-direct', '#att-spacemobile'],
   },
 ];
 
+export const WITTLAW_ADMINS_MODS: WittLawAdminMod[] = [
+  {
+    id: 'wittlaw_1',
+    nick: 'RichardAlanWitt',
+    name: 'Richard Alan Witt, Esq.',
+    title: 'Senior Managing Partner, FCC Licensee & NetAdmin Master',
+    firm: 'The Law Office of Richard A. Witt LLC',
+    firmUrl: 'www.wittlawfirm.com',
+    email: 'richard@wittlawfirm.com',
+    role: 'netadmin_root',
+    rankBadge: 'Root Admin (~q)',
+    prefix: '~',
+    hostmask: 'richard@wittlawfirm.com/licensee',
+    operFlags: '+oaqsh -N (Full Network Root)',
+    fccFrn: '0034981290',
+    pgpKeyId: '0x9F4C82A1B7E20914',
+    permissions: ['ALL_PERMISSIONS', 'SRA_LICENSE_AUTHORITY', 'GLOBAL_KILL', 'RAW_UNREAL_OPER', 'ROOT_DEV_PLATFORM'],
+    assignedChannels: ['#lobby', '#dev-platform', '#wittlaw-admins', '#drfun1-media', '#all-bands', '#wittlaw-spectrum'],
+    dutyStatus: 'on_duty',
+    bio: 'Lead counsel of record and licensed operator under FCC Part 25/73 and international ITU allocations. Oversees network architecture, satellite spectrum filings, and master UnrealIRCd link security.',
+    lastActive: 'Just now',
+  },
+  {
+    id: 'wittlaw_2',
+    nick: 'EleanorVance_Esq',
+    name: 'Eleanor Vance, Esq.',
+    title: 'Partner, Lead Regulatory Counsel & Chief Moderator',
+    firm: 'The Law Office of Richard A. Witt LLC',
+    firmUrl: 'www.wittlawfirm.com',
+    email: 'eleanor.vance@wittlawfirm.com',
+    role: 'head_regulatory_counsel',
+    rankBadge: 'Services Admin (&a)',
+    prefix: '&',
+    hostmask: 'vance@wittlawfirm.com/regulatory-lead',
+    operFlags: '+oa -N (Services Admin & Compliance)',
+    fccFrn: '0034981290-R01',
+    pgpKeyId: '0x5A118DE4C72B9031',
+    permissions: ['CHANNEL_MODERATION', 'REGULATORY_DISPATCH', 'GLINE_AUTHORITY', 'BROADCAST_COMPLIANCE'],
+    assignedChannels: ['#lobby', '#dev-platform', '#wittlaw-admins', '#drfun1-media', '#wittlaw-spectrum'],
+    dutyStatus: 'on_duty',
+    bio: 'Specialist in federal communications law, satellite orbital debris mitigation plans, and broadcast playout compliance. Head of developer conduct and moderation for dev.drfun1media.com.',
+    lastActive: '1m ago',
+  },
+  {
+    id: 'wittlaw_3',
+    nick: 'MarcusWitt_PE',
+    name: 'Marcus Witt, PE',
+    title: 'Principal Systems Architect & DevOps Engineering Lead',
+    firm: 'The Law Office of Richard A. Witt LLC',
+    firmUrl: 'www.wittlawfirm.com',
+    email: 'marcus.witt@wittlawfirm.com',
+    role: 'systems_architect',
+    rankBadge: 'Super Operator (&a)',
+    prefix: '&',
+    hostmask: 'marcus@wittlawfirm.com/devops-lead',
+    operFlags: '+oa (DevOps & Infrastructure Oper)',
+    fccFrn: '0034981290-E02',
+    pgpKeyId: '0x8B342C9901FA4721',
+    permissions: ['CI_CD_DEPLOY', 'SANDBOX_MANAGEMENT', 'WEBSOCKET_API_KEYS', 'LEAF_NODE_CONFIG'],
+    assignedChannels: ['#lobby', '#dev-platform', '#wittlaw-admins', '#switch-supernap', '#c-band', '#ka-band'],
+    dutyStatus: 'on_duty',
+    bio: 'Licensed Professional Engineer (PE) leading optical cross-connect architecture, 100G RisingNet peering, and continuous integration pipelines on dev.drfun1media.com.',
+    lastActive: '3m ago',
+  },
+  {
+    id: 'wittlaw_4',
+    nick: 'SarahJenkins_Esq',
+    name: 'Sarah Jenkins, Esq.',
+    title: 'Senior Associate, IP & DMCA Digital Rights Counsel',
+    firm: 'The Law Office of Richard A. Witt LLC',
+    firmUrl: 'www.wittlawfirm.com',
+    email: 'sjenkins@wittlawfirm.com',
+    role: 'ip_copyright_counsel',
+    rankBadge: 'Operator & Mod (@o)',
+    prefix: '@',
+    hostmask: 'jenkins@wittlawfirm.com/dmca-counsel',
+    operFlags: '+o (Content & Copyright Oper)',
+    fccFrn: '0034981290-L03',
+    pgpKeyId: '0x334DF889AA120B44',
+    permissions: ['DMCA_TAKEDOWN_REVIEW', 'STREAM_CLEARANCE', 'COPYRIGHT_AUDITING', 'KICK_OPERATOR'],
+    assignedChannels: ['#lobby', '#dev-platform', '#wittlaw-admins', '#drfun1-media', '#fubo-sports'],
+    dutyStatus: 'active_audit',
+    bio: 'Oversees intellectual property clearances, live sports broadcasting synchronization rights for Fubo.tv relay, and digital millennium copyright compliance across all media feeds.',
+    lastActive: '6m ago',
+  },
+  {
+    id: 'wittlaw_5',
+    nick: 'DavidChen_CISSP',
+    name: 'David Chen, CISSP',
+    title: 'Director of Network Security & Cryptographic Auditing',
+    firm: 'The Law Office of Richard A. Witt LLC',
+    firmUrl: 'www.wittlawfirm.com',
+    email: 'dchen@wittlawfirm.com',
+    role: 'secops_security_admin',
+    rankBadge: 'Operator & Mod (@o)',
+    prefix: '@',
+    hostmask: 'dchen@wittlawfirm.com/secops-mod',
+    operFlags: '+o (Security & Cryptography Oper)',
+    fccFrn: '0034981290-S04',
+    pgpKeyId: '0x77EE1120BB890123',
+    permissions: ['TLS_CERT_INSPECTION', 'DDoS_MITIGATION', 'BOT_TOKEN_AUDIT', 'ZERO_TRUST_VERIFY'],
+    assignedChannels: ['#lobby', '#dev-platform', '#wittlaw-admins', '#switch-supernap', '#risingnet'],
+    dutyStatus: 'on_duty',
+    bio: 'Directs zero-trust security postures, TLS 1.3 certificate rotation, DDoS packet scrubbing via RisingNet CleanPipe, and API token revocation for developer clients.',
+    lastActive: '4m ago',
+  },
+  {
+    id: 'wittlaw_6',
+    nick: 'WittLaw_AuditBot',
+    name: 'WittLaw Automated Compliance Daemon',
+    title: 'Automated Regulatory Telemetry & Spectrum Audit Service',
+    firm: 'The Law Office of Richard A. Witt LLC',
+    firmUrl: 'www.wittlawfirm.com',
+    email: 'audit@wittlawfirm.com',
+    role: 'automated_audit_daemon',
+    rankBadge: 'Audit Daemon (@o)',
+    prefix: '@',
+    hostmask: 'audit@bot.wittlawfirm.com',
+    operFlags: '+o (Automated Oper Service)',
+    fccFrn: '0034981290',
+    pgpKeyId: '0x1010AABBCCDD0011',
+    permissions: ['AUTO_LOGGING', 'SPECTRUM_MONITOR', 'DISPATCH_ALERTS', 'JSON_RPC_AUDIT'],
+    assignedChannels: ['#lobby', '#dev-platform', '#wittlaw-admins', '#all-bands', '#wittlaw-spectrum'],
+    dutyStatus: 'active_audit',
+    bio: 'Continuous automated bot that queries UnrealIRCd JSON-RPC and Denora databases every 5 seconds to log operator actions, band power levels, and developer API compliance.',
+    lastActive: 'Continuous',
+    isBot: true,
+  },
+];
+
+export const DEV_PLATFORM_CONFIG: DevPlatformConfig = {
+  platformName: 'dev.drfun1media.com Developer Platform & Sandbox',
+  platformDomain: 'dev.drfun1media.com',
+  sid: '007',
+  sslPort: 6697,
+  webSocketPort: 8087,
+  httpApiPort: 8443,
+  sshPort: 2202,
+  environment: 'development_staging_sandbox',
+  transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)',
+  colocation: 'Switch SUPERNAP Las Vegas (www.switch.com)',
+  licensee: 'The Law Office of Richard A. Witt LLC (www.wittlawfirm.com)',
+  counselOfRecord: 'Richard Alan Witt, Esq. (FRN: 0034981290 / RAW-SATCOM-2026-LIC-0881)',
+  gitRepository: 'git@dev.drfun1media.com:wittlaw/satcom-platform.git',
+  activeBranch: 'main-dev',
+  unrealVersion: 'UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2-dev',
+  totalActiveDevs: 1420,
+  sandboxEnvironments: [
+    {
+      id: 'sandbox_main',
+      name: 'Primary Dev Trunk (dev.drfun1media.com)',
+      branch: 'main-dev',
+      gitCommit: '9a8b7c4 "feat: unreal 6.1.4 json-rpc & wittlaw admin mod dispatch"',
+      status: 'online',
+      port: 6697,
+      unrealVersion: 'UnrealIRCd 6.1.4-dev',
+      activeDevelopers: 840,
+      assignedAdmins: ['RichardAlanWitt', 'MarcusWitt_PE'],
+      deployTimestamp: '12m ago',
+      memoryUsageMb: 1420,
+    },
+    {
+      id: 'sandbox_staging',
+      name: 'Staging Alpha (staging.dev.drfun1media.com)',
+      branch: 'staging/fubo-twitch-relay',
+      gitCommit: '3f2e1d0 "feat: quad-screen 4k broadcast websocket bridge"',
+      status: 'online',
+      port: 6698,
+      unrealVersion: 'UnrealIRCd 6.1.4-dev',
+      activeDevelopers: 390,
+      assignedAdmins: ['SarahJenkins_Esq', 'DavidChen_CISSP'],
+      deployTimestamp: '25m ago',
+      memoryUsageMb: 980,
+    },
+    {
+      id: 'sandbox_ntn_testbed',
+      name: '3GPP NTN 5G Sandbox (ntn.dev.drfun1media.com)',
+      branch: 'feature/3gpp-rel18-ntn-direct',
+      gitCommit: '7e6d5c4 "fix: band n255 direct-to-handset gtp-u tunnel latency"',
+      status: 'online',
+      port: 6699,
+      unrealVersion: 'UnrealIRCd 6.1.4-dev',
+      activeDevelopers: 190,
+      assignedAdmins: ['EleanorVance_Esq', 'MarcusWitt_PE'],
+      deployTimestamp: '1h ago',
+      memoryUsageMb: 760,
+    },
+  ],
+  apiEndpoints: [
+    {
+      id: 'api_unreal_rpc',
+      name: 'UnrealIRCd JSON-RPC 2.0 API',
+      method: 'POST',
+      endpoint: 'https://dev.drfun1media.com:8443/api/v1/rpc',
+      description: 'Programmatically query server stats, inspect user channels, dispatch system notices, and control oper modes.',
+      category: 'unreal_ircd',
+      authType: 'WittLaw PGP Sign',
+      samplePayload: '{\n  "jsonrpc": "2.0",\n  "method": "server.get_stats",\n  "params": { "sid": "007" },\n  "id": 1\n}',
+      sampleResponse: '{\n  "jsonrpc": "2.0",\n  "result": {\n    "server": "dev.drfun1media.com",\n    "users": 8838,\n    "channels": 74,\n    "latency_ms": 1.2,\n    "licensee": "www.wittlawfirm.com"\n  },\n  "id": 1\n}',
+    },
+    {
+      id: 'api_websocket_stream',
+      name: 'Broadcast Telemetry WebSocket',
+      method: 'WS',
+      endpoint: 'wss://dev.drfun1media.com:8087/ws/v1/telemetry',
+      description: 'Full-duplex real-time feed streaming satellite orbits, Fubo sports scoreboard ticks, and #lobby IRC events.',
+      category: 'broadcast_stream',
+      authType: 'Bearer Token',
+      sampleResponse: '{\n  "event": "match_score_tick",\n  "match": "UEFA Quarterfinal",\n  "score": "2 - 1",\n  "time": "76 LIVE",\n  "channel": "#lobby"\n}',
+    },
+    {
+      id: 'api_denora_stats',
+      name: 'Denora IRC Stats REST API',
+      method: 'GET',
+      endpoint: 'https://dev.drfun1media.com:8443/api/v1/stats/denora',
+      description: 'Retrieve real-time TLD statistics, chatter activity rankings, word counts, and operator moderation counts.',
+      category: 'stats_denora',
+      authType: 'Bearer Token',
+      sampleResponse: '{\n  "global_users": 8838,\n  "peak_today": 9120,\n  "top_channel": "#lobby",\n  "moderation_actions_24h": 42\n}',
+    },
+    {
+      id: 'api_wittlaw_auth',
+      name: 'WittLaw Moderator Authorization & PGP Verify',
+      method: 'POST',
+      endpoint: 'https://dev.drfun1media.com:8443/api/v1/auth/wittlaw-oper',
+      description: 'Verifies RSA/ED25519 signatures from www.wittlawfirm.com attorneys before granting elevated Oper flags.',
+      category: 'auth_wittlaw',
+      authType: 'WittLaw PGP Sign',
+      samplePayload: '{\n  "nick": "RichardAlanWitt",\n  "frn": "0034981290",\n  "firm": "www.wittlawfirm.com",\n  "signed_nonce": "98fc47e2b10a"\n}',
+      sampleResponse: '{\n  "status": "authorized",\n  "flags": "+oaqsh",\n  "role": "netadmin_root",\n  "counsel_verified": true\n}',
+    },
+  ],
+  wittLawAdmins: WITTLAW_ADMINS_MODS,
+  recentAuditActions: [
+    {
+      id: 'audit_1',
+      timestamp: '12:08:42',
+      adminNick: 'RichardAlanWitt',
+      adminTitle: 'Senior Managing Partner (NetAdmin Root)',
+      actionType: 'COMPLIANCE_AUDIT',
+      target: 'dev.drfun1media.com:6697',
+      channel: '#lobby',
+      reason: 'Bi-hourly FCC Part 25/73 broadcast playout & RF bandwidth verification passed 100%.',
+      legalBasis: '47 CFR § 25.202 / FCC Earth Station License RAW-SATCOM-2026-LIC-0881',
+      statutoryReference: 'Communications Act of 1934 Title III',
+      severity: 'notice',
+    },
+    {
+      id: 'audit_2',
+      timestamp: '12:05:19',
+      adminNick: 'EleanorVance_Esq',
+      adminTitle: 'Head FCC Regulatory Counsel & Lead Mod',
+      actionType: 'MODE',
+      target: '#lobby',
+      channel: '#lobby',
+      reason: 'Enforced channel mode +sntk 100G. Encrypted transit verified across RisingNet optical backbone.',
+      legalBasis: 'WittLaw Network Operating Rules Article IV § 2',
+      statutoryReference: 'ITU Radio Regulations Appendix 4',
+      severity: 'advisory',
+    },
+    {
+      id: 'audit_3',
+      timestamp: '11:58:02',
+      adminNick: 'SarahJenkins_Esq',
+      adminTitle: 'IP & DMCA Digital Rights Counsel',
+      actionType: 'DMCA_TAKEDOWN_REVIEW',
+      target: 'Fubo Sports Network 4K Ingest',
+      channel: '#fubo-sports',
+      reason: 'Cleared SMPTE 2110 satellite transponder retransmission license for UEFA Champions League.',
+      legalBasis: '17 U.S.C. § 111 / Copyright Royalty Board Agreement 2026',
+      statutoryReference: 'Title 17 Copyright Law',
+      severity: 'notice',
+    },
+    {
+      id: 'audit_4',
+      timestamp: '11:42:15',
+      adminNick: 'DavidChen_CISSP',
+      adminTitle: 'Director of Network Security',
+      actionType: 'API_KEY_REVOKE',
+      target: 'Developer ID #dev-unverified-409',
+      reason: 'Rate limit breach and unverified PGP signature detected on JSON-RPC endpoint.',
+      legalBasis: 'WittLaw Zero-Trust Information Security Policy § 8.1',
+      statutoryReference: 'NIST SP 800-207 Zero Trust Architecture',
+      severity: 'enforcement',
+    },
+  ],
+};
+
 export const INITIAL_IRC_MESSAGES: Record<string, IrcMessage[]> = {
+  '#lobby': [
+    {
+      id: 'lobby_1',
+      timestamp: '12:00:00',
+      sender: '***',
+      channel: '#lobby',
+      content: 'Connecting to dev.drfun1media.com:6697 (SSL) [SID 007 - Switch & RisingNet Dedicated Teleport Dev Gateway]...',
+      type: 'system',
+    },
+    {
+      id: 'lobby_2',
+      timestamp: '12:00:01',
+      sender: '***',
+      channel: '#lobby',
+      content: 'TLS Handshake verified: TLSv1.3 TLS_AES_256_GCM_SHA384. Mode +sntk 100G. UnrealIRCd 6.1.4 + DrFun1-Mesh v4.2.',
+      type: 'system',
+    },
+    {
+      id: 'lobby_3',
+      timestamp: '12:00:02',
+      sender: '***',
+      channel: '#lobby',
+      content: 'Channel topic: Official DrFun1 Media Flagship Network Lobby | Fubo.tv Live Sports & Twitch.tv Stream Relay | dev.drfun1media.com:6697 (SSL)',
+      type: 'system',
+    },
+    {
+      id: 'lobby_4',
+      timestamp: '12:00:05',
+      sender: 'RichardAlanWitt',
+      channel: '#lobby',
+      content: 'Welcome to the #lobby flagship command center! Seamlessly broadcasting Fubo.tv live sports multiplex, Twitch.tv live streams, and mIRC classic client relay across dev.drfun1media.com.',
+      type: 'message',
+    },
+    {
+      id: 'lobby_5',
+      timestamp: '12:00:10',
+      sender: 'DrFun1_Admin',
+      channel: '#lobby',
+      content: 'Fubo Sports Network 4K stream is live on Deck A. Twitch.tv stream is broadcasting on Deck B. All channel commands are active: /whois, /query, /join, /stats, /clear.',
+      type: 'message',
+    },
+    {
+      id: 'lobby_6',
+      timestamp: '12:00:18',
+      sender: 'Switch_NOC_Bot',
+      channel: '#lobby',
+      content: '[BROADCAST RELAY] dev.drfun1media.com (SID 007) fiber capacity: 100 Gbps dedicated optical transit via RisingNet. Current latency: 1.2ms.',
+      type: 'notice',
+    },
+    {
+      id: 'lobby_7',
+      timestamp: '12:00:30',
+      sender: 'DJ_VinylKev',
+      channel: '#lobby',
+      content: 'UEFA Champions League and Premier League satellite quad-screens are locked in on Fubo feed! Audio is crystal clear in 320kbps Opus.',
+      type: 'message',
+    },
+    {
+      id: 'lobby_8',
+      timestamp: '12:00:45',
+      sender: 'SatcomGuru',
+      channel: '#lobby',
+      content: 'PogChamp! Twitch emote sync is enabled in chat. Feel free to use Kappa, LUL, PogChamp, MonkaS in chat!',
+      type: 'message',
+    },
+  ],
+  '#dev-platform': [
+    {
+      id: 'dev_msg_1',
+      timestamp: '12:00:00',
+      sender: '***',
+      channel: '#dev-platform',
+      content: 'Connecting to dev.drfun1media.com:6697 (SSL) [UnrealIRCd 6.1.4 Developer Platform & WebSocket Gateway]...',
+      type: 'system',
+    },
+    {
+      id: 'dev_msg_2',
+      timestamp: '12:00:01',
+      sender: 'RichardAlanWitt',
+      channel: '#dev-platform',
+      content: 'Welcome developers to the dev.drfun1media.com Development Platform! The Law Office of Richard A. Witt LLC legal and engineering team is on-duty to review API access, bot tokens, and broadcast pipelines.',
+      type: 'message',
+    },
+    {
+      id: 'dev_msg_3',
+      timestamp: '12:00:08',
+      sender: 'MarcusWitt_PE',
+      channel: '#dev-platform',
+      content: '[DEV PLATFORM] Sandbox environments active: main-dev (Port 6697), staging-alpha (Port 6698), and 3GPP-NTN (Port 6699). JSON-RPC 2.0 API listening on :8443.',
+      type: 'notice',
+    },
+    {
+      id: 'dev_msg_4',
+      timestamp: '12:00:15',
+      sender: 'EleanorVance_Esq',
+      channel: '#dev-platform',
+      content: 'WittLaw moderation rule #1: All third-party bots and streaming relays must register their PGP public key and adhere to FCC Part 73/25 guidelines. Ping @EleanorVance_Esq or /whois for token clearance.',
+      type: 'message',
+    },
+    {
+      id: 'dev_msg_5',
+      timestamp: '12:00:22',
+      sender: 'WittLaw_AuditBot',
+      channel: '#dev-platform',
+      content: '[WITTLaw AUDIT DAEMON] All 3 active developer sandbox testbeds verified healthy with 0 memory leaks and TLSv1.3 TLS_AES_256_GCM cipher suite.',
+      type: 'notice',
+    },
+  ],
+  '#wittlaw-admins': [
+    {
+      id: 'wl_admin_1',
+      timestamp: '12:00:00',
+      sender: '***',
+      channel: '#wittlaw-admins',
+      content: 'Joined #wittlaw-admins (Modes: +sntik 100G). Legal counsel & network operator privileged communications channel.',
+      type: 'system',
+    },
+    {
+      id: 'wl_admin_2',
+      timestamp: '12:00:04',
+      sender: 'RichardAlanWitt',
+      channel: '#wittlaw-admins',
+      content: 'WittLaw Legal & Admin team standing by on dev.drfun1media.com. SRA FRN 0034981290 license verification in effect.',
+      type: 'message',
+    },
+    {
+      id: 'wl_admin_3',
+      timestamp: '12:00:12',
+      sender: 'SarahJenkins_Esq',
+      channel: '#wittlaw-admins',
+      content: 'DMCA & IP review queue is clear. Fubo and Twitch relay transponder agreements re-verified for current broadcast window.',
+      type: 'message',
+    },
+    {
+      id: 'wl_admin_4',
+      timestamp: '12:00:20',
+      sender: 'DavidChen_CISSP',
+      channel: '#wittlaw-admins',
+      content: 'Zero-trust perimeter active. 26 Switch SUPERNAP leaves passing continuous SHA256 leaf certificate audits.',
+      type: 'notice',
+    },
+  ],
   '#drfun1-media': [
     {
       id: 'm_1',
@@ -2900,6 +3452,8 @@ export const STATS_DRFUN1IRCD_PORTAL: StatsPortalInfo = {
   zncBouncer: 'irc.drfun1media.com:6697 (SSL) / WebAdmin :5000',
   neostatsService: 'neostats.drfun1.com (SID: 099 - StatServ / ConnectServ / SecureServ)',
   neostatsRepo: 'https://github.com/Macs/NeoStats.git',
+  denoraService: 'denora.drfun1.com (SID: 098 - StatServ / phpDenora MariaDB Sync)',
+  denoraRepo: 'https://github.com/denora/denora.git',
   lastTelemetrySync: 'Live WebSocket / JSON-RPC Sync',
   globalUptime: '148d 12h 23m 40s (99.999% SLA)',
   totalClients: 8838,
@@ -3102,4 +3656,221 @@ ulines {
     neostats.drfun1.com;
 };`
 };
+
+export const DENORA_CONFIG: DenoraConfig = {
+  version: 'Denora 1.5.1-git',
+  gitRepo: 'https://github.com/denora/denora.git',
+  serverName: 'denora.drfun1.com',
+  sid: '098',
+  hubServer: 'irc.drfun1.com',
+  hubPort: 6697,
+  ssl: true,
+  dbBackend: 'MariaDB 10.11 / MySQL 8.0 InnoDB + phpDenora Web Integration',
+  status: 'active',
+  uptime: '148d 12h 19m 14s',
+  peakUsersAllTime: 14290,
+  peakUsersAllTimeDate: '2026-11-04 18:42:10 UTC',
+  peakUsersToday: 9412,
+  peakChannelsAllTime: 82,
+  currentChannels: 74,
+  totalConnectionsLogged: 3491820,
+  syncIntervalSeconds: 30,
+  tldStats: [
+    { tld: '.com', country: 'Commercial / Global Anycast', userCount: 3682, percentage: 41.6, flag: '🌐' },
+    { tld: '.net', country: 'Network Infrastructure & Telecom', userCount: 1842, percentage: 20.8, flag: '⚡' },
+    { tld: '.org', country: 'Non-profit & Open Source Orgs', userCount: 920, percentage: 10.4, flag: '🛡️' },
+    { tld: '.tv', country: 'Tuvalu / Linear Broadcast Playout', userCount: 742, percentage: 8.4, flag: '📺' },
+    { tld: '.de', country: 'Germany (Frankfurt Switch Teleport)', userCount: 512, percentage: 5.8, flag: '🇩🇪' },
+    { tld: '.uk', country: 'United Kingdom (London Docklands)', userCount: 384, percentage: 4.3, flag: '🇬🇧' },
+    { tld: '.jp', country: 'Japan (Tokyo Equinix Ingest)', userCount: 298, percentage: 3.4, flag: '🇯🇵' },
+    { tld: '.ca', country: 'Canada (Toronto C-Band Ingest)', userCount: 246, percentage: 2.8, flag: '🇨🇦' },
+    { tld: '.nl', country: 'Netherlands (Amsterdam Teleport)', userCount: 212, percentage: 2.4, flag: '🇳🇱' },
+  ],
+  clientStats: [
+    { clientName: 'mIRC 7.76+', category: 'Desktop', userCount: 2410, percentage: 27.3 },
+    { clientName: 'WeeChat 4.2+ (CLI/Headless)', category: 'CLI', userCount: 1820, percentage: 20.6 },
+    { clientName: 'HexChat 2.16+', category: 'Desktop', userCount: 1540, percentage: 17.4 },
+    { clientName: 'Irssi 1.4+ (UNIX Shell)', category: 'CLI', userCount: 1180, percentage: 13.4 },
+    { clientName: 'The Lounge Web (Self-Hosted)', category: 'Web', userCount: 840, percentage: 9.5 },
+    { clientName: 'ZNC 1.9.1 Bouncer (znc.git)', category: 'Bouncer', userCount: 620, percentage: 7.0 },
+    { clientName: 'KiwiIRC / DrFun1 Studio WebIRC', category: 'Web', userCount: 428, percentage: 4.8 },
+  ],
+  topChannels: [
+    { channel: '#drfun1-primetv', users: 1840, linesToday: 184290, wordsToday: 1294000, topicChanges: 4, msgRate: '42.4 msg/s', modes: '+sntk 100G' },
+    { channel: '#whitehouse-briefings', users: 1290, linesToday: 98400, wordsToday: 842000, topicChanges: 2, msgRate: '28.1 msg/s', modes: '+cnt' },
+    { channel: '#c-band-space', users: 840, linesToday: 64120, wordsToday: 482000, topicChanges: 1, msgRate: '18.6 msg/s', modes: '+cnt' },
+    { channel: '#5g-ntn', users: 780, linesToday: 52900, wordsToday: 394000, topicChanges: 3, msgRate: '14.2 msg/s', modes: '+cnt' },
+    { channel: '#fcc-spectrum-alerts', users: 620, linesToday: 41200, wordsToday: 310000, topicChanges: 5, msgRate: '9.4 msg/s', modes: '+cnt' },
+    { channel: '#switch-supernap', users: 540, linesToday: 38100, wordsToday: 290000, topicChanges: 2, msgRate: '12.0 msg/s', modes: '+cnt' },
+    { channel: '#ku-band', users: 510, linesToday: 29400, wordsToday: 218000, topicChanges: 1, msgRate: '8.1 msg/s', modes: '+cnt' },
+    { channel: '#mpd-dj-booth', users: 490, linesToday: 34800, wordsToday: 260000, topicChanges: 8, msgRate: '16.5 msg/s', modes: '+cnt' }
+  ],
+  topChatters: [
+    { nick: 'DrFun1Admin', lines: 14890, words: 112400, smileys: 84, kicks: 42, modes: 64, lastActive: '12s ago' },
+    { nick: 'WittLaw_NetAdmin', lines: 11420, words: 98200, smileys: 12, kicks: 28, modes: 52, lastActive: '45s ago' },
+    { nick: 'Switch_NOC_Lead', lines: 9840, words: 74100, smileys: 5, kicks: 14, modes: 31, lastActive: '2m ago' },
+    { nick: 'SpaceTeleport_Oper', lines: 7650, words: 58900, smileys: 18, kicks: 6, modes: 22, lastActive: '1m ago' },
+    { nick: 'Capt_Dave', lines: 6290, words: 48200, smileys: 34, kicks: 2, modes: 8, lastActive: '4m ago' },
+    { nick: 'DJ_NeonCircuit', lines: 5840, words: 44100, smileys: 92, kicks: 1, modes: 12, lastActive: '30s ago' },
+    { nick: 'SatcomAuditor', lines: 4720, words: 38900, smileys: 2, kicks: 0, modes: 15, lastActive: '8m ago' },
+  ],
+  confSnippet: `/* ==============================================================
+ * Denora IRC Statistics 1.5 Configuration (irc.drfun1.com)
+ * Source Repository: https://github.com/denora/denora.git
+ * Authors: Denora Development Team (Hal9000, Jorden, DukePyramid)
+ * Licensed to: Richard Alan Witt (www.wittlawfirm.com)
+ * ============================================================== */
+
+// Git Build:
+// $ git clone https://github.com/denora/denora.git
+// $ cd denora
+// $ ./configure --prefix=/opt/denora --with-mysql --with-unreal32 --enable-ssl
+// $ make && make install
+
+// General Denora Settings
+name            "denora.drfun1.com";
+desc            "DrFun1 Media Official Denora 1.5 IRC Statistics Daemon";
+pid             "/opt/denora/data/denora.pid";
+motd            "/opt/denora/data/denora.motd";
+
+// Uplink Server (UnrealIRCd 6.1.4 Master Hub)
+RemoteServer    "127.0.0.1";
+Port            6697;
+ServerPass      "WittLaw_Switch_Denora_Sync_2026";
+ServerNumeric   "098";
+ProtocolMode    "unreal32";
+UseTLS          yes;
+
+// StatServ Client Settings
+StatServNick    "StatServ";
+StatServIdent   "stats";
+StatServHost    "stats.drfun1.com";
+StatServReal    "Denora IRC Statistics Engine (github.com/denora/denora.git)";
+StatServAlias   "Denora";
+
+// MariaDB / MySQL Database Backend (for phpDenora Web Dashboard)
+SqlHost         "localhost";
+SqlUser         "denora";
+SqlPass         "WittLaw_Denora_Sql_2026";
+SqlName         "drfun1_denora_stats";
+SqlPort         3306;
+SqlSock         "/var/run/mysqld/mysqld.sock";
+SqlType         "mysql";
+
+// Tracking Features
+KeepSpam        yes;
+SpamTime        86400;
+AutoOpClean     yes;
+TrackTLD        yes;
+GeoIP           yes;
+GeoIPDatabase   "/usr/share/GeoIP/GeoIP.dat";
+HTMLPath        "/var/www/stats.drfun1ircd.com/denora";
+HTMLTheme       "modern_slate";
+HTMLExportFreq  30;`,
+  unrealLinkSnippet: `/* ==============================================================
+ * UnrealIRCd 6.1.4 Link Block for Denora (github.com/denora/denora.git)
+ * Insert into unrealircd.conf on irc.drfun1.com
+ * ============================================================== */
+
+link denora.drfun1.com {
+    incoming {
+        mask 127.0.0.1;
+        mask *.drfun1.com;
+    };
+    outgoing {
+        hostname "127.0.0.1";
+        port 6697;
+        options { ssl; };
+    };
+    password "WittLaw_Switch_Denora_Sync_2026";
+    class servers;
+    type services;
+};
+
+/* Denora U-lines Configuration */
+ulines {
+    denora.drfun1.com;
+};`,
+  sqlSchemaSnippet: `/* ==============================================================
+ * Denora 1.5 Database Schema Definition (drfun1_denora_stats)
+ * Cloned from: https://github.com/denora/denora.git (sql/mysql.sql)
+ * Compatible with phpDenora & stats.drfun1ircd.com
+ * ============================================================== */
+
+CREATE DATABASE IF NOT EXISTS drfun1_denora_stats CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE drfun1_denora_stats;
+
+CREATE TABLE IF NOT EXISTS denora_stats (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(32) NOT NULL,
+    val BIGINT NOT NULL,
+    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_type (type)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS denora_tld (
+    country VARCHAR(64) NOT NULL,
+    countrycode VARCHAR(8) NOT NULL PRIMARY KEY,
+    count INT UNSIGNED NOT NULL DEFAULT 0,
+    overall INT UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS denora_chan (
+    chanid INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    channel VARCHAR(64) NOT NULL UNIQUE,
+    currentusers INT UNSIGNED NOT NULL DEFAULT 0,
+    maxusers INT UNSIGNED NOT NULL DEFAULT 0,
+    maxusertime INT UNSIGNED NOT NULL DEFAULT 0,
+    topic VARCHAR(512),
+    topicauthor VARCHAR(64),
+    topictime INT UNSIGNED NOT NULL DEFAULT 0,
+    modes VARCHAR(64)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS denora_cstats (
+    uname VARCHAR(64) NOT NULL,
+    chan VARCHAR(64) NOT NULL,
+    letters BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    words BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    line BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    actions BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    smileys BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    kicks BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    modes BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    topics BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    PRIMARY KEY (uname, chan)
+) ENGINE=InnoDB;`,
+  gitBuildInstructions: `# ==============================================================
+# Building Denora IRC Stats from GitHub Repository
+# URL: https://github.com/denora/denora.git
+# Supported Platforms: Linux / FreeBSD / OpenBSD / Switch SUPERNAP
+# ==============================================================
+
+# 1. Install prerequisites
+sudo apt-get update
+sudo apt-get install -y build-essential libmysqlclient-dev libssl-dev git autoconf automake libtool geoip-bin libgeoip-dev
+
+# 2. Clone Denora from official GitHub repository
+git clone https://github.com/denora/denora.git /opt/denora-src
+cd /opt/denora-src
+
+# 3. Configure Denora for UnrealIRCd protocol and MySQL
+./configure --prefix=/opt/denora \\
+            --with-mysql \\
+            --with-unreal32 \\
+            --enable-ssl \\
+            --enable-geoip
+
+# 4. Compile and install
+make -j$(nproc)
+sudo make install
+
+# 5. Initialize MySQL / MariaDB tables
+mysql -u root -p drfun1_denora_stats < /opt/denora-src/sql/mysql.sql
+
+# 6. Deploy denora.conf and start daemon
+cp /opt/denora/etc/denora.conf.dist /opt/denora/etc/denora.conf
+/opt/denora/bin/denora`
+};
+
 

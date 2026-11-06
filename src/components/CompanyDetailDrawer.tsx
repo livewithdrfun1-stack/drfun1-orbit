@@ -22,7 +22,9 @@ import {
   Terminal,
   Cpu,
   Send,
-  Satellite
+  Satellite,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 
 interface CompanyDetailDrawerProps {
@@ -92,10 +94,30 @@ export const CompanyDetailDrawer: React.FC<CompanyDetailDrawerProps> = ({
         {/* Drawer Header */}
         <div className="p-6 border-b border-slate-800 flex items-start justify-between gap-4 bg-slate-950/50">
           <div className="min-w-0">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 flex-wrap">
               <h2 className="text-xl font-bold text-white tracking-tight truncate">
                 {company.name}
               </h2>
+              {Boolean(company.isGold || company.isVerifiedGold) && (
+                <span
+                  data-testid="drawer-badge-gold"
+                  title="Verified Gold Tier Provider"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/40 font-mono shadow-sm"
+                >
+                  <ShieldCheck className="w-3 h-3 text-amber-400" />
+                  <span>Verified Gold</span>
+                </span>
+              )}
+              {Boolean(company.isPremium || company.isVerifiedPremium) && (
+                <span
+                  data-testid="drawer-badge-premium"
+                  title="Verified Premium Provider"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-500/15 text-purple-300 border border-purple-500/40 font-mono shadow-sm"
+                >
+                  <Sparkles className="w-3 h-3 text-purple-400" />
+                  <span>Verified Premium</span>
+                </span>
+              )}
               <button
                 onClick={() => onToggleBookmark(company.id)}
                 title={isBookmarked ? 'Bookmarked' : 'Add to bookmarks'}

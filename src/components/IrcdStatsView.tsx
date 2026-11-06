@@ -40,9 +40,13 @@ import {
   BarChart3,
   GitFork,
   GitBranch,
-  Database
+  Database,
+  PieChart,
+  TrendingUp,
+  MessageSquare,
+  Award
 } from 'lucide-react';
-import { UNREAL_HUB_DETAILS, SWITCH_DEDICATED_NODES, ALL_DRFUN1_MEDIA_CHANNELS, ZNC_BOUNCER_CONFIG, STATS_DRFUN1IRCD_PORTAL, NEOSTATS_CONFIG } from '../data/ircData';
+import { UNREAL_HUB_DETAILS, SWITCH_DEDICATED_NODES, ALL_DRFUN1_MEDIA_CHANNELS, ZNC_BOUNCER_CONFIG, STATS_DRFUN1IRCD_PORTAL, NEOSTATS_CONFIG, DENORA_CONFIG } from '../data/ircData';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 
 interface IrcdStatsViewProps {
@@ -68,10 +72,25 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
 }) => {
   // Live uptime counter in seconds (starting from 148 days, 12 hours)
   const [uptimeSeconds, setUptimeSeconds] = useState(148 * 86400 + 12 * 3600 + 1420);
-  const [activeStatsTab, setActiveStatsTab] = useState<'overview' | 'neostats' | 'nodes' | 'znc' | 'stats_cmd' | 'anope' | 'channels'>('overview');
+  const [activeStatsTab, setActiveStatsTab] = useState<'overview' | 'denora' | 'neostats' | 'nodes' | 'znc' | 'stats_cmd' | 'anope' | 'channels'>('overview');
   const [selectedStatsQuery, setSelectedStatsQuery] = useState<'u' | 'm' | 'l' | 'c' | 'k' | 'T' | 'z'>('u');
   const [selectedNeoStatsCmd, setSelectedNeoStatsCmd] = useState<string>('STATS');
   const [selectedNeoStatsConfTab, setSelectedNeoStatsConfTab] = useState<'neostats_conf' | 'unreal_link' | 'git_build'>('neostats_conf');
+  const [selectedDenoraCmd, setSelectedDenoraCmd] = useState<string>('STATUS');
+  const [selectedDenoraConfTab, setSelectedDenoraConfTab] = useState<'denora_conf' | 'unreal_link' | 'mysql_schema' | 'git_build'>('denora_conf');
+  const [denoraTldFilter, setDenoraTldFilter] = useState('');
+  const [denoraLogs, setDenoraLogs] = useState<string[]>([
+    ':StatServ!stats@stats.drfun1.com NOTICE Guest :=== Denora IRC Statistics 1.5.1 Status Report ===',
+    ':StatServ!stats@stats.drfun1.com NOTICE Guest :Git Repository      : https://github.com/denora/denora.git',
+    ':StatServ!stats@stats.drfun1.com NOTICE Guest :Server Name         : denora.drfun1.com (Numeric: 098, U-lines Active)',
+    ':StatServ!stats@stats.drfun1.com NOTICE Guest :Uplink Master Hub   : irc.drfun1.com:6697 (Switch SUPERNAP Las Vegas Core)',
+    ':StatServ!stats@stats.drfun1.com NOTICE Guest :Current Global Users: 8,838 clients across 26 servers',
+    ':StatServ!stats@stats.drfun1.com NOTICE Guest :Current Channels    : 74 active broadcast rooms',
+    ':StatServ!stats@stats.drfun1.com NOTICE Guest :All-Time Peak Users : 14,290 (Set on 2026-11-04 18:42:10 UTC)',
+    ':StatServ!stats@stats.drfun1.com NOTICE Guest :MariaDB / MySQL Sync: drfun1_denora_stats InnoDB Tables OK (every 30s)',
+    ':StatServ!stats@stats.drfun1.com NOTICE Guest :phpDenora Web Feeds : Synchronized to https://stats.drfun1ircd.com/denora',
+    ':StatServ!stats@stats.drfun1.com NOTICE Guest :End of /msg StatServ STATUS report.'
+  ]);
   const [neoStatsLogs, setNeoStatsLogs] = useState<string[]>([
     ':StatServ!services@services.drfun1.com NOTICE Guest :=== NeoStats 3.0.2 StatServ Network Report ===',
     ':StatServ!services@services.drfun1.com NOTICE Guest :Current Global Clients : 8,838 (Peak: 14,290 on 2026-11-04)',
@@ -147,6 +166,16 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
       c.frequencyBand.toLowerCase().includes(q)
     );
   }, [channelSearch]);
+
+  // Filter Denora TLDs
+  const filteredDenoraTlds = useMemo(() => {
+    if (!denoraTldFilter.trim()) return DENORA_CONFIG.tldStats;
+    const q = denoraTldFilter.toLowerCase();
+    return DENORA_CONFIG.tldStats.filter(t => 
+      t.tld.toLowerCase().includes(q) ||
+      t.country.toLowerCase().includes(q)
+    );
+  }, [denoraTldFilter]);
 
   // Handle running /STATS command in terminal
   const handleRunStatsCommand = (flag: 'u' | 'm' | 'l' | 'c' | 'k' | 'T' | 'z') => {
@@ -335,6 +364,110 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
     setNeoStatsLogs(lines);
   };
 
+  // Handle running Denora StatServ command
+  const handleRunDenoraCommand = (cmd: string) => {
+    setSelectedDenoraCmd(cmd);
+    let lines: string[] = [];
+    switch (cmd) {
+      case 'STATUS':
+        lines = [
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :=== Denora IRC Statistics 1.5.1 Status Report ===`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Source Repository : https://github.com/denora/denora.git`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Server Name       : denora.drfun1.com (Numeric: 098, U-lines Active)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Uplink Master     : irc.drfun1.com:6697 (Switch SUPERNAP Las Vegas Core)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Uptime            : 148 days, 12 hours, 19 mins, 14 secs`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Current Online    : 8,838 Users, 74 Channels, 26 Servers`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :All-Time Record   : 14,290 Users, 82 Channels (2026-11-04)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :SQL Engine        : MariaDB 10.11 / MySQL 8.0 (drfun1_denora_stats) - Connected`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :SQL Sync Cycle    : 30s interval | Last flush: 12 seconds ago`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :End of /msg StatServ STATUS report.`
+        ];
+        break;
+      case 'TLD':
+        lines = [
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :=== Denora TLD (Top-Level Domain) Geographic Breakdown ===`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :1. .com (Commercial Anycast)    : 3,682 users (41.6%)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :2. .net (Network Infrastructure): 1,842 users (20.8%)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :3. .org (Open Source/Non-Profit):   920 users (10.4%)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :4. .tv  (Broadcasting Playout)  :   742 users ( 8.4%)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :5. .de  (Germany Frankfurt POP) :   512 users ( 5.8%)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :6. .uk  (United Kingdom Ingest) :   384 users ( 4.3%)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :7. .jp  (Japan Tokyo POP)       :   298 users ( 3.4%)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :8. .ca  (Canada Toronto POP)     :   246 users ( 2.8%)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :9. .nl  (Netherlands Teleport)  :   212 users ( 2.4%)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Total Unique Countries Tracked  : 48 Sovereign Zones`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :End of /msg StatServ TLD report.`
+        ];
+        break;
+      case 'CLIENTS':
+        lines = [
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :=== Denora CTCP VERSION IRC Client Census ===`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :1. mIRC 7.76+                 : 2,410 users (27.3%) [Desktop Windows]`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :2. WeeChat 4.2+ (CLI/Headless): 1,820 users (20.6%) [Linux/macOS/BSD]`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :3. HexChat 2.16+              : 1,540 users (17.4%) [Desktop Multi-OS]`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :4. Irssi 1.4+ (UNIX Terminal) : 1,180 users (13.4%) [Linux Server/tmux]`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :5. The Lounge Web IRC Client  :   840 users ( 9.5%) [Node.js Web App]`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :6. ZNC 1.9.1 Bouncer (znc.git):   620 users ( 7.0%) [Bouncer Daemon]`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :7. KiwiIRC / DrFun1 WebIRC    :   428 users ( 4.8%) [Browser WebRTC/WS]`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :End of /msg StatServ CLIENTS report.`
+        ];
+        break;
+      case 'PEAK':
+        lines = [
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :=== Denora All-Time Network Record Peaks ===`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Maximum Users Online : 14,290 (Set on 2026-11-04 18:42:10 UTC)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Peak Users Today     :  9,412 (Recorded at 14:15 UTC)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Maximum Channels     :     82 (Historical peak)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Current Channels     :     74 (100% active synchronized)`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Total Users Logged   : 3,491,820 connections since epoch`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Server Splits (30d)  : 0 splits recorded`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :End of /msg StatServ PEAK report.`
+        ];
+        break;
+      case 'CHANSTATS':
+        lines = [
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :=== Denora ChanStats Channel Activity Leaderboard ===`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :1. #drfun1-primetv      : 1,840 users | 184,290 lines | 1,294,000 words | 42.4 msg/s`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :2. #whitehouse-briefings: 1,290 users |  98,400 lines |   842,000 words | 28.1 msg/s`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :3. #c-band-space        :   840 users |  64,120 lines |   482,000 words | 18.6 msg/s`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :4. #5g-ntn              :   780 users |  52,900 lines |   394,000 words | 14.2 msg/s`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :5. #fcc-spectrum-alerts :   620 users |  41,200 lines |   310,000 words |  9.4 msg/s`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :6. #switch-supernap     :   540 users |  38,100 lines |   290,000 words | 12.0 msg/s`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :End of /msg StatServ CHANSTATS report.`
+        ];
+        break;
+      case 'TOPCHATTERS':
+        lines = [
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :=== Denora Top Chatter Hall of Fame (Lines / Words) ===`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :1. DrFun1Admin       : 14,890 lines | 112,400 words | 84 smileys | 42 kicks`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :2. WittLaw_NetAdmin  : 11,420 lines |  98,200 words | 12 smileys | 28 kicks`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :3. Switch_NOC_Lead   :  9,840 lines |  74,100 words |  5 smileys | 14 kicks`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :4. SpaceTeleport_Oper:  7,650 lines |  58,900 words | 18 smileys |  6 kicks`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :5. Capt_Dave         :  6,290 lines |  48,200 words | 34 smileys |  2 kicks`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :6. DJ_NeonCircuit    :  5,840 lines |  44,100 words | 92 smileys |  1 kick`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :End of /msg StatServ TOPCHATTERS report.`
+        ];
+        break;
+      case 'SQLSYNC':
+        lines = [
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :=== Denora MySQL / MariaDB Sync Operation ===`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Database: drfun1_denora_stats @ localhost:3306`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Flushing in-memory statistical buffers to InnoDB tables...`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :denora_stats   : 142 rows committed`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :denora_tld     : 48 TLD countries updated`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :denora_chan    : 74 active channel records flushed`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :denora_cstats  : 8,838 user-channel relation records updated`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :phpDenora sync : HTML & JSON cache updated at /var/www/stats.drfun1ircd.com/denora`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :Synchronization completed with 0 errors in 18.4ms.`,
+          `:StatServ!stats@stats.drfun1.com NOTICE Guest :End of /msg StatServ SQLSYNC report.`
+        ];
+        break;
+      default:
+        break;
+    }
+    setDenoraLogs(lines);
+  };
+
   return (
     <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       
@@ -416,6 +549,25 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
                 title="NeoStats Official Git Repository (https://github.com/Macs/NeoStats.git)"
               >
                 <span>github.com/Macs/NeoStats</span>
+                <ExternalLink className="w-2.5 h-2.5" />
+              </a>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-950/80 border border-fuchsia-500/30 flex flex-col min-w-[170px]">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-slate-400 uppercase font-semibold">Denora (SID 098)</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-400 animate-pulse" />
+              </div>
+              <span className="text-fuchsia-300 font-bold flex items-center gap-1">
+                <span>denora.drfun1.com</span>
+              </span>
+              <a
+                href="https://github.com/denora/denora.git"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                title="Denora Stats Official Git Repository (https://github.com/denora/denora.git)"
+              >
+                <span>github.com/denora/denora</span>
                 <ExternalLink className="w-2.5 h-2.5" />
               </a>
             </div>
@@ -624,6 +776,7 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
       <div className="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto no-scrollbar font-mono text-xs">
         {[
           { id: 'overview', label: 'Network Overview & Security', icon: Activity },
+          { id: 'denora', label: 'Denora Stats (github.com/denora/denora.git)', icon: PieChart },
           { id: 'neostats', label: 'NeoStats 3.0 (github.com/Macs/NeoStats.git)', icon: BarChart3 },
           { id: 'znc', label: 'ZNC 1.9.1 Bouncer (znc.git)', icon: Layers },
           { id: 'nodes', label: `26 Switch Leaf Nodes (${SWITCH_DEDICATED_NODES.length})`, icon: Server },
@@ -926,6 +1079,579 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
             </div>
             <pre className="p-4 bg-slate-950 text-emerald-300 font-mono text-xs overflow-x-auto max-h-[320px] leading-relaxed">
               {ZNC_BOUNCER_CONFIG.zncConfSnippet}
+            </pre>
+          </div>
+
+        </div>
+      )}
+
+      {/* ========================================================
+          TAB: DENORA IRC STATISTICS 1.5.1 & MYSQL TELEMETRY (github.com/denora/denora.git)
+          ======================================================== */}
+      {activeStatsTab === 'denora' && (
+        <div className="space-y-6">
+          {/* Denora Hero / Status Banner */}
+          <div className="bg-slate-900/90 border border-fuchsia-500/40 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-2.5 py-1 rounded-md text-xs font-mono font-bold bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-ping" />
+                    <span>DENORA 1.5.1 STATSERV ACTIVE</span>
+                  </span>
+                  <a
+                    href="https://github.com/denora/denora.git"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2.5 py-1 rounded-md text-xs font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 transition-colors flex items-center gap-1.5 cursor-pointer"
+                    title="Official Denora Git Repository: https://github.com/denora/denora.git"
+                  >
+                    <GitBranch className="w-3.5 h-3.5 text-purple-400" />
+                    <span>github.com/denora/denora.git</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-slate-800 text-slate-300 border border-slate-700">
+                    SID: 098 &bull; denora.drfun1.com
+                  </span>
+                  <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                    U-lines Verified
+                  </span>
+                  <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                    MySQL / MariaDB Synced (30s)
+                  </span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                  <span>Denora 1.5.1 IRC Network Statistics &amp; phpDenora Hub</span>
+                  <span className="text-fuchsia-400 font-mono text-base font-normal">&bull; Linked to irc.drfun1.com:6697</span>
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 max-w-3xl">
+                  Comprehensive network statistical daemon and real-time census engine cloned and built from <strong className="text-white">https://github.com/denora/denora.git</strong> (developed by Hal9000, Jorden, DukePyramid, and the Denora Development Team). Connected directly to <strong className="text-purple-300">irc.drfun1.com</strong> via TLS 1.3 U-lines under license to Richard Alan Witt (FRN 0034981290). Automatically tracks TLD country demographics, client software censuses via CTCP VERSION, channel message rates, and flushes persistent tables into MariaDB/MySQL (<code className="text-cyan-300 font-mono text-xs">drfun1_denora_stats</code>) to drive <strong className="text-fuchsia-300">stats.drfun1ircd.com</strong> and phpDenora dashboards.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap lg:flex-col gap-2 shrink-0 font-mono text-xs">
+                <div className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
+                  <span className="text-slate-400">Database Engine:</span>
+                  <span className="text-cyan-300 font-bold">MariaDB 10.11 InnoDB</span>
+                </div>
+                <div className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
+                  <span className="text-slate-400">Services Server:</span>
+                  <span className="text-fuchsia-300 font-bold">denora.drfun1.com</span>
+                </div>
+                <div className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
+                  <span className="text-slate-400">Upstream Hub:</span>
+                  <span className="text-purple-300 font-bold">irc.drfun1.com:6697</span>
+                </div>
+
+                <div className="flex items-center gap-2 mt-1">
+                  <a
+                    href="https://github.com/denora/denora.git"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-bold flex items-center justify-center gap-1.5 transition text-center"
+                  >
+                    <GitFork className="w-3.5 h-3.5" />
+                    <span>View Repository</span>
+                  </a>
+                  <button
+                    onClick={() => handleCopy('git clone https://github.com/denora/denora.git', 'gitCloneDenora')}
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition cursor-pointer"
+                    title="Copy Git Clone Command"
+                  >
+                    {copiedKey === 'gitCloneDenora' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>git clone</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Key Telemetry Metrics Cards Row */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <div className="text-slate-400 text-xs font-mono flex items-center justify-between">
+                <span>Peak Clients</span>
+                <Users className="w-3.5 h-3.5 text-fuchsia-400" />
+              </div>
+              <div className="text-xl sm:text-2xl font-bold font-mono text-white">
+                {DENORA_CONFIG.peakUsersAllTime.toLocaleString()}
+              </div>
+              <div className="text-[10px] font-mono text-emerald-400">
+                All-Time Peak Recorded
+              </div>
+            </div>
+
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <div className="text-slate-400 text-xs font-mono flex items-center justify-between">
+                <span>Peak Today</span>
+                <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
+              </div>
+              <div className="text-xl sm:text-2xl font-bold font-mono text-amber-300">
+                {DENORA_CONFIG.peakUsersToday.toLocaleString()}
+              </div>
+              <div className="text-[10px] font-mono text-slate-400">
+                Peak Window: 14:15 UTC
+              </div>
+            </div>
+
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <div className="text-slate-400 text-xs font-mono flex items-center justify-between">
+                <span>TLD Zones</span>
+                <Globe className="w-3.5 h-3.5 text-cyan-400" />
+              </div>
+              <div className="text-xl sm:text-2xl font-bold font-mono text-cyan-300">
+                48 TLDs
+              </div>
+              <div className="text-[10px] font-mono text-slate-400">
+                Top: .com (41.6%)
+              </div>
+            </div>
+
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <div className="text-slate-400 text-xs font-mono flex items-center justify-between">
+                <span>Active Channels</span>
+                <Hash className="w-3.5 h-3.5 text-purple-400" />
+              </div>
+              <div className="text-xl sm:text-2xl font-bold font-mono text-purple-300">
+                {DENORA_CONFIG.currentChannels}
+              </div>
+              <div className="text-[10px] font-mono text-slate-400">
+                Peak: {DENORA_CONFIG.peakChannelsAllTime} Channels
+              </div>
+            </div>
+
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <div className="text-slate-400 text-xs font-mono flex items-center justify-between">
+                <span>MySQL Sync</span>
+                <Database className="w-3.5 h-3.5 text-emerald-400" />
+              </div>
+              <div className="text-xl sm:text-2xl font-bold font-mono text-emerald-300">
+                {DENORA_CONFIG.syncIntervalSeconds}s Interval
+              </div>
+              <div className="text-[10px] font-mono text-emerald-400">
+                InnoDB drfun1_denora
+              </div>
+            </div>
+
+            <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <div className="text-slate-400 text-xs font-mono flex items-center justify-between">
+                <span>Total Connects</span>
+                <Activity className="w-3.5 h-3.5 text-rose-400" />
+              </div>
+              <div className="text-xl sm:text-2xl font-bold font-mono text-rose-300">
+                3.49M
+              </div>
+              <div className="text-[10px] font-mono text-slate-400">
+                Since Epoch Boot
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Denora StatServ Live Console */}
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="bg-slate-900/90 border-b border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 font-mono text-xs">
+                <Terminal className="w-4 h-4 text-fuchsia-400" />
+                <span className="font-bold text-white">Denora StatServ Interactive Diagnostic Console</span>
+                <span className="text-slate-500">|</span>
+                <span className="text-slate-400">Target: <strong className="text-fuchsia-300">denora.drfun1.com</strong> (SID 098)</span>
+              </div>
+
+              {/* Command Quick Buttons */}
+              <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs">
+                <span className="text-slate-500 text-[11px] mr-1">Query /msg StatServ:</span>
+                {[
+                  { cmd: 'STATUS', label: 'STATUS' },
+                  { cmd: 'TLD', label: 'TLD' },
+                  { cmd: 'CLIENTS', label: 'CLIENTS' },
+                  { cmd: 'PEAK', label: 'PEAK' },
+                  { cmd: 'CHANSTATS', label: 'CHANSTATS' },
+                  { cmd: 'TOPCHATTERS', label: 'TOPCHATTERS' },
+                  { cmd: 'SQLSYNC', label: 'SQLSYNC' },
+                ].map((item) => (
+                  <button
+                    key={item.cmd}
+                    onClick={() => handleRunDenoraCommand(item.cmd)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] transition-colors cursor-pointer ${
+                      selectedDenoraCmd === item.cmd
+                        ? 'bg-fuchsia-500 text-white font-bold shadow'
+                        : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Terminal Output */}
+            <div className="p-4 bg-slate-950 font-mono text-xs space-y-1.5 overflow-x-auto min-h-[220px]">
+              <div className="text-slate-500 pb-2 border-b border-slate-900 flex items-center justify-between">
+                <span>[Denora Telemetry] Linked to irc.drfun1.com:6697 with MariaDB sync active. Active query: /msg StatServ {selectedDenoraCmd}</span>
+                <span className="text-fuchsia-400">https://github.com/denora/denora.git</span>
+              </div>
+              
+              {denoraLogs.map((log, index) => (
+                <div key={index} className="flex items-start gap-2 leading-relaxed">
+                  <span className="text-fuchsia-500 select-none">&gt;</span>
+                  <span className={
+                    log.includes('===') ? 'text-fuchsia-300 font-bold' :
+                    log.includes('End of') ? 'text-emerald-400 font-bold' :
+                    log.includes('completed') ? 'text-emerald-300' :
+                    log.includes('Database:') ? 'text-cyan-300' :
+                    log.includes('1.') || log.includes('2.') ? 'text-white font-medium' :
+                    'text-slate-300'
+                  }>
+                    {log}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Two-Column Analytics Matrix 1: TLD Country Stats & CTCP Client Census */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Column 1: TLD Geographic Demographics */}
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-cyan-400" />
+                  <h3 className="font-mono font-bold text-white text-xs">
+                    TLD Country &amp; GeoIP Demographics
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Filter TLD (.com, .de)..."
+                      value={denoraTldFilter}
+                      onChange={(e) => setDenoraTldFilter(e.target.value)}
+                      className="pl-8 pr-2.5 py-1 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-44"
+                    />
+                  </div>
+                  <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/40">
+                    {filteredDenoraTlds.length} TLDs
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                {filteredDenoraTlds.map((tld) => (
+                  <div key={tld.tld} className="p-3 bg-slate-950/80 rounded-xl border border-slate-800/80 hover:border-slate-700 transition-colors space-y-2">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">{tld.flag}</span>
+                        <span className="font-bold text-cyan-300">{tld.tld}</span>
+                        <span className="text-[11px] text-slate-400 truncate max-w-[200px]">{tld.country}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-bold">{tld.userCount.toLocaleString()}</span>
+                        <span className="text-cyan-400 font-bold">({tld.percentage}%)</span>
+                      </div>
+                    </div>
+                    {/* Progress Bar */}
+                    <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-cyan-500 to-fuchsia-500 h-1.5 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, tld.percentage * 2.2)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Column 2: CTCP VERSION IRC Client Census */}
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <PieChart className="w-4 h-4 text-fuchsia-400" />
+                  <h3 className="font-mono font-bold text-white text-xs">
+                    CTCP VERSION IRC Client Census
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono text-fuchsia-400 bg-fuchsia-950/60 px-2 py-0.5 rounded border border-fuchsia-800/40">
+                  Denora Version Tracking
+                </span>
+              </div>
+
+              <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                {DENORA_CONFIG.clientStats.map((client) => {
+                  const getCategoryBadge = (cat: string) => {
+                    switch (cat) {
+                      case 'Desktop':
+                        return 'bg-purple-950/80 text-purple-300 border-purple-800/60';
+                      case 'CLI':
+                        return 'bg-emerald-950/80 text-emerald-300 border-emerald-800/60';
+                      case 'Web':
+                        return 'bg-cyan-950/80 text-cyan-300 border-cyan-800/60';
+                      case 'Bouncer':
+                        return 'bg-amber-950/80 text-amber-300 border-amber-800/60';
+                      default:
+                        return 'bg-slate-800 text-slate-300 border-slate-700';
+                    }
+                  };
+
+                  return (
+                    <div key={client.clientName} className="p-3 bg-slate-950/80 rounded-xl border border-slate-800/80 hover:border-slate-700 transition-colors space-y-2">
+                      <div className="flex items-center justify-between text-xs font-mono">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white">{client.clientName}</span>
+                          <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded border ${getCategoryBadge(client.category)}`}>
+                            {client.category}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-200">{client.userCount.toLocaleString()} clients</span>
+                          <span className="text-fuchsia-400 font-bold">({client.percentage}%)</span>
+                        </div>
+                      </div>
+                      {/* Progress Bar */}
+                      <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-fuchsia-500 to-purple-500 h-1.5 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(100, client.percentage * 3.2)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Two-Column Analytics Matrix 2: ChanStats Activity & Top Chatters Hall of Fame */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* ChanStats Channel Leaderboard */}
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <Hash className="w-4 h-4 text-emerald-400" />
+                  <h3 className="font-mono font-bold text-white text-xs">
+                    ChanStats Channel Activity Leaderboard
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono text-emerald-400">Today&apos;s Lines &amp; Words</span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left font-mono text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-500 text-[10px] uppercase">
+                      <th className="pb-2">Channel</th>
+                      <th className="pb-2 text-right">Users</th>
+                      <th className="pb-2 text-right">Lines</th>
+                      <th className="pb-2 text-right">Words</th>
+                      <th className="pb-2 text-right">Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {DENORA_CONFIG.topChannels.map((ch, idx) => (
+                      <tr key={ch.channel} className="hover:bg-slate-800/40 transition">
+                        <td className="py-2.5 font-bold text-white flex items-center gap-1.5">
+                          <span className="text-slate-500 text-[10px]">#{idx + 1}</span>
+                          <span className="text-emerald-400">{ch.channel}</span>
+                        </td>
+                        <td className="py-2.5 text-right text-slate-300">
+                          {ch.users.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 text-right font-bold text-purple-300">
+                          {ch.linesToday.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 text-right text-slate-400">
+                          {(ch.wordsToday / 1000).toFixed(0)}k
+                        </td>
+                        <td className="py-2.5 text-right font-bold text-cyan-400">
+                          {ch.msgRate}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Top Chatters Hall of Fame */}
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <Award className="w-4 h-4 text-amber-400" />
+                  <h3 className="font-mono font-bold text-white text-xs">
+                    Denora Top Chatter Hall of Fame
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono text-amber-400">Ranked by Lines</span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left font-mono text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-500 text-[10px] uppercase">
+                      <th className="pb-2">User / Operator</th>
+                      <th className="pb-2 text-right">Lines</th>
+                      <th className="pb-2 text-right">Words</th>
+                      <th className="pb-2 text-right">Smileys</th>
+                      <th className="pb-2 text-right">Kicks</th>
+                      <th className="pb-2 text-right">Last Seen</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {DENORA_CONFIG.topChatters.map((user, idx) => (
+                      <tr key={user.nick} className="hover:bg-slate-800/40 transition">
+                        <td className="py-2.5 font-bold text-white flex items-center gap-1.5">
+                          <span className="text-amber-400 font-bold text-[10px]">#{idx + 1}</span>
+                          <span className="text-white hover:text-amber-300 transition-colors">{user.nick}</span>
+                        </td>
+                        <td className="py-2.5 text-right font-bold text-fuchsia-300">
+                          {user.lines.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 text-right text-slate-400">
+                          {(user.words / 1000).toFixed(0)}k
+                        </td>
+                        <td className="py-2.5 text-right text-emerald-400">
+                          {user.smileys}
+                        </td>
+                        <td className="py-2.5 text-right text-rose-400">
+                          {user.kicks}
+                        </td>
+                        <td className="py-2.5 text-right text-slate-400 text-[10px]">
+                          {user.lastActive}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Denora Configuration & Git Build Inspector */}
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="bg-slate-900 px-4 py-3 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 font-mono text-xs">
+                <Terminal className="w-4 h-4 text-fuchsia-400" />
+                <span className="font-bold text-white">Denora 1.5 Configuration &amp; Git Build Inspector</span>
+                <span className="text-slate-500">|</span>
+                <a
+                  href="https://github.com/denora/denora.git"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                >
+                  <span>github.com/denora/denora.git</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+
+              {/* Subtabs selector */}
+              <div className="flex items-center gap-1.5 font-mono text-xs">
+                <button
+                  onClick={() => setSelectedDenoraConfTab('denora_conf')}
+                  className={`px-2.5 py-1 rounded text-xs transition cursor-pointer ${
+                    selectedDenoraConfTab === 'denora_conf'
+                      ? 'bg-fuchsia-600 text-white font-bold'
+                      : 'bg-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  denora.conf
+                </button>
+                <button
+                  onClick={() => setSelectedDenoraConfTab('unreal_link')}
+                  className={`px-2.5 py-1 rounded text-xs transition cursor-pointer ${
+                    selectedDenoraConfTab === 'unreal_link'
+                      ? 'bg-fuchsia-600 text-white font-bold'
+                      : 'bg-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  unrealircd.conf (Link &amp; U-lines)
+                </button>
+                <button
+                  onClick={() => setSelectedDenoraConfTab('mysql_schema')}
+                  className={`px-2.5 py-1 rounded text-xs transition cursor-pointer ${
+                    selectedDenoraConfTab === 'mysql_schema'
+                      ? 'bg-fuchsia-600 text-white font-bold'
+                      : 'bg-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  denora.sql (MariaDB Schema)
+                </button>
+                <button
+                  onClick={() => setSelectedDenoraConfTab('git_build')}
+                  className={`px-2.5 py-1 rounded text-xs transition cursor-pointer ${
+                    selectedDenoraConfTab === 'git_build'
+                      ? 'bg-fuchsia-600 text-white font-bold'
+                      : 'bg-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Git Clone &amp; Compile
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  const content = selectedDenoraConfTab === 'denora_conf'
+                    ? DENORA_CONFIG.confSnippet
+                    : selectedDenoraConfTab === 'unreal_link'
+                    ? DENORA_CONFIG.unrealLinkSnippet
+                    : selectedDenoraConfTab === 'mysql_schema'
+                    ? DENORA_CONFIG.sqlSchemaSnippet
+                    : `# Git Clone & Compilation Instructions for Denora\ngit clone https://github.com/denora/denora.git\ncd denora\n./configure --prefix=/opt/denora --with-mysql --with-unreal32 --enable-ssl\nmake\nsudo make install\n# Initialize database\nmysql -u denora -p drfun1_denora_stats < /opt/denora/sql/mysql.sql\n# Start Denora\n/opt/denora/bin/denora -f /opt/denora/etc/denora.conf`;
+                  handleCopy(content, 'denoraSnippet');
+                }}
+                className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1.5 text-xs font-mono cursor-pointer"
+              >
+                {copiedKey === 'denoraSnippet' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>Copy Code</span>
+              </button>
+            </div>
+
+            <pre className="p-4 bg-slate-950 text-fuchsia-300 font-mono text-xs overflow-x-auto max-h-[340px] leading-relaxed custom-nav-scrollbar selection:bg-fuchsia-900 selection:text-white">
+              {selectedDenoraConfTab === 'denora_conf' && DENORA_CONFIG.confSnippet}
+              {selectedDenoraConfTab === 'unreal_link' && DENORA_CONFIG.unrealLinkSnippet}
+              {selectedDenoraConfTab === 'mysql_schema' && DENORA_CONFIG.sqlSchemaSnippet}
+              {selectedDenoraConfTab === 'git_build' && `# ==============================================================
+# Denora 1.5 IRC Statistics Daemon Installation from GitHub
+# Source Repository: https://github.com/denora/denora.git
+# Authors: Hal9000, Jorden, DukePyramid, and the Denora Development Team
+# ==============================================================
+
+# 1. Install prerequisites (Debian/Ubuntu/CentOS/RHEL)
+sudo apt update && sudo apt install -y build-essential autoconf automake libtool \\
+    libssl-dev libmariadb-dev-compat libmariadb-dev default-mysql-client
+
+# 2. Clone Denora repository from GitHub
+git clone https://github.com/denora/denora.git
+cd denora
+
+# 3. Configure build for UnrealIRCd protocol with MySQL/MariaDB & OpenSSL
+./configure \\
+    --prefix=/opt/denora \\
+    --with-mysql \\
+    --with-unreal32 \\
+    --enable-ssl \\
+    --enable-geoip
+
+# 4. Compile daemon binary and core modules
+make -j$(nproc)
+
+# 5. Install binaries to /opt/denora
+sudo make install
+
+# 6. Initialize MariaDB / MySQL Schema for stats.drfun1ircd.com & phpDenora
+mysql -h localhost -u denora -p drfun1_denora_stats < /opt/denora/sql/mysql.sql
+
+# 7. Verify version and protocol module
+/opt/denora/bin/denora --version
+# Output: Denora 1.5.1 (Compiled for UnrealIRCd 6.x Protocol with OpenSSL 3.0 & MariaDB)
+
+# 8. Start Denora daemon with configuration
+/opt/denora/bin/denora -f /opt/denora/etc/denora.conf`}
             </pre>
           </div>
 
