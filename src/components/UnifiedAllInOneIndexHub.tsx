@@ -36,7 +36,8 @@ import {
   Sliders,
   Bell,
   Cpu,
-  Youtube
+  Youtube,
+  Music
 } from 'lucide-react';
 import {
   ALL_DRFUN1_MEDIA_CHANNELS,
@@ -50,6 +51,8 @@ import { ALL_DRFUN1_BROADCASTING_CHANNELS } from '../data/drfun1ScannedStationsD
 import { MasterEpgChannel } from '../types/masterEpg';
 import { DevPlatformWittLawModal } from './DevPlatformWittLawModal';
 import { ShoutcastIrcBotModal } from './ShoutcastIrcBotModal';
+import { IrcChannelAndLeafSearchEngine } from './IrcChannelAndLeafSearchEngine';
+import { UnifiedMusicIrcHub } from './UnifiedMusicIrcHub';
 
 interface UnifiedAllInOneIndexHubProps {
   ircSession: IrcLoginSession;
@@ -171,24 +174,26 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
   onOpenLoginModal,
   onNavigateToFullIrc,
 }) => {
-  // Hub Display Mode
-  // 'deck' = All-in-One Multi-Deck (Split Screen)
-  // 'drfun1' = DrFun1 Media Inc. & DrFun1 ECOM Inc. 27 Channels Multiplex
-  // 'fubo' = Fubo.tv Live Sports Arena
-  // 'twitch' = Twitch.tv Streamer Deck
-  // 'mirc' = mIRC v7.77 Classic Retro Desktop
-  const [activeDeckMode, setActiveDeckMode] = useState<'deck' | 'drfun1' | 'fubo' | 'twitch' | 'mirc'>('deck');
+  // Hub Display Mode:
+  // 'tv_radio' = Unified TV & Radio Broadcast IRC Client (All 27 DrFun1 TV/Radio Stations, Fubo, Twitch into ONE IRC Client)
+  // 'music_hub' = Unified Music Hub & IRC Client (YouTube Music, SHOUTcast Bots, MPD DJ Deck - 855k Channels)
+  // 'search' = IRC Channel & Leafed IRCD Network Search Engine (855k Channels & 26 Switch SUPERNAP Leaves)
+  // 'mirc' = mIRC v7.77 Classic Retro Desktop Client
+  const [activeDeckMode, setActiveDeckMode] = useState<'tv_radio' | 'music_hub' | 'search' | 'mirc' | 'deck' | 'drfun1' | 'fubo' | 'twitch'>('tv_radio');
 
   // Video / Broadcast State
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [volume, setVolume] = useState<number>(75);
-  const [deckFeedSource, setDeckFeedSource] = useState<'drfun1' | 'fubo'>('drfun1');
+  const [deckFeedSource, setDeckFeedSource] = useState<'drfun1' | 'fubo' | 'radio' | 'twitch'>('drfun1');
   const [selectedDrFun1Channel, setSelectedDrFun1Channel] = useState<MasterEpgChannel>(ALL_DRFUN1_BROADCASTING_CHANNELS[0]);
+  const [stationCategoryFilter, setStationCategoryFilter] = useState<'all' | 'tv' | 'radio' | 'sports' | 'twitch' | 'space'>('all');
   const [drfun1BandFilter, setDrfun1BandFilter] = useState<string>('all');
   const [selectedFuboMatch, setSelectedFuboMatch] = useState<FuboMatch>(FUBO_MATCHES[0]);
   const [isQuadViewActive, setIsQuadViewActive] = useState<boolean>(false);
   const [isShoutcastBotModalOpen, setIsShoutcastBotModalOpen] = useState<boolean>(false);
+  const [isSearchEngineModalOpen, setIsSearchEngineModalOpen] = useState<boolean>(false);
+  const [isMusicHubModalOpen, setIsMusicHubModalOpen] = useState<boolean>(false);
 
   // Twitch Stream State
   const [isFollowed, setIsFollowed] = useState<boolean>(false);
@@ -383,7 +388,7 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
           timestamp: timeStr,
           sender: '***',
           channel: activeChannel,
-          content: `[STATS UnrealIRCd 6.1.4] Server: ${activeServer}:6697 (SSL) | SID: 007 | 26 Switch SUPERNAP Leaves Synced | 8,838 Global Users | 885,000 Channels Synced | donSchoe/shoutcast-irc Bot Active | Transit: RisingNet 100G DWDM (0.00% packet loss)`,
+          content: `[STATS UnrealIRCd 6.1.4] Server: ${activeServer}:6697 (SSL) | SID: 007 | 26 Switch SUPERNAP Leaves Synced | 8,838 Global Users | 855,000 Channels Synced | donSchoe/shoutcast-irc Bot Active | Transit: RisingNet 100G DWDM (0.00% packet loss)`,
           type: 'notice',
         };
         setMessages((prev) => ({
@@ -411,13 +416,107 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
         return;
       }
 
+      if (command === 'search' || command === 'find') {
+        const query = args.trim().toLowerCase();
+        if (!query) {
+          setActiveDeckMode('search');
+          const noticeMsg: IrcMessage = {
+            id: `search_${Date.now()}`,
+            timestamp: timeStr,
+            sender: '***',
+            channel: activeChannel,
+            content: `Switched deck view to Search Engine (855k Channels & 26 Leaf Nodes). Usage: /search <keyword>`,
+            type: 'system',
+          };
+          setMessages((prev) => ({
+            ...prev,
+            [activeChannel]: [...(prev[activeChannel] || []), noticeMsg],
+          }));
+          setChatInput('');
+          return;
+        }
+
+        // Search in channels and leaf nodes
+        const matchedChannels = ALL_DRFUN1_MEDIA_CHANNELS
+          .filter((c) => c.name.toLowerCase().includes(query) || c.topic.toLowerCase().includes(query))
+          .slice(0, 4);
+
+        const matchedLeaves = SWITCH_DEDICATED_NODES
+          .filter((n) => n.name.toLowerCase().includes(query) || n.subdomain.toLowerCase().includes(query) || n.location.toLowerCase().includes(query))
+          .slice(0, 3);
+
+        const lines: string[] = [
+          `[SEARCH RESULTS for "${args.trim()}"] Channels (855k Network) & Leaf Nodes:`,
+        ];
+
+        if (matchedChannels.length > 0) {
+          lines.push('Channels:');
+          matchedChannels.forEach((c) => {
+            lines.push(`  - ${c.name} (${c.userCount.toLocaleString()} users) -> ${c.topic.slice(0, 65)}... [Type /join ${c.name}]`);
+          });
+        }
+
+        if (matchedLeaves.length > 0) {
+          lines.push('Leaf Nodes:');
+          matchedLeaves.forEach((n) => {
+            lines.push(`  - ${n.subdomain} (SID ${n.sid}, ${n.location}, ${n.latencyMs}ms, ${n.usersOnline} users)`);
+          });
+        }
+
+        if (matchedChannels.length === 0 && matchedLeaves.length === 0) {
+          lines.push(`  No direct matches for "${args.trim()}". Type /search or switch to the 'Search Engine' tab above to browse all 855k channels.`);
+        }
+
+        const resMsg: IrcMessage = {
+          id: `search_res_${Date.now()}`,
+          timestamp: timeStr,
+          sender: '***',
+          channel: activeChannel,
+          content: lines.join('\n'),
+          type: 'notice',
+        };
+        setMessages((prev) => ({
+          ...prev,
+          [activeChannel]: [...(prev[activeChannel] || []), resMsg],
+        }));
+        setChatInput('');
+        return;
+      }
+
+      if (command === 'leaf' || command === 'nodes') {
+        const query = args.trim().toLowerCase();
+        let leaves = SWITCH_DEDICATED_NODES;
+        if (query) {
+          leaves = leaves.filter((n) => n.name.toLowerCase().includes(query) || n.subdomain.toLowerCase().includes(query) || n.location.toLowerCase().includes(query) || n.sid.includes(query));
+        }
+        const lines = [
+          `[SWITCH SUPERNAP LEAF NODES] Total: 26 Dedicated Leaves Linked to irc.drfun1.com:6697 (SID 001):`,
+          ...leaves.slice(0, 5).map((n) => `  - ${n.subdomain} [SID ${n.sid}] ${n.location} (${n.latencyMs}ms, ${n.usersOnline} users)`),
+          `  (Type /search or switch to Search Engine view to inspect all 26 leaf links & SSL fingerprints)`
+        ];
+        const resMsg: IrcMessage = {
+          id: `leaf_res_${Date.now()}`,
+          timestamp: timeStr,
+          sender: '***',
+          channel: activeChannel,
+          content: lines.join('\n'),
+          type: 'notice',
+        };
+        setMessages((prev) => ({
+          ...prev,
+          [activeChannel]: [...(prev[activeChannel] || []), resMsg],
+        }));
+        setChatInput('');
+        return;
+      }
+
       if (command === 'help') {
         const helpMsg: IrcMessage = {
           id: `help_${Date.now()}`,
           timestamp: timeStr,
           sender: '***',
           channel: activeChannel,
-          content: `Available Commands: /join <#channel>, /nick <name>, /whois <nick>, /me <action>, /stats, /clear, /topic <text>, or .np, .song, .dj, .listeners, .stream (donSchoe/shoutcast-irc bot)`,
+          content: `Available Commands: /join <#channel>, /search <term>, /leaf <name>, /nick <name>, /whois <nick>, /me <action>, /stats, /clear, /topic <text>, or .np, .song, .dj, .listeners, .stream (donSchoe/shoutcast-irc bot)`,
           type: 'system',
         };
         setMessages((prev) => ({
@@ -444,24 +543,36 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
       [activeChannel]: [...(prev[activeChannel] || []), newMsg],
     }));
 
-    // Intercept SHOUTcast-IRC Bot Triggers (.np, .song, .dj, .listeners, .stream, .help)
+    // Intercept SHOUTcast-IRC Bot Triggers (.np, .yt, .playlist, .genre, .artist, .label, .queue, .song, .dj, .listeners, .stream, .help)
     const lowerText = text.trim().toLowerCase();
     if (lowerText.startsWith('.') || lowerText.startsWith('!')) {
       let botResp = '';
       if (lowerText === '.np' || lowerText === '!np') {
-        botResp = `[SHOUTcast D.N.A. x YouTube Music] Now Playing: Dr. Dre ft. Snoop Dogg - Still D.R.E. | Label: Death Row Records / Aftermath | Genre: West Coast Hip Hop / G-Funk | Listeners: 48,290 | Stream: https://music.youtube.com/watch?v=_CL6n0FJZpk | 885,000 Channels Synced by Artist, Genre & Label`;
+        botResp = `[SHOUTcast D.N.A. x YouTube Music] Now Playing: Dr. Dre ft. Snoop Dogg - Still D.R.E. | Label: Death Row Records / Aftermath | Genre: West Coast Hip Hop / G-Funk | Listeners: 48,290 | Stream: https://music.youtube.com/watch?v=_CL6n0FJZpk | 855,000 Channels Synced by Artist, Genre & Label`;
+      } else if (lowerText === '.yt' || lowerText === '!yt' || lowerText.startsWith('.yt ')) {
+        botResp = `[YouTube Music Library Engine] Active Track: Dr. Dre ft. Snoop Dogg - "Still D.R.E." | YouTube Music Link: https://music.youtube.com/watch?v=_CL6n0FJZpk | Bitrate: 320 kbps High-Fidelity | 855,000 Channels Synchronized | Source: https://github.com/donSchoe/shoutcast-irc.git`;
+      } else if (lowerText === '.playlist' || lowerText === '!playlist') {
+        botResp = `[YouTube Music Curated Playlists] 1: Death Row Classics (235k chan) | 2: Space Synthwave Odyssey (180k chan) | 3: Orbital Lo-Fi (135k chan) | 4: Club Nebula EDM (115k chan) | 5: Interstellar Symphony (65k chan) | 6: Shortwave Dub (60k chan) | 7: Classic Rock/Funk (65k chan) | Total: 855,000 Channels Synced`;
+      } else if (lowerText === '.genre' || lowerText === '!genre') {
+        botResp = `[855,000 Channels by Genre] West Coast Hip Hop/G-Funk: 210,000 | Space Synthwave: 180,000 | Lo-Fi Space: 135,000 | Cyberpunk EDM: 115,000 | Classic Rock & Funk: 90,000 | Space Symphony: 65,000 | Reggae/Dub: 60,000 | Total: 855,000 channels`;
+      } else if (lowerText === '.artist' || lowerText === '!artist') {
+        botResp = `[855,000 Channels by Artist] Snoop Dogg: 85k | Richard Alan Witt & DJ Orbit Nova: 95k | 2Pac: 75k | Dr. Dre: 60k | Daft Punk: 65k | Mount Westmore: 55k | Hans Zimmer: 50k | Kraftwerk: 45k | Aphex Twin: 40k | Global Indie: 285k | Total: 855,000 channels`;
+      } else if (lowerText === '.label' || lowerText === '!label') {
+        botResp = `[855,000 Channels by Record Label] Death Row Records: 235k | DrFun1 Music Group: 220k | WittLaw Soundworks: 155k | Aftermath/Interscope: 120k | Warp & Ninja Tune: 75k | Sony Masterworks: 50k | Total: 855,000 channels`;
+      } else if (lowerText === '.queue' || lowerText === '!queue') {
+        botResp = `[YouTube Music Bot Queue] Next: 1. 2Pac - California Love [yt:5wBT4G8Y2II] | 2. HOME - Resonance [yt:8GW6sLrK40k] | 3. Mount Westmore - Too Big [yt:kX_X3B2_rGE] | 4. Lofi Girl - Space Chill [yt:jfKfPfyJRdk] | Bot Fleet: donSchoe/shoutcast-irc`;
       } else if (lowerText === '.song' || lowerText === '!song') {
         botResp = `[SHOUTcast Song] "Still D.R.E." by Dr. Dre ft. Snoop Dogg (Album: 2001 • Label: Death Row Records / Aftermath) | YouTube Music: https://music.youtube.com/watch?v=_CL6n0FJZpk`;
       } else if (lowerText === '.dj' || lowerText === '!dj') {
         botResp = `[SHOUTcast DJ] Live On Air: Richard Alan Witt & DJ Orbit Nova (Switch SUPERNAP Teleport Master Studio - www.wittlawfirm.com) | Curator: Snoop Dogg & WittLaw Soundworks`;
       } else if (lowerText === '.listeners' || lowerText === '!listeners') {
-        botResp = `[SHOUTcast Listeners] Active on Channel: 48,290 | Total across 885,000 Channels: 1,245,800 Active Listeners | YouTube Music Engine Active`;
+        botResp = `[SHOUTcast Listeners] Active on Channel: 48,290 | Total across 855,000 Channels: 1,245,800 Active Listeners | YouTube Music Engine Active`;
       } else if (lowerText === '.stream' || lowerText === '!stream' || lowerText === '.listen') {
-        botResp = `[SHOUTcast x YouTube Music Stream] Tune In on YouTube Music: https://music.youtube.com/watch?v=_CL6n0FJZpk | SHOUTcast D.N.A. Relay: http://stream.drfun1.com:8000/live | 885,000 Channels Fanout Synced`;
+        botResp = `[SHOUTcast x YouTube Music Stream] Tune In on YouTube Music: https://music.youtube.com/watch?v=_CL6n0FJZpk | SHOUTcast D.N.A. Relay: http://stream.drfun1.com:8000/live | 855,000 Channels Fanout Synced`;
       } else if (lowerText === '.stats' || lowerText === '!stats') {
-        botResp = `[SHOUTcast Server Stats] stream.drfun1.com:8000/live | 885,000 Channels Categorized by Artist (10), Music Genre (7), Record Label (6) | YouTube Music Library Playlist Engine Active | Bot: donSchoe/shoutcast-irc.git`;
+        botResp = `[SHOUTcast Server Stats] stream.drfun1.com:8000/live | 855,000 Channels Categorized by Artist (10), Music Genre (7), Record Label (6) | YouTube Music Library Playlist Engine Active | Bot: donSchoe/shoutcast-irc.git`;
       } else if (lowerText === '.help' || lowerText === '!help') {
-        botResp = `[SHOUTcast Bot Help] Available triggers: .np, .song, .dj, .listeners, .stream, .stats, .help (donSchoe/shoutcast-irc daemon with YouTube Music library)`;
+        botResp = `[SHOUTcast Bot Help] Available triggers: .np, .yt, .playlist, .genre, .artist, .label, .queue, .song, .dj, .listeners, .stream, .stats, .help (donSchoe/shoutcast-irc daemon with YouTube Music library)`;
       }
 
       if (botResp) {
@@ -568,7 +679,7 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
               </span>
               <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 font-mono">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                <span>885,000 CHANNELS SYNCED</span>
+                <span>855,000 CHANNELS SYNCED</span>
               </span>
               <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-pink-500/20 text-pink-300 border border-pink-500/30 flex items-center gap-1 font-mono">
                 <Radio className="w-3 h-3 text-pink-400 animate-pulse" />
@@ -595,55 +706,42 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
           {/* Deck View Mode Switcher */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-1 flex items-center space-x-1 text-xs font-semibold">
             <button
-              onClick={() => setActiveDeckMode('deck')}
+              onClick={() => setActiveDeckMode('tv_radio')}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ${
-                activeDeckMode === 'deck'
+                activeDeckMode === 'tv_radio' || activeDeckMode === 'deck' || activeDeckMode === 'drfun1' || activeDeckMode === 'fubo' || activeDeckMode === 'twitch'
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-white'
               }`}
-              title="All-in-One Multi-Deck with Live Player + IRC & Nick List"
+              title="Unified TV & Radio Broadcast IRC Client - All 27 DrFun1 Stations, Fubo Sports, and Twitch into ONE IRC Client"
             >
-              <Layers className="w-3.5 h-3.5" />
-              <span>Multi-Deck</span>
+              <Tv className="w-3.5 h-3.5 text-purple-300" />
+              <span>TV &amp; Radio (All-in-One)</span>
             </button>
 
             <button
-              onClick={() => setActiveDeckMode('drfun1')}
+              onClick={() => setActiveDeckMode('music_hub')}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ${
-                activeDeckMode === 'drfun1'
-                  ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-sky-600 text-white shadow-md'
+                activeDeckMode === 'music_hub'
+                  ? 'bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-white'
               }`}
-              title="DrFun1 Media Inc. & DrFun1 ECOM Inc. Owned 27 Broadcasting Channels Multiplex"
+              title="Unified Music Hub & IRC Client - YouTube Music Library, SHOUTcast Bots & MPD DJ Deck across 855k Channels"
             >
-              <Radio className="w-3.5 h-3.5 text-purple-300" />
-              <span>DrFun1 Channels (27)</span>
+              <Music className="w-3.5 h-3.5 text-pink-300" />
+              <span>Music Hub &amp; IRC (855k)</span>
             </button>
 
             <button
-              onClick={() => setActiveDeckMode('fubo')}
+              onClick={() => setActiveDeckMode('search')}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ${
-                activeDeckMode === 'fubo'
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
+                activeDeckMode === 'search'
+                  ? 'bg-gradient-to-r from-indigo-600 via-sky-600 to-teal-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-white'
               }`}
-              title="Fubo.tv Live Sports Multiplex & Quad-View"
+              title="IRC Channel & Leafed IRCD Network Search Engine (855k Channels & 26 Switch SUPERNAP Leaves)"
             >
-              <Tv className="w-3.5 h-3.5" />
-              <span>Fubo.tv Sports</span>
-            </button>
-
-            <button
-              onClick={() => setActiveDeckMode('twitch')}
-              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ${
-                activeDeckMode === 'twitch'
-                  ? 'bg-gradient-to-r from-purple-700 to-indigo-700 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-              title="Twitch.tv Live Streamer & Emote Hub"
-            >
-              <Twitch className="w-3.5 h-3.5" />
-              <span>Twitch.tv</span>
+              <Search className="w-3.5 h-3.5 text-sky-300" />
+              <span>IRC &amp; Leaf Search</span>
             </button>
 
             <button
@@ -695,30 +793,40 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
               <option value="#fubo-sports">#fubo-sports (Sports Ingest / 1,150)</option>
               <option value="#c-band-space">#c-band (Galaxy 19 Teleport / 194)</option>
               <option value="#starlink">#starlink (SpaceX Optical / 845)</option>
-              <option value="#all-885000-channels">#all-885000-channels (885k Channels Fanout)</option>
+              <option value="#all-855000-channels">#all-855000-channels (855k Channels Fanout)</option>
             </select>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-2.5 pointer-events-none" />
           </div>
 
-          {/* YouTube Music Playlists Engine Button */}
+          {/* Unified Music Hub & IRC Client Button */}
           <button
-            onClick={() => setIsShoutcastBotModalOpen(true)}
+            onClick={() => setActiveDeckMode('music_hub')}
             className="px-3 py-1.5 bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white font-bold rounded-xl text-xs font-mono flex items-center gap-1.5 transition cursor-pointer shadow-md border border-red-400/40"
-            title="Open YouTube Music Library & Playlists (885,000 Channels by Artist, Genre & Label)"
+            title="Open Unified Music Hub & IRC Client - YouTube Music Library, donSchoe/shoutcast-irc bots & MPD DJ Deck across 855k Channels"
           >
-            <Youtube className="w-3.5 h-3.5 text-red-100" />
-            <span>YouTube Music Library</span>
+            <Music className="w-3.5 h-3.5 text-pink-100" />
+            <span>Music Hub &amp; IRC (855k)</span>
           </button>
 
-          {/* donSchoe/shoutcast-irc Announcer Bot Button */}
+          {/* donSchoe/shoutcast-irc Announcer Bot Quick Button */}
           <button
             onClick={() => setIsShoutcastBotModalOpen(true)}
             className="px-3 py-1.5 bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 hover:from-pink-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs font-mono flex items-center gap-1.5 transition cursor-pointer shadow-md border border-purple-400/40"
-            title="Open donSchoe/shoutcast-irc Announcer Bot (885,000 Channels)"
+            title="Open donSchoe/shoutcast-irc Announcer Bot (855,000 Channels)"
           >
             <Radio className="w-3.5 h-3.5 text-pink-200 animate-pulse" />
             <span>SHOUTcast Bot (.np)</span>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+          </button>
+
+          {/* IRC Channel & Leafed IRCD Network Search Engine Quick Button */}
+          <button
+            onClick={() => setIsSearchEngineModalOpen(true)}
+            className="px-3 py-1.5 bg-gradient-to-r from-purple-700 via-indigo-700 to-sky-700 hover:from-purple-600 hover:to-sky-600 text-white font-bold rounded-xl text-xs font-mono flex items-center gap-1.5 transition cursor-pointer shadow-md border border-purple-400/40"
+            title="Open IRC Channel & Leafed IRCD Network Search Engine (855,000 Channels & 26 Leaves)"
+          >
+            <Search className="w-3.5 h-3.5 text-purple-200" />
+            <span>IRC &amp; Leafed IRCD Search</span>
           </button>
 
           {/* Quick Server Switcher Dropdown */}
@@ -773,22 +881,49 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
               {/* Deck Sub-Header with Dual Feeds indicator & Source Switcher */}
               <div className="bg-slate-900/80 px-4 py-2 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
                 <div className="flex items-center gap-3">
-                  {/* Feed Source Selector (DrFun1 27 Channels vs Fubo Sports) */}
+                  {/* Feed Source Selector (DrFun1 TV vs DrFun1 Radio vs Fubo Sports) */}
                   <div className="bg-slate-950 border border-slate-800 rounded-lg p-0.5 flex items-center gap-1 font-mono text-[11px]">
                     <button
-                      onClick={() => setDeckFeedSource('drfun1')}
+                      onClick={() => {
+                        setDeckFeedSource('drfun1');
+                        if (selectedDrFun1Channel.unrealIrcChannel) {
+                          handleSwitchChannel(selectedDrFun1Channel.unrealIrcChannel);
+                        }
+                      }}
                       className={`px-2.5 py-1 rounded-md transition font-bold cursor-pointer flex items-center gap-1 ${
                         deckFeedSource === 'drfun1'
                           ? 'bg-purple-600 text-white shadow'
                           : 'text-slate-400 hover:text-white'
                       }`}
-                      title="Stream all 27 Broadcasting Channels Owned by DrFun1 Media Inc. & DrFun1 ECOM Inc."
+                      title="Stream DrFun1 Media TV Broadcasting Stations (4K / 5G / Fiber)"
                     >
-                      <Radio className="w-3 h-3 text-purple-300" />
-                      <span>DrFun1 Channels (27)</span>
+                      <Tv className="w-3 h-3 text-purple-300" />
+                      <span>DrFun1 TV</span>
                     </button>
+
                     <button
-                      onClick={() => setDeckFeedSource('fubo')}
+                      onClick={() => {
+                        setDeckFeedSource('radio');
+                        const radioCh = ALL_DRFUN1_BROADCASTING_CHANNELS.find((c) => c.channelNumber === 105) || ALL_DRFUN1_BROADCASTING_CHANNELS[0];
+                        setSelectedDrFun1Channel(radioCh);
+                        handleSwitchChannel('#drfun1-orbitradio');
+                      }}
+                      className={`px-2.5 py-1 rounded-md transition font-bold cursor-pointer flex items-center gap-1 ${
+                        deckFeedSource === 'radio'
+                          ? 'bg-pink-600 text-white shadow'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                      title="Stream DrFun1 Orbit Radio FM & Deep Space 24/7 (Ch 105 & 127)"
+                    >
+                      <Radio className="w-3 h-3 text-pink-300 animate-pulse" />
+                      <span>Orbit Radio FM</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setDeckFeedSource('fubo');
+                        handleSwitchChannel('#fubo-sports');
+                      }}
                       className={`px-2.5 py-1 rounded-md transition font-bold cursor-pointer flex items-center gap-1 ${
                         deckFeedSource === 'fubo'
                           ? 'bg-emerald-600 text-white shadow'
@@ -797,7 +932,7 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
                       title="Stream Fubo.tv Live Sports Multiplex"
                     >
                       <Tv className="w-3 h-3 text-emerald-300" />
-                      <span>Fubo.tv Sports (4)</span>
+                      <span>Fubo Sports</span>
                     </button>
                   </div>
 
@@ -1068,26 +1203,32 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
 
               {/* Station / Feed Selection Quick-bar */}
               <div className="bg-slate-900 border-t border-slate-800 p-2 flex items-center gap-2 overflow-x-auto text-xs">
-                {deckFeedSource === 'drfun1' ? (
+                {deckFeedSource === 'drfun1' || deckFeedSource === 'radio' ? (
                   <>
                     <span className="text-[11px] font-bold text-purple-300 uppercase tracking-wider shrink-0 px-2 font-mono flex items-center gap-1">
                       <Radio className="w-3 h-3 text-purple-400" />
-                      <span>DrFun1 Stations (27):</span>
+                      <span>TV &amp; Radio Stations (27):</span>
                     </span>
                     {ALL_DRFUN1_BROADCASTING_CHANNELS.map((ch) => (
                       <button
                         key={ch.id}
-                        onClick={() => setSelectedDrFun1Channel(ch)}
+                        onClick={() => {
+                          setSelectedDrFun1Channel(ch);
+                          if (ch.unrealIrcChannel) {
+                            handleSwitchChannel(ch.unrealIrcChannel);
+                          }
+                        }}
                         className={`px-2.5 py-1 rounded-lg text-xs font-semibold shrink-0 transition flex items-center gap-1.5 border cursor-pointer font-mono ${
                           selectedDrFun1Channel.id === ch.id
                             ? 'bg-purple-600/40 border-purple-400 text-white font-bold shadow'
                             : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
                         }`}
-                        title={`${ch.name} - ${ch.carrierFrequency}`}
+                        title={`${ch.name} - ${ch.carrierFrequency} (Syncs IRC to ${ch.unrealIrcChannel})`}
                       >
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                         <span className="text-purple-300 font-bold">Ch {ch.channelNumber}</span>
                         <span className="text-white truncate max-w-[130px]">{ch.callSign}</span>
+                        <span className="text-[10px] text-sky-400">({ch.unrealIrcChannel})</span>
                       </button>
                     ))}
                   </>
@@ -1102,12 +1243,14 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
                         onClick={() => {
                           setSelectedFuboMatch(m);
                           setIsQuadViewActive(false);
+                          handleSwitchChannel('#fubo-sports');
                         }}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition flex items-center gap-2 border cursor-pointer ${
                           selectedFuboMatch.id === m.id
                             ? 'bg-purple-600/30 border-purple-500 text-white font-bold'
                             : 'bg-slate-950 border-slate-800 text-slate-300 hover:text-white'
                         }`}
+                        title={`${m.channelName} (Syncs to #fubo-sports)`}
                       >
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                         <span>{m.channelName}</span>
@@ -1153,7 +1296,7 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
                     <span>donSchoe/shoutcast-irc</span>
                   </button>
                   <span className="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-mono font-bold">
-                    885,000 CHANNELS SYNCED
+                    855,000 CHANNELS SYNCED
                   </span>
                 </div>
               </div>
@@ -1671,6 +1814,38 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
               </div>
             </div>
           )}
+
+          {/* ========================================================= */}
+          {/* 5. UNIFIED MUSIC HUB & IRC CLIENT MODE (855k CHANNELS)    */}
+          {/* ========================================================= */}
+          {activeDeckMode === 'music_hub' && (
+            <div className="flex-1 flex flex-col bg-slate-950 p-2 sm:p-4 overflow-y-auto">
+              <UnifiedMusicIrcHub
+                ircSession={ircSession}
+                activeServer={activeServer}
+                onJoinExternalChannel={(chan) => handleSwitchChannel(chan)}
+              />
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* 6. IRC CHANNEL & LEAFED IRCD NETWORK SEARCH ENGINE MODE   */}
+          {/* ========================================================= */}
+          {activeDeckMode === 'search' && (
+            <div className="flex-1 flex flex-col bg-slate-950 p-2 sm:p-4 overflow-y-auto">
+              <IrcChannelAndLeafSearchEngine
+                onJoinChannel={(chan) => {
+                  handleSwitchChannel(chan);
+                  setActiveDeckMode('deck');
+                }}
+                onSelectLeafServer={(srv) => {
+                  handleSwitchServer(srv);
+                }}
+                onOpenShoutcastBotModal={() => setIsShoutcastBotModalOpen(true)}
+                onOpenDevPlatformModal={() => setIsDevPlatformModalOpen(true)}
+              />
+            </div>
+          )}
         </div>
 
         {/* Right Column: Synced IRC Chat & Interactive Nick List */}
@@ -1955,7 +2130,7 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
         }}
       />
 
-      {/* donSchoe/shoutcast-irc Announcer Bot & 885,000 Channels Fanout Modal */}
+      {/* donSchoe/shoutcast-irc Announcer Bot & 855,000 Channels Fanout Modal */}
       <ShoutcastIrcBotModal
         isOpen={isShoutcastBotModalOpen}
         onClose={() => setIsShoutcastBotModalOpen(false)}
@@ -1978,6 +2153,52 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
           playAudioChime();
         }}
       />
+
+      {/* IRC Channel & Leafed Network Search Engine Floating Modal */}
+      {isSearchEngineModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+          <div className="relative w-full max-w-6xl max-h-[92vh] flex flex-col">
+            <IrcChannelAndLeafSearchEngine
+              isModalView={true}
+              onCloseModal={() => setIsSearchEngineModalOpen(false)}
+              onJoinChannel={(chan) => {
+                handleSwitchChannel(chan);
+                setIsSearchEngineModalOpen(false);
+              }}
+              onSelectLeafServer={(srv) => {
+                handleSwitchServer(srv);
+                setIsSearchEngineModalOpen(false);
+              }}
+              onOpenShoutcastBotModal={() => {
+                setIsSearchEngineModalOpen(false);
+                setIsShoutcastBotModalOpen(true);
+              }}
+              onOpenDevPlatformModal={() => {
+                setIsSearchEngineModalOpen(false);
+                setIsDevPlatformModalOpen(true);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Unified Music Hub & IRC Client Floating Modal */}
+      {isMusicHubModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+          <div className="relative w-full max-w-6xl max-h-[92vh] flex flex-col">
+            <UnifiedMusicIrcHub
+              isModalView={true}
+              onCloseModal={() => setIsMusicHubModalOpen(false)}
+              ircSession={ircSession}
+              activeServer={activeServer}
+              onJoinExternalChannel={(chan) => {
+                handleSwitchChannel(chan);
+                setIsMusicHubModalOpen(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -37,7 +37,8 @@ import {
   Repeat,
   Search,
   Filter,
-  Share2
+  Share2,
+  Bot
 } from 'lucide-react';
 import {
   YOUTUBE_MUSIC_TRACKS,
@@ -45,7 +46,9 @@ import {
   MUSIC_GENRE_CATEGORIES,
   RECORD_LABEL_CATEGORIES,
   ARTIST_CATEGORIES,
-  SHOUTCAST_885000_CHANNELS_AUDIT,
+  BOT_MUSIC_ROSTER,
+  BotMusicAgent,
+  SHOUTCAST_855000_CHANNELS_AUDIT,
   YouTubeMusicTrack,
   YouTubeMusicPlaylist,
 } from '../data/shoutcastMusicLibraryData';
@@ -83,11 +86,12 @@ export const ShoutcastIrcBotModal: React.FC<ShoutcastIrcBotModalProps> = ({
   activeServer = 'dev.drfun1media.com',
 }) => {
   // Navigation Tabs
-  const [activeTab, setActiveTab] = useState<'yt_playlist' | 'by_genre' | 'by_artist' | 'by_label' | 'stream' | 'commands' | 'network' | 'daemon'>('yt_playlist');
+  const [activeTab, setActiveTab] = useState<'yt_playlist' | 'bot_library' | 'by_genre' | 'by_artist' | 'by_label' | 'stream' | 'commands' | 'network' | 'daemon'>('yt_playlist');
 
   // YouTube Music Library State
   const [selectedPlaylist, setSelectedPlaylist] = useState<YouTubeMusicPlaylist>(YOUTUBE_MUSIC_PLAYLISTS[0]);
   const [selectedTrack, setSelectedTrack] = useState<YouTubeMusicTrack>(YOUTUBE_MUSIC_TRACKS[0]);
+  const [selectedBotAgent, setSelectedBotAgent] = useState<BotMusicAgent>(BOT_MUSIC_ROSTER[0]);
   const [isPlayingYouTube, setIsPlayingYouTube] = useState<boolean>(true);
   const [isAudioMuted, setIsAudioMuted] = useState<boolean>(false);
   const [audioVolume, setAudioVolume] = useState<number>(85);
@@ -140,13 +144,13 @@ export const ShoutcastIrcBotModal: React.FC<ShoutcastIrcBotModalProps> = ({
     {
       timestamp: '15:20:02',
       sender: 'ShoutcastBot',
-      text: 'YouTube Music Library Playlist Engine loaded: 5 Curated Playlists | 885,000 Channels categorized by Artist, Genre & Label',
+      text: 'YouTube Music Library Playlist Engine loaded: 7 Curated Playlists | 855,000 Channels categorized by Artist, Genre & Label',
       isBot: true,
     },
     {
       timestamp: '15:20:03',
       sender: 'ShoutcastBot',
-      text: 'Synchronized with 885,000 IRC channels across UnrealIRCd 6.1.4 & Denora Stats.',
+      text: 'Synchronized with 855,000 IRC channels across UnrealIRCd 6.1.4 & Denora Stats.',
       isBot: true,
     },
     {
@@ -238,21 +242,21 @@ export const ShoutcastIrcBotModal: React.FC<ShoutcastIrcBotModalProps> = ({
 
   // Announce Now Playing to active IRC channel with YouTube Music metadata
   const handleAnnounceToIrc = () => {
-    const announcement = `[SHOUTcast D.N.A. x YouTube Music] Now Playing: ${selectedTrack.artist} - ${selectedTrack.title} | Label: ${selectedTrack.label} | Genre: ${selectedTrack.genre} | Listeners: ${selectedTrack.listeners.toLocaleString()} | Stream: ${selectedTrack.youtubeMusicUrl} | 885,000 Channels Synced`;
+    const announcement = `[SHOUTcast D.N.A. x YouTube Music] Now Playing: ${selectedTrack.artist} - ${selectedTrack.title} | Label: ${selectedTrack.label} | Genre: ${selectedTrack.genre} | Listeners: ${selectedTrack.listeners.toLocaleString()} | Stream: ${selectedTrack.youtubeMusicUrl} | 855,000 Channels Synced`;
     if (onBroadcastToIrc) {
       onBroadcastToIrc(announcement, currentIrcChannel);
     }
-    setAnnounceFeedback(`Broadcast dispatched to ${currentIrcChannel} across 885,000 network channels!`);
+    setAnnounceFeedback(`Broadcast dispatched to ${currentIrcChannel} across 855,000 network channels!`);
     setTimeout(() => setAnnounceFeedback(null), 3500);
   };
 
-  // Mass announce to all 885,000 channels
+  // Mass announce to all 855,000 channels
   const handleMassAnnounce = () => {
-    const announcement = `[NETWORK-WIDE 885,000 CHANNELS SYNC] 🎵 Now Playing on SHOUTcast D.N.A.: ${selectedTrack.artist} - "${selectedTrack.title}" (${selectedTrack.label}) | Listen Live on YouTube Music: ${selectedTrack.youtubeMusicUrl}`;
+    const announcement = `[NETWORK-WIDE 855,000 CHANNELS SYNC] 🎵 Now Playing on SHOUTcast D.N.A.: ${selectedTrack.artist} - "${selectedTrack.title}" (${selectedTrack.label}) | Listen Live on YouTube Music: ${selectedTrack.youtubeMusicUrl}`;
     if (onBroadcastToIrc) {
       onBroadcastToIrc(announcement, currentIrcChannel);
     }
-    setAnnounceFeedback(`Mass broadcast fanout triggered across all 885,000 channels!`);
+    setAnnounceFeedback(`Mass broadcast fanout triggered across all 855,000 channels!`);
     setTimeout(() => setAnnounceFeedback(null), 4000);
   };
 
@@ -277,18 +281,30 @@ export const ShoutcastIrcBotModal: React.FC<ShoutcastIrcBotModalProps> = ({
     const lower = trimmed.toLowerCase();
     if (lower === '.np' || lower === '!np' || lower === '/np') {
       botResponse = `[SHOUTcast D.N.A. x YouTube Music] Now Playing: ${selectedTrack.artist} - ${selectedTrack.title} | Label: ${selectedTrack.label} | Genre: ${selectedTrack.genre} | Listeners: ${selectedTrack.listeners.toLocaleString()} | YouTube: ${selectedTrack.youtubeMusicUrl}`;
+    } else if (lower === '.yt' || lower === '!yt' || lower.startsWith('.yt ')) {
+      botResponse = `[YouTube Music Stream] Active: "${selectedTrack.title}" by ${selectedTrack.artist} | Link: ${selectedTrack.youtubeMusicUrl} | Bitrate: ${selectedTrack.bitrate} | Engine: donSchoe/shoutcast-irc`;
+    } else if (lower === '.playlist' || lower === '!playlist') {
+      botResponse = `[YouTube Music Playlists] Active Playlist: "${selectedPlaylist.name}" (${selectedPlaylist.channelCount.toLocaleString()} channels) | Curator: ${selectedPlaylist.curator} | 855,000 Channels Total`;
+    } else if (lower === '.genre' || lower === '!genre') {
+      botResponse = `[855,000 Channels by Genre] 7 Categories: Hip Hop/G-Funk (210k), Synthwave (180k), Lo-Fi Space (135k), EDM (115k), Rock/Funk (90k), Space Symphony (65k), Reggae/Dub (60k)`;
+    } else if (lower === '.artist' || lower === '!artist') {
+      botResponse = `[855,000 Channels by Artist] 10 Hubs: Snoop Dogg (85k), Witt & Orbit Nova (95k), 2Pac (75k), Dr. Dre (60k), Daft Punk (65k), Mount Westmore (55k), Zimmer (50k), Kraftwerk (45k), Aphex (40k), Indie (285k)`;
+    } else if (lower === '.label' || lower === '!label') {
+      botResponse = `[855,000 Channels by Label] 6 Labels: Death Row (235k), DrFun1 Music (220k), WittLaw Soundworks (155k), Aftermath (120k), Warp (75k), Sony (50k)`;
+    } else if (lower === '.queue' || lower === '!queue') {
+      botResponse = `[YouTube Music Bot Queue] Next: 1. California Love (2Pac) | 2. Resonance (HOME) | 3. Too Big (Mount Westmore) | 4. Space Chill Radio (Lofi Girl) | Bot Fleet: donSchoe/shoutcast-irc`;
     } else if (lower === '.song' || lower === '!song') {
       botResponse = `[SHOUTcast Song] "${selectedTrack.title}" by ${selectedTrack.artist} (Album: ${selectedTrack.album} • Label: ${selectedTrack.label})`;
     } else if (lower === '.dj' || lower === '!dj') {
       botResponse = `[SHOUTcast DJ] On Air: ${selectedTrack.dj} | Live at Switch SUPERNAP Studios (www.switch.com / www.wittlawfirm.com)`;
     } else if (lower === '.listeners' || lower === '!listeners') {
-      botResponse = `[SHOUTcast Listeners] Current: ${selectedTrack.listeners.toLocaleString()} | Total across 885,000 channels: 1,245,800 active listeners`;
+      botResponse = `[SHOUTcast Listeners] Current: ${selectedTrack.listeners.toLocaleString()} | Total across 855,000 channels: 1,245,800 active listeners`;
     } else if (lower === '.stream' || lower === '!stream' || lower === '.listen') {
       botResponse = `[SHOUTcast Stream] YouTube Music Stream: ${selectedTrack.youtubeMusicUrl} | D.N.A. Server: http://stream.drfun1.com:8000/live`;
     } else if (lower === '.stats' || lower === '!stats') {
-      botResponse = `[SHOUTcast D.N.A. Server Stats] Server: stream.drfun1.com:8000 | 885,000 Channels Synced by Artist, Genre, & Label | Bot: donSchoe/shoutcast-irc.git`;
+      botResponse = `[SHOUTcast D.N.A. Server Stats] Server: stream.drfun1.com:8000 | 855,000 Channels Synced by Artist, Genre, & Label | Bot: donSchoe/shoutcast-irc.git`;
     } else if (lower === '.help' || lower === '!help') {
-      botResponse = `[SHOUTcast Bot Help] Available commands: .np (Now Playing), .song, .dj, .listeners, .stream, .stats, .help. Integrated with YouTube Music Library.`;
+      botResponse = `[SHOUTcast Bot Help] Available commands: .np (Now Playing), .yt (YouTube Stream), .playlist, .genre, .artist, .label, .queue, .song, .dj, .listeners, .stream, .stats, .help.`;
     } else {
       botResponse = `[SHOUTcast Bot] Unknown command "${trimmed}". Type .help for available commands or .np for current playing YouTube Music track.`;
     }
@@ -306,7 +322,7 @@ export const ShoutcastIrcBotModal: React.FC<ShoutcastIrcBotModalProps> = ({
 # donSchoe/shoutcast-irc - SHOUTcast to IRC Announcer Bot
 # Source: https://github.com/donSchoe/shoutcast-irc.git
 # Configured for: YouTube Music Library as Playlist Engine
-# Categorized: 885,000 Channels by Artist, Genre & Record Label
+# Categorized: 855,000 Channels by Artist, Genre & Record Label
 # License: Licensed to Richard Alan Witt (www.wittlawfirm.com)
 # ========================================================
 
@@ -327,7 +343,7 @@ class ShoutcastIrcBot < Net::IRC::Client
 
   def on_rpl_welcome(m)
     puts "[SHOUTcast-IRC] Connected to dev.drfun1media.com:6697 (SSL)!"
-    puts "[SHOUTcast-IRC] Syncing 885,000 channels by Artist, Genre, and Record Label..."
+    puts "[SHOUTcast-IRC] Syncing 855,000 channels by Artist, Genre, and Record Label..."
     post JOIN, @config['irc']['channels'].join(',')
     
     # Start polling thread
@@ -348,11 +364,11 @@ class ShoutcastIrcBot < Net::IRC::Client
     when /^\\.dj/i
       post NOTICE, channel, "[SHOUTcast DJ] Live On Air: Richard Alan Witt & DJ Orbit Nova (Switch SUPERNAP Studios)"
     when /^\\.listeners/i
-      post NOTICE, channel, "[SHOUTcast Listeners] Active: #{stats[:listeners]} | 885,000 Synced Channels"
+      post NOTICE, channel, "[SHOUTcast Listeners] Active: #{stats[:listeners]} | 855,000 Synced Channels"
     when /^\\.stream/i, /^\\.listen/i
       post NOTICE, channel, "[SHOUTcast Stream] YouTube Music: #{stats[:yt_url]} | SHOUTcast: http://stream.drfun1.com:8000/live"
     when /^\\.stats/i
-      post NOTICE, channel, "[SHOUTcast Stats] 885,000 Channels Synced by Artist, Genre, & Record Label | Hub: dev.drfun1media.com:6697"
+      post NOTICE, channel, "[SHOUTcast Stats] 855,000 Channels Synced by Artist, Genre, & Record Label | Hub: dev.drfun1media.com:6697"
     end
   end
 
@@ -395,7 +411,7 @@ bot.start`;
 
   const yamlConfig = `# ========================================================
 # config.yml - donSchoe/shoutcast-irc configuration
-# Categorized: 885,000 Channels by Artist, Genre, & Record Label
+# Categorized: 855,000 Channels by Artist, Genre, & Record Label
 # Playlist Engine: YouTube Music Library
 # ========================================================
 irc:
@@ -404,9 +420,9 @@ irc:
   ssl: true
   nick: "ShoutcastBot"
   user: "shoutcast"
-  realname: "donSchoe/shoutcast-irc Bot (885,000 Channels)"
+  realname: "donSchoe/shoutcast-irc Bot (855,000 Channels)"
   channels:
-    # 885,000 Channels categorized by Artist, Genre & Record Label
+    # 855,000 Channels categorized by Artist, Genre & Record Label
     - "#music-deathrow"
     - "#artist-snoopdogg"
     - "#artist-orbitnova"
@@ -482,7 +498,7 @@ shoutcast:
                 </a>
                 <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  <span>885,000 CHANNELS (ARTIST • GENRE • LABEL)</span>
+                  <span>855,000 CHANNELS (ARTIST • GENRE • LABEL)</span>
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5 font-mono flex flex-wrap items-center gap-2">
@@ -519,6 +535,18 @@ shoutcast:
           </button>
 
           <button
+            onClick={() => setActiveTab('bot_library')}
+            className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+              activeTab === 'bot_library'
+                ? 'bg-emerald-600 text-white shadow'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <Bot className="w-3.5 h-3.5 text-emerald-200" />
+            <span>Bot Fleet &amp; Music Engine (7 Bots)</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('by_genre')}
             className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition cursor-pointer ${
               activeTab === 'by_genre'
@@ -527,7 +555,7 @@ shoutcast:
             }`}
           >
             <Music className="w-3.5 h-3.5" />
-            <span>885,000 by Music Genre (7)</span>
+            <span>855,000 by Music Genre (7)</span>
           </button>
 
           <button
@@ -539,7 +567,7 @@ shoutcast:
             }`}
           >
             <Mic2 className="w-3.5 h-3.5" />
-            <span>885,000 by Artist (10)</span>
+            <span>855,000 by Artist (10)</span>
           </button>
 
           <button
@@ -551,7 +579,7 @@ shoutcast:
             }`}
           >
             <Tag className="w-3.5 h-3.5" />
-            <span>885,000 by Record Label (6)</span>
+            <span>855,000 by Record Label (6)</span>
           </button>
 
           <button
@@ -611,7 +639,7 @@ shoutcast:
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>{announceFeedback}</span>
               </span>
-              <span className="text-[10px] text-emerald-400/80">Fanout: 885,000 channels</span>
+              <span className="text-[10px] text-emerald-400/80">Fanout: 855,000 channels</span>
             </div>
           )}
 
@@ -802,10 +830,10 @@ shoutcast:
                     <button
                       onClick={handleMassAnnounce}
                       className="px-3 py-1.5 bg-purple-900/40 hover:bg-purple-900/60 text-purple-300 border border-purple-500/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-                      title="Broadcast Now Playing update across all 885,000 channels"
+                      title="Broadcast Now Playing update across all 855,000 channels"
                     >
                       <Globe className="w-3.5 h-3.5 text-purple-400" />
-                      <span>Mass Announce to 885,000 Channels</span>
+                      <span>Mass Announce to 855,000 Channels</span>
                     </button>
 
                     <button
@@ -836,7 +864,7 @@ shoutcast:
                     <span>Curated YouTube Music Playlists</span>
                   </h4>
                   <span className="text-xs font-mono text-slate-400">
-                    5 Curated Playlists &bull; 885,000 Channels Synced
+                    7 Curated Playlists &bull; 855,000 Channels Synced
                   </span>
                 </div>
 
@@ -1018,7 +1046,272 @@ shoutcast:
           )}
 
           {/* ========================================================= */}
-          {/* TAB 2: 885,000 CHANNELS CATEGORIZED BY MUSIC GENRE        */}
+          {/* TAB: BOT FLEET & YOUTUBE MUSIC ENGINES                     */}
+          {/* ========================================================= */}
+          {activeTab === 'bot_library' && (
+            <div className="space-y-6">
+              {/* Header Banner */}
+              <div className="bg-gradient-to-r from-emerald-950/40 via-purple-950/40 to-slate-900 border border-emerald-500/30 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Bot className="w-5 h-5 text-emerald-400" />
+                    <h3 className="text-white font-bold text-sm">
+                      donSchoe/shoutcast-irc Bot Fleet &bull; YouTube Music Engines
+                    </h3>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/40">
+                      855,000 CHANNELS SYNCED
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 font-mono mt-1 max-w-2xl">
+                    The bot fleet utilizes YouTube Music playlists as its autonomous audio library. Each bot synchronizes live track metadata, Now Playing notices, and channel topics across its assigned slice of the 855,000 IRCD channels.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 font-mono">
+                  <div className="bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-right">
+                    <div className="text-xs text-slate-500 uppercase">Bot Fleet</div>
+                    <div className="text-sm font-bold text-emerald-400">{BOT_MUSIC_ROSTER.length} Daemons Active</div>
+                  </div>
+                  <div className="bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-right">
+                    <div className="text-xs text-slate-500 uppercase">Channels</div>
+                    <div className="text-sm font-bold text-purple-300">855,000 Synced</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bot Architecture Blueprint */}
+              <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 text-xs font-mono">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-purple-300 flex items-center gap-1.5">
+                    <Terminal className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Autonomous Upstream Pipeline Architecture</span>
+                  </span>
+                  <a
+                    href="https://github.com/donSchoe/shoutcast-irc.git"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-400 hover:underline flex items-center gap-1"
+                  >
+                    <span>https://github.com/donSchoe/shoutcast-irc.git</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-2 text-center text-[11px] pt-1">
+                  <div className="bg-slate-950 p-2.5 rounded-lg border border-red-500/30">
+                    <div className="text-red-400 font-bold">1. YouTube Music Library</div>
+                    <div className="text-slate-400 mt-1">Curated Playlists &bull; 320 kbps Stems &bull; Artist Catalogs</div>
+                  </div>
+                  <div className="bg-slate-950 p-2.5 rounded-lg border border-purple-500/30">
+                    <div className="text-purple-400 font-bold">2. donSchoe/shoutcast-irc</div>
+                    <div className="text-slate-400 mt-1">Ruby Net-IRC &bull; D.N.A. XML Scraper &bull; Polling Loop</div>
+                  </div>
+                  <div className="bg-slate-950 p-2.5 rounded-lg border border-sky-500/30">
+                    <div className="text-sky-400 font-bold">3. Switch SUPERNAP 100G</div>
+                    <div className="text-slate-400 mt-1">26 Leaf Nodes &bull; RisingNet DWDM &bull; 1.2ms Latency</div>
+                  </div>
+                  <div className="bg-slate-950 p-2.5 rounded-lg border border-emerald-500/30">
+                    <div className="text-emerald-400 font-bold">4. UnrealIRCd 6.1.4</div>
+                    <div className="text-slate-400 mt-1">855,000 Synced Channels &bull; Denora Stats &bull; Topic Sync</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bot Fleet Roster Cards */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Bot className="w-4 h-4 text-emerald-400" />
+                    <span>Active Bot Fleet &amp; Assigned YouTube Music Engines</span>
+                  </h4>
+                  <span className="text-xs font-mono text-slate-400">
+                    7 Specialized Bots &bull; Total Fanout: 855,000 Channels
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {BOT_MUSIC_ROSTER.map((bot) => (
+                    <div
+                      key={bot.botNick}
+                      className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-emerald-500/50 transition"
+                    >
+                      <div>
+                        {/* Bot Header */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-950 border border-emerald-500/40 flex items-center justify-center font-mono font-bold text-emerald-400 text-xs">
+                              @{bot.botNick.slice(0, 2)}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-white text-sm">@{bot.botNick}</span>
+                                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                  {bot.status}
+                                </span>
+                              </div>
+                              <div className="text-[11px] text-slate-400">{bot.role}</div>
+                            </div>
+                          </div>
+
+                          <div className="text-right font-mono">
+                            <span className="text-xs font-bold text-emerald-400">
+                              {bot.channelsCount.toLocaleString()}
+                            </span>
+                            <div className="text-[10px] text-slate-500 uppercase">Channels</div>
+                          </div>
+                        </div>
+
+                        {/* Specialization & Focus */}
+                        <div className="mt-3 text-xs text-slate-300 font-mono">
+                          <p className="text-slate-400">{bot.specialization}</p>
+                          <div className="mt-1 flex items-center gap-1 text-[11px] text-purple-300">
+                            <span className="text-slate-500">Channels:</span>
+                            <span className="truncate">{bot.channelFocus}</span>
+                          </div>
+                        </div>
+
+                        {/* YouTube Music Source Link & Active Track */}
+                        <div className="mt-3 p-2.5 bg-slate-950 rounded-lg border border-slate-800 text-xs font-mono space-y-1.5">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-slate-400 flex items-center gap-1">
+                              <Youtube className="w-3 h-3 text-red-400" />
+                              <span>YouTube Playlist:</span>
+                            </span>
+                            <span className="text-red-300 font-bold truncate max-w-[220px]">
+                              {bot.playlistName}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-slate-400 flex items-center gap-1">
+                              <Music className="w-3 h-3 text-emerald-400" />
+                              <span>Now Playing:</span>
+                            </span>
+                            <span className="text-white font-bold truncate max-w-[220px]">
+                              {bot.currentTrackArtist} - {bot.currentTrackTitle}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-900">
+                            <span>Uptime: {bot.uptime}</span>
+                            <a
+                              href={bot.youtubeMusicUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-red-400 hover:text-red-300 hover:underline flex items-center gap-0.5"
+                            >
+                              <span>Open on YouTube Music</span>
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          </div>
+                        </div>
+
+                        {/* Supported Triggers */}
+                        <div className="mt-3 flex flex-wrap items-center gap-1">
+                          <span className="text-[10px] font-mono text-slate-500 mr-1">Triggers:</span>
+                          {bot.supportedCommands.map((cmd) => (
+                            <button
+                              key={cmd}
+                              onClick={() => {
+                                handleRunCommand(cmd);
+                                setActiveTab('commands');
+                              }}
+                              className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-mono text-[10px] transition cursor-pointer"
+                              title={`Execute ${cmd} trigger in simulator`}
+                            >
+                              {cmd}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono">
+                        <button
+                          onClick={() => {
+                            const found = YOUTUBE_MUSIC_TRACKS.find((t) => t.id === bot.activeTrackId);
+                            if (found) {
+                              handleSelectTrack(found);
+                            }
+                            setActiveTab('yt_playlist');
+                          }}
+                          className="px-2.5 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/40 rounded-lg text-[11px] font-bold flex items-center gap-1 transition cursor-pointer"
+                        >
+                          <Play className="w-3 h-3" />
+                          <span>Load in Player</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            const announcement = `[@${bot.botNick} x YouTube Music] Now Playing: ${bot.currentTrackArtist} - "${bot.currentTrackTitle}" | Playlist: ${bot.playlistName} | Listen: ${bot.youtubeMusicUrl} | Synced across ${bot.channelsCount.toLocaleString()} channels!`;
+                            if (onBroadcastToIrc) {
+                              onBroadcastToIrc(announcement, currentIrcChannel);
+                            }
+                            setAnnounceFeedback(`@${bot.botNick} announcement broadcast to ${currentIrcChannel} across ${bot.channelsCount.toLocaleString()} channels!`);
+                            setTimeout(() => setAnnounceFeedback(null), 3500);
+                          }}
+                          className="px-2.5 py-1 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/40 rounded-lg text-[11px] font-bold flex items-center gap-1 transition cursor-pointer"
+                        >
+                          <Send className="w-3 h-3" />
+                          <span>Broadcast .np to IRC</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* YouTube Music Bot Queue */}
+              <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
+                <div className="bg-slate-900 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between text-xs font-mono">
+                  <div className="flex items-center gap-2 font-bold text-white">
+                    <ListMusic className="w-4 h-4 text-red-400" />
+                    <span>Global YouTube Music Bot Fleet Playback Queue</span>
+                  </div>
+                  <span className="text-slate-400 text-[11px]">
+                    Scraped from YouTube Music Playlist API &bull; 855,000 Channels Fanout
+                  </span>
+                </div>
+
+                <div className="divide-y divide-slate-800/60 font-mono text-xs">
+                  {YOUTUBE_MUSIC_TRACKS.slice(0, 6).map((track, idx) => (
+                    <div key={track.id} className="p-3 flex items-center justify-between hover:bg-slate-800/40 transition">
+                      <div className="flex items-center gap-3">
+                        <span className="w-5 text-center text-slate-500 font-bold">{idx + 1}</span>
+                        <div>
+                          <div className="font-bold text-white flex items-center gap-1.5">
+                            <span>{track.title}</span>
+                            <span className="text-[10px] text-purple-300 px-1 rounded bg-purple-950/60 border border-purple-500/20">
+                              {track.label}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-400">
+                            {track.artist} &bull; <span className="text-emerald-400">{track.genre}</span> &bull; {track.duration}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <span className="text-[11px] text-slate-400 font-bold">
+                          {track.listeners.toLocaleString()} listeners
+                        </span>
+                        <a
+                          href={track.youtubeMusicUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 bg-red-600/30 hover:bg-red-600/50 text-red-200 border border-red-500/40 rounded-lg text-[11px] font-bold flex items-center gap-1 transition"
+                        >
+                          <Youtube className="w-3 h-3" />
+                          <span>Tune In</span>
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* TAB 2: 855,000 CHANNELS CATEGORIZED BY MUSIC GENRE        */}
           {/* ========================================================= */}
           {activeTab === 'by_genre' && (
             <div className="space-y-5">
@@ -1027,15 +1320,15 @@ shoutcast:
                   <div className="flex items-center gap-2">
                     <Music className="w-5 h-5 text-purple-400" />
                     <h3 className="text-white font-bold text-sm">
-                      885,000 Channels Network Categorized by Music Genre
+                      855,000 Channels Network Categorized by Music Genre
                     </h3>
                   </div>
                   <p className="text-xs text-slate-400 font-mono mt-1">
-                    Every channel in the 885,000 UnrealIRCd mesh is mapped to a dedicated musical genre stream powered by SHOUTcast D.N.A. &amp; YouTube Music playlists.
+                    Every channel in the 855,000 UnrealIRCd mesh is mapped to a dedicated musical genre stream powered by SHOUTcast D.N.A. &amp; YouTube Music playlists.
                   </p>
                 </div>
                 <div className="text-right font-mono">
-                  <div className="text-xl font-bold text-emerald-400">885,000</div>
+                  <div className="text-xl font-bold text-emerald-400">855,000</div>
                   <div className="text-[10px] text-slate-400 uppercase">Synchronized Channels</div>
                 </div>
               </div>
@@ -1111,7 +1404,7 @@ shoutcast:
           )}
 
           {/* ========================================================= */}
-          {/* TAB 3: 885,000 CHANNELS CATEGORIZED BY ARTIST             */}
+          {/* TAB 3: 855,000 CHANNELS CATEGORIZED BY ARTIST             */}
           {/* ========================================================= */}
           {activeTab === 'by_artist' && (
             <div className="space-y-5">
@@ -1120,16 +1413,16 @@ shoutcast:
                   <div className="flex items-center gap-2">
                     <Mic2 className="w-5 h-5 text-indigo-400" />
                     <h3 className="text-white font-bold text-sm">
-                      885,000 Channels Network Categorized by Artist
+                      855,000 Channels Network Categorized by Artist
                     </h3>
                   </div>
                   <p className="text-xs text-slate-400 font-mono mt-1">
-                    Dedicated artist networks routing live broadcasts, studio stem releases, and synchronized chat rooms across 885,000 channels.
+                    Dedicated artist networks routing live broadcasts, studio stem releases, and synchronized chat rooms across 855,000 channels.
                   </p>
                 </div>
                 <div className="text-right font-mono">
                   <div className="text-xl font-bold text-indigo-400">10 Main Artist Hubs</div>
-                  <div className="text-[10px] text-slate-400 uppercase">885,000 Channels Total</div>
+                  <div className="text-[10px] text-slate-400 uppercase">855,000 Channels Total</div>
                 </div>
               </div>
 
@@ -1194,7 +1487,7 @@ shoutcast:
           )}
 
           {/* ========================================================= */}
-          {/* TAB 4: 885,000 CHANNELS CATEGORIZED BY RECORD LABEL       */}
+          {/* TAB 4: 855,000 CHANNELS CATEGORIZED BY RECORD LABEL       */}
           {/* ========================================================= */}
           {activeTab === 'by_label' && (
             <div className="space-y-5">
@@ -1203,16 +1496,16 @@ shoutcast:
                   <div className="flex items-center gap-2">
                     <Tag className="w-5 h-5 text-pink-400" />
                     <h3 className="text-white font-bold text-sm">
-                      885,000 Channels Network Categorized by Record Label
+                      855,000 Channels Network Categorized by Record Label
                     </h3>
                   </div>
                   <p className="text-xs text-slate-400 font-mono mt-1">
-                    Licensed record label vaults and distribution pipelines broadcasting across the 885,000 channels UnrealIRCd &amp; SHOUTcast mesh.
+                    Licensed record label vaults and distribution pipelines broadcasting across the 855,000 channels UnrealIRCd &amp; SHOUTcast mesh.
                   </p>
                 </div>
                 <div className="text-right font-mono">
                   <div className="text-xl font-bold text-pink-400">6 Record Labels</div>
-                  <div className="text-[10px] text-slate-400 uppercase">885,000 Channels Total</div>
+                  <div className="text-[10px] text-slate-400 uppercase">855,000 Channels Total</div>
                 </div>
               </div>
 
@@ -1365,7 +1658,7 @@ shoutcast:
                       <span>Network Reach</span>
                     </div>
                     <div className="text-base font-bold text-emerald-300 mt-1">
-                      885,000
+                      855,000
                     </div>
                     <div className="text-[10px] text-slate-400 mt-0.5">
                       Channels Synced on IRC
@@ -1471,7 +1764,7 @@ shoutcast:
           )}
 
           {/* ========================================================= */}
-          {/* TAB 7: 885,000 CHANNELS FANOUT MATRIX                      */}
+          {/* TAB 7: 855,000 CHANNELS FANOUT MATRIX                      */}
           {/* ========================================================= */}
           {activeTab === 'network' && (
             <div className="space-y-5">
@@ -1480,15 +1773,15 @@ shoutcast:
                   <div className="flex items-center gap-2">
                     <Globe className="w-5 h-5 text-purple-400" />
                     <h3 className="text-white font-bold text-sm">
-                      885,000 Channels Fanout Matrix (Artist, Genre &amp; Label)
+                      855,000 Channels Fanout Matrix (Artist, Genre &amp; Label)
                     </h3>
                   </div>
                   <p className="text-xs text-slate-400 font-mono mt-1">
-                    The donSchoe/shoutcast-irc bot leverages UnrealIRCd 6.1.4 high-throughput leaf sync to distribute radio metadata across all 885,000 active channels.
+                    The donSchoe/shoutcast-irc bot leverages UnrealIRCd 6.1.4 high-throughput leaf sync to distribute radio metadata across all 855,000 active channels.
                   </p>
                 </div>
                 <div className="text-right font-mono">
-                  <div className="text-xl font-bold text-emerald-400">885,000</div>
+                  <div className="text-xl font-bold text-emerald-400">855,000</div>
                   <div className="text-[10px] text-slate-400 uppercase">Synchronized Channels</div>
                 </div>
               </div>
@@ -1516,7 +1809,7 @@ shoutcast:
                       { name: '#label-deathrow', type: 'Death Row Records Catalog', users: 52410, modes: '+sntk 100G', status: 'Master Vault Synced' },
                       { name: '#label-drfun1music', type: 'DrFun1 Music Group Hub', users: 39820, modes: '+sntk 100G', status: 'Active' },
                       { name: '#lobby', type: 'Flagship Network Lobby', users: 8838, modes: '+sntk 100G', status: 'Active (NP Sync)' },
-                      { name: '#all-885000-channels', type: 'Global Mesh Distribution Fanout', users: 1245800, modes: '+sntk 100G', status: '885,000 Channels Synced' },
+                      { name: '#all-855000-channels', type: 'Global Mesh Distribution Fanout', users: 1245800, modes: '+sntk 100G', status: '855,000 Channels Synced' },
                     ].map((row, i) => (
                       <tr key={i} className="hover:bg-slate-900/50">
                         <td className="py-2.5 px-3 text-purple-300 font-bold">{row.name}</td>
@@ -1603,7 +1896,7 @@ shoutcast:
             <Radio className="w-4 h-4 text-purple-400" />
             <span>donSchoe/shoutcast-irc.git &bull; YouTube Music Playlist Engine</span>
             <span className="text-slate-600">&bull;</span>
-            <span className="text-emerald-400">885,000 Channels (Artist, Genre &amp; Record Label)</span>
+            <span className="text-emerald-400">855,000 Channels (Artist, Genre &amp; Record Label)</span>
           </div>
 
           <button

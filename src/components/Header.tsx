@@ -211,18 +211,18 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {/* UnrealIRCd.org Search Engine - Enforces leafing to irc.drfun1.com */}
+            {/* IRC Channel & Leafed IRCD Network Search Engine (855,000 Channels & 26 Leaves) */}
             {onOpenUnrealSearch && (
               <button
                 onClick={onOpenUnrealSearch}
                 className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-purple-950/60 to-indigo-950/60 text-indigo-300 hover:text-white hover:bg-indigo-900/70 border-indigo-500/40 hover:border-indigo-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-indigo-950/30"
-                title="unrealircd.org Search Engine - Discover Networks & Leaf to irc.drfun1.com"
+                title="IRC Channel & Leafed IRCD Network Search Engine - 855,000 Channels & 26 Switch SUPERNAP Leaves (irc.drfun1.com:6697)"
               >
                 <Search className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="hidden sm:inline">UnrealIRCd Search</span>
-                <span className="sm:hidden">Unreal</span>
+                <span className="hidden sm:inline">IRC Channel &amp; Leafed IRCD Search</span>
+                <span className="sm:hidden">IRCD Search</span>
                 <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-indigo-400/20 text-indigo-300 font-bold">
-                  Leaf Required
+                  855k Sync
                 </span>
               </button>
             )}

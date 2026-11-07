@@ -5,7 +5,7 @@
  * DrFun1 Media Inc. & DrFun1 ECOM Inc.
  * 
  * YouTube Music Library & Playlist Catalog for SHOUTcast D.N.A. & donSchoe/shoutcast-irc
- * 885,000 Channels categorized by Artist, Music Genre, and Record Label.
+ * 855,000 Channels categorized by Artist, Music Genre, and Record Label.
  * Upstream Bot: https://github.com/donSchoe/shoutcast-irc.git
  */
 
@@ -341,7 +341,7 @@ export const YOUTUBE_MUSIC_PLAYLISTS: YouTubeMusicPlaylist[] = [
     label: 'Death Row Records',
     curator: 'Snoop Dogg & Richard Alan Witt',
     description: 'The legendary vault of Death Row Records, remastered for high-fidelity satellite & SHOUTcast streaming. Featuring 2Pac, Dr. Dre, Snoop Dogg, and Mount Westmore.',
-    channelCount: 240000,
+    channelCount: 235000,
     activeListeners: 184500,
     youtubePlaylistUrl: 'https://music.youtube.com/playlist?list=PL_DeathRow_Classics_DrFun1',
     tracks: [
@@ -359,7 +359,7 @@ export const YOUTUBE_MUSIC_PLAYLISTS: YouTubeMusicPlaylist[] = [
     label: 'DrFun1 Music Group & WittLaw Soundworks',
     curator: 'DJ Orbit Nova & Richard Alan Witt',
     description: 'Cinematic analog synthesizers, neon arpeggios, and laser-teleport audio streams broadcasting live from Switch SUPERNAP Nevada teleport.',
-    channelCount: 185000,
+    channelCount: 180000,
     activeListeners: 142800,
     youtubePlaylistUrl: 'https://music.youtube.com/playlist?list=PL_Space_Synthwave_DrFun1',
     tracks: [
@@ -376,7 +376,7 @@ export const YOUTUBE_MUSIC_PLAYLISTS: YouTubeMusicPlaylist[] = [
     label: 'DrFun1 Music Group / Lofi Records',
     curator: 'dev.drfun1media.com Engineering Crew',
     description: 'Relaxing cosmic beats, tape-distorted piano chords, and soothing space telemetry for midnight hacking, coding, and satellite link analysis.',
-    channelCount: 140000,
+    channelCount: 135000,
     activeListeners: 118400,
     youtubePlaylistUrl: 'https://music.youtube.com/playlist?list=PL_Orbital_Lofi_DrFun1',
     tracks: [
@@ -391,8 +391,8 @@ export const YOUTUBE_MUSIC_PLAYLISTS: YouTubeMusicPlaylist[] = [
     genre: 'Progressive House / Cyberpunk EDM',
     label: 'mau5trap / Virgin EMI / Warp Records',
     curator: 'DJ Orbit Nova',
-    description: 'High-energy progressive house, pounding basslines, and galactic festival anthems driving 120,000 UnrealIRCd synchronized channels.',
-    channelCount: 120000,
+    description: 'High-energy progressive house, pounding basslines, and galactic festival anthems driving 115,000 UnrealIRCd synchronized channels.',
+    channelCount: 115000,
     activeListeners: 94200,
     youtubePlaylistUrl: 'https://music.youtube.com/playlist?list=PL_Club_Nebula_DrFun1',
     tracks: [
@@ -416,17 +416,46 @@ export const YOUTUBE_MUSIC_PLAYLISTS: YouTubeMusicPlaylist[] = [
       YOUTUBE_MUSIC_TRACKS[8],
     ],
   },
+  {
+    id: 'pl-reggae-dub',
+    name: 'Shortwave Dub & Island Reggae Radiations',
+    genre: 'Reggae / Dub / Shortwave Audio',
+    label: 'Tuff Gong / Island Records',
+    curator: 'Vinyl Kev & ShortwaveBot',
+    description: 'Analog tape echo, dub sirens, and worldwide shortwave radio broadcasts fanning out over 60,000 channels.',
+    channelCount: 60000,
+    activeListeners: 54900,
+    youtubePlaylistUrl: 'https://music.youtube.com/playlist?list=PL_Shortwave_Dub_DrFun1',
+    tracks: [
+      YOUTUBE_MUSIC_TRACKS[12],
+    ],
+  },
+  {
+    id: 'pl-classic-rock-funk',
+    name: 'Classic Rock & Deep Funk Transmissions',
+    genre: 'Classic Rock & Funk Anthems',
+    label: 'Columbia / Warner / Atlantic',
+    curator: 'Richard Alan Witt & DJ Orbit Nova',
+    description: 'Electrifying vintage guitars, brass sections, and timeless anthems broadcasting across 65,000 channels.',
+    channelCount: 65000,
+    activeListeners: 61200,
+    youtubePlaylistUrl: 'https://music.youtube.com/playlist?list=PL_Classic_Rock_Funk_DrFun1',
+    tracks: [
+      YOUTUBE_MUSIC_TRACKS[6],
+      YOUTUBE_MUSIC_TRACKS[7],
+    ],
+  },
 ];
 
 // ========================================================
-// 3. 885,000 CHANNELS CATEGORIZED BY MUSIC GENRE
+// 3. 855,000 CHANNELS CATEGORIZED BY MUSIC GENRE
 // ========================================================
 export const MUSIC_GENRE_CATEGORIES: MusicGenreCategory[] = [
   {
     id: 'genre-hiphop-gfunk',
     name: 'West Coast Hip Hop & 90s G-Funk',
     channelPrefix: '#music-gfunk',
-    channelCount: 215000,
+    channelCount: 210000,
     activeListeners: 184500,
     topArtists: ['Dr. Dre', 'Snoop Dogg', '2Pac', 'Mount Westmore', 'Ice Cube', 'Too $hort'],
     topLabels: ['Death Row Records', 'Aftermath Entertainment', 'Doggystyle Records'],
@@ -437,7 +466,7 @@ export const MUSIC_GENRE_CATEGORIES: MusicGenreCategory[] = [
     id: 'genre-space-synthwave',
     name: 'Space Synthwave & Retrowave',
     channelPrefix: '#genre-synthwave',
-    channelCount: 185000,
+    channelCount: 180000,
     activeListeners: 142800,
     topArtists: ['HOME', 'DJ Orbit Nova & Richard Alan Witt', 'Kavinsky', 'The Midnight', 'Gunship'],
     topLabels: ['DrFun1 Music Group', 'WittLaw Soundworks', 'Midwest Collective'],
@@ -448,7 +477,7 @@ export const MUSIC_GENRE_CATEGORIES: MusicGenreCategory[] = [
     id: 'genre-lofi-space',
     name: 'Lo-Fi Space Beats & Ambient Chill',
     channelPrefix: '#genre-lofi-space',
-    channelCount: 140000,
+    channelCount: 135000,
     activeListeners: 118400,
     topArtists: ['Lofi Girl', 'ChilledCow', 'Kudasai', 'Idealism', 'Saib'],
     topLabels: ['Lofi Records', 'DrFun1 Ambient Lab', 'Chillhop Music'],
@@ -459,7 +488,7 @@ export const MUSIC_GENRE_CATEGORIES: MusicGenreCategory[] = [
     id: 'genre-edm-trance',
     name: 'Cyberpunk EDM, Progressive House & Trance',
     channelPrefix: '#genre-edm-trance',
-    channelCount: 120000,
+    channelCount: 115000,
     activeListeners: 94200,
     topArtists: ['deadmau5', 'Daft Punk', 'Eric Prydz', 'Above & Beyond', 'Armin van Buuren'],
     topLabels: ['mau5trap', 'Virgin EMI', 'Anjunabeats', 'Armada Music'],
@@ -470,7 +499,7 @@ export const MUSIC_GENRE_CATEGORIES: MusicGenreCategory[] = [
     id: 'genre-classic-rock-funk',
     name: 'Classic Rock & Funk Anthems',
     channelPrefix: '#genre-rock-funk',
-    channelCount: 95000,
+    channelCount: 90000,
     activeListeners: 82100,
     topArtists: ['Parliament-Funkadelic', 'Pink Floyd', 'Steely Dan', 'Earth Wind & Fire', 'Fleetwood Mac'],
     topLabels: ['Columbia', 'Warner Records', 'Atlantic Records'],
@@ -492,7 +521,7 @@ export const MUSIC_GENRE_CATEGORIES: MusicGenreCategory[] = [
     id: 'genre-reggae-dub',
     name: 'Reggae, Dub & Shortwave Radio DX',
     channelPrefix: '#genre-reggae-dub',
-    channelCount: 65000,
+    channelCount: 60000,
     activeListeners: 54900,
     topArtists: ['Bob Marley & The Wailers', 'King Tubby', 'Lee "Scratch" Perry', 'Chronixx', 'Damian Marley'],
     topLabels: ['Tuff Gong', 'Island Records', 'Trojan Records'],
@@ -502,7 +531,7 @@ export const MUSIC_GENRE_CATEGORIES: MusicGenreCategory[] = [
 ];
 
 // ========================================================
-// 4. 885,000 CHANNELS CATEGORIZED BY RECORD LABEL
+// 4. 855,000 CHANNELS CATEGORIZED BY RECORD LABEL
 // ========================================================
 export const RECORD_LABEL_CATEGORIES: RecordLabelCategory[] = [
   {
@@ -512,7 +541,7 @@ export const RECORD_LABEL_CATEGORIES: RecordLabelCategory[] = [
     headquarters: 'Beverly Hills, CA & Las Vegas, NV',
     genreFocus: 'West Coast Hip Hop, G-Funk, Gangsta Rap, R&B',
     channelName: '#label-deathrow',
-    channelCount: 240000,
+    channelCount: 235000,
     activeListeners: 215400,
     topArtists: ['Snoop Dogg', '2Pac', 'Dr. Dre', 'Tha Dogg Pound', 'Lady of Rage', 'Nate Dogg'],
     catalogSize: '1,200+ Master Tracks, 50 Platinum Albums',
@@ -525,7 +554,7 @@ export const RECORD_LABEL_CATEGORIES: RecordLabelCategory[] = [
     headquarters: 'Switch SUPERNAP Teleport, Las Vegas, NV',
     genreFocus: 'Space Synthwave, Orbital Radio, 4K Broadcast Audio, Lo-Fi',
     channelName: '#label-drfun1music',
-    channelCount: 225000,
+    channelCount: 220000,
     activeListeners: 194800,
     topArtists: ['DJ Orbit Nova', 'Richard Alan Witt', 'Vinyl Kev', 'Switch SUPERNAP NOC Ensemble'],
     catalogSize: '850+ Proprietary 4K UHD Lossless Stems',
@@ -538,7 +567,7 @@ export const RECORD_LABEL_CATEGORIES: RecordLabelCategory[] = [
     headquarters: 'The Law Office of Richard A. Witt LLC, Cheshire, CT',
     genreFocus: 'Spectrum Telemetry Audio, Space Symphony, EAS & Regulatory Audio',
     channelName: '#label-wittlaw-records',
-    channelCount: 160000,
+    channelCount: 155000,
     activeListeners: 142100,
     topArtists: ['Richard Alan Witt', 'Elena Rostova', 'Goldstone Laser Array Artists'],
     catalogSize: '420+ Master Telemetry Soundtracks',
@@ -551,7 +580,7 @@ export const RECORD_LABEL_CATEGORIES: RecordLabelCategory[] = [
     headquarters: 'Universal City, CA',
     genreFocus: 'Hip Hop, Rap, Pop, Urban Contemporary',
     channelName: '#label-aftermath',
-    channelCount: 125000,
+    channelCount: 120000,
     activeListeners: 112800,
     topArtists: ['Dr. Dre', 'Eminem', 'Kendrick Lamar', '50 Cent', 'Anderson .Paak'],
     catalogSize: '2,500+ Global Diamond Hits',
@@ -564,7 +593,7 @@ export const RECORD_LABEL_CATEGORIES: RecordLabelCategory[] = [
     headquarters: 'London, UK & Switch SUPERNAP London Node',
     genreFocus: 'IDM, Ambient Techno, Experimental Electronic, Glitch',
     channelName: '#label-warprecords',
-    channelCount: 80000,
+    channelCount: 75000,
     activeListeners: 78500,
     topArtists: ['Aphex Twin', 'Boards of Canada', 'Autechre', 'Bonobo', 'Bicep'],
     catalogSize: '3,800+ Electronic Master Recordings',
@@ -577,7 +606,7 @@ export const RECORD_LABEL_CATEGORIES: RecordLabelCategory[] = [
     headquarters: 'New York, NY',
     genreFocus: 'Classical, Film Scores, Jazz, High-Resolution Acoustic Audio',
     channelName: '#label-sonymasterworks',
-    channelCount: 55000,
+    channelCount: 50000,
     activeListeners: 59200,
     topArtists: ['Hans Zimmer', 'Miles Davis', 'John Coltrane', 'Yo-Yo Ma'],
     catalogSize: '15,000+ Orchestral Master Works',
@@ -586,7 +615,7 @@ export const RECORD_LABEL_CATEGORIES: RecordLabelCategory[] = [
 ];
 
 // ========================================================
-// 5. 885,000 CHANNELS CATEGORIZED BY ARTIST
+// 5. 855,000 CHANNELS CATEGORIZED BY ARTIST
 // ========================================================
 export const ARTIST_CATEGORIES: ArtistCategory[] = [
   {
@@ -639,7 +668,7 @@ export const ARTIST_CATEGORIES: ArtistCategory[] = [
     genre: 'Electronic / French Touch / Nu-Disco',
     label: 'Columbia / Daft Life',
     channelName: '#artist-daftpunk',
-    channelCount: 70000,
+    channelCount: 65000,
     activeListeners: 82100,
     youtubeMusicArtistUrl: 'https://music.youtube.com/channel/UC-DaftPunk-Official',
     popularTracks: ['Get Lucky', 'Around the World', 'One More Time', 'Harder, Better, Faster, Stronger'],
@@ -694,7 +723,7 @@ export const ARTIST_CATEGORIES: ArtistCategory[] = [
     genre: 'Eclectic / Lo-Fi / World Broadcasts',
     label: 'DrFun1 Community & Independent Artists',
     channelName: '#artist-community',
-    channelCount: 310000,
+    channelCount: 285000,
     activeListeners: 248900,
     youtubeMusicArtistUrl: 'https://music.youtube.com',
     popularTracks: ['Space Station Lounge Vol. 1', 'Subsea Fiber Drift', 'LEO Orbit Beats'],
@@ -702,10 +731,153 @@ export const ARTIST_CATEGORIES: ArtistCategory[] = [
 ];
 
 // ========================================================
-// 6. 885,000 CHANNELS GLOBAL NETWORK AUDIT VERIFICATION
+// 6. BOT FLEET: donSchoe/shoutcast-irc.git MUSIC LIBRARY ENGINES
 // ========================================================
-export const SHOUTCAST_885000_CHANNELS_AUDIT = {
-  totalNetworkChannels: 885000,
+export interface BotMusicAgent {
+  botNick: string;
+  role: string;
+  specialization: string;
+  assignedPlaylistId: string;
+  playlistName: string;
+  channelFocus: string;
+  channelsCount: number;
+  activeTrackId: string;
+  currentTrackTitle: string;
+  currentTrackArtist: string;
+  youtubeMusicUrl: string;
+  supportedCommands: string[];
+  status: 'Broadcasting YouTube Music' | 'Queue Synced' | 'Live Standby';
+  uptime: string;
+  gitRepo: string;
+}
+
+export const BOT_MUSIC_ROSTER: BotMusicAgent[] = [
+  {
+    botNick: 'ShoutcastBot',
+    role: 'Primary Announcer & Master Fanout Engine',
+    specialization: 'Global Network Metadata Relay across all 855,000 Channels',
+    assignedPlaylistId: 'pl-synthwave-odyssey',
+    playlistName: 'Space Synthwave & Retrowave Odyssey 2026',
+    channelFocus: '#lobby, #all-855000-channels, #music-channels',
+    channelsCount: 855000,
+    activeTrackId: 'yt-sw-01',
+    currentTrackTitle: 'Resonance',
+    currentTrackArtist: 'HOME',
+    youtubeMusicUrl: 'https://music.youtube.com/watch?v=8GW6sLrK40k',
+    supportedCommands: ['.np', '.yt', '.playlist', '.genre', '.label', '.artist', '.search', '.queue', '.dj', '.stats', '.help'],
+    status: 'Broadcasting YouTube Music',
+    uptime: '48 days, 12:44:18',
+    gitRepo: 'https://github.com/donSchoe/shoutcast-irc.git',
+  },
+  {
+    botNick: 'DeathRowBot',
+    role: 'West Coast Hip Hop & G-Funk YouTube Music Agent',
+    specialization: 'Death Row Records Catalog & West Coast Rap Vault',
+    assignedPlaylistId: 'pl-deathrow-classics',
+    playlistName: 'Death Row Records: 30 Years of West Coast Greatness',
+    channelFocus: '#music-deathrow, #artist-snoopdogg, #artist-2pac, #artist-drdre, #artist-mountwestmore',
+    channelsCount: 235000,
+    activeTrackId: 'yt-dr-01',
+    currentTrackTitle: 'Still D.R.E.',
+    currentTrackArtist: 'Dr. Dre ft. Snoop Dogg',
+    youtubeMusicUrl: 'https://music.youtube.com/watch?v=_CL6n0FJZpk',
+    supportedCommands: ['.np', '.yt', '.deathrow', '.snoop', '.2pac', '.dre', '.playlist', '.queue'],
+    status: 'Broadcasting YouTube Music',
+    uptime: '32 days, 08:15:02',
+    gitRepo: 'https://github.com/donSchoe/shoutcast-irc.git',
+  },
+  {
+    botNick: 'SynthwaveBot',
+    role: 'Space Synthwave & Retrowave YouTube Music Agent',
+    specialization: 'DrFun1 Music Group & WittLaw Soundworks Laser Streams',
+    assignedPlaylistId: 'pl-synthwave-odyssey',
+    playlistName: 'Space Synthwave & Retrowave Odyssey 2026',
+    channelFocus: '#genre-synthwave, #artist-orbitnova, #drfun1-orbitradio, #label-drfun1music',
+    channelsCount: 180000,
+    activeTrackId: 'yt-sw-04',
+    currentTrackTitle: 'Deep Space Laser Symphony (Switch SUPERNAP Master)',
+    currentTrackArtist: 'DJ Orbit Nova & Richard Alan Witt',
+    youtubeMusicUrl: 'https://music.youtube.com/watch?v=stream-drfun1-orbit',
+    supportedCommands: ['.np', '.yt', '.synthwave', '.laser', '.orbit', '.playlist', '.queue'],
+    status: 'Broadcasting YouTube Music',
+    uptime: '41 days, 19:30:11',
+    gitRepo: 'https://github.com/donSchoe/shoutcast-irc.git',
+  },
+  {
+    botNick: 'LofiSpaceBot',
+    role: 'Developer & Coding Lo-Fi YouTube Music Agent',
+    specialization: 'Chillhop, Tape Beats & Cosmic Study Tracks for Hackers',
+    assignedPlaylistId: 'pl-lofi-space-beats',
+    playlistName: 'Orbital Lo-Fi: Deep Space Beats for Developers & Coders',
+    channelFocus: '#genre-lofi-space, #dev-platform, #dev-sandbox',
+    channelsCount: 135000,
+    activeTrackId: 'yt-lofi-01',
+    currentTrackTitle: 'beats to relax/study to (Space Chill Radio)',
+    currentTrackArtist: 'Lofi Girl / ChilledCow All-Stars',
+    youtubeMusicUrl: 'https://music.youtube.com/watch?v=jfKfPfyJRdk',
+    supportedCommands: ['.np', '.yt', '.lofi', '.study', '.relax', '.playlist', '.queue'],
+    status: 'Broadcasting YouTube Music',
+    uptime: '28 days, 04:12:45',
+    gitRepo: 'https://github.com/donSchoe/shoutcast-irc.git',
+  },
+  {
+    botNick: 'EdmTranceBot',
+    role: 'Cyberpunk EDM & Progressive House YouTube Music Agent',
+    specialization: 'Club Nebula, Festival Bangers & 128-138 BPM Peak Energy',
+    assignedPlaylistId: 'pl-cyberpunk-edm',
+    playlistName: 'Club Nebula: Cyberpunk EDM, House & Trance',
+    channelFocus: '#genre-edm-trance, #artist-daftpunk, #label-warprecords',
+    channelsCount: 115000,
+    activeTrackId: 'yt-edm-01',
+    currentTrackTitle: 'Strobe (Club Edit Master)',
+    currentTrackArtist: 'deadmau5',
+    youtubeMusicUrl: 'https://music.youtube.com/watch?v=m4_9TFeMfJE',
+    supportedCommands: ['.np', '.yt', '.edm', '.trance', '.dance', '.playlist', '.queue'],
+    status: 'Broadcasting YouTube Music',
+    uptime: '19 days, 16:50:22',
+    gitRepo: 'https://github.com/donSchoe/shoutcast-irc.git',
+  },
+  {
+    botNick: 'SymphonyBot',
+    role: 'Space Symphony & Neo-Classical YouTube Music Agent',
+    specialization: 'Cinematic Orchestral Masterworks & Film Scores',
+    assignedPlaylistId: 'pl-space-symphony',
+    playlistName: 'Interstellar Symphony: Neo-Classical & Film Scores',
+    channelFocus: '#genre-spacesymphony, #artist-hanszimmer, #label-sonymasterworks',
+    channelsCount: 65000,
+    activeTrackId: 'yt-cl-01',
+    currentTrackTitle: 'Cornfield Chase (Interstellar Theme)',
+    currentTrackArtist: 'Hans Zimmer',
+    youtubeMusicUrl: 'https://music.youtube.com/watch?v=UDVtMYqUAyw',
+    supportedCommands: ['.np', '.yt', '.classical', '.zimmer', '.score', '.playlist', '.queue'],
+    status: 'Broadcasting YouTube Music',
+    uptime: '33 days, 11:20:00',
+    gitRepo: 'https://github.com/donSchoe/shoutcast-irc.git',
+  },
+  {
+    botNick: 'RockDubBot',
+    role: 'Classic Rock & Shortwave Dub YouTube Music Agent',
+    specialization: 'Vintage Guitars, Funk Anthems & Island Dub Radiations',
+    assignedPlaylistId: 'pl-reggae-dub',
+    playlistName: 'Shortwave Dub & Island Reggae Radiations',
+    channelFocus: '#genre-reggae-dub, #genre-rock-funk, #artist-community',
+    channelsCount: 70000,
+    activeTrackId: 'yt-reg-01',
+    currentTrackTitle: 'Could You Be Loved',
+    currentTrackArtist: 'Bob Marley & The Wailers',
+    youtubeMusicUrl: 'https://music.youtube.com/watch?v=69RdQFDuYzo',
+    supportedCommands: ['.np', '.yt', '.reggae', '.dub', '.rock', '.funk', '.playlist'],
+    status: 'Broadcasting YouTube Music',
+    uptime: '15 days, 07:44:19',
+    gitRepo: 'https://github.com/donSchoe/shoutcast-irc.git',
+  },
+];
+
+// ========================================================
+// 7. 855,000 CHANNELS GLOBAL NETWORK AUDIT VERIFICATION
+// ========================================================
+export const SHOUTCAST_855000_CHANNELS_AUDIT = {
+  totalNetworkChannels: 855000,
   activeStreams: 27,
   totalListenersAllChannels: 1245800,
   upstreamGitRepo: 'https://github.com/donSchoe/shoutcast-irc.git',
@@ -718,7 +890,15 @@ export const SHOUTCAST_885000_CHANNELS_AUDIT = {
   legalLicensee: 'Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com)',
   fccFrn: '0034981290',
   genresCount: MUSIC_GENRE_CATEGORIES.length,
+  genresChannelSum: MUSIC_GENRE_CATEGORIES.reduce((acc, g) => acc + g.channelCount, 0),
   labelsCount: RECORD_LABEL_CATEGORIES.length,
+  labelsChannelSum: RECORD_LABEL_CATEGORIES.reduce((acc, l) => acc + l.channelCount, 0),
   artistsCount: ARTIST_CATEGORIES.length,
+  artistsChannelSum: ARTIST_CATEGORIES.reduce((acc, a) => acc + a.channelCount, 0),
+  botFleetCount: BOT_MUSIC_ROSTER.length,
   youtubeMusicCatalogCount: YOUTUBE_MUSIC_TRACKS.length,
+  youtubeMusicPlaylistsCount: YOUTUBE_MUSIC_PLAYLISTS.length,
 };
+
+// Backward-compatible alias
+export const SHOUTCAST_885000_CHANNELS_AUDIT = SHOUTCAST_855000_CHANNELS_AUDIT;

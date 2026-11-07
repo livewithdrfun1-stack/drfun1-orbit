@@ -1340,13 +1340,13 @@ export const WITT_LAW_FIRM_REGISTRY: WittLawFirmRegistryInfo = {
   certificationStatus: 'Active, Verified & In Good Standing',
   filingDate: 'October 30, 2026',
   certifiedChannelCount: 31,
-  totalBotFleetChannels: 885000,
+  totalBotFleetChannels: 855000,
   botFleetBreakdown: [
     {
       bot: 'ShoutcastBot (donSchoe/shoutcast-irc)',
-      channels: 885000,
+      channels: 855000,
       description: 'SHOUTcast D.N.A. radio stream monitor, automated Now Playing announcer, listener statistics, and channel topic synchronizer (https://github.com/donSchoe/shoutcast-irc.git).',
-      status: 'Active (885,000 Channels Synced)',
+      status: 'Active (855,000 Channels Synced)',
     },
     {
       bot: 'DeathRowBot',

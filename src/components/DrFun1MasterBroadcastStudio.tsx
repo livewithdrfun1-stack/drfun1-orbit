@@ -98,6 +98,7 @@ import { IrcClientView } from './IrcClientView';
 import { IrcdStatsView } from './IrcdStatsView';
 import { RestreamStudioView } from './RestreamStudioView';
 import { ZncWebControlPanelView } from './ZncWebControlPanelView';
+import { UnifiedMusicIrcHub } from './UnifiedMusicIrcHub';
 
 export type StudioToolId =
   | 'strimm_drfun1tv'
@@ -2573,37 +2574,23 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
             </div>
           )}
 
-          {/* TOOL 12: MPD MUSIC PLAYER DAEMON & LIVE DJ CONTROL DECK */}
+          {/* TOOL 12: UNIFIED MUSIC HUB & IRC CLIENT (MPD, YOUTUBE MUSIC & SHOUTCAST BOTS) */}
           {activeStudioTool === 'mpd_bot' && (
             <div className="p-4 sm:p-6 space-y-4">
-              <div className="bg-slate-950/80 border border-emerald-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-lg bg-emerald-950/80 text-emerald-400 border border-emerald-800/80">
-                    <Headphones className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <span>MPD Music Player Daemon &amp; Live DJ Control Deck</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700/60 font-bold uppercase">
-                        Live DJ Booth Active
-                      </span>
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Direct automated Icecast music stream playout, playlist automation, and IRC bot commands.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-xs font-mono">
-                  <span className="text-slate-400">Stream:</span>
-                  <span className="text-emerald-400 font-bold">stream.drfun1.com:8000</span>
-                </div>
-              </div>
-              <MpdBotControlView
-                onOpenIrc={() => handleSelectStudioTool('irc_client')}
-                onOpenBroadcast={() => handleSelectStudioTool('strimm_drfun1tv')}
-                onOpenDuplicator={() => handleSelectStudioTool('wordpress_duplicator')}
-                activeRank={activeRank}
-                onOpenAdminPanel={onOpenIrcdAdmin}
+              <UnifiedMusicIrcHub
+                ircSession={{
+                  nick: 'DJ_OrbitNova',
+                  isConnected: true,
+                  serverHost: 'dev.drfun1media.com',
+                  serverPort: 6697,
+                  channel: '#music-deathrow',
+                  ident: 'orbitnova',
+                  realname: 'DJ Orbit Nova - DrFun1 Music',
+                  useSsl: true,
+                  connectedAt: Date.now(),
+                }}
+                activeServer="dev.drfun1media.com"
+                onJoinExternalChannel={() => handleSelectStudioTool('irc_client')}
               />
             </div>
           )}
