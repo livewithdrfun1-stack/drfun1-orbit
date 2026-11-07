@@ -10,6 +10,7 @@
  */
 
 import { MasterEpgChannel } from '../types/masterEpg';
+import { MASTER_EPG_CHANNELS } from './masterEpgData';
 
 export interface ScannableTransponderCarrier {
   frequencyMhz: number;
@@ -1205,3 +1206,15 @@ export const SCANNABLE_BANDS = [
   { id: 'S-Band', name: 'S-Band Telemetry & NOAA Space Weather Radar', count: 2, range: '2.0 - 2.4 GHz' },
   { id: 'X-Band', name: 'X-Band Deep Space & Secure Inter-Agency Relays', count: 2, range: '7.25 - 8.45 GHz' },
 ] as const;
+
+/**
+ * All 27 broadcasting channels owned by DrFun1 Media Inc. & DrFun1 ECOM Inc.
+ * Channels 101 to 105: Core Flagship Stations (Prime TV 4K, Satcom News, Wireless 5G, ECOM Shopping, Orbit Radio)
+ * Channels 106 to 127: Scanned Space, Teleport, RF Spectrum, Cable Arc & Satellite Channels
+ * Licensed to Richard Alan Witt (www.wittlawfirm.com) - FCC FRN: 0034981290
+ */
+export const ALL_DRFUN1_BROADCASTING_CHANNELS: MasterEpgChannel[] = [
+  ...MASTER_EPG_CHANNELS.filter((c) => c.channelNumber >= 101 && c.channelNumber <= 105),
+  ...DRFUN1_SCANNABLE_CABLE_SATELLITE_STATIONS.filter((c) => c.channelNumber >= 106 && c.channelNumber <= 127),
+];
+

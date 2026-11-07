@@ -109,3 +109,32 @@ export interface UserNote {
   notes: string;
   updatedAt: string;
 }
+
+export type TelemetryStatus = 'Active' | 'Degraded' | 'Offline';
+
+export interface SatelliteTelemetryNode {
+  id: string;
+  name: string;
+  orbitalPlane: string;
+  altitudeKm: string;
+  frequencyBand: string;
+  status: TelemetryStatus;
+  snrDb: number;
+  batteryPct: number;
+  tempCelsius: number;
+  laserCrosslinkStatus: 'Nominal' | 'Acquiring' | 'Offline' | 'Bypassed';
+  latencyMs: number;
+  lastTelemetryUpdate: string;
+  statusReason: string;
+  payloadUtilizationPct: number;
+}
+
+export interface FleetHealthTelemetryState {
+  overallAvailabilityPct: number;
+  activeCount: number;
+  degradedCount: number;
+  offlineCount: number;
+  totalMonitored: number;
+  lastPolledAt: string;
+  nodes: SatelliteTelemetryNode[];
+}

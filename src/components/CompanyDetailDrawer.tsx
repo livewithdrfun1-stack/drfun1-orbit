@@ -24,8 +24,11 @@ import {
   Send,
   Satellite,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Activity,
+  ArrowUpRight
 } from 'lucide-react';
+import { FleetHealthAvailabilityOverlay } from './FleetHealthAvailabilityOverlay';
 
 interface CompanyDetailDrawerProps {
   company: SatelliteCompany | null;
@@ -52,6 +55,7 @@ export const CompanyDetailDrawer: React.FC<CompanyDetailDrawerProps> = ({
 
   const [activeTab, setActiveTab] = useState<'overview' | 'wholesale' | 'switch-irc' | 'contacts' | 'notes'>('overview');
   const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [isFleetHealthOpen, setIsFleetHealthOpen] = useState<boolean>(false);
 
   const switchProfile = company.switchInterconnect || getSwitchInterconnectForCompany(company.name, company.id, company.headquarters?.region || 'Global');
 
@@ -132,6 +136,17 @@ export const CompanyDetailDrawer: React.FC<CompanyDetailDrawerProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {/* Fleet Health & Availability Telemetry Overlay Button */}
+            <button
+              onClick={() => setIsFleetHealthOpen(true)}
+              className="px-2.5 py-1.5 text-xs font-medium text-emerald-300 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/40 hover:border-emerald-400 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+              title="Open Fleet Health & Availability Telemetry Overlay"
+            >
+              <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <span className="hidden sm:inline font-mono">Fleet Health</span>
+              <span className="text-[10px] font-mono px-1 rounded bg-emerald-900/80 text-emerald-200">Live</span>
+            </button>
+
             {onOpenOrbitMap && (
               <button
                 onClick={onOpenOrbitMap}
@@ -159,7 +174,7 @@ export const CompanyDetailDrawer: React.FC<CompanyDetailDrawerProps> = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-800 px-6 bg-slate-950/30 text-xs font-medium">
+        <div className="flex border-b border-slate-800 px-6 bg-slate-950/30 text-xs font-medium overflow-x-auto">
           <button
             onClick={() => setActiveTab('overview')}
             className={`py-3 px-3 border-b-2 transition-colors whitespace-nowrap ${
@@ -169,6 +184,15 @@ export const CompanyDetailDrawer: React.FC<CompanyDetailDrawerProps> = ({
             }`}
           >
             Overview & Orbit
+          </button>
+          <button
+            onClick={() => setIsFleetHealthOpen(true)}
+            className="py-3 px-3 border-b-2 border-transparent text-emerald-400 hover:text-emerald-300 transition-colors whitespace-nowrap flex items-center gap-1.5 font-semibold cursor-pointer"
+            title="Inspect Real-Time Fleet Health & Availability Telemetry Markers"
+          >
+            <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+            <span>Fleet Health &amp; Availability</span>
+            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/40">99.98%</span>
           </button>
           <button
             onClick={() => setActiveTab('wholesale')}
@@ -259,6 +283,55 @@ export const CompanyDetailDrawer: React.FC<CompanyDetailDrawerProps> = ({
                     <span className="text-slate-500">Payload Generation:</span> {company.fleetSize.generationDetails}
                   </div>
                 )}
+              </div>
+
+              {/* Fleet Health & Availability Live Telemetry Preview Banner */}
+              <div className="bg-gradient-to-r from-emerald-950/40 via-slate-950 to-indigo-950/40 border border-emerald-500/30 rounded-xl p-4 shadow-lg space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-lg bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 shrink-0">
+                      <Activity className="w-4 h-4 animate-pulse" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold font-mono text-white flex items-center gap-2">
+                        <span>Fleet Health &amp; Availability Telemetry</span>
+                        <span className="px-1.5 py-0.2 rounded text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+                          99.98% SLA
+                        </span>
+                      </h4>
+                      <p className="text-[11px] text-slate-400 font-mono">
+                        Real-time telemetry markers: Active &bull; Degraded &bull; Offline
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setIsFleetHealthOpen(true)}
+                    className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg text-xs font-mono transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer shrink-0"
+                  >
+                    <span>Launch Telemetry Overlay</span>
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Telemetry Markers Status Pills */}
+                <div className="grid grid-cols-3 gap-2 text-center pt-2 border-t border-slate-800/80 font-mono text-xs">
+                  <div className="p-2 bg-slate-900/80 rounded-lg border border-slate-800 flex items-center justify-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-slate-400 text-[11px]">Active:</span>
+                    <span className="text-emerald-400 font-bold">96.4%</span>
+                  </div>
+                  <div className="p-2 bg-slate-900/80 rounded-lg border border-slate-800 flex items-center justify-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-400" />
+                    <span className="text-slate-400 text-[11px]">Degraded:</span>
+                    <span className="text-amber-300 font-bold">3.1%</span>
+                  </div>
+                  <div className="p-2 bg-slate-900/80 rounded-lg border border-slate-800 flex items-center justify-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                    <span className="text-slate-400 text-[11px]">Offline:</span>
+                    <span className="text-rose-400 font-bold">0.5%</span>
+                  </div>
+                </div>
               </div>
 
               {/* Coverage & Regulatory */}
@@ -727,6 +800,15 @@ export const CompanyDetailDrawer: React.FC<CompanyDetailDrawerProps> = ({
             </div>
           )}
         </div>
+
+        {/* Fleet Health & Availability Telemetry Overlay */}
+        {isFleetHealthOpen && (
+          <FleetHealthAvailabilityOverlay
+            company={company}
+            onClose={() => setIsFleetHealthOpen(false)}
+            onOpenRfq={onOpenRfq}
+          />
+        )}
       </div>
     </div>
   );

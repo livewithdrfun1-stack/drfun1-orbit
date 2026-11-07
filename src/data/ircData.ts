@@ -38,7 +38,7 @@ export const UNREAL_HUB_DETAILS: UnrealIrcdHub = {
     'node24.goldstone.switch.drfun1.com',
     'node25.lasvegas-edge.switch.drfun1.com',
   ],
-  totalSyncedChannels: 70,
+  totalSyncedChannels: 885000,
   totalSyncedUsers: 8838,
   aggregateBandwidth: '3.85 Tbps Global Terrestrial, Subsea, Quantum Fiber & Space Teleport Interconnect',
 };
@@ -66,7 +66,7 @@ export const SWITCH_DEDICATED_NODES: SwitchDedicatedNode[] = [
     sid: '007',
     leafStatus: 'synced',
     leafBurstStats: {
-      syncedChannels: 74,
+      syncedChannels: 885000,
       syncedNicks: 8838,
       syncLatencyMs: 1.2,
       lastBurst: '0.2s ago',
@@ -110,7 +110,7 @@ link irc.drfun1.com {
     sid: '026',
     leafStatus: 'synced',
     leafBurstStats: {
-      syncedChannels: 70,
+      syncedChannels: 885000,
       syncedNicks: 1420,
       syncLatencyMs: 1.8,
       lastBurst: '0.4s ago',
@@ -2519,6 +2519,15 @@ export const INITIAL_IRC_USERS: IrcUser[] = [
     channels: ['#lobby', '#tmobile-direct', '#att-spacemobile', '#verizon-satcom', '#5g-ntn'],
   },
   {
+    nick: 'ShoutcastBot',
+    prefix: '@',
+    role: 'SHOUTcast-to-IRC Announcer Daemon (donSchoe/shoutcast-irc)',
+    hostmask: 'bot@shoutcast.drfun1.com',
+    isBot: true,
+    organization: 'donSchoe/shoutcast-irc.git (Ruby Net-IRC / 885,000 Channels)',
+    channels: ['#lobby', '#drfun1-primetv', '#drfun1-orbitradio', '#dev-platform', '#fubo-sports', '#all-bands'],
+  },
+  {
     nick: 'SatcomGuru',
     prefix: '+',
     role: 'Senior RF Payload Engineer',
@@ -3458,7 +3467,7 @@ export const STATS_DRFUN1IRCD_PORTAL: StatsPortalInfo = {
   globalUptime: '148d 12h 23m 40s (99.999% SLA)',
   totalClients: 8838,
   totalServers: 26,
-  totalChannels: 70,
+  totalChannels: 885000,
 };
 
 export const NEOSTATS_CONFIG: NeoStatsConfig = {
@@ -3473,7 +3482,7 @@ export const NEOSTATS_CONFIG: NeoStatsConfig = {
   status: 'active',
   uptime: '148d 12h 19m 14s',
   peakUsers: 14290,
-  peakChannels: 74,
+  peakChannels: 885420,
   peakServers: 26,
   totalConnectionsLogged: 3491820,
   modules: [
@@ -3671,8 +3680,8 @@ export const DENORA_CONFIG: DenoraConfig = {
   peakUsersAllTime: 14290,
   peakUsersAllTimeDate: '2026-11-04 18:42:10 UTC',
   peakUsersToday: 9412,
-  peakChannelsAllTime: 82,
-  currentChannels: 74,
+  peakChannelsAllTime: 885420,
+  currentChannels: 885000,
   totalConnectionsLogged: 3491820,
   syncIntervalSeconds: 30,
   tldStats: [

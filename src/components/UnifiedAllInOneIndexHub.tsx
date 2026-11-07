@@ -35,7 +35,8 @@ import {
   RefreshCw,
   Sliders,
   Bell,
-  Cpu
+  Cpu,
+  Youtube
 } from 'lucide-react';
 import {
   ALL_DRFUN1_MEDIA_CHANNELS,
@@ -45,7 +46,10 @@ import {
   UNREAL_HUB_DETAILS,
 } from '../data/ircData';
 import { IrcUser, IrcMessage, IrcLoginSession } from '../types/irc';
+import { ALL_DRFUN1_BROADCASTING_CHANNELS } from '../data/drfun1ScannedStationsData';
+import { MasterEpgChannel } from '../types/masterEpg';
 import { DevPlatformWittLawModal } from './DevPlatformWittLawModal';
+import { ShoutcastIrcBotModal } from './ShoutcastIrcBotModal';
 
 interface UnifiedAllInOneIndexHubProps {
   ircSession: IrcLoginSession;
@@ -169,17 +173,22 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
 }) => {
   // Hub Display Mode
   // 'deck' = All-in-One Multi-Deck (Split Screen)
+  // 'drfun1' = DrFun1 Media Inc. & DrFun1 ECOM Inc. 27 Channels Multiplex
   // 'fubo' = Fubo.tv Live Sports Arena
   // 'twitch' = Twitch.tv Streamer Deck
   // 'mirc' = mIRC v7.77 Classic Retro Desktop
-  const [activeDeckMode, setActiveDeckMode] = useState<'deck' | 'fubo' | 'twitch' | 'mirc'>('deck');
+  const [activeDeckMode, setActiveDeckMode] = useState<'deck' | 'drfun1' | 'fubo' | 'twitch' | 'mirc'>('deck');
 
   // Video / Broadcast State
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [volume, setVolume] = useState<number>(75);
+  const [deckFeedSource, setDeckFeedSource] = useState<'drfun1' | 'fubo'>('drfun1');
+  const [selectedDrFun1Channel, setSelectedDrFun1Channel] = useState<MasterEpgChannel>(ALL_DRFUN1_BROADCASTING_CHANNELS[0]);
+  const [drfun1BandFilter, setDrfun1BandFilter] = useState<string>('all');
   const [selectedFuboMatch, setSelectedFuboMatch] = useState<FuboMatch>(FUBO_MATCHES[0]);
   const [isQuadViewActive, setIsQuadViewActive] = useState<boolean>(false);
+  const [isShoutcastBotModalOpen, setIsShoutcastBotModalOpen] = useState<boolean>(false);
 
   // Twitch Stream State
   const [isFollowed, setIsFollowed] = useState<boolean>(false);
@@ -374,7 +383,7 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
           timestamp: timeStr,
           sender: '***',
           channel: activeChannel,
-          content: `[STATS UnrealIRCd 6.1.4] Server: ${activeServer}:6697 (SSL) | SID: 007 | 26 Switch SUPERNAP Leaves Synced | 8,838 Global Users | 14 Channels | Transit: RisingNet 100G DWDM (0.00% packet loss)`,
+          content: `[STATS UnrealIRCd 6.1.4] Server: ${activeServer}:6697 (SSL) | SID: 007 | 26 Switch SUPERNAP Leaves Synced | 8,838 Global Users | 885,000 Channels Synced | donSchoe/shoutcast-irc Bot Active | Transit: RisingNet 100G DWDM (0.00% packet loss)`,
           type: 'notice',
         };
         setMessages((prev) => ({
@@ -408,7 +417,7 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
           timestamp: timeStr,
           sender: '***',
           channel: activeChannel,
-          content: `Available Commands: /join <#channel>, /nick <name>, /whois <nick>, /me <action>, /stats, /clear, /topic <text>`,
+          content: `Available Commands: /join <#channel>, /nick <name>, /whois <nick>, /me <action>, /stats, /clear, /topic <text>, or .np, .song, .dj, .listeners, .stream (donSchoe/shoutcast-irc bot)`,
           type: 'system',
         };
         setMessages((prev) => ({
@@ -434,6 +443,45 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
       ...prev,
       [activeChannel]: [...(prev[activeChannel] || []), newMsg],
     }));
+
+    // Intercept SHOUTcast-IRC Bot Triggers (.np, .song, .dj, .listeners, .stream, .help)
+    const lowerText = text.trim().toLowerCase();
+    if (lowerText.startsWith('.') || lowerText.startsWith('!')) {
+      let botResp = '';
+      if (lowerText === '.np' || lowerText === '!np') {
+        botResp = `[SHOUTcast D.N.A. x YouTube Music] Now Playing: Dr. Dre ft. Snoop Dogg - Still D.R.E. | Label: Death Row Records / Aftermath | Genre: West Coast Hip Hop / G-Funk | Listeners: 48,290 | Stream: https://music.youtube.com/watch?v=_CL6n0FJZpk | 885,000 Channels Synced by Artist, Genre & Label`;
+      } else if (lowerText === '.song' || lowerText === '!song') {
+        botResp = `[SHOUTcast Song] "Still D.R.E." by Dr. Dre ft. Snoop Dogg (Album: 2001 • Label: Death Row Records / Aftermath) | YouTube Music: https://music.youtube.com/watch?v=_CL6n0FJZpk`;
+      } else if (lowerText === '.dj' || lowerText === '!dj') {
+        botResp = `[SHOUTcast DJ] Live On Air: Richard Alan Witt & DJ Orbit Nova (Switch SUPERNAP Teleport Master Studio - www.wittlawfirm.com) | Curator: Snoop Dogg & WittLaw Soundworks`;
+      } else if (lowerText === '.listeners' || lowerText === '!listeners') {
+        botResp = `[SHOUTcast Listeners] Active on Channel: 48,290 | Total across 885,000 Channels: 1,245,800 Active Listeners | YouTube Music Engine Active`;
+      } else if (lowerText === '.stream' || lowerText === '!stream' || lowerText === '.listen') {
+        botResp = `[SHOUTcast x YouTube Music Stream] Tune In on YouTube Music: https://music.youtube.com/watch?v=_CL6n0FJZpk | SHOUTcast D.N.A. Relay: http://stream.drfun1.com:8000/live | 885,000 Channels Fanout Synced`;
+      } else if (lowerText === '.stats' || lowerText === '!stats') {
+        botResp = `[SHOUTcast Server Stats] stream.drfun1.com:8000/live | 885,000 Channels Categorized by Artist (10), Music Genre (7), Record Label (6) | YouTube Music Library Playlist Engine Active | Bot: donSchoe/shoutcast-irc.git`;
+      } else if (lowerText === '.help' || lowerText === '!help') {
+        botResp = `[SHOUTcast Bot Help] Available triggers: .np, .song, .dj, .listeners, .stream, .stats, .help (donSchoe/shoutcast-irc daemon with YouTube Music library)`;
+      }
+
+      if (botResp) {
+        setTimeout(() => {
+          const botReplyMsg: IrcMessage = {
+            id: `bot_reply_${Date.now()}`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            sender: 'ShoutcastBot',
+            channel: activeChannel,
+            content: botResp,
+            type: 'notice',
+          };
+          setMessages((prev) => ({
+            ...prev,
+            [activeChannel]: [...(prev[activeChannel] || []), botReplyMsg],
+          }));
+          playAudioChime();
+        }, 300);
+      }
+    }
 
     setChatInput('');
     playAudioChime();
@@ -518,6 +566,14 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
                 <span>ALL-IN-ONE HUB</span>
               </span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                <span>885,000 CHANNELS SYNCED</span>
+              </span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-pink-500/20 text-pink-300 border border-pink-500/30 flex items-center gap-1 font-mono">
+                <Radio className="w-3 h-3 text-pink-400 animate-pulse" />
+                <span>SHOUTCAST D.N.A.</span>
+              </span>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400 mt-0.5 font-mono">
               <span className="flex items-center gap-1 text-emerald-400 font-semibold">
@@ -549,6 +605,19 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
             >
               <Layers className="w-3.5 h-3.5" />
               <span>Multi-Deck</span>
+            </button>
+
+            <button
+              onClick={() => setActiveDeckMode('drfun1')}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer ${
+                activeDeckMode === 'drfun1'
+                  ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-sky-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="DrFun1 Media Inc. & DrFun1 ECOM Inc. Owned 27 Broadcasting Channels Multiplex"
+            >
+              <Radio className="w-3.5 h-3.5 text-purple-300" />
+              <span>DrFun1 Channels (27)</span>
             </button>
 
             <button
@@ -591,25 +660,66 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
             </button>
           </div>
 
-          {/* Quick Channel Dropdown */}
+          {/* Quick Channel Dropdown (all 27 DrFun1 channels & network channels) */}
           <div className="relative">
             <select
               value={activeChannel}
               onChange={(e) => handleSwitchChannel(e.target.value)}
               className="bg-slate-900 text-white border border-slate-700/80 rounded-xl px-2.5 py-1.5 text-xs font-mono font-bold appearance-none pr-7 cursor-pointer hover:border-purple-500/60 focus:outline-none focus:ring-1 focus:ring-purple-500"
             >
-              <option value="#lobby">#lobby (Main Flagship / 8,838)</option>
+              <option value="#lobby">#lobby (Flagship Network / 8,838)</option>
+              <option value="#music-deathrow">#music-deathrow (Death Row Records / 48,290)</option>
+              <option value="#artist-snoopdogg">#artist-snoopdogg (Snoop Dogg Official / 43,900)</option>
+              <option value="#artist-orbitnova">#artist-orbitnova (DJ Orbit Nova &amp; Richard Alan Witt / 58,940)</option>
+              <option value="#artist-2pac">#artist-2pac (2Pac Death Row / 52,410)</option>
+              <option value="#genre-synthwave">#genre-synthwave (Space Synthwave / 41,200)</option>
+              <option value="#genre-lofi-space">#genre-lofi-space (Orbital Lo-Fi Beats / 64,200)</option>
+              <option value="#label-deathrow">#label-deathrow (Death Row Master Vault / 52,410)</option>
+              <option value="#label-drfun1music">#label-drfun1music (DrFun1 Music Group / 39,820)</option>
+              <option value="#label-wittlaw-records">#label-wittlaw-records (WittLaw Soundworks / 42,100)</option>
+              <option value="#drfun1-primetv">#drfun1-primetv (Ch 101 Prime 4K / 420)</option>
+              <option value="#drfun1-satcomnews">#drfun1-satcomnews (Ch 102 News / 290)</option>
+              <option value="#drfun1-wirelesstv">#drfun1-wirelesstv (Ch 103 5G / 345)</option>
+              <option value="#drfun1-shopping">#drfun1-shopping (Ch 104 Deals / 185)</option>
+              <option value="#drfun1-orbitradio">#drfun1-orbitradio (Ch 105 &amp; 127 Radio / 7,810)</option>
+              <option value="#optical-laser">#optical-laser (Ch 106 1550nm Laser / 310)</option>
+              <option value="#spectrum-law">#spectrum-law (Ch 107 WittLaw Spectrum / 125)</option>
+              <option value="#all-bands">#all-bands (Ch 108 Multi-Spectrum / 820)</option>
+              <option value="#5g-ntn">#5g-ntn (Ch 109 Direct-to-Cell / 350)</option>
+              <option value="#cablecast-metro">#cablecast-metro (Ch 110 QAM-256 / 210)</option>
+              <option value="#tvu-grid">#tvu-grid (Ch 111 Global Grid / 415)</option>
+              <option value="#dbs-4k">#dbs-4k (Ch 112 DBS Direct / 560)</option>
+              <option value="#switch-teleport">#switch-teleport (Ch 113 SUPERNAP 360 / 640)</option>
               <option value="#dev-platform">#dev-platform (API Sandbox / 1,420)</option>
               <option value="#wittlaw-admins">#wittlaw-admins (WittLaw NOC / 65)</option>
-              <option value="#drfun1-primetv">#drfun1-primetv (4K Master / 420)</option>
               <option value="#fubo-sports">#fubo-sports (Sports Ingest / 1,150)</option>
-              <option value="#c-band-space">#c-band (Space Teleports / 194)</option>
-              <option value="#5g-ntn">#5g-ntn (Direct-to-Device / 350)</option>
+              <option value="#c-band-space">#c-band (Galaxy 19 Teleport / 194)</option>
               <option value="#starlink">#starlink (SpaceX Optical / 845)</option>
-              <option value="#tmobile-direct">#tmobile-direct (PCS Band 25 / 920)</option>
+              <option value="#all-885000-channels">#all-885000-channels (885k Channels Fanout)</option>
             </select>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-2.5 pointer-events-none" />
           </div>
+
+          {/* YouTube Music Playlists Engine Button */}
+          <button
+            onClick={() => setIsShoutcastBotModalOpen(true)}
+            className="px-3 py-1.5 bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white font-bold rounded-xl text-xs font-mono flex items-center gap-1.5 transition cursor-pointer shadow-md border border-red-400/40"
+            title="Open YouTube Music Library & Playlists (885,000 Channels by Artist, Genre & Label)"
+          >
+            <Youtube className="w-3.5 h-3.5 text-red-100" />
+            <span>YouTube Music Library</span>
+          </button>
+
+          {/* donSchoe/shoutcast-irc Announcer Bot Button */}
+          <button
+            onClick={() => setIsShoutcastBotModalOpen(true)}
+            className="px-3 py-1.5 bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 hover:from-pink-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs font-mono flex items-center gap-1.5 transition cursor-pointer shadow-md border border-purple-400/40"
+            title="Open donSchoe/shoutcast-irc Announcer Bot (885,000 Channels)"
+          >
+            <Radio className="w-3.5 h-3.5 text-pink-200 animate-pulse" />
+            <span>SHOUTcast Bot (.np)</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+          </button>
 
           {/* Quick Server Switcher Dropdown */}
           <div className="relative">
@@ -660,44 +770,190 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
           {/* ========================================================= */}
           {activeDeckMode === 'deck' && (
             <div className="flex-1 flex flex-col">
-              {/* Deck Sub-Header with Dual Feeds indicator */}
-              <div className="bg-slate-900/60 px-4 py-2 border-b border-slate-800/60 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1 text-emerald-400 font-bold">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>FUBO.TV SPORTS FEED &amp; TWITCH STREAM HYBRID</span>
-                  </span>
-                  <span className="text-slate-600">|</span>
-                  <span className="text-slate-400 font-mono text-[11px]">
-                    Channel {selectedFuboMatch.channelName} &bull; {selectedFuboMatch.resolution}
+              {/* Deck Sub-Header with Dual Feeds indicator & Source Switcher */}
+              <div className="bg-slate-900/80 px-4 py-2 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-3">
+                  {/* Feed Source Selector (DrFun1 27 Channels vs Fubo Sports) */}
+                  <div className="bg-slate-950 border border-slate-800 rounded-lg p-0.5 flex items-center gap-1 font-mono text-[11px]">
+                    <button
+                      onClick={() => setDeckFeedSource('drfun1')}
+                      className={`px-2.5 py-1 rounded-md transition font-bold cursor-pointer flex items-center gap-1 ${
+                        deckFeedSource === 'drfun1'
+                          ? 'bg-purple-600 text-white shadow'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                      title="Stream all 27 Broadcasting Channels Owned by DrFun1 Media Inc. & DrFun1 ECOM Inc."
+                    >
+                      <Radio className="w-3 h-3 text-purple-300" />
+                      <span>DrFun1 Channels (27)</span>
+                    </button>
+                    <button
+                      onClick={() => setDeckFeedSource('fubo')}
+                      className={`px-2.5 py-1 rounded-md transition font-bold cursor-pointer flex items-center gap-1 ${
+                        deckFeedSource === 'fubo'
+                          ? 'bg-emerald-600 text-white shadow'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                      title="Stream Fubo.tv Live Sports Multiplex"
+                    >
+                      <Tv className="w-3 h-3 text-emerald-300" />
+                      <span>Fubo.tv Sports (4)</span>
+                    </button>
+                  </div>
+
+                  <span className="text-slate-600 hidden sm:inline">|</span>
+                  <span className="text-slate-400 font-mono text-[11px] truncate max-w-[280px]">
+                    {deckFeedSource === 'drfun1'
+                      ? `Ch ${selectedDrFun1Channel.channelNumber} • ${selectedDrFun1Channel.name}`
+                      : `${selectedFuboMatch.channelName} • ${selectedFuboMatch.resolution}`}
                   </span>
                 </div>
+
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setIsQuadViewActive(!isQuadViewActive)}
-                    className={`px-2 py-1 rounded text-[11px] font-bold flex items-center gap-1 transition ${
-                      isQuadViewActive ? 'bg-sky-500 text-slate-950' : 'bg-slate-800 text-slate-300 hover:text-white'
-                    }`}
-                  >
-                    <Grid className="w-3 h-3" />
-                    <span>{isQuadViewActive ? 'Single Screen' : 'Quad-Screen (4x)'}</span>
-                  </button>
+                  {deckFeedSource === 'drfun1' && (
+                    <button
+                      onClick={() => {
+                        handleSwitchChannel(selectedDrFun1Channel.unrealIrcChannel);
+                      }}
+                      className="px-2.5 py-1 bg-purple-950/80 hover:bg-purple-900/80 text-purple-300 border border-purple-500/40 rounded text-[11px] font-mono flex items-center gap-1 transition cursor-pointer"
+                      title={`Sync IRC chat to ${selectedDrFun1Channel.unrealIrcChannel}`}
+                    >
+                      <Terminal className="w-3 h-3 text-purple-400" />
+                      <span>Sync {selectedDrFun1Channel.unrealIrcChannel}</span>
+                    </button>
+                  )}
+                  {deckFeedSource === 'fubo' && (
+                    <button
+                      onClick={() => setIsQuadViewActive(!isQuadViewActive)}
+                      className={`px-2 py-1 rounded text-[11px] font-bold flex items-center gap-1 transition ${
+                        isQuadViewActive ? 'bg-sky-500 text-slate-950' : 'bg-slate-800 text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      <Grid className="w-3 h-3" />
+                      <span>{isQuadViewActive ? 'Single Screen' : 'Quad-Screen (4x)'}</span>
+                    </button>
+                  )}
                   <button
                     onClick={() => setIsMuted(!isMuted)}
-                    className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300"
-                    title={isMuted ? 'Unmute' : 'Mute'}
+                    className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
+                    title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
                   >
-                    {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
+                    {isMuted ? <VolumeX className="w-3.5 h-3.5 text-slate-400" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
                   </button>
                 </div>
               </div>
 
               {/* Broadcast Screen Canvas Area */}
               <div className="relative bg-slate-950 aspect-video flex-1 min-h-[300px] max-h-[460px] overflow-hidden flex flex-col justify-center items-center">
-                {!isQuadViewActive ? (
-                  // Single Screen Feed
+                {deckFeedSource === 'drfun1' ? (
+                  // DRFUN1 27 CHANNELS SCREEN PLAYOUT
+                  <div className="relative w-full h-full flex flex-col justify-between p-4 bg-gradient-to-br from-slate-950 via-indigo-950/50 to-slate-950 select-none">
+                    <div className="absolute inset-0 opacity-25 pointer-events-none bg-[radial-gradient(#818cf8_1px,transparent_1px)] [background-size:16px_16px]" />
+
+                    {/* Top Broadcast Overlay Badges */}
+                    <div className="relative z-10 flex items-center justify-between">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="px-2 py-0.5 rounded font-black text-[10px] uppercase tracking-wider bg-red-600 text-white shadow flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                          <span>LIVE 4K</span>
+                        </span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-950 text-purple-300 border border-purple-500/40">
+                          Ch {selectedDrFun1Channel.channelNumber} • {selectedDrFun1Channel.callSign}
+                        </span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-900/90 text-sky-300 border border-sky-500/30">
+                          {selectedDrFun1Channel.frequencyBand}
+                        </span>
+                        {selectedDrFun1Channel.scte35Enabled && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                            SCTE-35
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 text-[10px] font-mono">
+                        <span className="px-2 py-0.5 rounded bg-slate-900/80 text-slate-300 border border-slate-700">
+                          {selectedDrFun1Channel.bitrate}
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800/40 font-bold">
+                          {selectedDrFun1Channel.resolution}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Central Broadcast Studio Graphic / Visualizer */}
+                    <div className="relative z-10 my-auto text-center px-4">
+                      {selectedDrFun1Channel.category === 'Music & Radio' ? (
+                        // Radio Waveform Playout
+                        <div className="inline-block bg-slate-900/95 border border-purple-500/40 rounded-2xl p-5 shadow-2xl backdrop-blur-md max-w-lg w-full">
+                          <div className="flex items-center justify-center gap-3 mb-3">
+                            <Radio className="w-6 h-6 text-pink-400 animate-pulse" />
+                            <span className="text-sm font-bold text-white tracking-wide">
+                              {selectedDrFun1Channel.name}
+                            </span>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-pink-500/20 text-pink-300 border border-pink-500/40">
+                              SHOUTcast D.N.A.
+                            </span>
+                          </div>
+                          <div className="text-base font-bold text-purple-200 truncate">
+                            {selectedDrFun1Channel.currentProgram}
+                          </div>
+                          <div className="text-xs text-slate-400 font-mono mt-1">
+                            Host: {selectedDrFun1Channel.currentHost}
+                          </div>
+                          {/* Audio Equalizer Bars */}
+                          <div className="h-10 flex items-end justify-center gap-1.5 mt-4 px-4">
+                            {[75, 45, 90, 60, 85, 40, 95, 70, 50, 80, 65, 88, 92, 55, 78, 62, 84, 96, 70, 52].map((h, i) => (
+                              <div
+                                key={i}
+                                className="flex-1 bg-gradient-to-t from-purple-600 via-pink-500 to-indigo-400 rounded-t transition-all duration-200"
+                                style={{ height: isPlaying ? `${h}%` : '15%' }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        // 4K Video Playout Canvas
+                        <div className="inline-block bg-slate-900/90 border border-slate-700/80 rounded-2xl p-5 shadow-2xl backdrop-blur-md max-w-lg w-full">
+                          <div className="flex items-center justify-center gap-2 mb-2">
+                            <span className="text-xs font-mono font-bold text-purple-400">
+                              {selectedDrFun1Channel.networkOwner}
+                            </span>
+                            <span className="text-slate-600">&bull;</span>
+                            <span className="text-xs font-mono text-emerald-400">
+                              {selectedDrFun1Channel.viewers.toLocaleString()} Viewers
+                            </span>
+                          </div>
+                          <h3 className="text-lg font-bold text-white tracking-wide">
+                            {selectedDrFun1Channel.currentProgram}
+                          </h3>
+                          <div className="text-xs text-slate-400 font-mono mt-1 flex items-center justify-center gap-2">
+                            <span>Host: {selectedDrFun1Channel.currentHost}</span>
+                            <span className="text-slate-600">&bull;</span>
+                            <span className="text-sky-300">{selectedDrFun1Channel.currentDuration}</span>
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-slate-800 text-[11px] font-mono text-slate-300 flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-purple-300">Carrier: {selectedDrFun1Channel.carrierFrequency}</span>
+                            <span className="text-slate-400">Transponder: {selectedDrFun1Channel.transponder}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bottom Status Ticker Overlay */}
+                    <div className="relative z-10 flex items-center justify-between text-[11px] font-mono text-slate-400 bg-slate-950/80 p-2 rounded-lg border border-slate-800/80">
+                      <div className="flex items-center gap-2 truncate mr-3">
+                        <span className="text-red-400 font-bold shrink-0">&bull; CRAWL:</span>
+                        <span className="text-slate-200 truncate">{selectedDrFun1Channel.newsTickerCrawl}</span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-purple-300">Audio: {selectedDrFun1Channel.audioCodec}</span>
+                        <span className="text-emerald-400 font-bold">FRN: {selectedDrFun1Channel.fccFrn}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : !isQuadViewActive ? (
+                  // Single Screen Feed (Fubo Sports)
                   <div className="relative w-full h-full flex flex-col justify-between p-4 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40 select-none">
-                    {/* Background Visualizer Simulation */}
                     <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px]" />
 
                     {/* Top Broadcast Overlay Badges */}
@@ -810,29 +1066,255 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
                 )}
               </div>
 
-              {/* Match Selection Quick-bar */}
+              {/* Station / Feed Selection Quick-bar */}
               <div className="bg-slate-900 border-t border-slate-800 p-2 flex items-center gap-2 overflow-x-auto text-xs">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 px-2 font-mono">
-                  Live Feeds:
-                </span>
-                {FUBO_MATCHES.map((m) => (
+                {deckFeedSource === 'drfun1' ? (
+                  <>
+                    <span className="text-[11px] font-bold text-purple-300 uppercase tracking-wider shrink-0 px-2 font-mono flex items-center gap-1">
+                      <Radio className="w-3 h-3 text-purple-400" />
+                      <span>DrFun1 Stations (27):</span>
+                    </span>
+                    {ALL_DRFUN1_BROADCASTING_CHANNELS.map((ch) => (
+                      <button
+                        key={ch.id}
+                        onClick={() => setSelectedDrFun1Channel(ch)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold shrink-0 transition flex items-center gap-1.5 border cursor-pointer font-mono ${
+                          selectedDrFun1Channel.id === ch.id
+                            ? 'bg-purple-600/40 border-purple-400 text-white font-bold shadow'
+                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                        title={`${ch.name} - ${ch.carrierFrequency}`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span className="text-purple-300 font-bold">Ch {ch.channelNumber}</span>
+                        <span className="text-white truncate max-w-[130px]">{ch.callSign}</span>
+                      </button>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider shrink-0 px-2 font-mono">
+                      Fubo Live Feeds:
+                    </span>
+                    {FUBO_MATCHES.map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => {
+                          setSelectedFuboMatch(m);
+                          setIsQuadViewActive(false);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition flex items-center gap-2 border cursor-pointer ${
+                          selectedFuboMatch.id === m.id
+                            ? 'bg-purple-600/30 border-purple-500 text-white font-bold'
+                            : 'bg-slate-950 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span>{m.channelName}</span>
+                        <span className="text-[10px] font-mono text-purple-300 font-bold">{m.score}</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* 1.5 DRFUN1 MEDIA & DRFUN1 ECOM 27 CHANNELS MULTIPLEX MODE */}
+          {/* ========================================================= */}
+          {activeDeckMode === 'drfun1' && (
+            <div className="flex-1 flex flex-col bg-slate-950">
+              {/* DrFun1 Brand Header Banner */}
+              <div className="bg-gradient-to-r from-purple-950/80 via-indigo-950/90 to-slate-900 px-4 py-3 border-b border-purple-500/30 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="px-2.5 py-1 rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-xs tracking-wider shadow">
+                    DRFUN1 MEDIA INC.
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-sm tracking-wide flex items-center gap-2">
+                      <span>All 27 Broadcasting Channels Owned &amp; Operated</span>
+                      <span className="text-xs font-mono font-normal text-purple-300">
+                        (FCC FRN: 0034981290)
+                      </span>
+                    </h3>
+                    <p className="text-[11px] text-slate-400 font-mono">
+                      Licensed to Richard Alan Witt (www.wittlawfirm.com) • Switch SUPERNAP Teleports &amp; Fiber Rings
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
                   <button
-                    key={m.id}
-                    onClick={() => {
-                      setSelectedFuboMatch(m);
-                      setIsQuadViewActive(false);
-                    }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition flex items-center gap-2 border cursor-pointer ${
-                      selectedFuboMatch.id === m.id
-                        ? 'bg-purple-600/30 border-purple-500 text-white font-bold'
-                        : 'bg-slate-950 border-slate-800 text-slate-300 hover:text-white'
+                    onClick={() => setIsShoutcastBotModalOpen(true)}
+                    className="px-3 py-1.5 bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 border border-pink-500/40 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <Radio className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
+                    <span>donSchoe/shoutcast-irc</span>
+                  </button>
+                  <span className="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-mono font-bold">
+                    885,000 CHANNELS SYNCED
+                  </span>
+                </div>
+              </div>
+
+              {/* Spectrum Band Quick Filter Pills */}
+              <div className="bg-slate-900/90 border-b border-slate-800 px-4 py-2 flex items-center gap-1.5 overflow-x-auto text-xs">
+                <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
+                  Filter Band:
+                </span>
+                {[
+                  { id: 'all', label: 'All Bands (27)' },
+                  { id: 'Ka-Band', label: 'Ka-Band (7)' },
+                  { id: 'Ku-Band', label: 'Ku-Band (6)' },
+                  { id: 'C-Band', label: 'C-Band (4)' },
+                  { id: 'Optical Laser', label: 'Optical Laser (2)' },
+                  { id: 'QAM Cable', label: 'QAM Cable (4)' },
+                  { id: '5G NTN', label: '5G NTN (2)' },
+                  { id: 'S-Band', label: 'S-Band (2)' },
+                  { id: 'X-Band', label: 'X-Band (2)' },
+                ].map((band) => (
+                  <button
+                    key={band.id}
+                    onClick={() => setDrfun1BandFilter(band.id)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold shrink-0 transition cursor-pointer ${
+                      drfun1BandFilter === band.id
+                        ? 'bg-purple-600 text-white shadow'
+                        : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-white'
                     }`}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    <span>{m.channelName}</span>
-                    <span className="text-[10px] font-mono text-purple-300 font-bold">{m.score}</span>
+                    {band.label}
                   </button>
                 ))}
+              </div>
+
+              {/* Active Screen 4K Player Canvas */}
+              <div className="relative bg-slate-950 aspect-video flex-1 min-h-[260px] max-h-[380px] overflow-hidden flex flex-col justify-between p-4 border-b border-slate-800">
+                <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#a855f7_1px,transparent_1px)] [background-size:16px_16px]" />
+
+                {/* Top Overlay Badges */}
+                <div className="relative z-10 flex items-center justify-between">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-2 py-0.5 rounded font-black text-[10px] uppercase bg-red-600 text-white shadow flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                      <span>ON-AIR 4K</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-950 text-purple-300 border border-purple-500/40">
+                      Channel {selectedDrFun1Channel.channelNumber} • {selectedDrFun1Channel.callSign}
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-900/90 text-sky-300 border border-sky-500/30">
+                      {selectedDrFun1Channel.frequencyBand}
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono text-emerald-400 bg-emerald-950/80 border border-emerald-500/30">
+                      {selectedDrFun1Channel.viewers.toLocaleString()} Viewers
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-[10px] font-mono">
+                    <button
+                      onClick={() => handleSwitchChannel(selectedDrFun1Channel.unrealIrcChannel)}
+                      className="px-2.5 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white font-bold flex items-center gap-1 transition cursor-pointer shadow"
+                    >
+                      <Terminal className="w-3 h-3" />
+                      <span>Join {selectedDrFun1Channel.unrealIrcChannel}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Central Program Visualizer */}
+                <div className="relative z-10 my-auto text-center px-4">
+                  <div className="inline-block bg-slate-900/90 border border-slate-700/80 rounded-2xl p-5 shadow-2xl backdrop-blur-md max-w-xl w-full">
+                    <h3 className="text-xl font-bold text-white tracking-wide">
+                      {selectedDrFun1Channel.name}
+                    </h3>
+                    <div className="text-sm font-semibold text-purple-300 mt-1">
+                      {selectedDrFun1Channel.currentProgram}
+                    </div>
+                    <div className="text-xs text-slate-400 font-mono mt-1">
+                      Host: {selectedDrFun1Channel.currentHost} • {selectedDrFun1Channel.currentDuration}
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-slate-800 text-[11px] font-mono text-slate-300 grid grid-cols-2 gap-2 text-left">
+                      <div>
+                        <span className="text-slate-500">Transponder: </span>
+                        <span className="text-white font-semibold">{selectedDrFun1Channel.transponder}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Carrier: </span>
+                        <span className="text-purple-300 font-semibold">{selectedDrFun1Channel.carrierFrequency}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Playout Bitrate: </span>
+                        <span className="text-emerald-400 font-semibold">{selectedDrFun1Channel.bitrate}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Audio Codec: </span>
+                        <span className="text-sky-300 font-semibold">{selectedDrFun1Channel.audioCodec}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom News Ticker */}
+                <div className="relative z-10 flex items-center justify-between text-[11px] font-mono text-slate-400 bg-slate-950/80 p-2 rounded-lg border border-slate-800/80">
+                  <div className="flex items-center gap-2 truncate mr-3">
+                    <span className="text-amber-400 font-bold shrink-0">&bull; NOC TICKER:</span>
+                    <span className="text-slate-200 truncate">{selectedDrFun1Channel.newsTickerCrawl}</span>
+                  </div>
+                  <div className="text-emerald-400 font-bold shrink-0">
+                    FRN {selectedDrFun1Channel.fccFrn} (Rule {selectedDrFun1Channel.fccRulePart})
+                  </div>
+                </div>
+              </div>
+
+              {/* 27 Channels Matrix Grid */}
+              <div className="p-3 bg-slate-950 overflow-y-auto max-h-[320px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
+                  {ALL_DRFUN1_BROADCASTING_CHANNELS
+                    .filter((c) => drfun1BandFilter === 'all' || c.frequencyBand.toLowerCase().includes(drfun1BandFilter.toLowerCase()))
+                    .map((ch) => (
+                      <div
+                        key={ch.id}
+                        onClick={() => setSelectedDrFun1Channel(ch)}
+                        className={`rounded-xl border p-3 flex flex-col justify-between transition-all cursor-pointer ${
+                          selectedDrFun1Channel.id === ch.id
+                            ? 'bg-purple-950/40 border-purple-400 shadow-md ring-1 ring-purple-500/30'
+                            : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-950 text-purple-300 border border-purple-500/30">
+                              Ch {ch.channelNumber}
+                            </span>
+                            <span className="text-xs font-bold text-white truncate max-w-[170px]" title={ch.name}>
+                              {ch.callSign} • {ch.name.replace('DrFun1 ', '')}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-mono font-bold text-emerald-400 shrink-0">
+                            {ch.resolution.split(' ')[0]}
+                          </span>
+                        </div>
+
+                        <div className="text-[11px] text-slate-300 font-medium mt-1 truncate" title={ch.currentProgram}>
+                          {ch.currentProgram}
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mt-2 pt-2 border-t border-slate-800/80">
+                          <span className="truncate max-w-[180px]">{ch.frequencyBand.split('/')[0]}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedDrFun1Channel(ch);
+                              handleSwitchChannel(ch.unrealIrcChannel);
+                            }}
+                            className="text-purple-400 hover:text-purple-300 hover:underline font-bold"
+                          >
+                            {ch.unrealIrcChannel}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
               </div>
             </div>
           )}
@@ -1470,6 +1952,30 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
         }}
         onJoinDevChannel={(ch) => {
           handleSwitchChannel(ch);
+        }}
+      />
+
+      {/* donSchoe/shoutcast-irc Announcer Bot & 885,000 Channels Fanout Modal */}
+      <ShoutcastIrcBotModal
+        isOpen={isShoutcastBotModalOpen}
+        onClose={() => setIsShoutcastBotModalOpen(false)}
+        activeServer={activeServer}
+        currentIrcChannel={activeChannel}
+        onBroadcastToIrc={(msg, ch) => {
+          const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          const shoutcastMsg: IrcMessage = {
+            id: `shoutcast_${Date.now()}`,
+            timestamp: timeStr,
+            sender: 'ShoutcastBot',
+            channel: ch,
+            content: msg,
+            type: 'notice',
+          };
+          setMessages((prev) => ({
+            ...prev,
+            [ch]: [...(prev[ch] || []), shoutcastMsg],
+          }));
+          playAudioChime();
         }}
       />
     </div>
