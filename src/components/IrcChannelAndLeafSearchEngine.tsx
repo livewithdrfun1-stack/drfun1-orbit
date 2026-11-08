@@ -51,7 +51,15 @@ import {
   BOT_MUSIC_ROSTER,
   SHOUTCAST_855000_CHANNELS_AUDIT
 } from '../data/shoutcastMusicLibraryData';
-import { INITIAL_UNREAL_SEARCH_INDEX, UNREAL_HUB_TARGET, generateUnrealLeafConfigSnippet } from '../data/unrealSearchData';
+import {
+  INITIAL_UNREAL_SEARCH_INDEX,
+  UNREAL_HUB_TARGET,
+  generateUnrealLeafConfigSnippet,
+  DATAPACKET_LEAF_NODES,
+  UNREALIRCD_335_LEAF_NODES,
+  USER_REQUESTED_347_NODES,
+  ALL_NETWORK_LEAF_NODES
+} from '../data/unrealSearchData';
 import { SwitchDedicatedNode, IrcChannel } from '../types/irc';
 
 export interface IrcSearchChannelItem {
@@ -98,9 +106,13 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
   // Search & Filters state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChannelCategory, setSelectedChannelCategory] = useState<string>('all');
+  const [selectedLeafProvider, setSelectedLeafProvider] = useState<string>('all');
   const [selectedLeafRegion, setSelectedLeafRegion] = useState<string>('all');
   const [channelSortBy, setChannelSortBy] = useState<'users' | 'name' | 'bitrate' | 'subchannels'>('users');
   const [leafSortBy, setLeafSortBy] = useState<'latency' | 'users' | 'sid' | 'name'>('latency');
+  const [leafPage, setLeafPage] = useState<number>(1);
+  const [showAllLeaves, setShowAllLeaves] = useState<boolean>(false);
+  const leafPageSize = 24;
 
   // Interactive drawer / details
   const [inspectLeafNode, setInspectLeafNode] = useState<SwitchDedicatedNode | null>(null);
@@ -307,8 +319,41 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
 
   // Filtered & Sorted Leaf Nodes
   const filteredLeafNodes = useMemo(() => {
-    let result = SWITCH_DEDICATED_NODES;
+    let result = ALL_NETWORK_LEAF_NODES;
 
+    // Filter by provider
+    if (selectedLeafProvider !== 'all') {
+      result = result.filter((n) => n.provider === selectedLeafProvider);
+    }
+
+    // Filter by region
+    if (selectedLeafRegion !== 'all') {
+      result = result.filter((n) => {
+        const reg = (n.region || '').toLowerCase();
+        const loc = n.location.toLowerCase();
+        if (selectedLeafRegion === 'north_america') {
+          return reg.includes('north america') || loc.includes('nv') || loc.includes('ca') || loc.includes('ny') || loc.includes('tx') || loc.includes('il') || loc.includes('va') || loc.includes('canada');
+        }
+        if (selectedLeafRegion === 'europe') {
+          return reg.includes('europe') || loc.includes('uk') || loc.includes('de') || loc.includes('nl') || loc.includes('fr') || loc.includes('es') || loc.includes('it') || loc.includes('ch') || loc.includes('se');
+        }
+        if (selectedLeafRegion === 'asia_pacific') {
+          return reg.includes('asia') || reg.includes('pacific') || loc.includes('jp') || loc.includes('sg') || loc.includes('au') || loc.includes('kr') || loc.includes('tw') || loc.includes('in') || loc.includes('nz');
+        }
+        if (selectedLeafRegion === 'latin_america') {
+          return reg.includes('latin') || loc.includes('br') || loc.includes('ar') || loc.includes('cl') || loc.includes('co') || loc.includes('pe') || loc.includes('mx') || loc.includes('cr');
+        }
+        if (selectedLeafRegion === 'middle_east_africa') {
+          return reg.includes('middle east') || reg.includes('africa') || loc.includes('ae') || loc.includes('za') || loc.includes('il') || loc.includes('tr') || loc.includes('sa') || loc.includes('eg');
+        }
+        if (selectedLeafRegion === 'orbital_teleport') {
+          return reg.includes('orbital') || reg.includes('teleport') || loc.includes('deep space') || loc.includes('goldstone') || loc.includes('mojave') || loc.includes('satcom') || loc.includes('nasa');
+        }
+        return true;
+      });
+    }
+
+    // Filter by search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter(
@@ -318,60 +363,60 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
           n.location.toLowerCase().includes(q) ||
           n.sid.toLowerCase().includes(q) ||
           n.campusName.toLowerCase().includes(q) ||
-          n.sslFingerprint.toLowerCase().includes(q)
+          (n.provider && n.provider.toLowerCase().includes(q)) ||
+          (n.country && n.country.toLowerCase().includes(q)) ||
+          (n.region && n.region.toLowerCase().includes(q)) ||
+          n.sslFingerprint.toLowerCase().includes(q) ||
+          n.fiberCapacity.toLowerCase().includes(q)
       );
     }
 
-    if (selectedLeafRegion !== 'all') {
-      result = result.filter((n) => {
-        if (selectedLeafRegion === 'us_core') {
-          return n.location.includes('Las Vegas') || n.location.includes('Tahoe') || n.location.includes('San Jose') || n.location.includes('Los Angeles');
-        }
-        if (selectedLeafRegion === 'us_east_central') {
-          return n.location.includes('Grand Rapids') || n.location.includes('Atlanta') || n.location.includes('Chicago') || n.location.includes('New York') || n.location.includes('Ashburn') || n.location.includes('Miami');
-        }
-        if (selectedLeafRegion === 'europe') {
-          return n.location.includes('London') || n.location.includes('Frankfurt') || n.location.includes('Stockholm');
-        }
-        if (selectedLeafRegion === 'asia_pacific') {
-          return n.location.includes('Tokyo') || n.location.includes('Singapore') || n.location.includes('Sydney') || n.location.includes('Hawaii');
-        }
-        if (selectedLeafRegion === 'deep_space') {
-          return n.location.includes('Mojave') || n.location.includes('Teleport') || n.name.includes('Teleport') || n.name.includes('Goldstone');
-        }
-        return true;
-      });
-    }
-
+    // Sort
     return [...result].sort((a, b) => {
       if (leafSortBy === 'latency') return a.latencyMs - b.latencyMs;
       if (leafSortBy === 'users') return b.usersOnline - a.usersOnline;
       if (leafSortBy === 'sid') return a.sid.localeCompare(b.sid);
       return a.subdomain.localeCompare(b.subdomain);
     });
-  }, [searchQuery, selectedLeafRegion, leafSortBy]);
+  }, [searchQuery, selectedLeafProvider, selectedLeafRegion, leafSortBy]);
+
+  // Paginated Slice for responsive rendering across 347+ nodes
+  const paginatedLeafNodes = useMemo(() => {
+    if (showAllLeaves) return filteredLeafNodes;
+    const startIndex = (leafPage - 1) * leafPageSize;
+    return filteredLeafNodes.slice(startIndex, startIndex + leafPageSize);
+  }, [filteredLeafNodes, leafPage, showAllLeaves, leafPageSize]);
+
+  const totalLeafPages = Math.max(1, Math.ceil(filteredLeafNodes.length / leafPageSize));
 
   // Simulated Traceroute to a Leaf Node
   const handleRunTraceroute = (node: SwitchDedicatedNode) => {
     setTraceRouteNode(node);
     setIsTracing(true);
+
+    const isDataPacket = node.provider === 'datapacket';
+    const isUnreal = node.provider === 'unrealircd';
+
     setTraceOutput([
       `traceroute to ${node.subdomain} (${node.host}), 30 hops max, 60 byte packets`,
-      ` 1  gateway.switch.drfun1.net (199.167.144.1)  0.312 ms  0.288 ms  0.274 ms`,
-      ` 2  core-r1.lasvegas.risingnet.net (199.167.145.10)  0.640 ms  0.612 ms  0.590 ms`,
-      ` 3  dwdm-ring-100g.switch.supernap.org (10.240.1.1)  0.920 ms  0.880 ms  0.840 ms`,
+      ` 1  gateway.switch.drfun1.net (199.167.144.1)  0.288 ms  0.274 ms  0.260 ms`,
+      isDataPacket
+        ? ` 2  core-border-lacp.datapacket.com (100G CDN77 Backbone)  0.512 ms  0.490 ms`
+        : ` 2  core-r1.lasvegas.risingnet.net (199.167.145.10)  0.640 ms  0.612 ms`,
+      ` 3  dwdm-ring-100g.switch.supernap.org (10.240.1.1)  0.920 ms  0.880 ms`,
     ]);
 
     setTimeout(() => {
       setTraceOutput((prev) => [
         ...prev,
-        ` 4  switch-leaf-mesh-backbone.drfun1.com (10.240.10.${node.sid})  ${(node.latencyMs * 0.7).toFixed(2)} ms`,
-        ` 5  ${node.subdomain} (SID ${node.sid}) [UnrealIRCd 6.1.4 TLSv1.3]  ${node.latencyMs.toFixed(2)} ms`,
-        `>>> Route Verified: Direct RisingNet 100G Optical Interconnect. 0.00% Packet Loss.`,
-        `>>> Synced with irc.drfun1.com:6697 Master Hub via SSL Fingerprint: ${node.sslFingerprint.slice(0, 24)}...`
+        ` 4  ${isDataPacket ? 'datapacket-baremetal-leaf' : isUnreal ? 'unrealircd-leaf-mesh' : 'switch-core-ring'}.drfun1.com (10.240.${node.provider === 'datapacket' ? '21' : '10'}.${node.sid})  ${(node.latencyMs * 0.75).toFixed(2)} ms`,
+        ` 5  ${node.subdomain} [SID ${node.sid}] (UnrealIRCd 6.1.4 TLSv1.3 AES-256)  ${node.latencyMs.toFixed(2)} ms`,
+        `>>> Route Status: 0.00% Packet Loss across ${node.fiberCapacity}`,
+        `>>> Verified Leaf Handshake: Leafed to irc.drfun1.com:6697 (SID 001)`,
+        `>>> SSL Fingerprint Verified: ${node.sslFingerprint.slice(0, 32)}...`
       ]);
       setIsTracing(false);
-    }, 900);
+    }, 850);
   };
 
   // Generate prefix fanout test channel
@@ -415,11 +460,14 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                   855,000 Channels
                 </span>
                 <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded-md hidden sm:inline">
-                  26 Leaf Nodes
+                  335 UnrealIRCd Nodes
+                </span>
+                <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 bg-sky-500/20 text-sky-300 border border-sky-500/40 rounded-md hidden md:inline">
+                  12 DataPacket 100G
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Master Hub: <span className="text-emerald-400 font-mono font-semibold">irc.drfun1.com:6697</span> (SID 001) &bull; Switch SUPERNAP Las Vegas Core &bull; Licensee: Richard Alan Witt (FRN 0034981290)
+                Master Hub: <span className="text-emerald-400 font-mono font-semibold">irc.drfun1.com:6697</span> (SID 001) &bull; Switch SUPERNAP Las Vegas Core &bull; 347 Verified Leaves &bull; Licensee: Richard Alan Witt (FRN 0034981290)
               </p>
             </div>
           </div>
@@ -473,7 +521,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
             }`}
           >
             <Server className="w-4 h-4 text-emerald-300" />
-            <span>Leafed Network (26 Leaves)</span>
+            <span>Leafed Network (347 / 373 Nodes)</span>
           </button>
 
           <button
@@ -520,9 +568,11 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
             <span>Global Mesh: Synced</span>
           </span>
           <span>&bull;</span>
-          <span className="text-purple-300">855,000 Channels Synced</span>
+          <span className="text-purple-300">335 UnrealIRCd</span>
           <span>&bull;</span>
-          <span className="text-sky-300">3.85 Tbps RisingNet Transit</span>
+          <span className="text-sky-300">12 DataPacket 100G</span>
+          <span>&bull;</span>
+          <span className="text-emerald-300">855,000 Channels</span>
         </div>
       </div>
 
@@ -536,17 +586,23 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setLeafPage(1);
+                }}
                 placeholder={
                   activeTab === 'channels'
                     ? "Search 855k channels by name (e.g. #music-deathrow, #artist-snoopdogg), genre, artist, topic..."
-                    : "Search 26 leaf nodes by hostname (e.g. dev.drfun1media.com, node1), city, SID, region..."
+                    : "Search 347 leaf nodes by provider (unrealircd, datapacket), hostname, city, SID, region..."
                 }
                 className="w-full bg-slate-950 text-white pl-10 pr-10 py-2.5 rounded-xl border border-slate-700/80 text-xs sm:text-sm font-mono placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
               />
               {searchQuery && (
                 <button
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => {
+                    setSearchQuery('');
+                    setLeafPage(1);
+                  }}
                   className="absolute right-3 top-3 text-slate-400 hover:text-white"
                   title="Clear Search"
                 >
@@ -587,7 +643,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
             )}
           </div>
 
-          {/* Category Filter Chips */}
+          {/* Category Filter Chips for Channels */}
           {activeTab === 'channels' && (
             <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
               <span className="text-slate-500 text-[11px] uppercase mr-1">Filter Channels:</span>
@@ -615,30 +671,63 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
             </div>
           )}
 
-          {/* Region Filter Chips for Leaf Nodes */}
+          {/* Provider & Region Filter Chips for Leaf Nodes */}
           {activeTab === 'leaf_nodes' && (
-            <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
-              <span className="text-slate-500 text-[11px] uppercase mr-1">Filter Regions:</span>
-              {[
-                { id: 'all', label: 'All Regions (26 Nodes)' },
-                { id: 'us_core', label: 'US Core (NV / CA)' },
-                { id: 'us_east_central', label: 'US Central & East' },
-                { id: 'europe', label: 'Europe & UK' },
-                { id: 'asia_pacific', label: 'Asia-Pacific' },
-                { id: 'deep_space', label: 'Deep Space Teleports' },
-              ].map((chip) => (
-                <button
-                  key={chip.id}
-                  onClick={() => setSelectedLeafRegion(chip.id)}
-                  className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
-                    selectedLeafRegion === chip.id
-                      ? 'bg-emerald-600/30 text-emerald-200 border border-emerald-500/60 font-bold'
-                      : 'bg-slate-950 text-slate-400 border border-slate-800 hover:border-slate-700 hover:text-slate-200'
-                  }`}
-                >
-                  {chip.label}
-                </button>
-              ))}
+            <div className="space-y-2 pt-1">
+              {/* Provider Filter Chips */}
+              <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
+                <span className="text-slate-500 text-[11px] uppercase mr-1">Provider:</span>
+                {[
+                  { id: 'all', label: `All Mesh Nodes (${ALL_NETWORK_LEAF_NODES.length})` },
+                  { id: 'unrealircd', label: `UnrealIRCd.org (${UNREALIRCD_335_LEAF_NODES.length} Nodes)` },
+                  { id: 'datapacket', label: `DataPacket.com 100G (${DATAPACKET_LEAF_NODES.length} Nodes)` },
+                  { id: 'switch', label: `Switch SUPERNAP (${SWITCH_DEDICATED_NODES.length} Nodes)` },
+                ].map((chip) => (
+                  <button
+                    key={chip.id}
+                    onClick={() => {
+                      setSelectedLeafProvider(chip.id);
+                      setLeafPage(1);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                      selectedLeafProvider === chip.id
+                        ? 'bg-purple-600/30 text-purple-200 border border-purple-500/60 font-bold shadow-sm'
+                        : 'bg-slate-950 text-slate-400 border border-slate-800 hover:border-slate-700 hover:text-slate-200'
+                    }`}
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Region Filter Chips */}
+              <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
+                <span className="text-slate-500 text-[11px] uppercase mr-1">Region:</span>
+                {[
+                  { id: 'all', label: 'All Regions' },
+                  { id: 'north_america', label: 'North America (100+)' },
+                  { id: 'europe', label: 'Europe (105+)' },
+                  { id: 'asia_pacific', label: 'Asia-Pacific (65+)' },
+                  { id: 'latin_america', label: 'Latin America (30)' },
+                  { id: 'middle_east_africa', label: 'Middle East & Africa (20)' },
+                  { id: 'orbital_teleport', label: 'Orbital & Teleport (15)' },
+                ].map((chip) => (
+                  <button
+                    key={chip.id}
+                    onClick={() => {
+                      setSelectedLeafRegion(chip.id);
+                      setLeafPage(1);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                      selectedLeafRegion === chip.id
+                        ? 'bg-emerald-600/30 text-emerald-200 border border-emerald-500/60 font-bold shadow-sm'
+                        : 'bg-slate-950 text-slate-400 border border-slate-800 hover:border-slate-700 hover:text-slate-200'
+                    }`}
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -800,152 +889,276 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
         )}
 
         {/* ======================================================== */}
-        {/* TAB 2: LEAFED NETWORK NODES SEARCH (26 SWITCH SUPERNAP)  */}
+        {/* TAB 2: LEAFED NETWORK NODES SEARCH (335 UNREAL + 12 DP)  */}
         {/* ======================================================== */}
         {activeTab === 'leaf_nodes' && (
           <div className="space-y-4">
             {/* Master Hub Telemetry Hero */}
-            <div className="bg-gradient-to-r from-purple-950/60 via-slate-900 to-indigo-950/60 border border-purple-500/30 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
+            <div className="bg-gradient-to-r from-purple-950/70 via-slate-900 to-indigo-950/70 border border-purple-500/40 rounded-xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
                   <span className="text-xs font-mono uppercase tracking-wider text-purple-300 font-bold">
-                    Master Hub Node 001
+                    Master Core Hub
                   </span>
-                  <span className="text-xs font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/40">
+                  <span className="text-xs font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/40 font-bold">
                     SID: 001
                   </span>
+                  <span className="text-xs font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/40">
+                    347 Leafed Nodes Verified
+                  </span>
                 </div>
-                <h3 className="text-lg font-black font-mono text-white">irc.drfun1.com:6697 (SSL)</h3>
-                <p className="text-xs text-slate-300">
-                  Switch SUPERNAP Las Vegas 7, 8, 9 Core Teleport Campus &bull; 100% Green Renewable Energy &bull; RisingNet 100G DWDM
+                <h3 className="text-lg sm:text-xl font-black font-mono text-white tracking-wide">
+                  irc.drfun1.com:6697 (SSL)
+                </h3>
+                <p className="text-xs text-slate-300 max-w-2xl">
+                  Switch SUPERNAP Las Vegas 7, 8, 9 Core Teleport Campus &bull; 100% Green Renewable Energy &bull; RisingNet 100G DWDM Optical Ring &bull; 335 UnrealIRCd.org Nodes + 12 DataPacket.com 100G Nodes
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
-                <div className="bg-slate-950/80 px-3 py-2 rounded-lg border border-slate-800 text-center">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+                <div className="bg-slate-950/90 px-3 py-2 rounded-lg border border-slate-800 text-center">
                   <span className="text-slate-400 block text-[10px]">SYNCED CHANNELS</span>
                   <span className="text-base font-black text-purple-300">855,000</span>
                 </div>
-                <div className="bg-slate-950/80 px-3 py-2 rounded-lg border border-slate-800 text-center">
-                  <span className="text-slate-400 block text-[10px]">SYNCED LEAVES</span>
-                  <span className="text-base font-black text-emerald-400">26 / 26</span>
+                <div className="bg-slate-950/90 px-3 py-2 rounded-lg border border-slate-800 text-center">
+                  <span className="text-slate-400 block text-[10px]">UNREALIRCD.ORG</span>
+                  <span className="text-base font-black text-emerald-400">335 / 335</span>
                 </div>
-                <div className="bg-slate-950/80 px-3 py-2 rounded-lg border border-slate-800 text-center">
-                  <span className="text-slate-400 block text-[10px]">TRANSIT CAPACITY</span>
-                  <span className="text-base font-black text-sky-300">3.85 Tbps</span>
+                <div className="bg-slate-950/90 px-3 py-2 rounded-lg border border-slate-800 text-center">
+                  <span className="text-slate-400 block text-[10px]">DATAPACKET 100G</span>
+                  <span className="text-base font-black text-sky-300">12 / 12</span>
                 </div>
+                <div className="bg-slate-950/90 px-3 py-2 rounded-lg border border-slate-800 text-center">
+                  <span className="text-slate-400 block text-[10px]">TOTAL MESH LEAVES</span>
+                  <span className="text-base font-black text-amber-300">373 Nodes</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Results Count & View Toggle */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono text-slate-400 px-1">
+              <div className="flex items-center gap-2">
+                <span>
+                  Showing <span className="text-emerald-300 font-bold">{filteredLeafNodes.length}</span> matching leaf nodes
+                  {filteredLeafNodes.length > 0 && !showAllLeaves && (
+                    <span>
+                      {' '}(page {leafPage} of {totalLeafPages})
+                    </span>
+                  )}
+                </span>
+                <span className="text-slate-600">|</span>
+                <span className="text-[11px] text-purple-300">All Leafed to irc.drfun1.com:6697 (SID 001)</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowAllLeaves(!showAllLeaves)}
+                  className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded text-[11px] text-slate-300 hover:text-white transition cursor-pointer"
+                >
+                  {showAllLeaves ? 'Enable Pagination (24 / page)' : `Show All (${filteredLeafNodes.length})`}
+                </button>
               </div>
             </div>
 
             {/* Leaf Nodes Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              {filteredLeafNodes.map((node) => {
-                const isSelected = inspectLeafNode?.id === node.id;
+            {filteredLeafNodes.length === 0 ? (
+              <div className="p-8 text-center bg-slate-900/40 border border-dashed border-slate-800 rounded-xl space-y-2">
+                <Server className="w-8 h-8 text-slate-600 mx-auto" />
+                <p className="text-sm font-semibold text-slate-300">No leaf nodes found matching &quot;{searchQuery}&quot;</p>
+                <p className="text-xs text-slate-500">Try clearing filters or searching for &quot;ashburn&quot;, &quot;datapacket&quot;, &quot;london&quot;, &quot;frankfurt&quot;, or &quot;tokyo&quot;</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                {paginatedLeafNodes.map((node) => {
+                  const isSelected = inspectLeafNode?.id === node.id;
+                  const isDataPacket = node.provider === 'datapacket';
+                  const isUnreal = node.provider === 'unrealircd';
 
-                return (
-                  <div
-                    key={node.id}
-                    className={`bg-slate-900/80 hover:bg-slate-900 border rounded-xl p-3.5 flex flex-col justify-between transition shadow-md ${
-                      isSelected ? 'border-purple-500 ring-1 ring-purple-500' : 'border-slate-800 hover:border-emerald-500/50'
-                    }`}
-                  >
-                    <div className="space-y-2.5">
-                      {/* Node Header */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-purple-950 text-purple-300 rounded border border-purple-800">
-                              SID: {node.sid}
-                            </span>
-                            <span className="text-[10px] font-mono px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded border border-emerald-800">
-                              {node.leafStatus.toUpperCase()}
+                  return (
+                    <div
+                      key={node.id}
+                      className={`bg-slate-900/80 hover:bg-slate-900 border rounded-xl p-3.5 flex flex-col justify-between transition shadow-md ${
+                        isSelected
+                          ? 'border-purple-500 ring-1 ring-purple-500'
+                          : isDataPacket
+                          ? 'border-purple-800/80 hover:border-purple-500'
+                          : 'border-slate-800 hover:border-emerald-500/50'
+                      }`}
+                    >
+                      <div className="space-y-2.5">
+                        {/* Node Header */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-purple-950 text-purple-300 rounded border border-purple-800">
+                                SID: {node.sid}
+                              </span>
+                              {isDataPacket ? (
+                                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-gradient-to-r from-purple-900 to-indigo-900 text-purple-200 rounded border border-purple-500">
+                                  DataPacket 100G
+                                </span>
+                              ) : isUnreal ? (
+                                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded border border-emerald-700">
+                                  UnrealIRCd 6.1.4
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-sky-950 text-sky-300 rounded border border-sky-800">
+                                  Switch SUPERNAP
+                                </span>
+                              )}
+                              <span className="text-[10px] font-mono px-1.5 py-0.5 bg-slate-800 text-emerald-300 rounded border border-slate-700">
+                                {node.leafStatus.toUpperCase()}
+                              </span>
+                            </div>
+                            <h4 className="text-sm font-black font-mono text-white mt-1.5 truncate">
+                              {node.subdomain}
+                            </h4>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <span
+                              className={`text-xs font-mono font-black px-2 py-0.5 rounded border ${
+                                node.latencyMs < 10
+                                  ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
+                                  : node.latencyMs < 30
+                                  ? 'bg-sky-950/80 text-sky-300 border-sky-800'
+                                  : node.latencyMs < 90
+                                  ? 'bg-amber-950/80 text-amber-300 border-amber-800'
+                                  : 'bg-purple-950/80 text-purple-300 border-purple-800'
+                              }`}
+                            >
+                              {node.latencyMs} ms
                             </span>
                           </div>
-                          <h4 className="text-sm font-black font-mono text-white mt-1 truncate">
-                            {node.subdomain}
-                          </h4>
                         </div>
 
-                        <div className="text-right">
-                          <span
-                            className={`text-xs font-mono font-black px-2 py-0.5 rounded border ${
-                              node.latencyMs < 5
-                                ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
-                                : node.latencyMs < 25
-                                ? 'bg-sky-950/80 text-sky-300 border-sky-800'
-                                : node.latencyMs < 80
-                                ? 'bg-amber-950/80 text-amber-300 border-amber-800'
-                                : 'bg-purple-950/80 text-purple-300 border-purple-800'
-                            }`}
-                          >
-                            {node.latencyMs} ms
-                          </span>
+                        {/* Location & Facility */}
+                        <div className="text-xs text-slate-300 space-y-0.5">
+                          <p className="font-semibold text-slate-200 flex items-center justify-between">
+                            <span>{node.location}</span>
+                            {node.region && (
+                              <span className="text-[10px] font-mono text-slate-400 font-normal">
+                                {node.region}
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-[11px] text-slate-400 truncate">{node.campusName}</p>
+                        </div>
+
+                        {/* Fingerprint & Encryption */}
+                        <div className="bg-slate-950/80 p-2 rounded-lg border border-slate-800 text-[10px] font-mono space-y-1">
+                          <div className="flex items-center justify-between text-slate-400">
+                            <span>Link Target:</span>
+                            <span className="text-emerald-300 font-bold">irc.drfun1.com:6697</span>
+                          </div>
+                          <div className="flex items-center justify-between text-slate-400">
+                            <span>Uplink Speed:</span>
+                            <span className="text-sky-300 font-semibold">{node.fiberCapacity}</span>
+                          </div>
+                          <div className="text-slate-400 truncate pt-0.5 border-t border-slate-900">
+                            <span>FP: </span>
+                            <span className="text-purple-300">{node.sslFingerprint.slice(0, 30)}...</span>
+                          </div>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1 border-t border-slate-800/60">
+                          <span className="text-emerald-400 font-semibold">{node.usersOnline.toLocaleString()} Users</span>
+                          <span className="text-purple-300 font-semibold">855k Chans</span>
+                          <span className="text-sky-300 font-semibold">{node.leafPeers} Peers</span>
                         </div>
                       </div>
 
-                      {/* Location & Campus */}
-                      <div className="text-xs text-slate-300 space-y-0.5">
-                        <p className="font-semibold text-slate-200">{node.location}</p>
-                        <p className="text-[11px] text-slate-400 truncate">{node.campusName}</p>
-                      </div>
+                      {/* Node Actions */}
+                      <div className="mt-3 pt-2.5 border-t border-slate-800 flex items-center gap-1.5">
+                        <button
+                          onClick={() => setInspectLeafNode(node)}
+                          className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Cpu className="w-3.5 h-3.5 text-purple-400" />
+                          <span>Link Block</span>
+                        </button>
 
-                      {/* Fingerprint & Encryption */}
-                      <div className="bg-slate-950/80 p-2 rounded-lg border border-slate-800 text-[10px] font-mono space-y-1">
-                        <div className="flex items-center justify-between text-slate-400">
-                          <span>SSL Cipher:</span>
-                          <span className="text-emerald-300">TLSv1.3 AES-256</span>
-                        </div>
-                        <div className="text-slate-400 truncate">
-                          <span>FP: </span>
-                          <span className="text-purple-300">{node.sslFingerprint.slice(0, 28)}...</span>
-                        </div>
-                      </div>
+                        <button
+                          onClick={() => handleRunTraceroute(node)}
+                          className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-sky-300 hover:text-white rounded-lg text-xs font-mono transition cursor-pointer flex items-center gap-1"
+                          title="Run Traceroute & BGP Ping to this leaf"
+                        >
+                          <Activity className="w-3.5 h-3.5" />
+                          <span>Trace</span>
+                        </button>
 
-                      {/* Stats */}
-                      <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1 border-t border-slate-800/60">
-                        <span className="text-emerald-400 font-semibold">{node.usersOnline.toLocaleString()} Users</span>
-                        <span className="text-purple-300 font-semibold">855,000 Chans</span>
-                        <span className="text-sky-300 font-semibold">{node.fiberCapacity.split(' ')[0]} Fiber</span>
+                        <button
+                          onClick={() => handleCopy(node.unrealLinkBlock, node.id)}
+                          className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-mono transition cursor-pointer"
+                          title="Copy UnrealIRCd Link Block Snippet"
+                        >
+                          {copiedKey === node.id ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
+            )}
 
-                    {/* Node Actions */}
-                    <div className="mt-3 pt-2.5 border-t border-slate-800 flex items-center gap-1.5">
-                      <button
-                        onClick={() => setInspectLeafNode(node)}
-                        className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <Cpu className="w-3.5 h-3.5 text-purple-400" />
-                        <span>Link Block</span>
-                      </button>
+            {/* Pagination Controls */}
+            {!showAllLeaves && totalLeafPages > 1 && (
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono">
+                <span className="text-slate-400">
+                  Showing page <span className="text-white font-bold">{leafPage}</span> of{' '}
+                  <span className="text-white font-bold">{totalLeafPages}</span> ({filteredLeafNodes.length} total nodes)
+                </span>
 
-                      <button
-                        onClick={() => handleRunTraceroute(node)}
-                        className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-sky-300 hover:text-white rounded-lg text-xs font-mono transition cursor-pointer flex items-center gap-1"
-                        title="Run Traceroute & BGP Ping to this leaf"
-                      >
-                        <Activity className="w-3.5 h-3.5" />
-                        <span>Trace</span>
-                      </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setLeafPage((p) => Math.max(1, p - 1))}
+                    disabled={leafPage === 1}
+                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 rounded-lg transition cursor-pointer"
+                  >
+                    &larr; Previous
+                  </button>
 
+                  {/* Quick Page Jump Buttons */}
+                  {Array.from({ length: Math.min(5, totalLeafPages) }, (_, i) => {
+                    let pageNum = i + 1;
+                    if (totalLeafPages > 5 && leafPage > 3) {
+                      pageNum = leafPage - 2 + i;
+                      if (pageNum > totalLeafPages) pageNum = totalLeafPages - (4 - i);
+                    }
+                    if (pageNum <= 0 || pageNum > totalLeafPages) return null;
+
+                    return (
                       <button
-                        onClick={() => handleCopy(node.unrealLinkBlock, node.id)}
-                        className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-mono transition cursor-pointer"
-                        title="Copy UnrealIRCd Link Block Snippet"
+                        key={pageNum}
+                        onClick={() => setLeafPage(pageNum)}
+                        className={`w-8 h-8 rounded-lg font-bold transition cursor-pointer ${
+                          leafPage === pageNum
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        }`}
                       >
-                        {copiedKey === node.id ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5" />
-                        )}
+                        {pageNum}
                       </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  })}
+
+                  <button
+                    onClick={() => setLeafPage((p) => Math.min(totalLeafPages, p + 1))}
+                    disabled={leafPage === totalLeafPages}
+                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 rounded-lg transition cursor-pointer"
+                  >
+                    Next &rarr;
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -953,77 +1166,226 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
         {/* TAB 3: NETWORK LIVE TOPOLOGY & STAR MESH MAP            */}
         {/* ======================================================== */}
         {activeTab === 'topology' && (
-          <div className="space-y-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-4">
+          <div className="space-y-5">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-5 space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 className="text-base font-black font-mono text-white flex items-center gap-2">
                     <Network className="w-5 h-5 text-sky-400" />
-                    <span>UnrealIRCd 6.1.4 Global Star-Mesh Interconnect</span>
+                    <span>UnrealIRCd 6.1.4 Global Star-Mesh Interconnect (347 Leafed Nodes)</span>
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Master Hub: <span className="text-emerald-400 font-mono">irc.drfun1.com:6697</span> &bull; 26 Switch SUPERNAP Leaves radiating via RisingNet DWDM Optical Ring
+                    Master Hub: <span className="text-emerald-400 font-mono font-bold">irc.drfun1.com:6697</span> (SID 001) &bull; 12 DataPacket.com 100G Bare-Metal Nodes + 335 UnrealIRCd.org Verified Leaves
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs font-mono">
+                <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
                   <span className="px-2.5 py-1 bg-emerald-950/80 text-emerald-300 border border-emerald-800 rounded-lg">
-                    Leaf Burst Latency: 1.2 ms
+                    Hub Sync: 0.8 ms
                   </span>
                   <span className="px-2.5 py-1 bg-purple-950/80 text-purple-300 border border-purple-800 rounded-lg">
                     Packet Drop: 0.00%
                   </span>
+                  <span className="px-2.5 py-1 bg-sky-950/80 text-sky-300 border border-sky-800 rounded-lg">
+                    Spanning Tree: Synced
+                  </span>
                 </div>
               </div>
 
-              {/* Topology Matrix Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 pt-2">
-                {/* Center Hub */}
-                <div className="col-span-2 sm:col-span-3 md:col-span-4 lg:col-span-6 bg-gradient-to-r from-purple-950/90 via-slate-900 to-indigo-950/90 border border-purple-500/60 rounded-xl p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-purple-600 rounded-lg text-white">
-                      <Zap className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-bold text-white">irc.drfun1.com:6697</span>
-                        <span className="text-[10px] font-mono bg-purple-500/30 text-purple-200 px-1.5 py-0.5 rounded border border-purple-500/40">
-                          CORE HUB (SID 001)
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-slate-300 font-mono">Switch SUPERNAP Las Vegas 7, 8, 9 Core</span>
-                    </div>
+              {/* Master Core Hub Box */}
+              <div className="bg-gradient-to-r from-purple-950/90 via-slate-900 to-indigo-950/90 border-2 border-purple-500/70 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg shadow-purple-900/20">
+                <div className="flex items-center gap-3.5">
+                  <div className="p-3 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl text-white shadow-md">
+                    <Zap className="w-6 h-6 animate-pulse" />
                   </div>
-
-                  <div className="text-right text-xs font-mono hidden sm:block">
-                    <span className="text-emerald-400 font-bold block">855,000 Channels Synced</span>
-                    <span className="text-slate-400 text-[10px]">RisingNet Tier-1 BGP Optical Transit</span>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-base font-black font-mono text-white">irc.drfun1.com:6697 (SSL)</span>
+                      <span className="text-[10px] font-mono bg-purple-500/30 text-purple-200 px-2 py-0.5 rounded border border-purple-400/50 font-bold">
+                        CORE HUB &bull; SID 001
+                      </span>
+                      <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/40">
+                        ONLINE &bull; 100G DWDM
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 font-mono mt-0.5">
+                      Switch SUPERNAP Las Vegas 7, 8, 9 Core Teleport Campus &bull; 100% Renewable Green Power
+                    </p>
                   </div>
                 </div>
 
-                {/* Satellite Leaf Nodes */}
-                {SWITCH_DEDICATED_NODES.map((leaf) => (
-                  <div
-                    key={leaf.id}
-                    onClick={() => setInspectLeafNode(leaf)}
-                    className="bg-slate-950/90 hover:bg-slate-900 border border-slate-800 hover:border-sky-500/60 rounded-lg p-2.5 transition cursor-pointer text-left space-y-1.5 group"
-                  >
-                    <div className="flex items-center justify-between text-[10px] font-mono">
-                      <span className="text-purple-300 font-bold">SID {leaf.sid}</span>
-                      <span className="text-emerald-400 font-semibold">{leaf.latencyMs}ms</span>
-                    </div>
-                    <span className="text-xs font-mono font-bold text-slate-200 group-hover:text-sky-300 block truncate">
-                      {leaf.subdomain.split('.')[0]}
-                    </span>
-                    <span className="text-[10px] text-slate-400 block truncate font-mono">
-                      {leaf.location.split(',')[0]}
-                    </span>
-                    <div className="flex items-center gap-1 text-[9px] text-slate-500 font-mono">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      <span>Burst: Synced</span>
-                    </div>
+                <div className="text-right text-xs font-mono sm:border-l sm:border-slate-800 sm:pl-4">
+                  <span className="text-emerald-400 font-black text-sm block">855,000 Channels Synced</span>
+                  <span className="text-purple-300 font-semibold text-[11px] block">347 Verified Leaf Nodes Attached</span>
+                  <span className="text-slate-400 text-[10px]">RisingNet BGP Tier-1 Optical DWDM</span>
+                </div>
+              </div>
+
+              {/* SECTION A: 12 DATAPACKET.COM 100G BARE-METAL SUPERCORE LEAF NODES */}
+              <div className="space-y-2.5 pt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-800 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Cpu className="w-4 h-4 text-purple-400" />
+                    <h4 className="text-sm font-black font-mono text-purple-200">
+                      1. DATAPACKET.COM 100G HIGH-SPEED BARE-METAL LEAF RING (12 NODES)
+                    </h4>
                   </div>
-                ))}
+                  <span className="text-xs font-mono text-slate-400">
+                    DataPacket 100+ Tbps Global BGP Backbone &bull; SIDs 021 to 032 &bull; Direct Leaf to irc.drfun1.com
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                  {DATAPACKET_LEAF_NODES.map((dp) => (
+                    <div
+                      key={dp.id}
+                      onClick={() => setInspectLeafNode(dp)}
+                      className="bg-slate-950 hover:bg-slate-900 border border-purple-900/60 hover:border-purple-500 rounded-lg p-2.5 transition cursor-pointer text-left space-y-1 group"
+                    >
+                      <div className="flex items-center justify-between text-[10px] font-mono">
+                        <span className="text-purple-300 font-bold">SID {dp.sid}</span>
+                        <span className="text-emerald-400 font-semibold">{dp.latencyMs}ms</span>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-slate-200 group-hover:text-purple-300 block truncate">
+                        {dp.subdomain.split('.')[0]}.{dp.subdomain.split('.')[1]}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block truncate font-mono">
+                        {dp.location.split(',')[0]}
+                      </span>
+                      <div className="flex items-center justify-between text-[9px] font-mono pt-1 border-t border-slate-900">
+                        <span className="text-sky-300 truncate">{dp.fiberCapacity.split(' ')[0]}</span>
+                        <span className="text-emerald-400">Leafed</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* SECTION B: 335 UNREALIRCD.ORG GLOBAL FEDERATION LEAF NODES */}
+              <div className="space-y-2.5 pt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-800 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-emerald-400" />
+                    <h4 className="text-sm font-black font-mono text-emerald-200">
+                      2. UNREALIRCD.ORG VERIFIED GLOBAL LEAF FEDERATION (335 NODES)
+                    </h4>
+                  </div>
+                  <span className="text-xs font-mono text-slate-400">
+                    6 Continents &bull; SIDs 101 to 435 &bull; All Synced to irc.drfun1.com:6697
+                  </span>
+                </div>
+
+                {/* Regional Clusters Bar */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-xs font-mono">
+                  <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                    <span className="text-slate-400 text-[10px] block">NORTH AMERICA</span>
+                    <span className="text-white font-black text-sm">100 Nodes</span>
+                    <span className="text-emerald-400 text-[10px] block">SIDs 101-200 &bull; 1-26ms</span>
+                  </div>
+                  <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                    <span className="text-slate-400 text-[10px] block">EUROPE &amp; UK</span>
+                    <span className="text-white font-black text-sm">105 Nodes</span>
+                    <span className="text-emerald-400 text-[10px] block">SIDs 201-305 &bull; 72-85ms</span>
+                  </div>
+                  <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                    <span className="text-slate-400 text-[10px] block">ASIA-PACIFIC</span>
+                    <span className="text-white font-black text-sm">65 Nodes</span>
+                    <span className="text-emerald-400 text-[10px] block">SIDs 306-370 &bull; 94-135ms</span>
+                  </div>
+                  <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                    <span className="text-slate-400 text-[10px] block">LATIN AMERICA</span>
+                    <span className="text-white font-black text-sm">30 Nodes</span>
+                    <span className="text-emerald-400 text-[10px] block">SIDs 371-400 &bull; 42-104ms</span>
+                  </div>
+                  <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                    <span className="text-slate-400 text-[10px] block">MIDDLE EAST &amp; AFRICA</span>
+                    <span className="text-white font-black text-sm">20 Nodes</span>
+                    <span className="text-emerald-400 text-[10px] block">SIDs 401-420 &bull; 88-142ms</span>
+                  </div>
+                  <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                    <span className="text-slate-400 text-[10px] block">ORBITAL &amp; DEEP SPACE</span>
+                    <span className="text-white font-black text-sm">15 Nodes</span>
+                    <span className="text-emerald-400 text-[10px] block">SIDs 421-435 &bull; Teleports</span>
+                  </div>
+                </div>
+
+                {/* Sample Selection of UnrealIRCd Nodes from all regions */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 pt-1">
+                  {UNREALIRCD_335_LEAF_NODES.slice(0, 18).map((leaf) => (
+                    <div
+                      key={leaf.id}
+                      onClick={() => setInspectLeafNode(leaf)}
+                      className="bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-lg p-2.5 transition cursor-pointer text-left space-y-1 group"
+                    >
+                      <div className="flex items-center justify-between text-[10px] font-mono">
+                        <span className="text-emerald-300 font-bold">SID {leaf.sid}</span>
+                        <span className="text-slate-300 font-semibold">{leaf.latencyMs}ms</span>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-slate-200 group-hover:text-emerald-300 block truncate">
+                        {leaf.subdomain.split('.')[0]}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block truncate font-mono">
+                        {leaf.location.split(',')[0]}
+                      </span>
+                      <div className="flex items-center gap-1 text-[9px] text-slate-500 font-mono">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span>Unreal 6.1.4 Leaf</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="text-center pt-1">
+                  <button
+                    onClick={() => {
+                      setSelectedLeafProvider('unrealircd');
+                      setActiveTab('leaf_nodes');
+                    }}
+                    className="px-4 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-emerald-300 hover:text-white rounded-lg text-xs font-mono transition cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <span>Browse &amp; Search All 335 UnrealIRCd.org Nodes in Leaf Search Engine &rarr;</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* SECTION C: 26 SWITCH SUPERNAP CORE TELEPORT LEAVES */}
+              <div className="space-y-2.5 pt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-800 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Server className="w-4 h-4 text-sky-400" />
+                    <h4 className="text-sm font-black font-mono text-sky-200">
+                      3. SWITCH SUPERNAP GREEN CORE &amp; TELEPORT CAMPUSES (26 NODES)
+                    </h4>
+                  </div>
+                  <span className="text-xs font-mono text-slate-400">
+                    Switch Las Vegas, Tahoe Reno, The Keep Atlanta, Grand Rapids &bull; RisingNet 100G DWDM Ring
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                  {SWITCH_DEDICATED_NODES.slice(0, 12).map((leaf) => (
+                    <div
+                      key={leaf.id}
+                      onClick={() => setInspectLeafNode(leaf)}
+                      className="bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-sky-500 rounded-lg p-2.5 transition cursor-pointer text-left space-y-1 group"
+                    >
+                      <div className="flex items-center justify-between text-[10px] font-mono">
+                        <span className="text-sky-300 font-bold">SID {leaf.sid}</span>
+                        <span className="text-emerald-400 font-semibold">{leaf.latencyMs}ms</span>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-slate-200 group-hover:text-sky-300 block truncate">
+                        {leaf.subdomain.split('.')[0]}
+                      </span>
+                      <span className="text-[10px] text-slate-400 block truncate font-mono">
+                        {leaf.location.split(',')[0]}
+                      </span>
+                      <div className="flex items-center gap-1 text-[9px] text-slate-500 font-mono">
+                        <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                        <span>Switch Core</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -1041,7 +1403,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                   <span>855,000 Channels Network Prefix &amp; Fanout Space Explorer</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  Test and inspect how UnrealIRCd dynamically partitions the 855,000 channel space across the 26 Switch SUPERNAP leaves and assigns donSchoe/shoutcast-irc announcer bots.
+                  Test and inspect how UnrealIRCd dynamically partitions the 855,000 channel space across the 335 UnrealIRCd nodes, 12 DataPacket 100G nodes, and 26 Switch SUPERNAP leaves and assigns donSchoe/shoutcast-irc announcer bots.
                 </p>
               </div>
 

@@ -29,6 +29,10 @@ export interface SwitchDedicatedNode {
     encryption: string;
   };
   unrealLinkBlock: string;
+  provider?: 'datapacket' | 'unrealircd' | 'switch';
+  region?: string;
+  country?: string;
+  uplinkSpeed?: string;
 }
 
 export interface UnrealIrcdHub {
