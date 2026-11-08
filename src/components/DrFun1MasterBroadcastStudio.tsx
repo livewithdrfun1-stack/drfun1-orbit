@@ -99,10 +99,12 @@ import { IrcdStatsView } from './IrcdStatsView';
 import { RestreamStudioView } from './RestreamStudioView';
 import { ZncWebControlPanelView } from './ZncWebControlPanelView';
 import { UnifiedMusicIrcHub } from './UnifiedMusicIrcHub';
+import { SocialLiveDashboard } from './SocialLiveDashboard';
 
 export type StudioToolId =
   | 'strimm_drfun1tv'
   | 'epg_guide'
+  | 'social_live'
   | 'restream_multistream'
   | 'wordpress_duplicator'
   | 'mpd_bot'
@@ -855,6 +857,19 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
             </button>
 
             <button
+              onClick={() => handleSelectStudioTool('social_live')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 ${
+                activeStudioTool === 'social_live'
+                  ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-600/30'
+                  : 'bg-purple-950/60 hover:bg-purple-900/60 text-purple-300 border border-purple-800/60'
+              }`}
+              title="Social-Live Self-Hosted FFmpeg Broadcaster (AxionAura/social-live: YouTube, Facebook, Twitch, Kick)"
+            >
+              <Radio className="w-3.5 h-3.5 text-purple-400" />
+              <span>Social-Live FFmpeg</span>
+            </button>
+
+            <button
               onClick={() => handleSelectStudioTool('restream_multistream')}
               className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-1.5 ${
                 activeStudioTool === 'restream_multistream'
@@ -1429,6 +1444,7 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 activeRank={activeRank}
                 onOpenAdminPanel={onOpenIrcdAdmin}
                 onOpenIrcClient={onOpenIrc}
+                initialShowNicklist={true}
                 className="h-full border-0 rounded-none"
               />
             </div>
@@ -1471,6 +1487,19 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-900 text-slate-300">
                   {channels.length}
                 </span>
+              </button>
+
+              {/* Tool 2.5: Social-Live Self-Hosted FFmpeg Broadcaster (AxionAura/social-live) */}
+              <button
+                onClick={() => handleSelectStudioTool('social_live')}
+                className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
+                  activeStudioTool === 'social_live'
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                    : 'text-purple-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Radio className="w-3.5 h-3.5 text-purple-400" />
+                <span>Social-Live FFmpeg</span>
               </button>
 
               {/* Tool 3: Restream.io Multistream Playout */}
@@ -2680,6 +2709,17 @@ export const DrFun1MasterBroadcastStudio: React.FC<DrFun1MasterBroadcastStudioPr
                 onNavigateToIrc={() => handleSelectStudioTool('irc_client')}
                 onNavigateToStats={() => handleSelectStudioTool('ircd_stats')}
                 onOpenLicense={onOpenLicense}
+              />
+            </div>
+          )}
+
+          {/* TOOL 16: SOCIAL-LIVE SELF-HOSTED BROADCASTER (AxionAura/social-live) */}
+          {activeStudioTool === 'social_live' && (
+            <div className="p-4 sm:p-6 space-y-4">
+              <SocialLiveDashboard
+                onOpenLicense={onOpenLicense}
+                onOpenSwitchMesh={onOpenSwitchMesh}
+                onNavigateToIrc={onOpenIrc}
               />
             </div>
           )}

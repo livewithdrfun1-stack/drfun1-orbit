@@ -79,7 +79,7 @@ function generateInitialFleetTelemetry(company: SatelliteCompany): SatelliteTele
       batteryPct,
       tempCelsius: Math.floor(14 + Math.random() * 12),
       laserCrosslinkStatus: status === 'Offline' ? 'Offline' : status === 'Degraded' ? 'Acquiring' : 'Nominal',
-      latencyMs: Number((parseInt(company.latencyMs) || 32) + (Math.random() * 6 - 3)).toFixed(0) as unknown as number,
+      latencyMs: Math.round((parseInt(company.latencyMs) || 32) + (Math.random() * 6 - 3)),
       lastTelemetryUpdate: 'Just now',
       statusReason,
       payloadUtilizationPct: payloadUtil,
@@ -142,7 +142,7 @@ export const FleetHealthAvailabilityOverlay: React.FC<FleetHealthAvailabilityOve
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isAutoPollActive, nodes]);
+  }, [isAutoPollActive]);
 
   // Execute a simulated telemetry polling update
   const triggerMockTelemetryPoll = () => {

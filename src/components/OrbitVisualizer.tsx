@@ -3,6 +3,7 @@ import { SatelliteCompany, OrbitType } from '../types/satellite';
 import { Orbit, Radio, Globe, ArrowRight, Layers, Satellite, Compass } from 'lucide-react';
 import { LeafletSatelliteTracker } from './LeafletSatelliteTracker';
 import { IntegrationHubView } from './IntegrationHubView';
+import { OrbitalDistributionDonutChart } from './OrbitalDistributionDonutChart';
 
 interface OrbitVisualizerProps {
   companies: SatelliteCompany[];
@@ -11,7 +12,7 @@ interface OrbitVisualizerProps {
   onOpenSwitchMesh?: () => void;
   onNavigateToIrc?: (channel?: string) => void;
   onNavigateToStudio?: () => void;
-  initialMode?: 'tracker' | 'altitude_ladder' | 'telemetry_apis';
+  initialMode?: 'tracker' | 'altitude_ladder' | 'donut_distribution' | 'telemetry_apis';
 }
 
 export const OrbitVisualizer: React.FC<OrbitVisualizerProps> = ({
@@ -23,7 +24,7 @@ export const OrbitVisualizer: React.FC<OrbitVisualizerProps> = ({
   onNavigateToStudio,
   initialMode = 'tracker',
 }) => {
-  const [activeViewMode, setActiveViewMode] = useState<'tracker' | 'altitude_ladder' | 'telemetry_apis'>(initialMode);
+  const [activeViewMode, setActiveViewMode] = useState<'tracker' | 'altitude_ladder' | 'donut_distribution' | 'telemetry_apis'>(initialMode);
   const [selectedOrbitFilter, setSelectedOrbitFilter] = useState<OrbitType | 'All'>('All');
 
   useEffect(() => {
@@ -61,6 +62,18 @@ export const OrbitVisualizer: React.FC<OrbitVisualizerProps> = ({
           </button>
 
           <button
+            onClick={() => setActiveViewMode('donut_distribution')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center space-x-2 transition cursor-pointer ${
+              activeViewMode === 'donut_distribution'
+                ? 'bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 text-slate-950 shadow-md font-extrabold'
+                : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+            }`}
+          >
+            <Orbit className={`w-4 h-4 ${activeViewMode === 'donut_distribution' ? 'text-slate-950' : 'text-cyan-400'}`} />
+            <span>Donut Fleet Distribution (D3.js)</span>
+          </button>
+
+          <button
             onClick={() => setActiveViewMode('altitude_ladder')}
             className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center space-x-2 transition cursor-pointer ${
               activeViewMode === 'altitude_ladder'
@@ -69,7 +82,7 @@ export const OrbitVisualizer: React.FC<OrbitVisualizerProps> = ({
             }`}
           >
             <Orbit className="w-4 h-4 text-purple-400" />
-            <span>Orbital Regimes Altitude Distribution (GEO / MEO / LEO)</span>
+            <span>Altitude Distribution (GEO / MEO / LEO)</span>
           </button>
 
           <button
@@ -102,15 +115,30 @@ export const OrbitVisualizer: React.FC<OrbitVisualizerProps> = ({
         />
       )}
 
-      {/* View 2: Orbital Altitude Ladder & Constellation Distribution */}
+      {/* View 2: D3.js Donut Fleet Distribution (LEO / MEO / GEO) */}
+      {activeViewMode === 'donut_distribution' && (
+        <OrbitalDistributionDonutChart
+          companies={companies}
+          onSelectCompany={onSelectCompany}
+        />
+      )}
+
+      {/* View 3: Orbital Altitude Ladder & Constellation Distribution */}
       {activeViewMode === 'altitude_ladder' && (
-      <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-5">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-          <div>
-            <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-              <Orbit className="w-5 h-5 text-sky-400" />
-              <span>Orbital Altitude & Constellation Distribution</span>
-            </h3>
+      <div className="space-y-6">
+        {/* Embedded D3 Donut Chart for Comprehensive Overview */}
+        <OrbitalDistributionDonutChart
+          companies={companies}
+          onSelectCompany={onSelectCompany}
+        />
+
+        <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div>
+              <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                <Orbit className="w-5 h-5 text-sky-400" />
+                <span>Orbital Altitude &amp; Constellation Distribution</span>
+              </h3>
             <p className="text-xs text-slate-400 mt-1 max-w-3xl">
               Comparative visualization of satellite communication orbital regimes. Latency is dictated by the speed of light over transmission distance: from ultra-low latency LEO constellations (20–40ms) up to broad-footprint Geostationary (GEO) arcs (~600ms).
             </p>
@@ -281,6 +309,7 @@ export const OrbitVisualizer: React.FC<OrbitVisualizerProps> = ({
             </div>
           )}
         </div>
+      </div>
       </div>
       )}
 

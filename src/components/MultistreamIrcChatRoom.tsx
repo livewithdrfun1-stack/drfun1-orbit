@@ -34,7 +34,11 @@ import {
   Maximize2,
   Tv,
   Crown,
-  AlertTriangle
+  AlertTriangle,
+  Search,
+  AtSign,
+  Info,
+  X as CloseIcon
 } from 'lucide-react';
 
 export interface MultistreamIrcChatRoomProps {
@@ -46,6 +50,7 @@ export interface MultistreamIrcChatRoomProps {
   className?: string;
   onToggleOverlay?: (visible: boolean) => void;
   isOverlayVisible?: boolean;
+  initialShowNicklist?: boolean;
 }
 
 interface CombinedChatMessage extends StreamChatMessage {
@@ -81,14 +86,129 @@ const DEFAULT_IRC_CHANNELS = [
   { id: '#switch-supernap', name: '#switch-supernap', topic: 'Switch SUPERNAP 100G Fiber & Core Teleport NOC', users: 289, modes: '+isnt' },
 ];
 
-const INITIAL_IRC_USERS = [
-  { nick: 'Richard_Witt', prefix: '~', role: 'NetAdmin / Legal', status: 'active', rank: 'sra' },
-  { nick: 'DJ_OrbitNova', prefix: '@', role: 'Station DJ / Ops', status: 'active', rank: 'op' },
-  { nick: 'DrFun1Bot', prefix: '+', role: 'MPD Relay Service', status: 'bot', rank: 'voice' },
-  { nick: 'NOC_Operator', prefix: '@', role: 'Switch Teleport Lead', status: 'active', rank: 'sop' },
-  { nick: 'Vegas_Viewer', prefix: '', role: 'Stream Viewer', status: 'active', rank: 'listener' },
-  { nick: 'Cyber_Pilot', prefix: '+', role: 'Space Enthusiast', status: 'active', rank: 'voice' },
-  { nick: 'Satcom_Tech', prefix: '', role: 'Downlink Engineer', status: 'active', rank: 'listener' },
+export interface IrcNickUser {
+  nick: string;
+  prefix: string;
+  role: string;
+  status: 'active' | 'idle' | 'bot';
+  rank: 'sra' | 'founder' | 'sop' | 'op' | 'hop' | 'voice' | 'listener';
+  platform?: 'unreal_irc' | 'twitch' | 'youtube' | 'kick';
+  hostmask?: string;
+  organization?: string;
+  signonTime?: string;
+}
+
+const INITIAL_IRC_USERS: IrcNickUser[] = [
+  { 
+    nick: 'Richard_Witt', 
+    prefix: '~', 
+    role: 'NetAdmin & Legal Counsel', 
+    status: 'active', 
+    rank: 'sra', 
+    platform: 'unreal_irc', 
+    hostmask: 'richard@switch-core.wittlawfirm.com', 
+    organization: 'The Law Office of Richard A. Witt LLC (FRN 0034981290)', 
+    signonTime: 'Online 4h 35m' 
+  },
+  { 
+    nick: 'DJ_OrbitNova', 
+    prefix: '@', 
+    role: 'Station DJ & Playout Lead', 
+    status: 'active', 
+    rank: 'op', 
+    platform: 'unreal_irc', 
+    hostmask: 'dj@audio-deck.drfun1.com', 
+    organization: 'DrFun1 Master Audio Desk', 
+    signonTime: 'Online 3h 58m' 
+  },
+  { 
+    nick: 'NOC_Operator', 
+    prefix: '@', 
+    role: 'Switch SUPERNAP Teleport NOC', 
+    status: 'active', 
+    rank: 'sop', 
+    platform: 'unreal_irc', 
+    hostmask: 'noc@teleport.switch.com', 
+    organization: 'Switch SUPERNAP Nevada 100G Fiber Core', 
+    signonTime: 'Online 6h 40m' 
+  },
+  { 
+    nick: 'DrFun1Bot', 
+    prefix: '+', 
+    role: 'MPD Playout & Request Bot', 
+    status: 'bot', 
+    rank: 'voice', 
+    platform: 'unreal_irc', 
+    hostmask: 'bot@services.drfun1.com', 
+    organization: 'donSchoe/shoutcast-irc bot (mpd.drfun1.com:6600)', 
+    signonTime: 'Uptime 14d 02h' 
+  },
+  { 
+    nick: 'SatelliteDesk', 
+    prefix: '+', 
+    role: 'FCC Dockets & Orbit News Wire', 
+    status: 'bot', 
+    rank: 'voice', 
+    platform: 'unreal_irc', 
+    hostmask: 'fcc@newsroom.drfun1.com', 
+    organization: 'FCC Space Bureau Automated Feed', 
+    signonTime: 'Uptime 8d 19h' 
+  },
+  { 
+    nick: 'Cyber_Pilot', 
+    prefix: '+', 
+    role: 'Orbital Telemetry Engineer', 
+    status: 'active', 
+    rank: 'voice', 
+    platform: 'unreal_irc', 
+    hostmask: 'pilot@leo-mesh.orbit.net', 
+    organization: 'Constellation SGP4 Tracker', 
+    signonTime: 'Online 1h 22m' 
+  },
+  { 
+    nick: 'TwitchViewer99', 
+    prefix: '', 
+    role: 'Twitch Relay Viewer', 
+    status: 'active', 
+    rank: 'listener', 
+    platform: 'twitch', 
+    hostmask: 'twitch@restream.io', 
+    organization: 'Twitch Live Broadcaster Stream', 
+    signonTime: 'Online 52m' 
+  },
+  { 
+    nick: 'KickStreamer', 
+    prefix: '', 
+    role: 'Kick.com Relay Viewer', 
+    status: 'active', 
+    rank: 'listener', 
+    platform: 'kick', 
+    hostmask: 'kick@restream.io', 
+    organization: 'Kick.com Live Stream Relay', 
+    signonTime: 'Online 36m' 
+  },
+  { 
+    nick: 'Satcom_Tech', 
+    prefix: '', 
+    role: 'Downlink RF Engineer', 
+    status: 'active', 
+    rank: 'listener', 
+    platform: 'unreal_irc', 
+    hostmask: 'rf@groundstation.drfun1.com', 
+    organization: 'Earth Station Ground Segment', 
+    signonTime: 'Online 2h 28m' 
+  },
+  { 
+    nick: 'Vegas_Viewer', 
+    prefix: '', 
+    role: 'Fiber Stream Audience', 
+    status: 'idle', 
+    rank: 'listener', 
+    platform: 'unreal_irc', 
+    hostmask: 'viewer@nv-fiber.switch.com', 
+    organization: 'Las Vegas Fiber Ring Client', 
+    signonTime: 'Idle 20m' 
+  },
 ];
 
 const INITIAL_COMBINED_MESSAGES: CombinedChatMessage[] = [
@@ -168,12 +288,17 @@ export const MultistreamIrcChatRoom: React.FC<MultistreamIrcChatRoomProps> = ({
   className = '',
   onToggleOverlay,
   isOverlayVisible = false,
+  initialShowNicklist = true,
 }) => {
   const [selectedChannel, setSelectedChannel] = useState<string>(defaultChannel);
   const [messages, setMessages] = useState<CombinedChatMessage[]>(INITIAL_COMBINED_MESSAGES);
   const [inputText, setInputText] = useState<string>('');
   const [filterMode, setFilterMode] = useState<'all' | 'irc_only' | 'stream_only'>('all');
-  const [showUserList, setShowUserList] = useState<boolean>(false);
+  const [showUserList, setShowUserList] = useState<boolean>(variant === 'overlay' ? false : (initialShowNicklist ?? true));
+  const [nickUsers, setNickUsers] = useState<IrcNickUser[]>(INITIAL_IRC_USERS);
+  const [nickSearch, setNickSearch] = useState<string>('');
+  const [nickRankFilter, setNickRankFilter] = useState<'all' | 'ops' | 'voice' | 'viewers'>('all');
+  const [selectedWhoisUser, setSelectedWhoisUser] = useState<IrcNickUser | null>(null);
   const [broadcastToIrc, setBroadcastToIrc] = useState<boolean>(true);
   const [broadcastToStreams, setBroadcastToStreams] = useState<boolean>(true);
   const [isBotAutoNpActive, setIsBotAutoNpActive] = useState<boolean>(true);
@@ -183,6 +308,39 @@ export const MultistreamIrcChatRoom: React.FC<MultistreamIrcChatRoomProps> = ({
 
   const currentRankDef = ANOPE_RANKS.find(r => r.id === activeRank) || ANOPE_RANKS[0];
   const isOpsAndAbove = currentRankDef.isOpsAndAbove;
+
+  // Filtered and searched nick list
+  const filteredNickUsers = useMemo(() => {
+    return nickUsers.filter(u => {
+      if (nickSearch.trim()) {
+        const query = nickSearch.toLowerCase();
+        const matchesQuery = 
+          u.nick.toLowerCase().includes(query) ||
+          u.role.toLowerCase().includes(query) ||
+          (u.organization && u.organization.toLowerCase().includes(query)) ||
+          (u.hostmask && u.hostmask.toLowerCase().includes(query));
+        if (!matchesQuery) return false;
+      }
+      if (nickRankFilter === 'ops') {
+        return u.prefix === '~' || u.prefix === '&' || u.prefix === '@' || u.rank === 'sra' || u.rank === 'founder' || u.rank === 'sop' || u.rank === 'op';
+      }
+      if (nickRankFilter === 'voice') {
+        return u.prefix === '+' || u.rank === 'voice' || u.status === 'bot';
+      }
+      if (nickRankFilter === 'viewers') {
+        return !u.prefix || u.rank === 'listener' || u.platform !== 'unreal_irc';
+      }
+      return true;
+    });
+  }, [nickUsers, nickSearch, nickRankFilter]);
+
+  // Insert mention into chat input
+  const handleMentionNick = (nick: string) => {
+    setInputText(prev => {
+      const trimmed = prev.trim();
+      return trimmed.length > 0 ? `${trimmed} @${nick} ` : `@${nick} `;
+    });
+  };
 
   // Sync selected channel when defaultChannel prop changes
   useEffect(() => {
@@ -375,13 +533,18 @@ export const MultistreamIrcChatRoom: React.FC<MultistreamIrcChatRoomProps> = ({
             onClick={() => setShowUserList(!showUserList)}
             className={`px-2.5 py-1.5 rounded-lg border text-xs font-mono font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
               showUserList
-                ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
-                : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+                ? 'bg-purple-600 text-white border-purple-400 shadow-sm shadow-purple-900/50'
+                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white'
             }`}
-            title="Toggle Channel Nick List"
+            title="Toggle Channel Nicklist & WHOIS Inspector"
           >
-            <Users className="w-3.5 h-3.5 text-purple-400" />
-            <span className="hidden sm:inline">{activeChannelObj.users} Users</span>
+            <Users className={`w-3.5 h-3.5 ${showUserList ? 'text-white' : 'text-purple-400'}`} />
+            <span>Nicklist</span>
+            <span className={`px-1.5 py-0.2 text-[10px] font-bold rounded-md ${
+              showUserList ? 'bg-purple-800 text-purple-100' : 'bg-slate-700 text-purple-300'
+            }`}>
+              {nickUsers.length}
+            </span>
           </button>
 
           {onToggleOverlay && (
@@ -528,41 +691,215 @@ export const MultistreamIrcChatRoom: React.FC<MultistreamIrcChatRoomProps> = ({
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Channel Nick List Drawer */}
+        {/* Channel Nicklist Drawer & WHOIS Inspector */}
         {showUserList && (
-          <div className="w-56 bg-slate-950 border-l border-slate-800 p-3 overflow-y-auto space-y-2 font-mono text-xs">
-            <div className="flex items-center justify-between text-[11px] text-slate-400 uppercase tracking-wider pb-1 border-b border-slate-800">
-              <span>Channel Nicks</span>
-              <span>{INITIAL_IRC_USERS.length}</span>
+          <div className="w-64 sm:w-72 bg-slate-950 border-l border-slate-800 flex flex-col font-mono text-xs z-10 shrink-0">
+            {/* Nicklist Header */}
+            <div className="p-2.5 border-b border-slate-800 bg-slate-900/80 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-purple-400" />
+                <span className="font-bold text-slate-200">Broadcast Nicks</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-300 font-semibold">
+                  {filteredNickUsers.length}/{nickUsers.length}
+                </span>
+              </div>
+              <button
+                onClick={() => setShowUserList(false)}
+                className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
+                title="Close Nicklist"
+              >
+                <CloseIcon className="w-3.5 h-3.5" />
+              </button>
             </div>
 
-            <div className="space-y-1.5">
-              {INITIAL_IRC_USERS.map(user => (
-                <div key={user.nick} className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between">
-                  <div className="truncate">
-                    <span className={`font-bold mr-1 ${
-                      user.prefix === '~' ? 'text-red-400' :
-                      user.prefix === '@' ? 'text-emerald-400' :
-                      user.prefix === '+' ? 'text-sky-400' : 'text-slate-500'
-                    }`}>
-                      {user.prefix || '•'}
-                    </span>
-                    <span className="text-white font-medium">{user.nick}</span>
-                  </div>
-                  <span className="text-[9px] text-slate-400 truncate max-w-[70px]">
-                    {user.role}
-                  </span>
+            {/* Search Input */}
+            <div className="p-2 border-b border-slate-800/80 bg-slate-950">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Filter nick or role..."
+                  value={nickSearch}
+                  onChange={(e) => setNickSearch(e.target.value)}
+                  className="w-full pl-8 pr-5 py-1 bg-slate-900 border border-slate-700/80 rounded-lg text-slate-200 text-[11px] placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                />
+                {nickSearch && (
+                  <button
+                    onClick={() => setNickSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-[10px] cursor-pointer"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+
+              {/* Rank Filter Chips */}
+              <div className="flex items-center gap-1 mt-1.5">
+                {(['all', 'ops', 'voice', 'viewers'] as const).map((filterKey) => (
+                  <button
+                    key={filterKey}
+                    onClick={() => setNickRankFilter(filterKey)}
+                    className={`flex-1 py-0.5 text-[10px] font-bold rounded capitalize transition-colors cursor-pointer ${
+                      nickRankFilter === filterKey
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                    }`}
+                  >
+                    {filterKey}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Nicks List */}
+            <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+              {filteredNickUsers.length === 0 ? (
+                <div className="text-center py-6 text-slate-500 text-[11px]">
+                  No nicks match "{nickSearch}"
                 </div>
-              ))}
+              ) : (
+                filteredNickUsers.map((user) => {
+                  const isSelected = selectedWhoisUser?.nick === user.nick;
+                  return (
+                    <div
+                      key={user.nick}
+                      onClick={() => setSelectedWhoisUser(isSelected ? null : user)}
+                      className={`p-1.5 rounded-lg border transition-all cursor-pointer group ${
+                        isSelected
+                          ? 'bg-purple-950/40 border-purple-500/60 shadow-sm'
+                          : 'bg-slate-900/70 border-slate-800/80 hover:bg-slate-800/80 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-1.5 truncate">
+                          {/* Status dot */}
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                              user.status === 'bot'
+                                ? 'bg-purple-400 animate-pulse'
+                                : user.status === 'active'
+                                ? 'bg-emerald-400'
+                                : 'bg-slate-500'
+                            }`}
+                          />
+
+                          {/* Prefix */}
+                          <span
+                            className={`font-black text-xs ${
+                              user.prefix === '~'
+                                ? 'text-red-400'
+                                : user.prefix === '&'
+                                ? 'text-amber-400'
+                                : user.prefix === '@'
+                                ? 'text-emerald-400'
+                                : user.prefix === '+'
+                                ? 'text-sky-400'
+                                : 'text-slate-500'
+                            }`}
+                          >
+                            {user.prefix || '•'}
+                          </span>
+
+                          {/* Nick */}
+                          <span className="font-semibold text-slate-200 group-hover:text-white truncate">
+                            {user.nick}
+                          </span>
+                        </div>
+
+                        {/* Quick action buttons */}
+                        <div className="flex items-center gap-1 shrink-0">
+                          {/* Platform badge */}
+                          {user.platform === 'twitch' && (
+                            <span className="text-[9px] px-1 py-0.2 bg-purple-600/30 text-purple-300 rounded border border-purple-500/30">
+                              Twitch
+                            </span>
+                          )}
+                          {user.platform === 'youtube' && (
+                            <span className="text-[9px] px-1 py-0.2 bg-red-600/30 text-red-300 rounded border border-red-500/30">
+                              YT
+                            </span>
+                          )}
+                          {user.platform === 'kick' && (
+                            <span className="text-[9px] px-1 py-0.2 bg-emerald-600/30 text-emerald-300 rounded border border-emerald-500/30">
+                              Kick
+                            </span>
+                          )}
+                          {user.platform === 'unreal_irc' && (
+                            <span className="text-[9px] px-1 py-0.2 bg-slate-800 text-slate-400 rounded">
+                              IRC
+                            </span>
+                          )}
+
+                          {/* Mention button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMentionNick(user.nick);
+                            }}
+                            className="p-1 text-slate-500 hover:text-purple-300 hover:bg-purple-950/50 rounded transition-colors cursor-pointer"
+                            title={`Mention @${user.nick} in chat`}
+                          >
+                            <AtSign className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Role preview */}
+                      <div className="text-[10px] text-slate-400 truncate pl-3 mt-0.5">
+                        {user.role}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
 
-            {/* Quick Bot Commands Cheat Sheet */}
-            <div className="pt-3 border-t border-slate-800 text-[10px] text-slate-400 space-y-1">
-              <span className="text-purple-300 font-bold block uppercase">Bot Commands:</span>
-              <div><code className="text-emerald-400">!np</code> - Now Playing</div>
-              <div><code className="text-emerald-400">!dj</code> - Active DJ Info</div>
-              <div><code className="text-emerald-400">!stream</code> - Stream Stats</div>
-              <div><code className="text-emerald-400">!queue</code> - Track List</div>
+            {/* WHOIS Inspector Card (If a nick is selected) */}
+            {selectedWhoisUser && (
+              <div className="p-2.5 border-t border-purple-500/30 bg-purple-950/20 text-[11px] space-y-1">
+                <div className="flex items-center justify-between font-bold text-purple-300">
+                  <div className="flex items-center gap-1">
+                    <Info className="w-3.5 h-3.5 text-purple-400" />
+                    <span>WHOIS: {selectedWhoisUser.nick}</span>
+                  </div>
+                  <button
+                    onClick={() => setSelectedWhoisUser(null)}
+                    className="text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="text-slate-300 font-mono text-[10px] break-all">
+                  <span className="text-slate-500">Host: </span>{selectedWhoisUser.hostmask || 'n/a'}
+                </div>
+                {selectedWhoisUser.organization && (
+                  <div className="text-slate-300 text-[10px]">
+                    <span className="text-slate-500">Org: </span>{selectedWhoisUser.organization}
+                  </div>
+                )}
+                <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                  <span>{selectedWhoisUser.signonTime || 'Online'}</span>
+                  <button
+                    onClick={() => handleMentionNick(selectedWhoisUser.nick)}
+                    className="text-purple-400 hover:text-purple-200 font-bold underline cursor-pointer"
+                  >
+                    +Mention
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Quick Bot Commands Cheat Sheet Footer */}
+            <div className="p-2 border-t border-slate-800 bg-slate-950 text-[10px] text-slate-400 space-y-0.5">
+              <span className="text-purple-300 font-bold block uppercase text-[9px]">Playout Bot Commands:</span>
+              <div className="flex items-center justify-between">
+                <span><code className="text-emerald-400">!np</code> Now Playing</span>
+                <span><code className="text-emerald-400">!dj</code> Host Info</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span><code className="text-emerald-400">!stream</code> Stats</span>
+                <span><code className="text-emerald-400">!queue</code> Tracks</span>
+              </div>
             </div>
           </div>
         )}

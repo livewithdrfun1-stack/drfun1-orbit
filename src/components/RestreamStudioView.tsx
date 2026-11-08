@@ -24,6 +24,7 @@ import { EcomTransmissionOverlay } from './stream/EcomTransmissionOverlay';
 import { RtmpTvHostPanel } from './stream/RtmpTvHostPanel';
 import { TvuNetworksCdnClonePanel } from './stream/TvuNetworksCdnClonePanel';
 import { EcomTransmissionTab } from './stream/EcomTransmissionTab';
+import { SocialLiveDashboard } from './SocialLiveDashboard';
 import { 
   Radio, 
   Video, 
@@ -91,7 +92,7 @@ export const RestreamStudioView: React.FC<RestreamStudioViewProps> = ({
   const [isScreenSharing, setIsScreenSharing] = useState<boolean>(false);
   const [isIrcOverlayOnVideo, setIsIrcOverlayOnVideo] = useState<boolean>(true);
   const [selectedOverlayId, setSelectedOverlayId] = useState<string>('ov_license');
-  const [activeTab, setActiveTab] = useState<'destinations' | 'ecom_transmission' | 'tv_host' | 'tvu_cloud_cdn' | 'chat' | 'rtmp_setup'>('destinations');
+  const [activeTab, setActiveTab] = useState<'destinations' | 'social_live' | 'ecom_transmission' | 'tv_host' | 'tvu_cloud_cdn' | 'chat' | 'rtmp_setup'>('destinations');
 
   // ECOM & RTMP TV Host & TVU Cloud CDN States
   const [ecomState, setEcomState] = useState<EcomTransmissionState>(INITIAL_ECOM_TRANSMISSION);
@@ -748,6 +749,18 @@ export const RestreamStudioView: React.FC<RestreamStudioViewProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveTab('social_live')}
+              className={`py-2 px-2.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'social_live'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold shadow'
+                  : 'text-slate-400 hover:text-emerald-300'
+              }`}
+            >
+              <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Social-Live (FFmpeg)</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('ecom_transmission')}
               className={`py-2 px-2.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap ${
                 activeTab === 'ecom_transmission'
@@ -922,6 +935,17 @@ export const RestreamStudioView: React.FC<RestreamStudioViewProps> = ({
             </div>
           )}
 
+          {/* Tab: Self-Hosted Social-Live Multi-Platform FFmpeg Dashboard */}
+          {activeTab === 'social_live' && (
+            <div className="p-3 flex flex-col flex-1 overflow-y-auto max-h-[750px]">
+              <SocialLiveDashboard
+                onOpenLicense={onOpenLicense}
+                onOpenSwitchMesh={onOpenSwitchMesh}
+                onNavigateToIrc={onNavigateToIrc}
+              />
+            </div>
+          )}
+
           {/* Tab 2: DrFun1 Media ECOM Live Transmission */}
           {activeTab === 'ecom_transmission' && (
             <EcomTransmissionTab
@@ -965,6 +989,7 @@ export const RestreamStudioView: React.FC<RestreamStudioViewProps> = ({
                 onOpenAdminPanel={onOpenAdminPanel}
                 onOpenIrcClient={onNavigateToIrc}
                 defaultChannel="#drfun1-media"
+                initialShowNicklist={true}
                 isOverlayVisible={isIrcOverlayOnVideo}
                 onToggleOverlay={setIsIrcOverlayOnVideo}
               />

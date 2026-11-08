@@ -53,6 +53,7 @@ import { DevPlatformWittLawModal } from './DevPlatformWittLawModal';
 import { ShoutcastIrcBotModal } from './ShoutcastIrcBotModal';
 import { IrcChannelAndLeafSearchEngine } from './IrcChannelAndLeafSearchEngine';
 import { UnifiedMusicIrcHub } from './UnifiedMusicIrcHub';
+import { ALL_NETWORK_LEAF_NODES } from '../data/unrealSearchData';
 
 interface UnifiedAllInOneIndexHubProps {
   ircSession: IrcLoginSession;
@@ -441,12 +442,12 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
           .filter((c) => c.name.toLowerCase().includes(query) || c.topic.toLowerCase().includes(query))
           .slice(0, 4);
 
-        const matchedLeaves = SWITCH_DEDICATED_NODES
-          .filter((n) => n.name.toLowerCase().includes(query) || n.subdomain.toLowerCase().includes(query) || n.location.toLowerCase().includes(query))
-          .slice(0, 3);
+        const matchedLeaves = ALL_NETWORK_LEAF_NODES
+          .filter((n) => n.name.toLowerCase().includes(query) || n.subdomain.toLowerCase().includes(query) || n.location.toLowerCase().includes(query) || (n.provider && n.provider.toLowerCase().includes(query)))
+          .slice(0, 4);
 
         const lines: string[] = [
-          `[SEARCH RESULTS for "${args.trim()}"] Channels (855k Network) & Leaf Nodes:`,
+          `[SEARCH RESULTS for "${args.trim()}"] Channels (855k Network) & Leaf Nodes (347 Synced):`,
         ];
 
         if (matchedChannels.length > 0) {
@@ -459,12 +460,13 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
         if (matchedLeaves.length > 0) {
           lines.push('Leaf Nodes:');
           matchedLeaves.forEach((n) => {
-            lines.push(`  - ${n.subdomain} (SID ${n.sid}, ${n.location}, ${n.latencyMs}ms, ${n.usersOnline} users)`);
+            const prov = n.provider === 'datapacket' ? 'DataPacket 100G' : n.provider === 'unrealircd' ? 'UnrealIRCd 6.1' : 'Switch Core';
+            lines.push(`  - ${n.subdomain} [${prov} SID ${n.sid}] (${n.location}, ${n.latencyMs}ms, ${n.usersOnline} users)`);
           });
         }
 
         if (matchedChannels.length === 0 && matchedLeaves.length === 0) {
-          lines.push(`  No direct matches for "${args.trim()}". Type /search or switch to the 'Search Engine' tab above to browse all 855k channels.`);
+          lines.push(`  No direct matches for "${args.trim()}". Type /search or switch to the 'Search Engine' tab above to browse all 855k channels and 347 leaf nodes.`);
         }
 
         const resMsg: IrcMessage = {
@@ -485,14 +487,17 @@ export const UnifiedAllInOneIndexHub: React.FC<UnifiedAllInOneIndexHubProps> = (
 
       if (command === 'leaf' || command === 'nodes') {
         const query = args.trim().toLowerCase();
-        let leaves = SWITCH_DEDICATED_NODES;
+        let leaves = ALL_NETWORK_LEAF_NODES;
         if (query) {
-          leaves = leaves.filter((n) => n.name.toLowerCase().includes(query) || n.subdomain.toLowerCase().includes(query) || n.location.toLowerCase().includes(query) || n.sid.includes(query));
+          leaves = leaves.filter((n) => n.name.toLowerCase().includes(query) || n.subdomain.toLowerCase().includes(query) || n.location.toLowerCase().includes(query) || n.sid.includes(query) || (n.provider && n.provider.toLowerCase().includes(query)));
         }
         const lines = [
-          `[SWITCH SUPERNAP LEAF NODES] Total: 26 Dedicated Leaves Linked to irc.drfun1.com:6697 (SID 001):`,
-          ...leaves.slice(0, 5).map((n) => `  - ${n.subdomain} [SID ${n.sid}] ${n.location} (${n.latencyMs}ms, ${n.usersOnline} users)`),
-          `  (Type /search or switch to Search Engine view to inspect all 26 leaf links & SSL fingerprints)`
+          `[GLOBAL LEAF NETWORK] Total: 347 Verified Leaves (335 UnrealIRCd + 12 DataPacket 100G) Linked to irc.drfun1.com:6697 (SID 001):`,
+          ...leaves.slice(0, 6).map((n) => {
+            const prov = n.provider === 'datapacket' ? 'DataPacket 100G' : n.provider === 'unrealircd' ? 'UnrealIRCd 6.1' : 'Switch Core';
+            return `  - ${n.subdomain} [${prov} SID ${n.sid}] ${n.location} (${n.latencyMs}ms, ${n.usersOnline} users)`;
+          }),
+          `  (Type /search <name> or switch to 'Search Engine' tab to inspect all 347 leaf configs & SSL fingerprints)`
         ];
         const resMsg: IrcMessage = {
           id: `leaf_res_${Date.now()}`,

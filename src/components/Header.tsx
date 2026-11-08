@@ -24,12 +24,14 @@ import {
   Globe,
   Crown,
   Search,
-  Cpu
+  Cpu,
+  Video,
+  Headphones
 } from 'lucide-react';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { UserMembershipState } from '../types/membership';
 
-export type AppTab = 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'stream' | 'social' | 'irc' | 'ircstats' | 'media' | 'carriers' | 'mpd' | 'duplicator' | 'community' | 'znc' | 'integrations' | 'domains';
+export type AppTab = 'broadcast_studio' | 'tv_newscast' | 'radio_dj' | 'irc' | 'master_control' | 'media' | 'stream' | 'mpd' | 'duplicator' | 'ircstats' | 'znc' | 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'social' | 'carriers' | 'community' | 'integrations' | 'domains';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -105,9 +107,9 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Brand Wordmark & Logo: DrFun1 Media */}
           <div className="flex items-center gap-3 shrink-0">
             <button 
-              onClick={() => setActiveTab('media')}
+              onClick={() => setActiveTab('broadcast_studio')}
               className="flex items-center gap-2.5 group cursor-pointer text-left"
-              title="DrFun1 Media - Broadcasting & Satcom Network"
+              title="DrFun1 Media - Broadcasting, Online Radio & TV Newscasting Workstation"
             >
               <div className="relative w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 via-pink-600 to-sky-500 p-0.5 shadow-md shadow-purple-900/40 group-hover:scale-105 transition-transform">
                 <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center relative overflow-hidden">
@@ -403,111 +405,92 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="bg-slate-950 overflow-x-auto custom-nav-scrollbar border-b border-slate-800/50">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-11 flex items-center justify-between gap-1 sm:gap-2 text-xs font-medium text-slate-400 min-w-max">
           
-          {/* 1. Directory & NTN Fleets */}
+          {/* 1. Master Broadcast & In/Out Studio */}
           <button
-            onClick={() => setActiveTab('directory')}
+            onClick={() => setActiveTab('broadcast_studio')}
             className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'directory' || activeTab === 'carriers'
-                ? 'bg-sky-500/15 text-sky-400 border-sky-500/40 font-semibold shadow-sm shadow-sky-500/10 ring-1 ring-sky-500/20'
-                : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-900/60'
+              activeTab === 'broadcast_studio' || activeTab === 'media' || activeTab === 'stream' || activeTab === 'duplicator'
+                ? 'bg-rose-500/20 text-rose-300 border-rose-500/60 font-bold shadow-md shadow-rose-950/30 ring-1 ring-rose-500/40'
+                : 'text-slate-400 border-transparent hover:text-rose-300 hover:bg-slate-900/60'
             }`}
+            title="Master Broadcast Studio: Multi-Destination Push, RTMP Ingestion, Social-Live FFmpeg, Video Sources & Cablecast PEG"
           >
-            <Satellite className="w-3.5 h-3.5 text-sky-400" />
-            <span>Satcom &amp; NTN Directory</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold hidden sm:inline">
-              Fleets &amp; NTN
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+            </span>
+            <Radio className="w-3.5 h-3.5 text-rose-400" />
+            <span>Broadcast In/Out Studio</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 font-bold">
+              Multistream &amp; RTMP
             </span>
           </button>
 
-          {/* 2. Orbits & Telemetry Hub */}
+          {/* 2. Live TV & Newscasting Desk */}
           <button
-            onClick={() => setActiveTab('orbits')}
+            onClick={() => setActiveTab('tv_newscast')}
             className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'orbits' || activeTab === 'integrations'
+              activeTab === 'tv_newscast'
+                ? 'bg-purple-500/20 text-purple-300 border-purple-500/60 font-bold shadow-md shadow-purple-950/30 ring-1 ring-purple-500/40'
+                : 'text-slate-400 border-transparent hover:text-purple-300 hover:bg-slate-900/60'
+            }`}
+            title="Online TV Playout, Live Anchor Desk, Real-Time RSS Newsroom Wire, Teleprompter Rundown & SCTE-35 EAS"
+          >
+            <Tv className="w-3.5 h-3.5 text-purple-400" />
+            <span>Live TV &amp; Newscasting</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">
+              Anchor &amp; RSS Wire
+            </span>
+          </button>
+
+          {/* 3. Online Radio & MPD DJ Station */}
+          <button
+            onClick={() => setActiveTab('radio_dj')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'radio_dj' || activeTab === 'mpd'
+                ? 'bg-pink-500/20 text-pink-300 border-pink-500/60 font-bold shadow-md shadow-pink-950/30 ring-1 ring-pink-500/40'
+                : 'text-slate-400 border-transparent hover:text-pink-300 hover:bg-slate-900/60'
+            }`}
+            title="Online Radio Streaming (SHOUTcast/Icecast), Dual-Deck MPD DJ Console, 855k YouTube Music Catalog & Request Bot"
+          >
+            <Headphones className="w-3.5 h-3.5 text-pink-400" />
+            <span>Online Radio &amp; MPD DJ</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-pink-500/20 text-pink-300 font-bold">
+              SHOUTcast FM
+            </span>
+          </button>
+
+          {/* 4. Unified IRC Client & Leaf Mesh */}
+          <button
+            onClick={() => setActiveTab('irc')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'irc' || activeTab === 'ircstats'
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 font-bold shadow-md shadow-emerald-950/30 ring-1 ring-emerald-500/40'
+                : 'text-slate-400 border-transparent hover:text-emerald-300 hover:bg-slate-900/60'
+            }`}
+            title="UnrealIRCd 6.1.4 Client (irc.drfun1.com:6697 SSL), 347 Global Leaf Nodes Search Engine & Anope Services"
+          >
+            <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+            <span>WebIRC &amp; Leaf Mesh</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold">
+              347 Nodes
+            </span>
+          </button>
+
+          {/* 5. Master Control & Transmission Infrastructure */}
+          <button
+            onClick={() => setActiveTab('master_control')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'master_control' || activeTab === 'directory' || activeTab === 'orbits' || activeTab === 'compare' || activeTab === 'carriers' || activeTab === 'znc'
                 ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/60 font-bold shadow-md shadow-cyan-950/30 ring-1 ring-cyan-500/40'
                 : 'text-slate-400 border-transparent hover:text-cyan-300 hover:bg-slate-900/60'
             }`}
-            title="Global Interactive Orbit Tracking Map, Satellite Ground Tracks, Day/Night Terminator & Public Telemetry APIs"
+            title="Switch SUPERNAP NV 100G Teleport, DataPacket Trans-Atlantic Edge, TVU Cloud CDN, Satellite Downlinks & FCC Compliance"
           >
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
-            </span>
-            <span>Orbit Tracking &amp; Telemetry</span>
+            <Server className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Master Control &amp; Downlinks</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold">
-              Live SGP4
-            </span>
-          </button>
-
-          {/* 3. Compare Matrix & SLA Calculator */}
-          <button
-            onClick={() => setActiveTab('compare')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'compare'
-                ? 'bg-sky-500/20 text-sky-300 border-sky-500/50 font-bold shadow-md shadow-sky-500/20 ring-1 ring-sky-500/30'
-                : 'text-slate-400 border-transparent hover:text-sky-300 hover:bg-slate-900/60'
-            }`}
-            title="Multi-Operator Technical Comparison Matrix, D3 Latency Visualizer & SLA Uptime Credit Calculator"
-          >
-            <Scale className="w-3.5 h-3.5 text-sky-400" />
-            <span>Compare &amp; SLA Calculator</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold hidden sm:inline">
-              Matrix &amp; D3
-            </span>
-          </button>
-
-          {/* 4. DrFun1 Master Broadcast Playout & IRC Suite */}
-          <button
-            onClick={() => setActiveTab('media')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'media' || activeTab === 'stream' || activeTab === 'mpd' || activeTab === 'duplicator' || activeTab === 'irc' || activeTab === 'ircstats' || activeTab === 'znc'
-                ? 'bg-purple-500/20 text-purple-300 border-purple-500/50 font-bold shadow-md shadow-purple-500/20 ring-1 ring-purple-500/30'
-                : 'text-slate-400 border-transparent hover:text-purple-300 hover:bg-slate-900/60'
-            }`}
-            title="DrFun1 Master Studio Suite: Linear TV Playout, Restream Multistream, MPD DJ Deck, WordPress 1:1 Duplicator, WebIRC, stats.drfun1ircd.com & ZNC WebAdmin"
-          >
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
-            </span>
-            <Tv className="w-3.5 h-3.5 text-purple-400" />
-            <span>DrFun1 TV &amp; Studio Suite</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">
-              DrFun1TV
-            </span>
-          </button>
-
-          {/* 5. Wholesale Store & Custom Domain Registrar */}
-          <button
-            onClick={() => setActiveTab('store')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'store' || activeTab === 'domains'
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold shadow-md shadow-amber-500/20 ring-1 ring-amber-500/30'
-                : 'text-slate-400 border-transparent hover:text-amber-300 hover:bg-slate-900/60'
-            }`}
-            title="DrFun1 Wholesale Store & Resell Marketplace, Unlocked Phones, and Domain Name Registrar & Anycast DNS (.tv / .com)"
-          >
-            <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
-            <span>Store &amp; Domain Registrar</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 font-bold">
-              ECOM &amp; DNS
-            </span>
-          </button>
-
-          {/* 6. Community Hub & SpaceBook Social Network */}
-          <button
-            onClick={() => setActiveTab('community')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'community' || activeTab === 'social'
-                ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border-cyan-500/60 font-bold shadow-md shadow-cyan-950/30 ring-1 ring-cyan-500/40'
-                : 'text-slate-400 border-transparent hover:text-cyan-300 hover:bg-slate-900/60'
-            }`}
-            title="DRFUN1 Community Hub, Broadcaster Lounge, Member Tiers & SpaceBook Social Feed"
-          >
-            <Users className="w-3.5 h-3.5 text-blue-400" />
-            <span>Community &amp; SpaceBook</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 font-bold">
-              Hub &amp; Social
+              Switch 100G
             </span>
           </button>
 
@@ -599,52 +582,44 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="grid grid-cols-1 gap-2">
               {[
                 { 
-                  id: 'directory', 
-                  label: 'Satcom & NTN Directory', 
-                  desc: 'Satellite Fleets, 3GPP 5G Carriers & RFQ Composer',
-                  badge: 'Fleets & NTN', 
-                  color: 'sky', 
-                  icon: Satellite 
-                },
-                { 
-                  id: 'orbits', 
-                  label: 'Orbit Tracking & Telemetry Hub', 
-                  desc: 'Leaflet SGP4 Map, Ground Radar & NASA/NOAA APIs',
-                  badge: 'Live Radar', 
-                  color: 'cyan', 
+                  id: 'broadcast_studio', 
+                  label: 'Broadcast In/Out Studio', 
+                  desc: 'Multistream Push, RTMP Ingest, Social-Live FFmpeg & Cablecast',
+                  badge: 'Multistream & RTMP', 
+                  color: 'rose', 
                   icon: Radio 
                 },
                 { 
-                  id: 'compare', 
-                  label: 'Compare Matrix & SLA Calculator', 
-                  desc: 'Operator Matrix, D3 Latency Trends & Outage Rebates',
-                  badge: 'Matrix & SLA', 
-                  color: 'sky', 
-                  icon: Scale 
-                },
-                { 
-                  id: 'media', 
-                  label: 'DrFun1 TV & Studio Suite', 
-                  desc: 'Linear Playout, Restream, DJ Deck, WebIRC, NeoStats & ZNC',
-                  badge: 'DrFun1TV', 
+                  id: 'tv_newscast', 
+                  label: 'Live TV & Newscasting', 
+                  desc: 'Anchor Desk, RSS Newsroom Wire, Teleprompter & SCTE-35 EAS',
+                  badge: 'Anchor & RSS Wire', 
                   color: 'purple', 
                   icon: Tv 
                 },
                 { 
-                  id: 'store', 
-                  label: 'Wholesale Store & Domain Registrar', 
-                  desc: 'Hardware Catalog, Unlocked Phones & .tv/.com Anycast DNS',
-                  badge: 'ECOM & DNS', 
-                  color: 'amber', 
-                  icon: ShoppingBag 
+                  id: 'radio_dj', 
+                  label: 'Online Radio & MPD DJ', 
+                  desc: 'SHOUTcast FM Player, Dual DJ Decks, 855k YouTube Catalog',
+                  badge: 'SHOUTcast FM', 
+                  color: 'pink', 
+                  icon: Headphones 
                 },
                 { 
-                  id: 'community', 
-                  label: 'Community Hub & SpaceBook Social', 
-                  desc: 'Broadcaster Lounge, Member Tiers & Social Feed',
-                  badge: 'Hub & Social', 
-                  color: 'blue', 
-                  icon: Users 
+                  id: 'irc', 
+                  label: 'WebIRC & Leaf Mesh', 
+                  desc: 'UnrealIRCd 6.1.4 Client, 347 Leaf Nodes Search & Anope',
+                  badge: '347 Nodes', 
+                  color: 'emerald', 
+                  icon: Terminal 
+                },
+                { 
+                  id: 'master_control', 
+                  label: 'Master Control & Downlinks', 
+                  desc: 'Switch 100G Teleport, DataPacket CDN & Satellite Registry',
+                  badge: 'Switch 100G', 
+                  color: 'cyan', 
+                  icon: Server 
                 },
               ].map((item) => {
                 const Icon = item.icon;

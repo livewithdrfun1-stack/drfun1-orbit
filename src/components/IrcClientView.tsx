@@ -58,6 +58,7 @@ interface IrcClientViewProps {
   activeRank?: AnopeRankLevel;
   onOpenIrcdAdmin?: () => void;
   onOpenZncWebAdmin?: () => void;
+  onOpenUnrealSearch?: () => void;
 }
 
 export const IrcClientView: React.FC<IrcClientViewProps> = ({
@@ -68,6 +69,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
   activeRank = 'op',
   onOpenIrcdAdmin,
   onOpenZncWebAdmin,
+  onOpenUnrealSearch,
 }) => {
   const [activeNodeId, setActiveNodeId] = useState<string>('switch_node_1');
   const [currentNick, setCurrentNick] = useState<string>(() => {

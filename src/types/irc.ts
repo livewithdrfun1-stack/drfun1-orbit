@@ -15,9 +15,9 @@ export interface SwitchDedicatedNode {
   unrealVersion: string;
   sslFingerprint: string;
   transitProvider: string;
-  // UnrealIRCd Hub-and-Leaf Peering to irc.drfun1.com
-  leafHub: 'irc.drfun1.com';
-  hubPort: 6697;
+  // UnrealIRCd Hub-and-Leaf Peering to irc.drfun1.com & irc.drfun1media.com
+  leafHub: 'irc.drfun1.com' | 'irc.drfun1media.com' | string;
+  hubPort: number;
   sid: string;
   leafStatus: 'linked' | 'synced' | 'bursting';
   leafBurstStats: {
@@ -29,25 +29,39 @@ export interface SwitchDedicatedNode {
     encryption: string;
   };
   unrealLinkBlock: string;
-  provider?: 'datapacket' | 'unrealircd' | 'switch';
+  provider?: 'datapacket' | 'unrealircd' | 'switch' | 'risingnet';
   region?: string;
   country?: string;
   uplinkSpeed?: string;
 }
 
 export interface UnrealIrcdHub {
-  host: 'irc.drfun1.com';
-  sid: '001';
-  port: 6697;
+  host: 'irc.drfun1.com' | 'irc.drfun1media.com' | string;
+  sid: '001' | '002' | string;
+  port: number;
   ssl: boolean;
-  networkName: 'DrFun1-Orbit-Mesh';
-  transitProvider: 'RisingNet Global Transit (www.risingnet.com)';
-  colocation: 'Switch SUPERNAP Core Campus (www.switch.com)';
-  licensee: 'Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com)';
+  networkName: string;
+  transitProvider: string;
+  colocation: string;
+  licensee: string;
   leafNodes: string[];
   totalSyncedChannels: number;
   totalSyncedUsers: number;
   aggregateBandwidth: string;
+  redundantPeerHub?: string;
+  anopeServicesHost?: string;
+}
+
+export interface AnopeServicesHub {
+  host: string;
+  sid: string;
+  linkedHubs: string[];
+  anopeVersion: string;
+  nickServCount: number;
+  chanServCount: number;
+  botServBots: string[];
+  operServAkills: number;
+  status: 'active' | 'syncing';
 }
 
 export interface IrcChannel {
@@ -88,12 +102,12 @@ export interface IrcMessage {
 export interface WebIrcConnectionState {
   connected: boolean;
   activeNodeId: string;
-  leafHub: 'irc.drfun1.com';
+  leafHub: 'irc.drfun1.com' | 'irc.drfun1media.com' | string;
   currentNick: string;
   currentChannel: string;
   tlsVerified: boolean;
-  hostingProvider: 'RisingNet Global Transit (www.risingnet.com)';
-  licenseHolder: 'Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com)';
+  hostingProvider: string;
+  licenseHolder: string;
 }
 
 export interface ZncModule {

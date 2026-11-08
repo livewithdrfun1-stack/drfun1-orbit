@@ -32,7 +32,7 @@ import { FacebookSocialView } from './components/FacebookSocialView';
 import { IrcClientView } from './components/IrcClientView';
 import { IrcdStatsView } from './components/IrcdStatsView';
 import { BroadcastMediaView } from './components/BroadcastMediaView';
-import { DrFun1MasterBroadcastStudio } from './components/DrFun1MasterBroadcastStudio';
+import { DrFun1MasterBroadcastStudio, StudioToolId } from './components/DrFun1MasterBroadcastStudio';
 import { PhoneCarriersView } from './components/PhoneCarriersView';
 import { MpdBotControlView } from './components/MpdBotControlView';
 import { IrcDuplicatorView } from './components/IrcDuplicatorView';
@@ -54,6 +54,9 @@ import { IrcStartupLoginModal } from './components/IrcStartupLoginModal';
 import { IndexIrcFloatingClient } from './components/IndexIrcFloatingClient';
 import { UnifiedAllInOneIndexHub } from './components/UnifiedAllInOneIndexHub';
 import { DevPlatformWittLawModal } from './components/DevPlatformWittLawModal';
+import { TvNewscastingStudio } from './components/TvNewscastingStudio';
+import { OnlineRadioDjStudio } from './components/OnlineRadioDjStudio';
+import { MasterControlView } from './components/MasterControlView';
 import { IrcLoginCredentials, IrcLoginSession } from './types/irc';
 import { UserMembershipState } from './types/membership';
 import { DEFAULT_MEMBERSHIP_STATE } from './data/membershipData';
@@ -85,11 +88,12 @@ const STORAGE_KEY_IRC_SESSION = 'drfun1_irc_session';
 
 export default function App() {
   // Tab state
-  const [activeTab, setActiveTab] = useState<AppTab>('directory');
+  const [activeTab, setActiveTab] = useState<AppTab>('broadcast_studio');
   const [directorySubView, setDirectorySubView] = useState<'operators' | 'carriers'>('operators');
   const [storeSubTab, setStoreSubTab] = useState<'catalog' | 'domains'>('catalog');
-  const [orbitsSubTab, setOrbitsSubTab] = useState<'tracker' | 'altitude_ladder' | 'telemetry_apis'>('tracker');
+  const [orbitsSubTab, setOrbitsSubTab] = useState<'tracker' | 'altitude_ladder' | 'donut_distribution' | 'telemetry_apis'>('tracker');
   const [communitySubTab, setCommunitySubTab] = useState<'discussions' | 'memberships' | 'showcase' | 'events' | 'roster' | 'spacebook'>('discussions');
+  const [mediaStudioTool, setMediaStudioTool] = useState<StudioToolId>('strimm_drfun1tv');
 
   // IRC Client Session & Startup Login State
   const [ircSession, setIrcSession] = useState<IrcLoginSession>(() => {
@@ -148,25 +152,13 @@ export default function App() {
   };
 
   const handleNavigateTab = (tab: AppTab) => {
-    if (tab === 'domains') {
-      setActiveTab('store');
-      setStoreSubTab('domains');
-    } else if (tab === 'integrations') {
-      setActiveTab('orbits');
-      setOrbitsSubTab('telemetry_apis');
-    } else if (tab === 'social') {
-      setActiveTab('community');
-      setCommunitySubTab('spacebook');
-    } else if (tab === 'carriers') {
-      setActiveTab('directory');
-      setDirectorySubView('carriers');
-    } else if (tab === 'rfq') {
-      handleOpenRfq();
+    if (tab === 'media' || tab === 'stream') {
+      setActiveTab('broadcast_studio');
+    } else if (tab === 'mpd') {
+      setActiveTab('radio_dj');
+    } else if (tab === 'directory' || tab === 'orbits' || tab === 'compare' || tab === 'carriers' || tab === 'integrations') {
+      setActiveTab('master_control');
     } else {
-      if (tab === 'directory') setDirectorySubView('operators');
-      if (tab === 'store') setStoreSubTab('catalog');
-      if (tab === 'orbits') setOrbitsSubTab('tracker');
-      if (tab === 'community') setCommunitySubTab('discussions');
       setActiveTab(tab);
     }
   };
@@ -626,46 +618,84 @@ export default function App() {
         </div>
       )}
 
-      {/* Unified Studio Broadcasting & Tools: Master Studio, Restream, MPD DJ Deck, WordPress 1:1 Duplicator, Web IRC, IRCD Stats & ZNC WebAdmin */}
-      {activeTab === 'media' || activeTab === 'stream' || activeTab === 'mpd' || activeTab === 'duplicator' || activeTab === 'irc' || activeTab === 'ircstats' || activeTab === 'znc' ? (
+      {/* ========================================================
+          5 UNIFIED BROADCASTING, ONLINE RADIO, TV & NEWSCASTING HUBS
+          ======================================================== */}
+
+      {/* Hub 1: Master Broadcast In/Out Studio */}
+      {activeTab === 'broadcast_studio' || activeTab === 'media' || activeTab === 'stream' || activeTab === 'duplicator' ? (
         <DrFun1MasterBroadcastStudio
           initialTool={
             activeTab === 'stream'
               ? 'restream_multistream'
-              : activeTab === 'mpd'
-              ? 'mpd_bot'
               : activeTab === 'duplicator'
               ? 'wordpress_duplicator'
-              : activeTab === 'irc'
-              ? 'irc_client'
-              : activeTab === 'ircstats'
-              ? 'ircd_stats'
-              : activeTab === 'znc'
-              ? 'znc_webadmin'
-              : 'strimm_drfun1tv'
+              : mediaStudioTool
           }
-          onOpenStore={() => setActiveTab('store')}
+          onOpenStore={() => setActiveTab('master_control')}
           onOpenIrc={() => setActiveTab('irc')}
           onOpenLicense={() => setIsLicenseModalOpen(true)}
           onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
           onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
-          onOpenMpd={() => setActiveTab('mpd')}
-          onOpenDuplicator={() => setActiveTab('duplicator')}
+          onOpenMpd={() => setActiveTab('radio_dj')}
+          onOpenDuplicator={() => setActiveTab('broadcast_studio')}
           activeRank={activeOperRank}
           onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
-          onOpenIrcStats={() => setActiveTab('ircstats')}
+          onOpenIrcStats={() => setActiveTab('irc')}
           onOpenUnrealSearch={() => setIsUnrealSearchOpen(true)}
           onToolChange={(tool) => {
-            if (tool === 'restream_multistream') setActiveTab('stream');
-            else if (tool === 'mpd_bot') setActiveTab('mpd');
-            else if (tool === 'wordpress_duplicator') setActiveTab('duplicator');
-            else if (tool === 'irc_client') setActiveTab('irc');
-            else if (tool === 'ircd_stats') setActiveTab('ircstats');
-            else if (tool === 'znc_webadmin') setActiveTab('znc');
-            else setActiveTab('media');
+            setMediaStudioTool(tool);
+            if (tool === 'irc_client') setActiveTab('irc');
+            else if (tool === 'mpd_bot') setActiveTab('radio_dj');
+            else setActiveTab('broadcast_studio');
           }}
         />
+      ) : activeTab === 'tv_newscast' ? (
+        /* Hub 2: Live TV & Newscasting Desk */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <TvNewscastingStudio
+            onOpenLicense={() => setIsLicenseModalOpen(true)}
+            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+            onNavigateToIrc={() => setActiveTab('irc')}
+            activeRank={activeOperRank}
+            onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
+          />
+        </main>
+      ) : activeTab === 'radio_dj' || activeTab === 'mpd' ? (
+        /* Hub 3: Online Radio & MPD DJ Station */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <OnlineRadioDjStudio
+            onOpenLicense={() => setIsLicenseModalOpen(true)}
+            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+            onNavigateToIrc={() => setActiveTab('irc')}
+            activeRank={activeOperRank}
+            onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
+            ircSession={ircSession}
+            onUpdateSession={(newSession) => {
+              const updated: IrcLoginSession = { ...ircSession, ...newSession };
+              setIrcSession(updated);
+              try {
+                localStorage.setItem(STORAGE_KEY_IRC_SESSION, JSON.stringify(updated));
+              } catch (_) {}
+            }}
+          />
+        </main>
+      ) : activeTab === 'irc' || activeTab === 'ircstats' ? (
+        /* Hub 4: Unified IRC Client & Leaf Mesh */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <IrcClientView
+            onOpenLicense={() => setIsLicenseModalOpen(true)}
+            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+            onNavigateToStore={() => setActiveTab('master_control')}
+            onNavigateToStudio={() => setActiveTab('broadcast_studio')}
+            activeRank={activeOperRank}
+            onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
+            onOpenZncWebAdmin={() => setIsZncWebAdminOpen(true)}
+            onOpenUnrealSearch={() => setIsUnrealSearchOpen(true)}
+          />
+        </main>
       ) : activeTab === 'community' || activeTab === 'social' ? (
+        /* Community Lounge */
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <CommunityHubView
             userMembership={userMembership}
@@ -676,550 +706,26 @@ export default function App() {
             onOpenZncWebAdmin={() => setIsZncWebAdminOpen(true)}
             onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
             onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
-            onJoinIrcChannel={(channel) => {
-              handleNavigateTab('irc');
-            }}
+            onJoinIrcChannel={() => setActiveTab('irc')}
             onNavigateToTab={(tab) => handleNavigateTab(tab)}
             initialSubTab={activeTab === 'social' ? 'spacebook' : communitySubTab}
           />
         </main>
-      ) : activeTab === 'integrations' ? (
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <OrbitVisualizer
+      ) : (
+        /* Hub 5: Master Control & Carrier Downlinks (with Switch 100G, DataPacket, TVU CDN & Satellite Downlinks) */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <MasterControlView
             companies={companies}
-            onSelectCompany={(c) => setSelectedCompany(c)}
             onOpenLicense={() => setIsLicenseModalOpen(true)}
             onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-            onNavigateToIrc={(chan) => handleNavigateTab('irc')}
-            onNavigateToStudio={() => handleNavigateTab('media')}
-            initialMode="telemetry_apis"
+            onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
+            onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
+            onOpenZncWebAdmin={() => setIsZncWebAdminOpen(true)}
+            onOpenUnrealSearch={() => setIsUnrealSearchOpen(true)}
+            activeRank={activeOperRank}
           />
         </main>
-      ) : (
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-          {/* 1. Real-Time Headline News Ticker from FCC.gov & Major Satellite Outlets */}
-          <SatelliteRssNewsSection
-            mode="ticker-only"
-            onOpenFullNewsroom={() => setIsNewsFeedExpanded((prev) => !prev)}
-          />
-
-          {/* 2. DrFun1 Media Unified Broadcast & IRCD Command Center (Directly under the news ticker) */}
-          <UnifiedAllInOneIndexHub
-            ircSession={ircSession}
-            onUpdateSession={(newSession) => {
-              const updated: IrcLoginSession = { ...ircSession, ...newSession };
-              setIrcSession(updated);
-              try {
-                localStorage.setItem(STORAGE_KEY_IRC_SESSION, JSON.stringify(updated));
-              } catch (_) {}
-            }}
-            onOpenLoginModal={() => setIsIrcStartupLoginOpen(true)}
-            onNavigateToFullIrc={() => handleNavigateTab('irc')}
-          />
-
-          {/* Optional Expanded RSS Newsroom & Archives if toggled from ticker */}
-          {isNewsFeedExpanded && (
-            <div className="animate-in fade-in duration-200">
-              <SatelliteRssNewsSection
-                mode="feed-only"
-                onOpenFullNewsroom={() => setIsNewsFeedExpanded(false)}
-              />
-            </div>
-          )}
-
-          {/* Editorial Domain Title & Description */}
-          <div className="border-b border-slate-800/80 pb-6 space-y-3.5">
-          {/* License Holder Ribbon */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-lg px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Licensed to Richard Alan Witt</span>
-              </span>
-              <span className="text-slate-600 hidden sm:inline">·</span>
-              <span className="text-slate-400 font-mono">
-                Cert ID: RAW-SATCOM-2026-LIC-0881
-              </span>
-              <span className="text-slate-600 hidden sm:inline">·</span>
-              <div className="flex items-center gap-3 text-slate-300 font-mono">
-                <a
-                  href="https://www.wittlawfirm.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sky-400 hover:text-sky-300 hover:underline flex items-center gap-1"
-                >
-                  <span>wittlawfirm.com</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-                <span className="text-slate-700">/</span>
-                <a
-                  href="https://www.owenscompany.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sky-400 hover:text-sky-300 hover:underline flex items-center gap-1"
-                >
-                  <span>owenscompany.com</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setIsLicenseModalOpen(true)}
-              className="text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1 rounded text-[11px] font-medium transition-colors"
-            >
-              View Certificate
-            </button>
-          </div>
-
-          {/* Switch & UnrealIRCd Leaf Mesh Ribbon */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-lg px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="flex items-center gap-1.5 text-sky-400 font-medium">
-                <Server className="w-4 h-4 text-sky-400" />
-                <span>Switch Colocation & UnrealIRCd Leaf Mesh</span>
-              </span>
-              <span className="text-slate-600 hidden sm:inline">·</span>
-              <span className="text-slate-300 font-mono text-[11px]">
-                Hub: <strong className="text-emerald-400">irc.drfun1.com:6697 (SSL)</strong>
-              </span>
-              <span className="text-slate-600 hidden sm:inline">·</span>
-              <div className="flex items-center gap-3 text-slate-300 font-mono text-[11px]">
-                <a
-                  href="https://www.switch.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sky-400 hover:text-sky-300 hover:underline flex items-center gap-1"
-                >
-                  <span>switch.com</span>
-                  <ExternalLink className="w-2.5 h-2.5" />
-                </a>
-                <span className="text-slate-700">/</span>
-                <a
-                  href="https://www.risingnet.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sky-400 hover:text-sky-300 hover:underline flex items-center gap-1"
-                >
-                  <span>risingnet.com</span>
-                  <ExternalLink className="w-2.5 h-2.5" />
-                </a>
-                <span className="text-slate-700">/</span>
-                <a
-                  href="https://www.unrealircd.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sky-400 hover:text-sky-300 hover:underline flex items-center gap-1"
-                >
-                  <span>unrealircd.com</span>
-                  <ExternalLink className="w-2.5 h-2.5" />
-                </a>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setIsSwitchMeshModalOpen(true)}
-              className="text-slate-950 font-semibold bg-emerald-400 hover:bg-emerald-300 px-2.5 py-1 rounded text-[11px] transition-colors flex items-center gap-1"
-            >
-              <Terminal className="w-3 h-3" />
-              <span>Inspect Leaf Mesh & Configs</span>
-            </button>
-          </div>
-
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-            <div className="max-w-3xl">
-              <span className="text-[11px] font-mono uppercase tracking-widest text-sky-400 font-semibold block mb-1">
-                Global Satellite Operator & Carrier Directory
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                Commercial Satellite & Constellation Directory
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-400 mt-2 leading-relaxed">
-                Comprehensive directory of satellite communications operators, low Earth orbit mega-constellations, geostationary fleets, direct-to-device (3GPP NTN) carriers, and ground segment teleports. Includes orbital telemetry, frequency allocations, and verified contact channels for transponder leasing, cellular backhaul, and carrier interconnect.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2.5 shrink-0">
-              <button
-                onClick={() => handleOpenRfq()}
-                className="px-4 py-2 text-xs font-medium text-slate-950 bg-sky-400 hover:bg-sky-300 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm shadow-sky-500/10"
-              >
-                <Mail className="w-4 h-4" />
-                <span>Compose Capacity RFQ</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Tab 1: Directory (Satellite Fleets & Constellations vs 3GPP 5G NTN Carriers) */}
-        {(activeTab === 'directory' || activeTab === 'carriers') && (
-          <div className="space-y-6">
-            {/* Directory Sub-View Switcher: Satellite Operators vs 5G NTN Phone Carriers */}
-            <div className="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-lg">
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setDirectorySubView('operators')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center space-x-2 transition cursor-pointer ${
-                    directorySubView === 'operators'
-                      ? 'bg-sky-500 text-slate-950 shadow-md font-extrabold'
-                      : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
-                  }`}
-                >
-                  <Satellite className={`w-4 h-4 ${directorySubView === 'operators' ? 'text-slate-950' : 'text-sky-400'}`} />
-                  <span>Satellite Fleets &amp; Operators ({companies.length})</span>
-                </button>
-
-                <button
-                  onClick={() => setDirectorySubView('carriers')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center space-x-2 transition cursor-pointer ${
-                    directorySubView === 'carriers'
-                      ? 'bg-sky-500 text-slate-950 shadow-md font-extrabold'
-                      : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
-                  }`}
-                >
-                  <Smartphone className={`w-4 h-4 ${directorySubView === 'carriers' ? 'text-slate-950' : 'text-sky-400'}`} />
-                  <span>3GPP 5G NTN Phone Carriers</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold ml-1">
-                    Direct-to-Device
-                  </span>
-                </button>
-              </div>
-
-              <div className="text-xs font-mono text-slate-400 flex items-center space-x-2 self-end sm:self-auto">
-                <span className="text-[11px] text-slate-500">Verified RF Teleports &amp; Spectrum Backhaul</span>
-              </div>
-            </div>
-
-            {directorySubView === 'carriers' ? (
-              <PhoneCarriersView
-                onOpenStore={() => handleNavigateTab('store')}
-                onOpenLicense={() => setIsLicenseModalOpen(true)}
-                onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-                onOpenRfqWithCarrier={() => handleOpenRfq()}
-              />
-            ) : (
-              <>
-                {/* Filter Toolbar */}
-                <FilterToolbar
-                  filters={filters}
-                  setFilters={setFilters}
-                  viewMode={viewMode}
-                  setViewMode={(mode) => {
-                    if (mode === 'orbit') {
-                      handleNavigateTab('orbits');
-                    } else {
-                      setViewMode(mode);
-                    }
-                  }}
-                  filteredCount={filteredCompanies.length}
-                  totalCount={companies.length}
-                  savedCount={bookmarkedIds.size}
-                />
-
-                {/* Empty state */}
-                {filteredCompanies.length === 0 ? (
-                  <div className="py-20 text-center bg-slate-900/20 border border-slate-800/80 rounded-xl p-8">
-                    <Search className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-                    <h3 className="text-base font-semibold text-slate-300">
-                      No matching satellite operators found
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                      Try broadening your search term, clearing band filters, or resetting orbital selections.
-                    </p>
-                    <button
-                      onClick={() =>
-                        setFilters({
-                          searchQuery: '',
-                          orbit: 'All',
-                          band: 'All',
-                          category: 'All',
-                          region: 'All',
-                          status: 'All',
-                          bookmarkedOnly: false,
-                        })
-                      }
-                      className="mt-4 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg transition-colors inline-flex items-center gap-1.5"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Reset All Filters</span>
-                    </button>
-                  </div>
-                ) : viewMode === 'cards' ? (
-                  /* Grid of Cards */
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {filteredCompanies.map((company) => (
-                      <CompanyCard
-                        key={company.id}
-                        company={company}
-                        isBookmarked={bookmarkedIds.has(company.id)}
-                        onToggleBookmark={handleToggleBookmark}
-                        onSelectCompany={(c) => setSelectedCompany(c)}
-                        onQuickContact={(c) => handleOpenRfq(c)}
-                        isCompared={comparedIds.has(company.id)}
-                        onToggleCompare={handleToggleCompare}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  /* High-Density Data Table */
-                  <CompanyTableView
-                    companies={filteredCompanies}
-                    bookmarkedIds={bookmarkedIds}
-                    onToggleBookmark={handleToggleBookmark}
-                    onSelectCompany={(c) => setSelectedCompany(c)}
-                    onQuickContact={(c) => handleOpenRfq(c)}
-                    comparedIds={comparedIds}
-                    onToggleCompare={handleToggleCompare}
-                  />
-                )}
-
-                {/* FCC & Global Satellite Industry RSS Newsroom Feed & Dockets Archive */}
-                {!isNewsFeedExpanded && (
-                  <div className="pt-4 border-t border-slate-800/80">
-                    <SatelliteRssNewsSection mode="feed-only" />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Tab 2: Orbits & Fleet Distribution */}
-        {activeTab === 'orbits' && (
-          <div className="space-y-6">
-            <OrbitVisualizer
-              companies={companies}
-              onSelectCompany={(c) => setSelectedCompany(c)}
-              onOpenLicense={() => setIsLicenseModalOpen(true)}
-              onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-              onNavigateToIrc={(chan) => handleNavigateTab('irc')}
-              onNavigateToStudio={() => handleNavigateTab('media')}
-              initialMode={orbitsSubTab}
-            />
-          </div>
-        )}
-
-        {/* Tab 3: Compare Operators Matrix & D3 Latency Visualizer */}
-        {activeTab === 'compare' && (
-          <div className="space-y-6">
-            {/* D3-based Latency Trends Over Time Chart */}
-            <LatencyTrendChart
-              companies={comparedCompaniesList}
-              allCompanies={companies}
-              onRemoveCompany={handleRemoveFromCompare}
-              onAddCompany={handleToggleCompare}
-              onOpenRfq={handleOpenRfq}
-              onOpenSlaCalculator={handleOpenSlaCalculator}
-            />
-
-            <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                <div>
-                  <h3 className="text-base font-bold text-white tracking-tight">
-                    Multi-Operator Technical Comparison Matrix
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Side-by-side technical, orbital, and carrier interconnect parameters for selected satellite operators.
-                  </p>
-                </div>
-                
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => handleOpenSlaCalculator()}
-                    className="px-3 py-1.5 bg-gradient-to-r from-emerald-950/80 to-teal-950/80 hover:from-emerald-900/80 hover:to-teal-900/80 border border-emerald-500/50 hover:border-emerald-400 text-emerald-300 hover:text-white rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 shadow-sm shadow-emerald-950/30 cursor-pointer"
-                    title="Estimate monthly uptime outage credits and carrier rebates"
-                  >
-                    <Calculator className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>SLA Calculator</span>
-                  </button>
-
-                  {comparedIds.size > 0 && (
-                    <button
-                      onClick={() => setComparedIds(new Set())}
-                      className="text-xs text-rose-400 hover:text-rose-300 transition-colors px-2 py-1 rounded bg-rose-950/30 border border-rose-500/20"
-                    >
-                      Clear Comparison
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {comparedCompaniesList.length === 0 ? (
-                <div className="py-16 text-center text-slate-400 border border-dashed border-slate-800 rounded-xl">
-                  <p className="text-sm">No operators currently staged for comparison.</p>
-                  <button
-                    onClick={() => setActiveTab('directory')}
-                    className="mt-3 px-4 py-2 bg-sky-400 text-slate-950 font-medium text-xs rounded-lg hover:bg-sky-300 transition-colors"
-                  >
-                    Browse Directory & Add Operators
-                  </button>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-slate-800">
-                        <th className="py-3 px-4 w-44 text-slate-500 font-mono uppercase text-[11px] bg-slate-950/40">
-                          Parameter
-                        </th>
-                        {comparedCompaniesList.map((c) => (
-                          <th key={c.id} className="py-3 px-4 min-w-[220px] bg-slate-950/20">
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <span className="font-bold text-sm text-slate-100 block">
-                                  {c.name}
-                                </span>
-                                <span className="text-[11px] text-slate-500 font-normal">
-                                  {c.headquarters.country}
-                                </span>
-                              </div>
-                              <button
-                                onClick={() => handleRemoveFromCompare(c.id)}
-                                className="text-slate-500 hover:text-rose-400 p-1 text-xs"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/60 font-mono text-xs">
-                      <tr>
-                        <td className="py-3 px-4 text-slate-500 uppercase text-[10px] bg-slate-950/40">
-                          Orbit Regime
-                        </td>
-                        {comparedCompaniesList.map((c) => (
-                          <td key={c.id} className="py-3 px-4 text-slate-200">
-                            <span className="text-sky-400 font-semibold">{c.orbitType}</span>
-                            <span className="text-slate-400 block text-[11px] mt-0.5">{c.altitudeKm}</span>
-                          </td>
-                        ))}
-                      </tr>
-                      <tr>
-                        <td className="py-3 px-4 text-slate-500 uppercase text-[10px] bg-slate-950/40">
-                          Latency
-                        </td>
-                        {comparedCompaniesList.map((c) => (
-                          <td key={c.id} className="py-3 px-4 text-slate-200">
-                            {c.latencyMs}
-                          </td>
-                        ))}
-                      </tr>
-                      <tr>
-                        <td className="py-3 px-4 text-slate-500 uppercase text-[10px] bg-slate-950/40">
-                          Fleet Size
-                        </td>
-                        {comparedCompaniesList.map((c) => (
-                          <td key={c.id} className="py-3 px-4 text-slate-200 tabular-nums">
-                            {c.fleetSize.activeSatellites > 0 ? (
-                              <>
-                                <strong className="text-slate-100">{c.fleetSize.activeSatellites.toLocaleString()}</strong> in orbit
-                                <span className="text-slate-500 block text-[11px]">/ {c.fleetSize.plannedSatellites.toLocaleString()} planned</span>
-                              </>
-                            ) : (
-                              <span className="text-slate-500">Integrator fleet</span>
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                      <tr>
-                        <td className="py-3 px-4 text-slate-500 uppercase text-[10px] bg-slate-950/40">
-                          Frequency Bands
-                        </td>
-                        {comparedCompaniesList.map((c) => (
-                          <td key={c.id} className="py-3 px-4 text-slate-300">
-                            {c.frequencyBands.join(', ')}
-                          </td>
-                        ))}
-                      </tr>
-                      <tr>
-                        <td className="py-3 px-4 text-slate-500 uppercase text-[10px] bg-slate-950/40">
-                          Top Wholesale Offering
-                        </td>
-                        {comparedCompaniesList.map((c) => (
-                          <td key={c.id} className="py-3 px-4 text-slate-300 font-sans text-xs">
-                            {c.satcomWholesaleOfferings[0] || '-'}
-                          </td>
-                        ))}
-                      </tr>
-                      <tr>
-                        <td className="py-3 px-4 text-slate-500 uppercase text-[10px] bg-slate-950/40">
-                          Carrier Contact Desk
-                        </td>
-                        {comparedCompaniesList.map((c) => {
-                          const contact = c.contacts[0];
-                          return (
-                            <td key={c.id} className="py-3 px-4 text-xs font-sans">
-                              {contact ? (
-                                <div>
-                                  <div className="font-semibold text-slate-200">{contact.department}</div>
-                                  <a
-                                    href={`mailto:${contact.email}`}
-                                    className="text-sky-400 hover:underline font-mono text-[11px] block mt-0.5"
-                                  >
-                                    {contact.email}
-                                  </a>
-                                </div>
-                              ) : (
-                                <span className="text-slate-500">-</span>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                      <tr>
-                        <td className="py-3 px-4 text-slate-500 uppercase text-[10px] bg-slate-950/40">
-                          Quick Dispatch
-                        </td>
-                        {comparedCompaniesList.map((c) => (
-                          <td key={c.id} className="py-3 px-4">
-                            <button
-                              onClick={() => handleOpenRfq(c)}
-                              className="py-1.5 px-3 bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 rounded text-xs transition-colors flex items-center gap-1 font-medium"
-                            >
-                              <Mail className="w-3 h-3" />
-                              <span>RFQ Inquiry</span>
-                            </button>
-                          </td>
-                        ))}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Tab 4: Outreach & RFQ Builder (Embedded Mode) */}
-        {activeTab === 'rfq' && (
-          <div className="space-y-6">
-            <RfqOutreachModal
-              isOpen={true}
-              onClose={() => setActiveTab('directory')}
-              availableCompanies={companies}
-              preSelectedCompany={rfqPreSelectedCompany}
-            />
-          </div>
-        )}
-
-        {/* Tab 5: Store & Resale Marketplace (DrFun1 Rebranded Ecosystem + Domain Registrar) */}
-        {(activeTab === 'store' || activeTab === 'domains') && (
-          <StoreView
-            onOpenProductConfig={handleOpenProductConfig}
-            onQuickAddToCart={handleQuickAddToCart}
-            cartItems={cartItems}
-            onOpenCart={() => setIsCartOpen(true)}
-            onOpenLicenseModal={() => setIsLicenseModalOpen(true)}
-            onOpenSwitchMeshModal={() => setIsSwitchMeshModalOpen(true)}
-            onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
-            onOpenDomainSearch={() => setStoreSubTab('domains')}
-            initialSubTab={activeTab === 'domains' ? 'domains' : storeSubTab}
-          />
-        )}
-      </main>
-    )}
+      )}
 
       {/* Footer */}
       <footer className="border-t border-slate-800 bg-slate-950/90 py-8 text-xs text-slate-500">

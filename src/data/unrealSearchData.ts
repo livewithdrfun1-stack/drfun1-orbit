@@ -16,20 +16,29 @@ import { SWITCH_DEDICATED_NODES } from './ircData';
 export const UNREAL_HUB_TARGET = {
   hostname: 'irc.drfun1.com',
   secondaryHostname: 'irc.drfun1media.com',
+  anopeHostname: 'services.drfun1.com',
+  anopeSecondaryHostname: 'services.drfun1media.com',
   sslPort: 6697,
   plainPort: 6667,
   hubSid: '001',
+  mediaHubSid: '002',
+  anopeSid: '00A',
   networkName: 'DrFun1 Media IRC Network',
   leafAuthSecret: 'drfun1-mesh-leaf-auth-2026',
   datacenter: 'Switch SUPERNAP Las Vegas (www.switch.com)',
   transit: 'RisingNet BGP Tier-1 Transit (www.risingnet.com)',
   license: 'Licensed to Richard Alan Witt (www.wittlawfirm.com / FRN 0034981290)',
-  officialPortal: 'https://stats.drfun1ircd.com'
+  officialPortal: 'https://stats.drfun1ircd.com',
+  totalSwitchNodes: 335,
+  totalDataPacketNodes: 12,
+  totalRisingNetNodes: 5,
+  totalLeafNodes: 352,
 };
 
 // =========================================================================
 // 1. EXACTLY 12 DEDICATED DATAPACKET.COM HIGH-CAPACITY LEAF NODES
 // Hosted on DataPacket.com 100+ Tbps BGP Backbone & CDN77 Optical Mesh
+// Leafed to Dual Hubs: irc.drfun1.com (SID 001) & irc.drfun1media.com (SID 002)
 // =========================================================================
 
 interface DataPacketLeafDef {
@@ -75,7 +84,7 @@ export const DATAPACKET_LEAF_NODES: SwitchDedicatedNode[] = DATAPACKET_RAW_DEFS.
     status: 'active',
     latencyMs: def.latencyMs,
     usersOnline: def.users,
-    leafPeers: 14,
+    leafPeers: 16,
     unrealVersion: 'UnrealIRCd-6.1.4',
     sslFingerprint: `DP:${(idx + 21).toString(16).toUpperCase()}:A7:E9:55:12:3C:99:FA:44:88:B1:00:26:DD:4A:EE`,
     transitProvider: 'DataPacket.com 100+ Tbps Optical BGP (CDN77/Arelion/Telia)',
@@ -91,7 +100,7 @@ export const DATAPACKET_LEAF_NODES: SwitchDedicatedNode[] = DATAPACKET_RAW_DEFS.
       linkProtocol: 'UnrealIRCd 6.1.4 SSL Spanning Tree',
       encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384'
     },
-    unrealLinkBlock: `/* DataPacket.com Leaf Node ${def.sid} Link to irc.drfun1.com */
+    unrealLinkBlock: `/* DataPacket.com Leaf Node ${def.sid} Dual-Hub Link Block */
 link irc.drfun1.com {
     incoming { mask *; };
     outgoing {
@@ -103,6 +112,21 @@ link irc.drfun1.com {
     password "${UNREAL_HUB_TARGET.leafAuthSecret}";
     class servers;
 };
+link irc.drfun1media.com {
+    incoming { mask *; };
+    outgoing {
+        bind-ip *;
+        hostname "irc.drfun1media.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "${UNREAL_HUB_TARGET.leafAuthSecret}";
+    class servers;
+};
+ulines {
+    "services.drfun1.com";
+    "services.drfun1media.com";
+};
 class servers {
     pingfreq 45;
     maxclients 100;
@@ -112,6 +136,102 @@ class servers {
     provider: 'datapacket',
     region: def.region,
     country: def.country,
+    uplinkSpeed: def.speed
+  };
+});
+
+// =========================================================================
+// 2. EXACTLY 5 DEDICATED RISINGNET.COM (www.risingnet.com) TIER-1 LEAF NODES
+// Hosted on RisingNet Optical DWDM Protected Backbone & RF Transport
+// Leafed to Dual Hubs: irc.drfun1.com (SID 001) & irc.drfun1media.com (SID 002)
+// =========================================================================
+
+interface RisingNetLeafDef {
+  code: string;
+  metro: string;
+  facility: string;
+  speed: string;
+  latencyMs: number;
+  users: number;
+  channels: number;
+  sid: string;
+}
+
+const RISINGNET_RAW_DEFS: RisingNetLeafDef[] = [
+  { code: 'ashburn', metro: 'Ashburn, VA', facility: 'Equinix DC10 / RisingNet Tier-1 BGP POP', speed: '100 Gbps Optical DWDM', latencyMs: 12.1, users: 3820, channels: 165, sid: '041' },
+  { code: 'losangeles', metro: 'Los Angeles, CA', facility: 'One Wilshire Telecom Center / RisingNet Pacific Core', speed: '100 Gbps Optical DWDM', latencyMs: 4.8, users: 4410, channels: 190, sid: '042' },
+  { code: 'siliconvalley', metro: 'San Jose, CA', facility: 'SV1 Silicon Valley / RisingNet Optical Hub', speed: '100 Gbps Optical DWDM', latencyMs: 7.2, users: 4190, channels: 180, sid: '043' },
+  { code: 'miami', metro: 'Miami, FL', facility: 'NAP of the Americas / RisingNet Subsea Gateway', speed: '100 Gbps Optical DWDM', latencyMs: 24.6, users: 3150, channels: 145, sid: '044' },
+  { code: 'dallas', metro: 'Dallas, TX', facility: 'Infomart Dallas / RisingNet Central Aggregator', speed: '100 Gbps Optical DWDM', latencyMs: 16.9, users: 3670, channels: 155, sid: '045' },
+];
+
+export const RISINGNET_5_LEAF_NODES: SwitchDedicatedNode[] = RISINGNET_RAW_DEFS.map((def, idx) => {
+  const host = `rn0${idx + 1}.${def.code}.risingnet.drfun1.com`;
+  return {
+    id: `rn_leaf_${def.code}`,
+    name: `RisingNet ${def.metro} 100G Backbone Leaf`,
+    subdomain: host,
+    host,
+    port: 6697,
+    location: def.metro,
+    campusName: def.facility,
+    tier: 'Tier 1 Optical DWDM Protected Backbone',
+    fiberCapacity: def.speed,
+    status: 'active',
+    latencyMs: def.latencyMs,
+    usersOnline: def.users,
+    leafPeers: 16,
+    unrealVersion: 'UnrealIRCd-6.1.4',
+    sslFingerprint: `RN:${(idx + 41).toString(16).toUpperCase()}:B9:4C:12:88:DF:99:E1:33:AA:77:00:26:FA:11:05`,
+    transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)',
+    leafHub: 'irc.drfun1.com',
+    hubPort: 6697,
+    sid: def.sid,
+    leafStatus: 'synced',
+    leafBurstStats: {
+      syncedChannels: 855000,
+      syncedNicks: def.users,
+      syncLatencyMs: def.latencyMs,
+      lastBurst: '2026-02-15T09:15:00Z',
+      linkProtocol: 'UnrealIRCd 6.1.4 SSL Spanning Tree',
+      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384'
+    },
+    unrealLinkBlock: `/* RisingNet.com Leaf Node ${def.sid} Dual-Hub Link Block */
+link irc.drfun1.com {
+    incoming { mask *; };
+    outgoing {
+        bind-ip *;
+        hostname "irc.drfun1.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "${UNREAL_HUB_TARGET.leafAuthSecret}";
+    class servers;
+};
+link irc.drfun1media.com {
+    incoming { mask *; };
+    outgoing {
+        bind-ip *;
+        hostname "irc.drfun1media.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "${UNREAL_HUB_TARGET.leafAuthSecret}";
+    class servers;
+};
+ulines {
+    "services.drfun1.com";
+    "services.drfun1media.com";
+};
+class servers {
+    pingfreq 45;
+    maxclients 100;
+    sendq 20000000;
+    connfreq 10;
+};`,
+    provider: 'risingnet',
+    region: 'North America (RisingNet Tier-1 Optical)',
+    country: 'United States',
     uplinkSpeed: def.speed
   };
 });
