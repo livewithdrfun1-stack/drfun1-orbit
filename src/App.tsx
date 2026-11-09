@@ -32,7 +32,6 @@ import { FacebookSocialView } from './components/FacebookSocialView';
 import { IrcClientView } from './components/IrcClientView';
 import { IrcdStatsView } from './components/IrcdStatsView';
 import { BroadcastMediaView } from './components/BroadcastMediaView';
-import { DrFun1MasterBroadcastStudio, StudioToolId } from './components/DrFun1MasterBroadcastStudio';
 import { PhoneCarriersView } from './components/PhoneCarriersView';
 import { MpdBotControlView } from './components/MpdBotControlView';
 import { IrcDuplicatorView } from './components/IrcDuplicatorView';
@@ -54,7 +53,6 @@ import { IrcStartupLoginModal } from './components/IrcStartupLoginModal';
 import { IndexIrcFloatingClient } from './components/IndexIrcFloatingClient';
 import { UnifiedAllInOneIndexHub } from './components/UnifiedAllInOneIndexHub';
 import { DevPlatformWittLawModal } from './components/DevPlatformWittLawModal';
-import { TvNewscastingStudio } from './components/TvNewscastingStudio';
 import { OnlineRadioDjStudio } from './components/OnlineRadioDjStudio';
 import { MasterControlView } from './components/MasterControlView';
 import { IrcLoginCredentials, IrcLoginSession } from './types/irc';
@@ -87,13 +85,12 @@ const STORAGE_KEY_MEMBERSHIP = 'drfun1_user_membership';
 const STORAGE_KEY_IRC_SESSION = 'drfun1_irc_session';
 
 export default function App() {
-  // Tab state
-  const [activeTab, setActiveTab] = useState<AppTab>('broadcast_studio');
+  // Tab state - WebIRC is primary index main page
+  const [activeTab, setActiveTab] = useState<AppTab>('irc');
   const [directorySubView, setDirectorySubView] = useState<'operators' | 'carriers'>('operators');
   const [storeSubTab, setStoreSubTab] = useState<'catalog' | 'domains'>('catalog');
   const [orbitsSubTab, setOrbitsSubTab] = useState<'tracker' | 'altitude_ladder' | 'donut_distribution' | 'telemetry_apis'>('tracker');
   const [communitySubTab, setCommunitySubTab] = useState<'discussions' | 'memberships' | 'showcase' | 'events' | 'roster' | 'spacebook'>('discussions');
-  const [mediaStudioTool, setMediaStudioTool] = useState<StudioToolId>('strimm_drfun1tv');
 
   // IRC Client Session & Startup Login State
   const [ircSession, setIrcSession] = useState<IrcLoginSession>(() => {
@@ -152,9 +149,7 @@ export default function App() {
   };
 
   const handleNavigateTab = (tab: AppTab) => {
-    if (tab === 'media' || tab === 'stream') {
-      setActiveTab('broadcast_studio');
-    } else if (tab === 'mpd') {
+    if (tab === 'media' || tab === 'stream' || tab === 'broadcast_studio' || tab === 'tv_newscast' || tab === 'mpd') {
       setActiveTab('radio_dj');
     } else if (tab === 'directory' || tab === 'orbits' || tab === 'compare' || tab === 'carriers' || tab === 'integrations') {
       setActiveTab('master_control');
@@ -619,49 +614,11 @@ export default function App() {
       )}
 
       {/* ========================================================
-          5 UNIFIED BROADCASTING, ONLINE RADIO, TV & NEWSCASTING HUBS
+          CORE UNIFIED HUBS: ONLINE RADIO & MPD DJ, WEBIRC LEAF MESH, MASTER CONTROL
           ======================================================== */}
 
-      {/* Hub 1: Master Broadcast In/Out Studio */}
-      {activeTab === 'broadcast_studio' || activeTab === 'media' || activeTab === 'stream' || activeTab === 'duplicator' ? (
-        <DrFun1MasterBroadcastStudio
-          initialTool={
-            activeTab === 'stream'
-              ? 'restream_multistream'
-              : activeTab === 'duplicator'
-              ? 'wordpress_duplicator'
-              : mediaStudioTool
-          }
-          onOpenStore={() => setActiveTab('master_control')}
-          onOpenIrc={() => setActiveTab('irc')}
-          onOpenLicense={() => setIsLicenseModalOpen(true)}
-          onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-          onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
-          onOpenMpd={() => setActiveTab('radio_dj')}
-          onOpenDuplicator={() => setActiveTab('broadcast_studio')}
-          activeRank={activeOperRank}
-          onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
-          onOpenIrcStats={() => setActiveTab('irc')}
-          onOpenUnrealSearch={() => setIsUnrealSearchOpen(true)}
-          onToolChange={(tool) => {
-            setMediaStudioTool(tool);
-            if (tool === 'irc_client') setActiveTab('irc');
-            else if (tool === 'mpd_bot') setActiveTab('radio_dj');
-            else setActiveTab('broadcast_studio');
-          }}
-        />
-      ) : activeTab === 'tv_newscast' ? (
-        /* Hub 2: Live TV & Newscasting Desk */
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-          <TvNewscastingStudio
-            onOpenLicense={() => setIsLicenseModalOpen(true)}
-            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-            onNavigateToIrc={() => setActiveTab('irc')}
-            activeRank={activeOperRank}
-            onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
-          />
-        </main>
-      ) : activeTab === 'radio_dj' || activeTab === 'mpd' ? (
+      {/* Hub 1: Online Radio & MPD DJ Station */}
+      {activeTab === 'radio_dj' || activeTab === 'mpd' ? (
         /* Hub 3: Online Radio & MPD DJ Station */
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
           <OnlineRadioDjStudio
@@ -687,11 +644,20 @@ export default function App() {
             onOpenLicense={() => setIsLicenseModalOpen(true)}
             onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
             onNavigateToStore={() => setActiveTab('master_control')}
-            onNavigateToStudio={() => setActiveTab('broadcast_studio')}
+            onNavigateToStudio={() => setActiveTab('radio_dj')}
             activeRank={activeOperRank}
             onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
             onOpenZncWebAdmin={() => setIsZncWebAdminOpen(true)}
             onOpenUnrealSearch={() => setIsUnrealSearchOpen(true)}
+            session={ircSession}
+            onOpenLoginModal={() => setIsIrcStartupLoginOpen(true)}
+            onUpdateSession={(partial) => {
+              const updated = { ...ircSession, ...partial };
+              setIrcSession(updated);
+              try {
+                localStorage.setItem(STORAGE_KEY_IRC_SESSION, JSON.stringify(updated));
+              } catch (_) {}
+            }}
           />
         </main>
       ) : activeTab === 'community' || activeTab === 'social' ? (
@@ -983,8 +949,8 @@ export default function App() {
         }}
       />
 
-      {/* Persistent Floating / Docked Live IRC Client on Index */}
-      {activeTab === 'directory' && (
+      {/* Persistent Floating / Docked Live IRC Client on Other Tabs */}
+      {activeTab !== 'irc' && (
         <IndexIrcFloatingClient
           session={ircSession}
           onOpenLoginModal={() => setIsIrcStartupLoginOpen(true)}

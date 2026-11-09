@@ -73,25 +73,26 @@ export const DATAPACKET_LEAF_NODES: SwitchDedicatedNode[] = DATAPACKET_RAW_DEFS.
   const host = `dp${String(idx + 1).padStart(2, '0')}.${def.code}.datapacket.drfun1.com`;
   return {
     id: `dp_leaf_${def.code}`,
-    name: `DataPacket ${def.metro} 100G Edge Leaf`,
+    name: `DataPacket ${def.metro} 100G No-Ads Leaf`,
     subdomain: host,
     host,
     port: 6697,
     location: def.metro,
-    campusName: def.facility,
-    tier: 'Tier IV Bare-Metal SuperCluster',
-    fiberCapacity: def.speed,
+    campusName: `${def.facility} (datapacket.com no ads / Pure Broadcast Relay)`,
+    tier: 'Tier IV Bare-Metal SuperCluster (datapacket.com no ads)',
+    fiberCapacity: `${def.speed} · Ad-Free Transit`,
     status: 'active',
     latencyMs: def.latencyMs,
     usersOnline: def.users,
     leafPeers: 16,
     unrealVersion: 'UnrealIRCd-6.1.4',
     sslFingerprint: `DP:${(idx + 21).toString(16).toUpperCase()}:A7:E9:55:12:3C:99:FA:44:88:B1:00:26:DD:4A:EE`,
-    transitProvider: 'DataPacket.com 100+ Tbps Optical BGP (CDN77/Arelion/Telia)',
+    transitProvider: 'DataPacket.com 100+ Tbps Optical BGP (Zero Ads / Ad-Free Stream Relay)',
     leafHub: 'irc.drfun1.com',
     hubPort: 6697,
     sid: def.sid,
     leafStatus: 'synced',
+    adPolicy: 'datapacket.com no ads (Strict Zero Commercial Advertising Policy)',
     leafBurstStats: {
       syncedChannels: 855000,
       syncedNicks: def.users,
@@ -100,7 +101,10 @@ export const DATAPACKET_LEAF_NODES: SwitchDedicatedNode[] = DATAPACKET_RAW_DEFS.
       linkProtocol: 'UnrealIRCd 6.1.4 SSL Spanning Tree',
       encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384'
     },
-    unrealLinkBlock: `/* DataPacket.com Leaf Node ${def.sid} Dual-Hub Link Block */
+    unrealLinkBlock: `/* DataPacket.com 100G No-Ads Leaf Node ${def.sid} (${def.metro}) */
+/* Dual-Hub Redundant Leaf to irc.drfun1.com & irc.drfun1media.com */
+/* Policy: datapacket.com no ads (Ad-Free High-Throughput Media Relay) */
+
 link irc.drfun1.com {
     incoming { mask *; };
     outgoing {
@@ -112,6 +116,7 @@ link irc.drfun1.com {
     password "${UNREAL_HUB_TARGET.leafAuthSecret}";
     class servers;
 };
+
 link irc.drfun1media.com {
     incoming { mask *; };
     outgoing {
@@ -123,10 +128,25 @@ link irc.drfun1media.com {
     password "${UNREAL_HUB_TARGET.leafAuthSecret}";
     class servers;
 };
+
 ulines {
     "services.drfun1.com";
     "services.drfun1media.com";
 };
+
+/* No-Ads & Anti-Spam Zero Commercial Interruption Directives */
+set {
+    anti-spam {
+        spamfilter {
+            ban-action block;
+            ban-reason "datapacket.com no ads: Commercial advertising & spam strictly prohibited";
+        };
+    };
+    modes-on-connect "+iwx";
+    modes-on-join "+Ntc"; /* No external messages, no colors, no unmoderated ads */
+    restrict-channelmodes "c";
+};
+
 class servers {
     pingfreq 45;
     maxclients 100;
@@ -620,7 +640,7 @@ const ALL_335_GEO_SEEDS: GeoNodeSeed[] = [
 ];
 
 // Verify count during runtime: ALL_335_GEO_SEEDS.length === 335
-export const UNREALIRCD_335_LEAF_NODES: SwitchDedicatedNode[] = ALL_335_GEO_SEEDS.map((seed, idx) => {
+export const SWITCH_335_LEAF_NODES: SwitchDedicatedNode[] = ALL_335_GEO_SEEDS.map((seed, idx) => {
   const nodeNum = idx + 1; // 1 to 335
   const sidNum = 100 + nodeNum; // SIDs '101' through '435' (clean 3-character UnrealIRCd SID)
   const sidStr = String(sidNum);
@@ -632,50 +652,46 @@ export const UNREALIRCD_335_LEAF_NODES: SwitchDedicatedNode[] = ALL_335_GEO_SEED
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '');
   const countryCode = seed.city.includes(',') ? seed.city.split(',')[1].trim().toLowerCase() : 'global';
-  const hostname = `u${sidStr}.${citySlug}.${countryCode}.unrealircd.drfun1.com`;
+  const hostname = `node${String(nodeNum).padStart(3, '0')}.${citySlug}.switch.drfun1.com`;
 
-  // Realistic randomized user count and channel count deterministically hashed
+  // Deterministically hashed users & channels
   const pseudoHash = ((idx + 1) * 997) % 3500;
   const usersOnline = 200 + (pseudoHash % 2800);
-  const channelsOnline = Math.max(12, Math.floor(usersOnline / 14));
   const latencyMs = Number((seed.baseLat + (idx % 7) * 0.4).toFixed(1));
 
   return {
-    id: `unreal_leaf_${sidStr}`,
-    name: `UnrealIRCd ${seed.city} Leaf (${sidStr})`,
+    id: `switch_leaf_${sidStr}`,
+    name: `Switch.com UnrealIRCd ${seed.city} Leaf (${sidStr})`,
     subdomain: hostname,
     host: hostname,
     port: 6697,
     location: seed.city,
-    campusName: seed.dc,
-    tier: seed.region === 'Orbital & Teleport' ? 'Tier IV Deep Space Teleport' : 'Tier III/IV Carrier Interconnect',
-    fiberCapacity: seed.region === 'Orbital & Teleport' ? '40 Gbps Laser / RF Space Ingest' : '100 Gbps Optical DWDM',
+    campusName: `Switch SUPERNAP Campus (www.switch.com 100% Green Energy) / ${seed.dc}`,
+    tier: 'Tier 5 Platinum Datacenter (www.switch.com 100% Green Energy) / unrealircd.org',
+    fiberCapacity: '100 Gbps Low-Latency Optical Cross-Connect',
     status: 'active',
     latencyMs,
     usersOnline,
-    leafPeers: 10 + (idx % 12),
-    unrealVersion: 'UnrealIRCd-6.1.4',
-    sslFingerprint: `U6:${sidStr.slice(0, 2)}:${(idx % 99).toString(16).padStart(2, '0').toUpperCase()}:4B:1A:89:C2:5E:F0:77:1A:BC:88:01:DF`,
-    transitProvider: seed.region.includes('North America')
-      ? 'RisingNet Optical BGP (www.risingnet.com)'
-      : seed.region.includes('Europe')
-      ? 'DE-CIX / Telia Arelion Tier-1'
-      : seed.region.includes('Orbital')
-      ? 'NASA / Deep Space Relay Network'
-      : 'Equinix Global Fabric / NTT Tier-1',
+    leafPeers: 14 + (idx % 12),
+    unrealVersion: 'UnrealIRCd-6.1.4 (unrealircd.org)',
+    sslFingerprint: `SW:${sidStr.slice(0, 2)}:${(idx % 99).toString(16).padStart(2, '0').toUpperCase()}:4B:1A:89:C2:5E:F0:77:1A:BC:88:01:DF`,
+    transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)',
     leafHub: 'irc.drfun1.com',
     hubPort: 6697,
     sid: sidStr,
     leafStatus: 'synced',
+    adPolicy: 'Zero Commercial Advertising / Pure Broadcast Stream Relay',
     leafBurstStats: {
       syncedChannels: 855000,
       syncedNicks: usersOnline,
       syncLatencyMs: latencyMs,
       lastBurst: '2026-02-15T10:00:00Z',
-      linkProtocol: 'UnrealIRCd 6.1.4 SSL Spanning Tree',
+      linkProtocol: 'UnrealIRCd 6.1.4 SSL Spanning Tree (unrealircd.org)',
       encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384'
     },
-    unrealLinkBlock: `/* UnrealIRCd.org Node SID ${sidStr} (${seed.city}) -> irc.drfun1.com */
+    unrealLinkBlock: `/* UnrealIRCd (unrealircd.org) Leaf Node on Switch.com (www.switch.com 100% Green Energy) */
+/* SID ${sidStr} (${seed.city}) Leafed to Dual Hubs: irc.drfun1.com & irc.drfun1media.com */
+
 link irc.drfun1.com {
     incoming { mask *; };
     outgoing {
@@ -687,51 +703,56 @@ link irc.drfun1.com {
     password "${UNREAL_HUB_TARGET.leafAuthSecret}";
     class servers;
 };
+
+link irc.drfun1media.com {
+    incoming { mask *; };
+    outgoing {
+        bind-ip *;
+        hostname "irc.drfun1media.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "${UNREAL_HUB_TARGET.leafAuthSecret}";
+    class servers;
+};
+
+ulines {
+    "services.drfun1.com";
+    "services.drfun1media.com";
+};
+
 class servers {
     pingfreq 60;
     maxclients 80;
     sendq 15000000;
     connfreq 12;
 };`,
-    provider: 'unrealircd',
+    provider: 'switch',
     region: seed.region,
     country: seed.country,
-    uplinkSpeed: '100 Gbps Optical'
+    uplinkSpeed: '100 Gbps Optical DWDM'
   };
 });
 
+// Alias for backwards compatibility
+export const UNREALIRCD_335_LEAF_NODES: SwitchDedicatedNode[] = SWITCH_335_LEAF_NODES;
+
 // =========================================================================
-// 3. COMBINED MASTER LEAF DIRECTORY (347 NODES: 335 UNREAL + 12 DATAPACKET)
-// Plus 26 Switch SUPERNAP core nodes = 373 total mesh nodes
+// 3. COMBINED MASTER LEAF DIRECTORY (352 LEAF NODES TOTAL)
+// 335 Switch.com + 12 DataPacket.com + 5 RisingNet.com
+// Leafed directly to Dual Hubs: irc.drfun1.com & irc.drfun1media.com
+// With Anope 2.1 Services on services.drfun1.com & services.drfun1media.com
 // =========================================================================
 
-// Tag Switch nodes with provider 'switch'
-const TAGGED_SWITCH_NODES: SwitchDedicatedNode[] = SWITCH_DEDICATED_NODES.map((n) => ({
-  ...n,
-  provider: 'switch' as const,
-  region: n.location.includes('Las Vegas') || n.location.includes('Tahoe') || n.location.includes('San Jose') || n.location.includes('Grand Rapids') || n.location.includes('Atlanta')
-    ? 'North America (Switch Core)'
-    : n.location.includes('London') || n.location.includes('Frankfurt')
-    ? 'Europe'
-    : n.location.includes('Tokyo') || n.location.includes('Sydney')
-    ? 'Asia-Pacific'
-    : 'Orbital & Teleport',
-  country: n.location.includes('UK') ? 'United Kingdom' : n.location.includes('Germany') ? 'Germany' : n.location.includes('Japan') ? 'Japan' : n.location.includes('Australia') ? 'Australia' : 'United States',
-  uplinkSpeed: n.fiberCapacity
-}));
-
-// The 347 requested nodes (335 UnrealIRCd.org + 12 DataPacket.com)
-export const USER_REQUESTED_347_NODES: SwitchDedicatedNode[] = [
-  ...DATAPACKET_LEAF_NODES, // 12
-  ...UNREALIRCD_335_LEAF_NODES, // 335
+export const ALL_352_LEAF_NODES: SwitchDedicatedNode[] = [
+  ...SWITCH_335_LEAF_NODES, // 335 Switch.com nodes
+  ...DATAPACKET_LEAF_NODES, // 12 DataPacket.com nodes
+  ...RISINGNET_5_LEAF_NODES, // 5 RisingNet.com nodes
 ];
 
-// All nodes on the network including Switch SUPERNAP (373 total)
-export const ALL_NETWORK_LEAF_NODES: SwitchDedicatedNode[] = [
-  ...DATAPACKET_LEAF_NODES, // 12
-  ...UNREALIRCD_335_LEAF_NODES, // 335
-  ...TAGGED_SWITCH_NODES, // 26
-];
+// Aliases for compatibility
+export const USER_REQUESTED_347_NODES: SwitchDedicatedNode[] = ALL_352_LEAF_NODES;
+export const ALL_NETWORK_LEAF_NODES: SwitchDedicatedNode[] = ALL_352_LEAF_NODES;
 
 export const INITIAL_UNREAL_SEARCH_INDEX: UnrealServerRecord[] = [
   {
@@ -755,18 +776,74 @@ export const INITIAL_UNREAL_SEARCH_INDEX: UnrealServerRecord[] = [
     onlineOpers: 14,
     latencyToHubMs: 0.8,
     cipherSuite: 'TLS_AES_256_GCM_SHA384 (ECDHE-X25519)',
-    description: 'Master Core Hub for the DrFun1 Satcom Broadcast & Space Telemetry Mesh. Hosted on 100% renewable Switch green fiber.',
+    description: 'Master Core Hub for the DrFun1 Satcom Broadcast & Space Telemetry Mesh. Redundantly peered to irc.drfun1media.com with 352 leaf nodes.',
     adminContact: 'admin@drfun1.com',
     websiteUrl: 'https://stats.drfun1ircd.com',
     tags: ['Master Hub', 'Switch SUPERNAP', 'Anope 2.1', 'ZNC Bouncer', 'Broadcast'],
     sampleChannels: ['#drfun1tv', '#space', '#broadcast', '#satcom', '#help'],
-    linkBlockSnippet: `/* Self Master Hub */\nme {\n    name "irc.drfun1.com";\n    info "Master Hub - Switch SUPERNAP";\n    sid "001";\n};`
+    linkBlockSnippet: `/* Self Master Hub */\nme {\n    name "irc.drfun1.com";\n    info "Master Hub - Switch SUPERNAP";\n    sid "001";\n};\npeer irc.drfun1media.com {\n    port 6697;\n    options { ssl; };\n};`
+  },
+  {
+    id: 'hub_drfun1media_vegas',
+    name: 'irc.drfun1media.com',
+    networkName: 'DrFun1 Media Global Mesh',
+    hubHost: 'irc.drfun1media.com',
+    isLeafedToDrFun1: true,
+    leafVerifiedAt: '2026-02-15T00:00:00Z',
+    unrealVersion: 'UnrealIRCd-6.1.4',
+    anopeVersion: 'Anope-2.1.0',
+    sslPort: 6697,
+    plainPort: 6667,
+    ipOrHostname: 'irc.drfun1media.com',
+    country: 'United States',
+    region: 'North America',
+    locationCity: 'Las Vegas, NV',
+    datacenter: 'Switch SUPERNAP Broadcast Teleport Campus',
+    onlineUsers: 3950,
+    onlineChannels: 168,
+    onlineOpers: 12,
+    latencyToHubMs: 0.4,
+    cipherSuite: 'TLS_AES_256_GCM_SHA384 (ECDHE-X25519)',
+    description: 'Secondary Broadcast & Media Hub redundantly paired with irc.drfun1.com. Hosts live TV playout, MPD DJ streams, and ZNC bouncers.',
+    adminContact: 'livewithdrfun1@gmail.com',
+    websiteUrl: 'https://stats.drfun1ircd.com',
+    tags: ['Media Hub', 'Switch SUPERNAP', 'Anope 2.1', 'Live TV Playout'],
+    sampleChannels: ['#drfun1-primetv', '#drfun1-media', '#paramount-cbs', '#all-music'],
+    linkBlockSnippet: `/* Self Secondary Hub */\nme {\n    name "irc.drfun1media.com";\n    info "Media Broadcast Hub - Switch SUPERNAP";\n    sid "002";\n};\npeer irc.drfun1.com {\n    port 6697;\n    options { ssl; };\n};`
+  },
+  {
+    id: 'anope_services_core',
+    name: 'services.drfun1.com',
+    networkName: 'DrFun1 Media Global Mesh',
+    hubHost: 'irc.drfun1.com & irc.drfun1media.com',
+    isLeafedToDrFun1: true,
+    leafVerifiedAt: '2026-02-15T00:00:00Z',
+    unrealVersion: 'Anope-2.1.0-Release',
+    anopeVersion: 'Anope-2.1.0 (git.anope.org)',
+    sslPort: 6697,
+    plainPort: 6667,
+    ipOrHostname: 'services.drfun1.com',
+    country: 'United States',
+    region: 'North America',
+    locationCity: 'Las Vegas, NV',
+    datacenter: 'Switch SUPERNAP Vault Core (100% Green Energy)',
+    onlineUsers: 8838,
+    onlineChannels: 74,
+    onlineOpers: 18,
+    latencyToHubMs: 0.2,
+    cipherSuite: 'TLS_AES_256_GCM_SHA384',
+    description: 'Anope 2.1 IRC Services powering NickServ, ChanServ, OperServ, BotServ (DrFun1Bot & OrbitGuard), HostServ, and MemoServ across all 352 leaf nodes.',
+    adminContact: 'admin@drfun1.com',
+    websiteUrl: 'https://anope.org',
+    tags: ['Anope Services', 'NickServ', 'ChanServ', 'OperServ', 'BotServ'],
+    sampleChannels: ['#services', '#orbit-ops', '#all-music', '#drfun1-primetv'],
+    linkBlockSnippet: `/* Anope 2.1 Services Link Block */\nlink services.drfun1.com {\n    incoming { mask *; };\n    outgoing {\n        hostname "irc.drfun1.com";\n        port 6697;\n        options { ssl; };\n    };\n    password "drfun1-anope-services-auth-2026";\n    class servers;\n};\nulines {\n    "services.drfun1.com";\n    "services.drfun1media.com";\n};`
   },
   {
     id: 'leaf_dp01_ashburn',
     name: 'dp01.ashburn.datapacket.drfun1.com',
     networkName: 'DrFun1 Media Global Mesh',
-    hubHost: 'irc.drfun1.com',
+    hubHost: 'irc.drfun1.com & irc.drfun1media.com',
     isLeafedToDrFun1: true,
     leafVerifiedAt: '2026-02-15T09:12:00Z',
     unrealVersion: 'UnrealIRCd-6.1.4',
@@ -783,54 +860,58 @@ export const INITIAL_UNREAL_SEARCH_INDEX: UnrealServerRecord[] = [
     onlineOpers: 6,
     latencyToHubMs: 14.2,
     cipherSuite: 'TLS_AES_256_GCM_SHA384 (TLS 1.3)',
-    description: 'DataPacket.com 100 Gbps dedicated unmetered leaf node connected directly to irc.drfun1.com core.',
+    description: 'DataPacket.com 100 Gbps dedicated unmetered no-ads leaf node (1 of 12) connected directly to dual hubs (irc.drfun1.com & irc.drfun1media.com) with strict zero commercial advertising policy.',
     adminContact: 'datapacket-noc@drfun1.com',
     websiteUrl: 'https://www.datapacket.com',
-    tags: ['DataPacket.com', '100 Gbps', 'Verified Leaf', 'DDoS Immune'],
+    tags: ['DataPacket.com', '100 Gbps', 'No Ads', 'Zero Advertising', 'Verified Leaf', 'DDoS Immune'],
     sampleChannels: ['#drfun1tv', '#space', '#all-855000-channels'],
     linkBlockSnippet: `link irc.drfun1.com {\n    incoming { mask *; };\n    outgoing {\n        bind-ip *;\n        hostname irc.drfun1.com;\n        port 6697;\n        options { ssl; };\n    };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n};`
   },
   {
-    id: 'leaf_drfun1media',
-    name: 'irc.drfun1media.com',
+    id: 'leaf_rn01_ashburn',
+    name: 'rn01.ashburn.risingnet.drfun1.com',
     networkName: 'DrFun1 Media Global Mesh',
-    hubHost: 'irc.drfun1.com',
+    hubHost: 'irc.drfun1.com & irc.drfun1media.com',
     isLeafedToDrFun1: true,
-    leafVerifiedAt: '2026-02-15T02:14:00Z',
+    leafVerifiedAt: '2026-02-15T09:15:00Z',
     unrealVersion: 'UnrealIRCd-6.1.4',
     anopeVersion: 'Anope-2.1.0',
     sslPort: 6697,
     plainPort: 6667,
-    ipOrHostname: 'irc.drfun1media.com',
+    ipOrHostname: 'rn01.ashburn.risingnet.drfun1.com',
     country: 'United States',
     region: 'North America',
-    locationCity: 'Las Vegas, NV',
-    datacenter: 'Switch SUPERNAP Las Vegas Vault 4',
-    onlineUsers: 3120,
-    onlineChannels: 142,
-    onlineOpers: 8,
-    latencyToHubMs: 1.2,
-    cipherSuite: 'TLS_AES_256_GCM_SHA384 (ECDHE-X25519)',
-    description: 'Primary Media Playout & Streaming Leaf directly linked to irc.drfun1.com hub.',
-    adminContact: 'livewithdrfun1@gmail.com',
-    websiteUrl: 'https://stats.drfun1ircd.com',
-    tags: ['Verified Leaf', 'DrFun1TV', 'ZNC Leaf', 'RisingNet BGP'],
-    sampleChannels: ['#drfun1-primetv', '#mpd-dj', '#restream', '#social'],
+    locationCity: 'Ashburn, VA',
+    datacenter: 'Equinix DC10 / RisingNet Tier-1 BGP POP',
+    onlineUsers: 3820,
+    onlineChannels: 165,
+    onlineOpers: 5,
+    latencyToHubMs: 12.1,
+    cipherSuite: 'TLS_AES_256_GCM_SHA384 (TLS 1.3)',
+    description: 'RisingNet 100G Optical DWDM backbone transit leaf node (1 of 5) leafed to dual hubs.',
+    adminContact: 'risingnet-noc@drfun1.com',
+    websiteUrl: 'https://www.risingnet.com',
+    tags: ['RisingNet.com', '100G DWDM', 'Verified Leaf', 'BGP Tier-1'],
+    sampleChannels: ['#risingnet-transit', '#all-bands', '#drfun1-media'],
     linkBlockSnippet: `link irc.drfun1.com {\n    incoming { mask *; };\n    outgoing {\n        bind-ip *;\n        hostname irc.drfun1.com;\n        port 6697;\n        options { ssl; };\n    };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n};`
   }
 ];
 
 export function generateUnrealLeafConfigSnippet(serverHostname: string, networkName: string): string {
   return `/* ====================================================================
- * UnrealIRCd 6.1.x Link Block Configuration
+ * UnrealIRCd 6.1.x Dual-Hub Link Block Configuration
  * Add this block to your unrealircd.conf on: ${serverHostname || 'your-server.domain.com'}
  * 
- * Target Hub: irc.drfun1.com (Port 6697 SSL)
+ * Target Hubs:
+ *   1. irc.drfun1.com:6697 SSL (Master Core Hub - Switch SUPERNAP Las Vegas, SID 001)
+ *   2. irc.drfun1media.com:6697 SSL (Broadcast Media Hub - Switch Teleport, SID 002)
+ * IRC Services: Anope 2.1 (services.drfun1.com / services.drfun1media.com)
  * Network: DrFun1 Media & Witt Law Firm Mesh (www.wittlawfirm.com)
  * License / FRN: 0034981290 | Switch SUPERNAP Colocation (www.switch.com)
- * DataPacket.com & UnrealIRCd.org Certified Leaf Federation
+ * Federation: 335 Switch.com + 12 DataPacket.com + 5 RisingNet.com = 352 Leaf Nodes
  * ==================================================================== */
 
+/* Primary Hub Link Block */
 link irc.drfun1.com {
     incoming {
         mask *;
@@ -845,7 +926,28 @@ link irc.drfun1.com {
     class servers;
 };
 
-/* Required class block for servers if not already present */
+/* Secondary / Media Hub Link Block */
+link irc.drfun1media.com {
+    incoming {
+        mask *;
+    };
+    outgoing {
+        bind-ip *;
+        hostname "irc.drfun1media.com";
+        port 6697;
+        options { ssl; };
+    };
+    password "${UNREAL_HUB_TARGET.leafAuthSecret}";
+    class servers;
+};
+
+/* Anope 2.1 Services U-Lines */
+ulines {
+    "services.drfun1.com";
+    "services.drfun1media.com";
+};
+
+/* Required class block for servers */
 class servers {
     pingfreq 60;
     maxclients 100;

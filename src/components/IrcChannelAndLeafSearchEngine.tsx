@@ -57,6 +57,8 @@ import {
   generateUnrealLeafConfigSnippet,
   DATAPACKET_LEAF_NODES,
   UNREALIRCD_335_LEAF_NODES,
+  SWITCH_335_LEAF_NODES,
+  RISINGNET_5_LEAF_NODES,
   USER_REQUESTED_347_NODES,
   ALL_NETWORK_LEAF_NODES
 } from '../data/unrealSearchData';
@@ -323,7 +325,11 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
 
     // Filter by provider
     if (selectedLeafProvider !== 'all') {
-      result = result.filter((n) => n.provider === selectedLeafProvider);
+      if (selectedLeafProvider === 'switch' || selectedLeafProvider === 'unrealircd') {
+        result = result.filter((n) => n.provider === 'switch' || n.provider === 'unrealircd');
+      } else {
+        result = result.filter((n) => n.provider === selectedLeafProvider);
+      }
     }
 
     // Filter by region
@@ -460,14 +466,14 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                   855,000 Channels
                 </span>
                 <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded-md hidden sm:inline">
-                  335 UnrealIRCd Nodes
+                  335 Switch.com UnrealIRCd
                 </span>
                 <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 bg-sky-500/20 text-sky-300 border border-sky-500/40 rounded-md hidden md:inline">
-                  12 DataPacket 100G
+                  12 DataPacket No-Ads
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Master Hub: <span className="text-emerald-400 font-mono font-semibold">irc.drfun1.com:6697</span> (SID 001) &bull; Switch SUPERNAP Las Vegas Core &bull; 347 Verified Leaves &bull; Licensee: Richard Alan Witt (FRN 0034981290)
+                Dual Hubs: <span className="text-emerald-400 font-mono font-semibold">irc.drfun1.com &amp; irc.drfun1media.com:6697</span> (SID 001/002) &bull; Switch SUPERNAP Las Vegas Core &bull; 352 Verified Leaves (335 Switch, 12 DP No-Ads, 5 RN) &bull; Licensee: Richard Alan Witt (FRN 0034981290)
               </p>
             </div>
           </div>
@@ -521,7 +527,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
             }`}
           >
             <Server className="w-4 h-4 text-emerald-300" />
-            <span>Leafed Network (347 / 373 Nodes)</span>
+            <span>Leafed Network (352 Nodes)</span>
           </button>
 
           <button
@@ -679,9 +685,9 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                 <span className="text-slate-500 text-[11px] uppercase mr-1">Provider:</span>
                 {[
                   { id: 'all', label: `All Mesh Nodes (${ALL_NETWORK_LEAF_NODES.length})` },
-                  { id: 'unrealircd', label: `UnrealIRCd.org (${UNREALIRCD_335_LEAF_NODES.length} Nodes)` },
-                  { id: 'datapacket', label: `DataPacket.com 100G (${DATAPACKET_LEAF_NODES.length} Nodes)` },
-                  { id: 'switch', label: `Switch SUPERNAP (${SWITCH_DEDICATED_NODES.length} Nodes)` },
+                  { id: 'switch', label: `Switch.com UnrealIRCd (${SWITCH_335_LEAF_NODES.length} Nodes)` },
+                  { id: 'datapacket', label: `DataPacket.com No-Ads (${DATAPACKET_LEAF_NODES.length} Nodes)` },
+                  { id: 'risingnet', label: `RisingNet Tier-1 (${RISINGNET_5_LEAF_NODES.length} Nodes)` },
                 ].map((chip) => (
                   <button
                     key={chip.id}
@@ -948,7 +954,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                   )}
                 </span>
                 <span className="text-slate-600">|</span>
-                <span className="text-[11px] text-purple-300">All Leafed to irc.drfun1.com:6697 (SID 001)</span>
+                <span className="text-[11px] text-purple-300">All Leafed to irc.drfun1.com &amp; irc.drfun1media.com:6697</span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -996,16 +1002,17 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                                 SID: {node.sid}
                               </span>
                               {isDataPacket ? (
-                                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-gradient-to-r from-purple-900 to-indigo-900 text-purple-200 rounded border border-purple-500">
-                                  DataPacket 100G
+                                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-gradient-to-r from-sky-900 to-indigo-900 text-sky-200 rounded border border-sky-500 flex items-center gap-1">
+                                  <span>DataPacket No-Ads</span>
+                                  <span className="text-[9px] bg-sky-500/30 px-1 rounded text-white">100G</span>
                                 </span>
-                              ) : isUnreal ? (
+                              ) : isUnreal || node.provider === 'switch' ? (
                                 <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded border border-emerald-700">
-                                  UnrealIRCd 6.1.4
+                                  Switch.com UnrealIRCd
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-sky-950 text-sky-300 rounded border border-sky-800">
-                                  Switch SUPERNAP
+                                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-amber-950 text-amber-300 rounded border border-amber-800">
+                                  RisingNet DWDM
                                 </span>
                               )}
                               <span className="text-[10px] font-mono px-1.5 py-0.5 bg-slate-800 text-emerald-300 rounded border border-slate-700">

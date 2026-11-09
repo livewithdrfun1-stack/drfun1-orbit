@@ -1,4 +1,4 @@
-import { SwitchDedicatedNode, UnrealIrcdHub, IrcChannel, IrcUser, IrcMessage, ZncBouncerConfig, StatsPortalInfo, NeoStatsConfig, NeoStatsModule, DenoraConfig, WittLawAdminMod, DevPlatformConfig, DevPlatformApiEndpoint, DevSandboxEnvironment, ModerationAuditAction } from '../types/irc';
+import { SwitchDedicatedNode, UnrealIrcdHub, AnopeServicesHub, IrcChannel, IrcUser, IrcMessage, ZncBouncerConfig, StatsPortalInfo, NeoStatsConfig, NeoStatsModule, DenoraConfig, WittLawAdminMod, DevPlatformConfig, DevPlatformApiEndpoint, DevSandboxEnvironment, ModerationAuditAction } from '../types/irc';
 
 export const UNREAL_HUB_DETAILS: UnrealIrcdHub = {
   host: 'irc.drfun1.com',
@@ -10,37 +10,55 @@ export const UNREAL_HUB_DETAILS: UnrealIrcdHub = {
   colocation: 'Switch SUPERNAP Core Campus (www.switch.com)',
   licensee: 'Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com)',
   leafNodes: [
-    'dev.drfun1media.com',
-    'irc.drfun1media.com',
-    'node1.lasvegas.switch.drfun1.com',
-    'node2.tahoereno.switch.drfun1.com',
-    'node3.grandrapids.switch.drfun1.com',
-    'node4.atlanta.switch.drfun1.com',
-    'node5.space-teleport.switch.drfun1.com',
-    'node6.austin.switch.drfun1.com',
-    'node7.chicago.switch.drfun1.com',
-    'node8.seattle.switch.drfun1.com',
-    'node9.newyork.switch.drfun1.com',
-    'node10.london.switch.drfun1.com',
-    'node11.tokyo.switch.drfun1.com',
-    'node12.hawaii.switch.drfun1.com',
-    'node13.sanjose.switch.drfun1.com',
-    'node14.denver.switch.drfun1.com',
-    'node15.miami.switch.drfun1.com',
-    'node16.ashburn.switch.drfun1.com',
-    'node17.losangeles.switch.drfun1.com',
-    'node18.frankfurt.switch.drfun1.com',
-    'node19.stockholm.switch.drfun1.com',
-    'node20.singapore.switch.drfun1.com',
-    'node21.sydney.switch.drfun1.com',
-    'node22.saopaulo.switch.drfun1.com',
-    'node23.dubai.switch.drfun1.com',
-    'node24.goldstone.switch.drfun1.com',
-    'node25.lasvegas-edge.switch.drfun1.com',
+    'irc.drfun1media.com (Dual Hub Peer)',
+    '335 Switch SUPERNAP Leaf Nodes (*.switch.drfun1.com)',
+    '12 DataPacket 100G Nodes (*.datapacket.drfun1.com)',
+    '5 RisingNet Optical Nodes (*.risingnet.drfun1.com)',
   ],
   totalSyncedChannels: 855000,
-  totalSyncedUsers: 8838,
+  totalSyncedUsers: 14290,
   aggregateBandwidth: '3.85 Tbps Global Terrestrial, Subsea, Quantum Fiber & Space Teleport Interconnect',
+  redundantPeerHub: 'irc.drfun1media.com',
+  anopeServicesHost: 'services.drfun1.com',
+};
+
+export const UNREAL_MEDIA_HUB_DETAILS: UnrealIrcdHub = {
+  host: 'irc.drfun1media.com',
+  sid: '002',
+  port: 6697,
+  ssl: true,
+  networkName: 'DrFun1-Media-Broadcast-Mesh',
+  transitProvider: 'RisingNet Global Transit (www.risingnet.com)',
+  colocation: 'Switch SUPERNAP Broadcast Teleport (www.switch.com)',
+  licensee: 'Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com)',
+  leafNodes: [
+    'irc.drfun1.com (Dual Hub Peer)',
+    '335 Switch SUPERNAP Leaf Nodes (*.switch.drfun1.com)',
+    '12 DataPacket 100G Nodes (*.datapacket.drfun1.com)',
+    '5 RisingNet Optical Nodes (*.risingnet.drfun1.com)',
+  ],
+  totalSyncedChannels: 855000,
+  totalSyncedUsers: 14290,
+  aggregateBandwidth: '3.85 Tbps Global Terrestrial, Subsea, Quantum Fiber & Space Teleport Interconnect',
+  redundantPeerHub: 'irc.drfun1.com',
+  anopeServicesHost: 'services.drfun1media.com',
+};
+
+export const DUAL_UNREAL_HUBS: UnrealIrcdHub[] = [
+  UNREAL_HUB_DETAILS,
+  UNREAL_MEDIA_HUB_DETAILS,
+];
+
+export const ANOPE_SERVICES_DETAILS: AnopeServicesHub = {
+  host: 'services.drfun1.com',
+  sid: '00A',
+  linkedHubs: ['irc.drfun1.com:6697', 'irc.drfun1media.com:6697'],
+  anopeVersion: 'Anope-2.1.0-Release (git.anope.org)',
+  nickServCount: 4210,
+  chanServCount: 184,
+  botServBots: ['DrFun1Bot', 'OrbitGuard', 'StatServ', 'HostServ', 'OperServ', 'MemoServ'],
+  operServAkills: 14,
+  status: 'active',
 };
 
 export const SWITCH_DEDICATED_NODES: SwitchDedicatedNode[] = [

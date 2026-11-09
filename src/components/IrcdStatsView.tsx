@@ -46,7 +46,9 @@ import {
   MessageSquare,
   Award
 } from 'lucide-react';
-import { UNREAL_HUB_DETAILS, SWITCH_DEDICATED_NODES, ALL_DRFUN1_MEDIA_CHANNELS, ZNC_BOUNCER_CONFIG, STATS_DRFUN1IRCD_PORTAL, NEOSTATS_CONFIG, DENORA_CONFIG } from '../data/ircData';
+import { UNREAL_HUB_DETAILS, UNREAL_MEDIA_HUB_DETAILS, DUAL_UNREAL_HUBS, ANOPE_SERVICES_DETAILS, SWITCH_DEDICATED_NODES, ALL_DRFUN1_MEDIA_CHANNELS, ZNC_BOUNCER_CONFIG, STATS_DRFUN1IRCD_PORTAL, NEOSTATS_CONFIG, DENORA_CONFIG } from '../data/ircData';
+import { PYCS_CHANNEL_DATA, PYCS_GIT_INFO, generatePycsConfigFile } from '../data/pycsData';
+import { ALL_352_LEAF_NODES, SWITCH_335_LEAF_NODES, DATAPACKET_LEAF_NODES, RISINGNET_5_LEAF_NODES } from '../data/unrealSearchData';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 
 interface IrcdStatsViewProps {
@@ -72,7 +74,10 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
 }) => {
   // Live uptime counter in seconds (starting from 148 days, 12 hours)
   const [uptimeSeconds, setUptimeSeconds] = useState(148 * 86400 + 12 * 3600 + 1420);
-  const [activeStatsTab, setActiveStatsTab] = useState<'overview' | 'denora' | 'neostats' | 'nodes' | 'znc' | 'stats_cmd' | 'anope' | 'channels'>('overview');
+  const [activeStatsTab, setActiveStatsTab] = useState<'overview' | 'denora' | 'neostats' | 'pycs' | 'nodes' | 'znc' | 'stats_cmd' | 'anope' | 'channels'>('overview');
+  const [selectedPycsChannel, setSelectedPycsChannel] = useState<string>('#drfun1-primetv');
+  const [nodeProviderFilter, setNodeProviderFilter] = useState<'all' | 'switch' | 'datapacket' | 'risingnet'>('all');
+  const currentPycsStats = PYCS_CHANNEL_DATA[selectedPycsChannel] || PYCS_CHANNEL_DATA['#drfun1-primetv'];
   const [selectedStatsQuery, setSelectedStatsQuery] = useState<'u' | 'm' | 'l' | 'c' | 'k' | 'T' | 'z'>('u');
   const [selectedNeoStatsCmd, setSelectedNeoStatsCmd] = useState<string>('STATS');
   const [selectedNeoStatsConfTab, setSelectedNeoStatsConfTab] = useState<'neostats_conf' | 'unreal_link' | 'git_build'>('neostats_conf');
@@ -144,17 +149,26 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
     setTimeout(() => setCopiedKey(null), 2500);
   };
 
-  // Filter nodes
+  // Filter 352 leaf nodes across Switch, DataPacket, and RisingNet
   const filteredNodes = useMemo(() => {
-    if (!searchNode.trim()) return SWITCH_DEDICATED_NODES;
+    let list = ALL_352_LEAF_NODES;
+    if (nodeProviderFilter === 'switch') {
+      list = SWITCH_335_LEAF_NODES;
+    } else if (nodeProviderFilter === 'datapacket') {
+      list = DATAPACKET_LEAF_NODES;
+    } else if (nodeProviderFilter === 'risingnet') {
+      list = RISINGNET_5_LEAF_NODES;
+    }
+
+    if (!searchNode.trim()) return list;
     const q = searchNode.toLowerCase();
-    return SWITCH_DEDICATED_NODES.filter(n => 
+    return list.filter(n => 
       n.name.toLowerCase().includes(q) ||
       n.host.toLowerCase().includes(q) ||
       n.location.toLowerCase().includes(q) ||
       n.sid.includes(q)
     );
-  }, [searchNode]);
+  }, [searchNode, nodeProviderFilter]);
 
   // Filter channels
   const filteredChannels = useMemo(() => {
@@ -775,14 +789,15 @@ export const IrcdStatsView: React.FC<IrcdStatsViewProps> = ({
           ======================================================== */}
       <div className="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto no-scrollbar font-mono text-xs">
         {[
-          { id: 'overview', label: 'Network Overview & Security', icon: Activity },
+          { id: 'overview', label: 'Network Overview & Dual Hubs', icon: Activity },
+          { id: 'pycs', label: 'PYCS Stats (github.com/obskyr/pycs.git)', icon: TrendingUp },
           { id: 'denora', label: 'Denora Stats (github.com/denora/denora.git)', icon: PieChart },
           { id: 'neostats', label: 'NeoStats 3.0 (github.com/Macs/NeoStats.git)', icon: BarChart3 },
           { id: 'znc', label: 'ZNC 1.9.1 Bouncer (znc.git)', icon: Layers },
-          { id: 'nodes', label: `26 Switch Leaf Nodes (${SWITCH_DEDICATED_NODES.length})`, icon: Server },
+          { id: 'nodes', label: `352 Leaf Nodes (${ALL_352_LEAF_NODES.length})`, icon: Server },
           { id: 'stats_cmd', label: 'Live /STATS Engine Terminal', icon: Terminal },
           { id: 'channels', label: `1:1 Media Broadcast Channels (${ALL_DRFUN1_MEDIA_CHANNELS.length})`, icon: Hash },
-          { id: 'anope', label: 'Anope 2.1 Services Health', icon: ShieldCheck },
+          { id: 'anope', label: 'Anope 2.1 Services & Dual Hubs', icon: ShieldCheck },
         ].map((tab) => {
           const Icon = tab.icon;
           return (
@@ -2216,6 +2231,290 @@ sudo make install
       )}
 
       {/* ========================================================
+          TAB: PYCS CHANNEL STATISTICS (obskyr/pycs.git)
+          ======================================================== */}
+      {activeStatsTab === 'pycs' && (
+        <div className="space-y-6">
+          {/* PYCS Banner & Meta Header */}
+          <div className="bg-gradient-to-r from-purple-950/60 via-slate-900 to-sky-950/60 border border-purple-500/40 rounded-2xl p-5 shadow-xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono text-xs font-bold border border-purple-500/40 flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5 text-purple-400" />
+                    PYCS: Python Channel Statistics for IRC
+                  </span>
+                  <span className="text-xs font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
+                    {PYCS_GIT_INFO.version}
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold text-white mt-1.5 flex items-center gap-2">
+                  <span>IRC Broadcast Channel Analytics &amp; Chatter Intelligence</span>
+                </h3>
+                <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                  High-speed Python AST log parser compiling statistics across dual hubs (<strong>irc.drfun1.com:6697</strong> &amp; <strong>irc.drfun1media.com:6697</strong>) and 352 leaf nodes (335 Switch SUPERNAP, 12 DataPacket, 5 RisingNet) with Anope 2.1 services.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href={PYCS_GIT_INFO.repository}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-mono font-semibold flex items-center gap-1.5 transition-colors border border-slate-700"
+                >
+                  <span>obskyr/pycs.git</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-purple-400" />
+                </a>
+                <button
+                  onClick={() => handleCopy(generatePycsConfigFile(selectedPycsChannel), 'pycs-conf')}
+                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-mono font-semibold flex items-center gap-1.5 transition-colors shadow-md cursor-pointer"
+                >
+                  {copiedKey === 'pycs-conf' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedKey === 'pycs-conf' ? 'Copied pycs.conf!' : 'Export pycs.conf'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Dual Hub & Federation Status Pill */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-purple-500/20 text-xs font-mono">
+              <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+                <span className="text-slate-500 text-[10px] uppercase block">Dual Hub Log Feeds</span>
+                <span className="text-purple-300 font-bold truncate block">irc.drfun1.com + irc.drfun1media.com</span>
+              </div>
+              <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+                <span className="text-slate-500 text-[10px] uppercase block">Federated Leaves</span>
+                <span className="text-emerald-400 font-bold">352 UnrealIRCd Leaves</span>
+              </div>
+              <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+                <span className="text-slate-500 text-[10px] uppercase block">Anope Services</span>
+                <span className="text-sky-300 font-bold">services.drfun1.com / media</span>
+              </div>
+              <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+                <span className="text-slate-500 text-[10px] uppercase block">Log Engine</span>
+                <span className="text-amber-300 font-bold">Python 3.10 Fast AST Regex</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Channel Selection Bar */}
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+            <div className="flex items-center gap-2">
+              <Hash className="w-4 h-4 text-purple-400" />
+              <span className="text-slate-300 font-bold">Select Broadcast Channel:</span>
+              <select
+                value={selectedPycsChannel}
+                onChange={(e) => setSelectedPycsChannel(e.target.value)}
+                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-white font-semibold focus:outline-none focus:border-purple-500 cursor-pointer"
+              >
+                {Object.keys(PYCS_CHANNEL_DATA).map((ch) => (
+                  <option key={ch} value={ch}>
+                    {ch} - {PYCS_CHANNEL_DATA[ch].title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="text-slate-400 text-[11px]">
+              Last Parsed: <span className="text-slate-200">{currentPycsStats.lastGenerated}</span>
+            </div>
+          </div>
+
+          {/* 4 Summary Stat Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono">
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+              <span className="text-slate-500 text-xs uppercase block">Total Logged Lines</span>
+              <span className="text-2xl font-black text-white mt-1 block">{currentPycsStats.totalLines.toLocaleString()}</span>
+              <span className="text-[11px] text-purple-400 mt-1 block">{currentPycsStats.averageWordsPerLine} words/line avg</span>
+            </div>
+
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+              <span className="text-slate-500 text-xs uppercase block">Total Words</span>
+              <span className="text-2xl font-black text-sky-400 mt-1 block">{currentPycsStats.totalWords.toLocaleString()}</span>
+              <span className="text-[11px] text-slate-400 mt-1 block">{(currentPycsStats.totalCharacters / 1000000).toFixed(2)}M characters</span>
+            </div>
+
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+              <span className="text-slate-500 text-xs uppercase block">Unique Chatters</span>
+              <span className="text-2xl font-black text-emerald-400 mt-1 block">{currentPycsStats.uniqueSpeakers}</span>
+              <span className="text-[11px] text-slate-400 mt-1 block">Across 352 leaf nodes</span>
+            </div>
+
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+              <span className="text-slate-500 text-xs uppercase block">Peak Broadcast Hour</span>
+              <span className="text-sm font-bold text-amber-300 mt-1 block">{currentPycsStats.mostActiveHour}</span>
+              <span className="text-[11px] text-slate-400 mt-1 block">{currentPycsStats.mostActiveDay}</span>
+            </div>
+          </div>
+
+          {/* Top Chatters Leaderboard */}
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="bg-slate-900/80 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-purple-400" />
+                <h4 className="font-bold text-white text-sm">Top Speakers Leaderboard ({selectedPycsChannel})</h4>
+              </div>
+              <span className="text-xs font-mono text-slate-400">Ranked by Lines &amp; Word Count</span>
+            </div>
+
+            <div className="p-4 space-y-3">
+              {currentPycsStats.topSpeakers.map((speaker) => (
+                <div key={speaker.nick} className="bg-slate-900/70 border border-slate-800/80 rounded-xl p-3 space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-6 h-6 rounded-lg bg-slate-800 text-purple-300 font-mono font-bold text-xs flex items-center justify-center border border-slate-700">
+                        #{speaker.rank}
+                      </span>
+                      <img src={speaker.avatar} alt={speaker.nick} className="w-8 h-8 rounded-full border border-purple-500/40 object-cover" />
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-bold text-sm text-white">
+                            <span className={speaker.prefix === '~' ? 'text-red-400' : speaker.prefix === '@' ? 'text-emerald-400' : 'text-sky-400'}>
+                              {speaker.prefix}
+                            </span>
+                            {speaker.nick}
+                          </span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                            {speaker.roleTitle}
+                          </span>
+                        </div>
+                        <span className="text-xs font-mono text-slate-400">Peak hour: {speaker.peakHour}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-right font-mono text-xs">
+                      <div>
+                        <span className="text-slate-400 text-[10px] block">LINES</span>
+                        <span className="font-bold text-white">{speaker.lines.toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 text-[10px] block">WORDS</span>
+                        <span className="font-bold text-purple-300">{speaker.words.toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 text-[10px] block">SHARE</span>
+                        <span className="font-bold text-emerald-400">{speaker.percentage}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Percentage Bar */}
+                  <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div className="bg-gradient-to-r from-purple-500 to-sky-400 h-1.5 rounded-full" style={{ width: `${speaker.percentage * 3}%` }} />
+                  </div>
+
+                  {/* Notable Quote */}
+                  <p className="text-xs text-slate-300 italic bg-slate-950/60 px-3 py-1.5 rounded-lg border border-slate-800/80">
+                    "{speaker.notableQuote}"
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Hourly Activity & Words Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Hourly Activity */}
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-sky-400" />
+                  <h4 className="font-bold text-white text-sm">24-Hour Activity Distribution</h4>
+                </div>
+                <span className="text-xs font-mono text-slate-400">UTC Timeline</span>
+              </div>
+
+              <div className="space-y-2 font-mono text-xs">
+                {currentPycsStats.hourlyActivity.map((hour) => (
+                  <div key={hour.hour} className="flex items-center gap-3">
+                    <span className="w-12 text-slate-400 text-[11px] shrink-0">{hour.hour}</span>
+                    <div className="flex-1 bg-slate-900 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-sky-500 h-2 rounded-full transition-all"
+                        style={{ width: `${Math.min(100, hour.percentage * 8)}%` }}
+                      />
+                    </div>
+                    <span className="w-16 text-right text-slate-300 font-bold shrink-0">{hour.lines.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Top Words & Emojis */}
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-purple-400" />
+                  <h4 className="font-bold text-white text-sm">Most Frequent Vocabulary &amp; Emojis</h4>
+                </div>
+                <span className="text-xs font-mono text-slate-400">PYCS Frequency Engine</span>
+              </div>
+
+              <div>
+                <span className="text-xs font-mono text-slate-400 block mb-2 uppercase text-[10px]">Top Words Frequency:</span>
+                <div className="flex flex-wrap gap-2">
+                  {currentPycsStats.topWords.map((item) => (
+                    <span
+                      key={item.word}
+                      className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono flex items-center gap-1.5 hover:border-purple-500 transition-colors"
+                    >
+                      <span className="text-white font-semibold">{item.word}</span>
+                      <span className="text-purple-400 font-bold text-[10px]">{item.count.toLocaleString()}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-800">
+                <span className="text-xs font-mono text-slate-400 block mb-2 uppercase text-[10px]">Top Emojis &amp; Shoutouts:</span>
+                <div className="flex flex-wrap gap-3">
+                  {currentPycsStats.topEmojis.map((emoji) => (
+                    <div key={emoji.name} className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-2">
+                      <span className="text-lg">{emoji.emoji}</span>
+                      <div>
+                        <span className="text-white font-mono font-bold text-xs block">{emoji.count.toLocaleString()}</span>
+                        <span className="text-slate-400 text-[10px] block">{emoji.name}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Notable Quotes Section */}
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <div className="flex items-center gap-2">
+                <Award className="w-4 h-4 text-amber-400" />
+                <h4 className="font-bold text-white text-sm">Notable Channel Quotes ({selectedPycsChannel})</h4>
+              </div>
+              <span className="text-xs font-mono text-slate-400">Captured by pycs quote-scorer</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {currentPycsStats.notableQuotes.map((quote) => (
+                <div key={quote.id} className="p-3 bg-slate-900/60 border border-slate-800 rounded-xl space-y-1.5 font-mono text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-purple-300">
+                      {quote.prefix}{quote.speaker}
+                    </span>
+                    <span className="text-[10px] text-slate-500">{quote.timestamp}</span>
+                  </div>
+                  <p className="text-slate-200 italic font-sans">
+                    "{quote.text}"
+                  </p>
+                  <div className="text-[10px] text-amber-400 flex items-center gap-1">
+                    <span>★ Score: {quote.score}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
           TAB 2: NETWORK OVERVIEW & SECURITY
           ======================================================== */}
       {activeStatsTab === 'overview' && (
@@ -2363,24 +2662,42 @@ sudo make install
       )}
 
       {/* ========================================================
-          TAB 3: 25 SWITCH LEAF NODES TABLE
+          TAB 3: 352 LEAF NODES TABLE (335 Switch, 12 DataPacket, 5 RisingNet)
           ======================================================== */}
       {activeStatsTab === 'nodes' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="text-xs text-slate-400 font-mono">
-              Showing <strong>{filteredNodes.length}</strong> of {SWITCH_DEDICATED_NODES.length} Switch SUPERNAP &amp; RisingNet Leaf Nodes linked to <strong className="text-purple-300">irc.drfun1.com</strong>
+              Showing <strong>{filteredNodes.length}</strong> of {ALL_352_LEAF_NODES.length} Leaf Nodes linked to Dual Hubs (<strong className="text-purple-300">irc.drfun1.com</strong> &amp; <strong className="text-purple-300">irc.drfun1media.com</strong>) with Anope 2.1
             </div>
 
-            <div className="relative w-full sm:w-72">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                placeholder="Search nodes, cities, SIDs..."
-                value={searchNode}
-                onChange={(e) => setSearchNode(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 font-mono"
-              />
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-1 rounded-xl text-xs font-mono">
+                {(['all', 'switch', 'datapacket', 'risingnet'] as const).map((prov) => (
+                  <button
+                    key={prov}
+                    onClick={() => setNodeProviderFilter(prov)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold capitalize transition-colors cursor-pointer ${
+                      nodeProviderFilter === prov
+                        ? 'bg-purple-600 text-white'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    {prov === 'all' ? `All (352)` : prov === 'switch' ? `Switch.com Unreal (335)` : prov === 'datapacket' ? `DataPacket No-Ads (12)` : `RisingNet (5)`}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Search nodes, cities, SIDs..."
+                  value={searchNode}
+                  onChange={(e) => setSearchNode(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 font-mono"
+                />
+              </div>
             </div>
           </div>
 
@@ -2406,6 +2723,16 @@ sudo make install
                           {node.sid}
                         </span>
                         <span className="font-semibold text-white">{node.name}</span>
+                        {node.provider === 'datapacket' && (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 shrink-0">
+                            NO ADS
+                          </span>
+                        )}
+                        {node.provider === 'switch' && (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0">
+                            UNREALIRCD
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="p-3.5 text-sky-400">

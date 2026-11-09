@@ -85,8 +85,13 @@ export const IrcStartupLoginModal: React.FC<IrcStartupLoginModalProps> = ({
     setIsConnecting(true);
 
     const isMaster = selectedNodeId === 'master_hub';
+    const isMediaHub = selectedNodeId === 'media_hub';
     const chosenNode = SWITCH_DEDICATED_NODES.find(n => n.id === selectedNodeId);
-    const serverHost = isMaster ? 'irc.drfun1.com' : (chosenNode?.host || 'dev.drfun1media.com');
+    const serverHost = isMaster 
+      ? 'irc.drfun1.com' 
+      : isMediaHub 
+      ? 'irc.drfun1media.com' 
+      : (chosenNode?.host || 'irc.drfun1.com');
     const serverPort = 6697;
 
     const credentials: IrcLoginCredentials = {
@@ -194,10 +199,15 @@ export const IrcStartupLoginModal: React.FC<IrcStartupLoginModalProps> = ({
               onChange={(e) => setSelectedNodeId(e.target.value)}
               className="w-full bg-slate-950 border border-slate-700 focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none transition-colors cursor-pointer"
             >
-              <option value="master_hub">
-                Master Hub 001 &bull; irc.drfun1.com:6697 (SSL) &bull; Las Vegas SUPERNAP Core
-              </option>
-              <optgroup label="26 Dedicated Switch SUPERNAP Leaf Nodes (RisingNet Fiber)">
+              <optgroup label="Dual Core Hubs (Switch SUPERNAP NV 100G Optical Core)">
+                <option value="master_hub">
+                  Dual Hub 001 &bull; irc.drfun1.com:6697 (TLS 1.3 SSL) &bull; Las Vegas SUPERNAP Core
+                </option>
+                <option value="media_hub">
+                  Dual Hub 002 &bull; irc.drfun1media.com:6697 (TLS 1.3 SSL) &bull; Broadcast Teleport Hub
+                </option>
+              </optgroup>
+              <optgroup label="352 Global Leaf Nodes (Switch 335 · DataPacket 12 · RisingNet 5)">
                 {SWITCH_DEDICATED_NODES.map((node) => (
                   <option key={node.id} value={node.id}>
                     Node {node.sid} &bull; {node.host} &bull; {node.location} ({node.latencyMs}ms)

@@ -107,28 +107,28 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Brand Wordmark & Logo: DrFun1 Media */}
           <div className="flex items-center gap-3 shrink-0">
             <button 
-              onClick={() => setActiveTab('broadcast_studio')}
+              onClick={() => setActiveTab('irc')}
               className="flex items-center gap-2.5 group cursor-pointer text-left"
-              title="DrFun1 Media - Broadcasting, Online Radio & TV Newscasting Workstation"
+              title="DrFun1 Media - UnrealIRCd WebIRC Client & Satcom Network (Index Page)"
             >
-              <div className="relative w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 via-pink-600 to-sky-500 p-0.5 shadow-md shadow-purple-900/40 group-hover:scale-105 transition-transform">
+              <div className="relative w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 via-purple-600 to-sky-500 p-0.5 shadow-md shadow-purple-900/40 group-hover:scale-105 transition-transform">
                 <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-transparent" />
-                  <Tv className="w-4 h-4 text-purple-400 group-hover:text-pink-300 transition-colors relative z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-purple-500/10 to-transparent" />
+                  <Terminal className="w-4 h-4 text-emerald-400 group-hover:text-purple-300 transition-colors relative z-10" />
                   <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-slate-950 animate-pulse z-10" />
                 </div>
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
                   <span className="text-base sm:text-lg font-black tracking-tight text-white group-hover:text-purple-300 transition-colors whitespace-nowrap">
-                    DrFun1 <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-sky-400 bg-clip-text text-transparent">Media</span>
+                    DrFun1 <span className="bg-gradient-to-r from-emerald-400 via-purple-400 to-sky-400 bg-clip-text text-transparent">WebIRC</span>
                   </span>
-                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase tracking-wider">
-                    LIVE
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">
+                    INDEX
                   </span>
                 </div>
                 <span className="text-[10px] font-mono text-slate-400 -mt-0.5 hidden sm:inline">
-                  Broadcasting &amp; Satcom Network
+                  352-Leaf Mesh &bull; Dual Core Hubs
                 </span>
               </div>
             </button>
@@ -405,45 +405,24 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="bg-slate-950 overflow-x-auto custom-nav-scrollbar border-b border-slate-800/50">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-11 flex items-center justify-between gap-1 sm:gap-2 text-xs font-medium text-slate-400 min-w-max">
           
-          {/* 1. Master Broadcast & In/Out Studio */}
+          {/* 1. Primary Index: Unified UnrealIRCd WebIRC Client & 352-Leaf Mesh */}
           <button
-            onClick={() => setActiveTab('broadcast_studio')}
+            onClick={() => setActiveTab('irc')}
             className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'broadcast_studio' || activeTab === 'media' || activeTab === 'stream' || activeTab === 'duplicator'
-                ? 'bg-rose-500/20 text-rose-300 border-rose-500/60 font-bold shadow-md shadow-rose-950/30 ring-1 ring-rose-500/40'
-                : 'text-slate-400 border-transparent hover:text-rose-300 hover:bg-slate-900/60'
+              activeTab === 'irc' || activeTab === 'ircstats'
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 font-bold shadow-md shadow-emerald-950/30 ring-1 ring-emerald-500/40'
+                : 'text-slate-400 border-transparent hover:text-emerald-300 hover:bg-slate-900/60'
             }`}
-            title="Master Broadcast Studio: Multi-Destination Push, RTMP Ingestion, Social-Live FFmpeg, Video Sources & Cablecast PEG"
+            title="Index Main Page: UnrealIRCd 6.1.4 WebIRC Client (irc.drfun1.com & irc.drfun1media.com:6697 SSL), 352 Global Leaf Nodes & Anope Services"
           >
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
-            </span>
-            <Radio className="w-3.5 h-3.5 text-rose-400" />
-            <span>Broadcast In/Out Studio</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 font-bold">
-              Multistream &amp; RTMP
+            <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+            <span>WebIRC &amp; Leaf Mesh (Index)</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold">
+              352 Nodes
             </span>
           </button>
 
-          {/* 2. Live TV & Newscasting Desk */}
-          <button
-            onClick={() => setActiveTab('tv_newscast')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'tv_newscast'
-                ? 'bg-purple-500/20 text-purple-300 border-purple-500/60 font-bold shadow-md shadow-purple-950/30 ring-1 ring-purple-500/40'
-                : 'text-slate-400 border-transparent hover:text-purple-300 hover:bg-slate-900/60'
-            }`}
-            title="Online TV Playout, Live Anchor Desk, Real-Time RSS Newsroom Wire, Teleprompter Rundown & SCTE-35 EAS"
-          >
-            <Tv className="w-3.5 h-3.5 text-purple-400" />
-            <span>Live TV &amp; Newscasting</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">
-              Anchor &amp; RSS Wire
-            </span>
-          </button>
-
-          {/* 3. Online Radio & MPD DJ Station */}
+          {/* 2. Online Radio & MPD DJ Station */}
           <button
             onClick={() => setActiveTab('radio_dj')}
             className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
@@ -460,24 +439,7 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
-          {/* 4. Unified IRC Client & Leaf Mesh */}
-          <button
-            onClick={() => setActiveTab('irc')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'irc' || activeTab === 'ircstats'
-                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 font-bold shadow-md shadow-emerald-950/30 ring-1 ring-emerald-500/40'
-                : 'text-slate-400 border-transparent hover:text-emerald-300 hover:bg-slate-900/60'
-            }`}
-            title="UnrealIRCd 6.1.4 Client (irc.drfun1.com:6697 SSL), 347 Global Leaf Nodes Search Engine & Anope Services"
-          >
-            <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-            <span>WebIRC &amp; Leaf Mesh</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold">
-              347 Nodes
-            </span>
-          </button>
-
-          {/* 5. Master Control & Transmission Infrastructure */}
+          {/* 3. Master Control & Transmission Infrastructure */}
           <button
             onClick={() => setActiveTab('master_control')}
             className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
@@ -582,20 +544,12 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="grid grid-cols-1 gap-2">
               {[
                 { 
-                  id: 'broadcast_studio', 
-                  label: 'Broadcast In/Out Studio', 
-                  desc: 'Multistream Push, RTMP Ingest, Social-Live FFmpeg & Cablecast',
-                  badge: 'Multistream & RTMP', 
-                  color: 'rose', 
-                  icon: Radio 
-                },
-                { 
-                  id: 'tv_newscast', 
-                  label: 'Live TV & Newscasting', 
-                  desc: 'Anchor Desk, RSS Newsroom Wire, Teleprompter & SCTE-35 EAS',
-                  badge: 'Anchor & RSS Wire', 
-                  color: 'purple', 
-                  icon: Tv 
+                  id: 'irc', 
+                  label: 'WebIRC & Leaf Mesh (Index)', 
+                  desc: 'UnrealIRCd 6.1.4 Client, 352 Leaf Nodes Search & Anope 2.1 Services',
+                  badge: '352 Nodes', 
+                  color: 'emerald', 
+                  icon: Terminal 
                 },
                 { 
                   id: 'radio_dj', 
@@ -604,14 +558,6 @@ export const Header: React.FC<HeaderProps> = ({
                   badge: 'SHOUTcast FM', 
                   color: 'pink', 
                   icon: Headphones 
-                },
-                { 
-                  id: 'irc', 
-                  label: 'WebIRC & Leaf Mesh', 
-                  desc: 'UnrealIRCd 6.1.4 Client, 347 Leaf Nodes Search & Anope',
-                  badge: '347 Nodes', 
-                  color: 'emerald', 
-                  icon: Terminal 
                 },
                 { 
                   id: 'master_control', 

@@ -33,6 +33,7 @@ export interface SwitchDedicatedNode {
   region?: string;
   country?: string;
   uplinkSpeed?: string;
+  adPolicy?: string;
 }
 
 export interface UnrealIrcdHub {
