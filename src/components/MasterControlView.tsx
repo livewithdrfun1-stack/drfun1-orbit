@@ -38,12 +38,17 @@ import {
   ChevronRight,
   Database,
   Lock,
-  Smartphone
+  Smartphone,
+  Rss,
+  Tv
 } from 'lucide-react';
 import { SatelliteCompany } from '../types/satellite';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { SWITCH_DEDICATED_NODES, UNREAL_HUB_DETAILS } from '../data/ircData';
 import { ALL_NETWORK_LEAF_NODES } from '../data/unrealSearchData';
+import { SatelliteRssNewsSection } from './SatelliteRssNewsSection';
+import { FuboTvCloneView } from './FuboTvCloneView';
+import { NocDashboardSection } from './NocDashboardSection';
 
 interface MasterControlViewProps {
   companies: SatelliteCompany[];
@@ -67,7 +72,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
   activeRank = 'op'
 }) => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [activeSubTab, setActiveSubTab] = useState<'infrastructure' | 'downlinks' | 'leaf_nodes' | 'compliance'>('infrastructure');
+  const [activeSubTab, setActiveSubTab] = useState<'infrastructure' | 'downlinks' | 'leaf_nodes' | 'noc' | 'compliance' | 'rss_news' | 'fubotv'>('noc');
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -95,12 +100,12 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                   SWITCH 100G FIBER RING
                 </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  347 Leaf Nodes
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
+                  352 Leaf Nodes
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Switch SUPERNAP NV Teleport · DataPacket 100G CDN · UnrealIRCd 6.1.4 Leaf Mesh · Satellite Carrier Downlinks
+                Switch SUPERNAP NV Teleport · DataPacket 100G CDN · UnrealIRCd 6.1.4 Leaf Mesh · Fubo.tv Live Sports · Satellite Downlinks · RSS Newsroom
               </p>
             </div>
           </div>
@@ -140,6 +145,21 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
         {/* Master Control Sub-Tabs */}
         <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-1 overflow-x-auto">
           <button
+            onClick={() => setActiveSubTab('noc')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'noc' || activeSubTab === 'leaf_nodes'
+                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-purple-300 hover:bg-slate-800/50'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5 text-purple-400" />
+            <span>Network Operations Center (NOC)</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">
+              352 Nodes Grid
+            </span>
+          </button>
+
+          <button
             onClick={() => setActiveSubTab('infrastructure')}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
               activeSubTab === 'infrastructure'
@@ -173,6 +193,36 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
           >
             <Terminal className="w-3.5 h-3.5 text-purple-400" />
             <span>347 UnrealIRCd Leaf Nodes</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('rss_news')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'rss_news'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-amber-300 hover:bg-slate-800/50'
+            }`}
+          >
+            <Rss className="w-3.5 h-3.5 text-amber-400" />
+            <span>Satellite, Fiber &amp; Wireless RSS Newsroom</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold">
+              Live Wire
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('fubotv')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'fubotv'
+                ? 'bg-orange-600/25 text-orange-300 border border-orange-500/50 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-orange-400 hover:bg-slate-800/50'
+            }`}
+          >
+            <Tv className="w-3.5 h-3.5 text-orange-500" />
+            <span>Fubo.tv Sports Playout</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-orange-500/20 text-orange-300 font-bold">
+              4K Live
+            </span>
           </button>
 
           <button
@@ -341,45 +391,13 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
         </div>
       )}
 
-      {/* Tab 3: Leaf Nodes */}
-      {activeSubTab === 'leaf_nodes' && (
-        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-4 shadow-xl">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-purple-400" />
-                UnrealIRCd 6.1.4 Global Leaf Mesh (347 Active Nodes)
-              </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                335 unrealircd.org verified servers and 12 DataPacket 100G trans-Atlantic edge leaves all leafed to irc.drfun1.com (SID 001).
-              </p>
-            </div>
-            {onOpenUnrealSearch && (
-              <button
-                onClick={onOpenUnrealSearch}
-                className="px-3 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-bold transition cursor-pointer"
-              >
-                Open Node Search Engine
-              </button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {ALL_NETWORK_LEAF_NODES.slice(0, 12).map((node) => (
-              <div key={node.id} className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-1.5 font-mono text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-white truncate">{node.name}</span>
-                  <span className="text-[10px] text-emerald-400 font-bold">ONLINE</span>
-                </div>
-                <div className="text-[11px] text-purple-300 truncate">{node.host}:{node.port}</div>
-                <div className="text-[10px] text-slate-500 flex justify-between">
-                  <span>SID: {node.sid}</span>
-                  <span>Ping: {node.latencyMs}ms</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Tab 3: Network Operations Center (NOC) Dashboard - 352-Leaf Mesh Visual Grid */}
+      {(activeSubTab === 'noc' || activeSubTab === 'leaf_nodes') && (
+        <NocDashboardSection
+          onOpenLicense={onOpenLicense}
+          onOpenSwitchMesh={onOpenSwitchMesh}
+          onOpenUnrealSearch={onOpenUnrealSearch}
+        />
       )}
 
       {/* Tab 4: Compliance */}
@@ -428,6 +446,19 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Tab 5: Satellite, Fiber, Wireless & Internet RSS Newsroom */}
+      {activeSubTab === 'rss_news' && (
+        <SatelliteRssNewsSection mode="full" />
+      )}
+
+      {/* Tab 6: Fubo.tv Live Sports, 4K Multi-View & EPG */}
+      {activeSubTab === 'fubotv' && (
+        <FuboTvCloneView
+          onOpenLicense={onOpenLicense}
+          onOpenSwitchMesh={onOpenSwitchMesh}
+        />
       )}
     </div>
   );

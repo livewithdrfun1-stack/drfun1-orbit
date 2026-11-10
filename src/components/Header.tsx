@@ -31,7 +31,7 @@ import {
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { UserMembershipState } from '../types/membership';
 
-export type AppTab = 'broadcast_studio' | 'tv_newscast' | 'radio_dj' | 'irc' | 'master_control' | 'media' | 'stream' | 'mpd' | 'duplicator' | 'ircstats' | 'znc' | 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'social' | 'carriers' | 'community' | 'integrations' | 'domains';
+export type AppTab = 'broadcast_studio' | 'tv_newscast' | 'radio_dj' | 'irc' | 'master_control' | 'media' | 'stream' | 'mpd' | 'duplicator' | 'ircstats' | 'znc' | 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'social' | 'carriers' | 'community' | 'integrations' | 'domains' | 'fubotv';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -456,6 +456,40 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
+          {/* 4. Wholesale Satcom, Fiber, Wireless & Store Catalog (drfun1 ECOM inc) */}
+          <button
+            onClick={() => setActiveTab('store')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'store'
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/60 font-bold shadow-md shadow-amber-950/30 ring-1 ring-amber-500/40'
+                : 'text-slate-400 border-transparent hover:text-amber-300 hover:bg-slate-900/60'
+            }`}
+            title="Wholesale Satellite, Fiber, Wireless, Hardware & Store Company Directory (drfun1 ECOM inc)"
+          >
+            <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
+            <span>Hardware &amp; Carrier Store</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold">
+              drfun1 ECOM
+            </span>
+          </button>
+
+          {/* 5. Fubo.tv Live Sports & EPG Streaming Hub */}
+          <button
+            onClick={() => setActiveTab('fubotv')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'fubotv'
+                ? 'bg-orange-600/25 text-orange-300 border-orange-500/60 font-bold shadow-md shadow-orange-950/30 ring-1 ring-orange-500/40'
+                : 'text-slate-400 border-transparent hover:text-orange-400 hover:bg-slate-900/60'
+            }`}
+            title="Fubo.tv Sports-First Live TV Streaming, 4K Broadcast Player, EPG Guide, 4-Screen MultiView & Cloud DVR"
+          >
+            <Tv className="w-3.5 h-3.5 text-orange-500" />
+            <span>Fubo.tv Sports</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-orange-500/20 text-orange-300 font-bold">
+              4K Live
+            </span>
+          </button>
+
         </nav>
       </div>
 
@@ -566,6 +600,22 @@ export const Header: React.FC<HeaderProps> = ({
                   badge: 'Switch 100G', 
                   color: 'cyan', 
                   icon: Server 
+                },
+                { 
+                  id: 'store', 
+                  label: 'Hardware & Carrier Store', 
+                  desc: 'Wholesale Satcom, Fiber, Wireless & Store Directory',
+                  badge: 'drfun1 ECOM', 
+                  color: 'amber', 
+                  icon: ShoppingBag 
+                },
+                { 
+                  id: 'fubotv', 
+                  label: 'Fubo.tv Sports Stream & EPG', 
+                  desc: '4K Sports, Live Matches, 4-Screen Multi-View & Cloud DVR',
+                  badge: '4K Live', 
+                  color: 'orange', 
+                  icon: Tv 
                 },
               ].map((item) => {
                 const Icon = item.icon;

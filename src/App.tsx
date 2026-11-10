@@ -55,6 +55,7 @@ import { UnifiedAllInOneIndexHub } from './components/UnifiedAllInOneIndexHub';
 import { DevPlatformWittLawModal } from './components/DevPlatformWittLawModal';
 import { OnlineRadioDjStudio } from './components/OnlineRadioDjStudio';
 import { MasterControlView } from './components/MasterControlView';
+import { FuboTvCloneView } from './components/FuboTvCloneView';
 import { IrcLoginCredentials, IrcLoginSession } from './types/irc';
 import { UserMembershipState } from './types/membership';
 import { DEFAULT_MEMBERSHIP_STATE } from './data/membershipData';
@@ -660,6 +661,33 @@ export default function App() {
             }}
           />
         </main>
+      ) : activeTab === 'store' ? (
+        /* Hub 5: Wholesale Satellite, Fiber, Wireless & Store Catalog */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <StoreView
+            onOpenProductConfig={handleOpenProductConfig}
+            onQuickAddToCart={handleQuickAddToCart}
+            cartItems={cartItems}
+            onOpenCart={() => setIsCartOpen(true)}
+            onOpenLicenseModal={() => setIsLicenseModalOpen(true)}
+            onOpenSwitchMeshModal={() => setIsSwitchMeshModalOpen(true)}
+            onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
+            onOpenDomainSearch={() => {
+              setActiveTab('store');
+              setStoreSubTab('domains');
+            }}
+            initialSubTab={storeSubTab}
+          />
+        </main>
+      ) : activeTab === 'fubotv' ? (
+        /* Hub 6: Fubo.tv Live Sports, 4K Player, Multi-View & EPG Guide */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <FuboTvCloneView
+            onOpenLicense={() => setIsLicenseModalOpen(true)}
+            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+            onNavigateToIrc={() => handleNavigateTab('irc')}
+          />
+        </main>
       ) : activeTab === 'community' || activeTab === 'social' ? (
         /* Community Lounge */
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -678,7 +706,7 @@ export default function App() {
           />
         </main>
       ) : (
-        /* Hub 5: Master Control & Carrier Downlinks (with Switch 100G, DataPacket, TVU CDN & Satellite Downlinks) */
+        /* Hub 6: Master Control & Carrier Downlinks (with Switch 100G, DataPacket, TVU CDN & Satellite Downlinks) */
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
           <MasterControlView
             companies={companies}
