@@ -6,20 +6,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   SatelliteCompany, 
-  CompanyFilterState, 
+  CompanyFilterState,
   UserNote 
 } from './types/satellite';
 import { INITIAL_SATELLITE_COMPANIES } from './data/satelliteCompanies';
-import { Header } from './components/Header';
-import { StatsBanner } from './components/StatsBanner';
-import { FilterToolbar } from './components/FilterToolbar';
-import { CompanyCard } from './components/CompanyCard';
-import { CompanyTableView } from './components/CompanyTableView';
+import { DEFAULT_MEMBERSHIP_STATE } from './data/membershipData';
+import { Header, AppTab } from './components/Header';
 import { CompanyDetailDrawer } from './components/CompanyDetailDrawer';
-import { OrbitVisualizer } from './components/OrbitVisualizer';
 import { RfqOutreachModal } from './components/RfqOutreachModal';
 import { CompareModal } from './components/CompareModal';
-import { LatencyTrendChart } from './components/LatencyTrendChart';
 import { AddCompanyModal } from './components/AddCompanyModal';
 import { LicenseModal } from './components/LicenseModal';
 import { SwitchIrcMeshModal } from './components/SwitchIrcMeshModal';
@@ -27,55 +22,32 @@ import { StoreProduct, CartItem } from './types/store';
 import { StoreView } from './components/StoreView';
 import { ProductConfigModal } from './components/ProductConfigModal';
 import { CartDrawer } from './components/CartDrawer';
-import { RestreamStudioView } from './components/RestreamStudioView';
-import { FacebookSocialView } from './components/FacebookSocialView';
 import { IrcClientView } from './components/IrcClientView';
-import { IrcdStatsView } from './components/IrcdStatsView';
-import { BroadcastMediaView } from './components/BroadcastMediaView';
-import { PhoneCarriersView } from './components/PhoneCarriersView';
-import { MpdBotControlView } from './components/MpdBotControlView';
-import { IrcDuplicatorView } from './components/IrcDuplicatorView';
 import { HostingResellerProgramModal } from './components/HostingResellerProgramModal';
 import { IrcdAdminPanelModal } from './components/IrcdAdminPanelModal';
 import { SwitchWittSatelliteFiberModal } from './components/SwitchWittSatelliteFiberModal';
-import { SatelliteRssNewsSection } from './components/SatelliteRssNewsSection';
-import { CommunityHubView } from './components/CommunityHubView';
 import { MembershipPlansModal } from './components/MembershipPlansModal';
-import { ZncWebControlPanelView } from './components/ZncWebControlPanelView';
 import { ZncWebAdminModal } from './components/ZncWebAdminModal';
-import { IntegrationHubView } from './components/IntegrationHubView';
 import { UnrealIrcdSearchEngineModal } from './components/UnrealIrcdSearchEngineModal';
 import { SlaCalculatorModal } from './components/SlaCalculatorModal';
-import { DomainSearchView } from './components/DomainSearchView';
 import { DomainSearchModal } from './components/DomainSearchModal';
 import { OrbitTrackingMapModal } from './components/OrbitTrackingMapModal';
 import { IrcStartupLoginModal } from './components/IrcStartupLoginModal';
 import { IndexIrcFloatingClient } from './components/IndexIrcFloatingClient';
-import { UnifiedAllInOneIndexHub } from './components/UnifiedAllInOneIndexHub';
 import { DevPlatformWittLawModal } from './components/DevPlatformWittLawModal';
 import { OnlineRadioDjStudio } from './components/OnlineRadioDjStudio';
 import { MasterControlView } from './components/MasterControlView';
 import { FuboTvCloneView } from './components/FuboTvCloneView';
 import { IrcLoginCredentials, IrcLoginSession } from './types/irc';
 import { UserMembershipState } from './types/membership';
-import { DEFAULT_MEMBERSHIP_STATE } from './data/membershipData';
 import { AnopeRankLevel } from './types/ircdAdmin';
 import { STORE_PRODUCTS } from './data/storeProducts';
-import { AppTab } from './components/Header';
 import { 
   Satellite, 
-  Radio, 
-  Search, 
-  RotateCcw,
-  Mail,
-  ShieldCheck,
-  Check,
+  ShieldCheck, 
+  Check, 
   ExternalLink,
-  Server,
-  Terminal,
-  Calculator,
-  Smartphone,
-  User
+  Scale
 } from 'lucide-react';
 
 const STORAGE_KEY_CUSTOM_COMPANIES = 'satcom_directory_custom_companies';
@@ -88,10 +60,7 @@ const STORAGE_KEY_IRC_SESSION = 'drfun1_irc_session';
 export default function App() {
   // Tab state - WebIRC is primary index main page
   const [activeTab, setActiveTab] = useState<AppTab>('irc');
-  const [directorySubView, setDirectorySubView] = useState<'operators' | 'carriers'>('operators');
   const [storeSubTab, setStoreSubTab] = useState<'catalog' | 'domains'>('catalog');
-  const [orbitsSubTab, setOrbitsSubTab] = useState<'tracker' | 'altitude_ladder' | 'donut_distribution' | 'telemetry_apis'>('tracker');
-  const [communitySubTab, setCommunitySubTab] = useState<'discussions' | 'memberships' | 'showcase' | 'events' | 'roster' | 'spacebook'>('discussions');
 
   // IRC Client Session & Startup Login State
   const [ircSession, setIrcSession] = useState<IrcLoginSession>(() => {
@@ -149,13 +118,17 @@ export default function App() {
     setIsIrcStartupLoginOpen(false);
   };
 
-  const handleNavigateTab = (tab: AppTab) => {
-    if (tab === 'media' || tab === 'stream' || tab === 'broadcast_studio' || tab === 'tv_newscast' || tab === 'mpd') {
+  const handleNavigateTab = (tab: string) => {
+    if (tab === 'radio_dj' || tab === 'mpd' || tab === 'studio' || tab === 'media') {
       setActiveTab('radio_dj');
-    } else if (tab === 'directory' || tab === 'orbits' || tab === 'compare' || tab === 'carriers' || tab === 'integrations') {
+    } else if (tab === 'master_control' || tab === 'directory' || tab === 'orbits' || tab === 'compare' || tab === 'carriers' || tab === 'ircstats') {
       setActiveTab('master_control');
+    } else if (tab === 'fubotv') {
+      setActiveTab('fubotv');
+    } else if (tab === 'store' || tab === 'domains') {
+      setActiveTab('store');
     } else {
-      setActiveTab(tab);
+      setActiveTab('irc');
     }
   };
 
@@ -598,14 +571,6 @@ export default function App() {
         isIrcConnected={ircSession.isConnected}
       />
 
-      {/* Real-time Telemetry Stats Banner */}
-      {(activeTab === 'directory' || activeTab === 'orbits' || activeTab === 'compare') && (
-        <StatsBanner 
-          companies={companies} 
-          onOpenOrbitMap={() => setIsOrbitMapModalOpen(true)}
-        />
-      )}
-
       {/* Export Toast Notification */}
       {exportNotice && (
         <div className="fixed bottom-6 right-6 z-50 bg-emerald-950/90 border border-emerald-500/50 text-emerald-200 px-4 py-2.5 rounded-lg shadow-xl text-xs flex items-center gap-2">
@@ -615,31 +580,11 @@ export default function App() {
       )}
 
       {/* ========================================================
-          CORE UNIFIED HUBS: ONLINE RADIO & MPD DJ, WEBIRC LEAF MESH, MASTER CONTROL
+          CORE UNIFIED PLATFORMS: 5 PRIMARY PAGES
           ======================================================== */}
 
-      {/* Hub 1: Online Radio & MPD DJ Station */}
-      {activeTab === 'radio_dj' || activeTab === 'mpd' ? (
-        /* Hub 3: Online Radio & MPD DJ Station */
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-          <OnlineRadioDjStudio
-            onOpenLicense={() => setIsLicenseModalOpen(true)}
-            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-            onNavigateToIrc={() => setActiveTab('irc')}
-            activeRank={activeOperRank}
-            onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
-            ircSession={ircSession}
-            onUpdateSession={(newSession) => {
-              const updated: IrcLoginSession = { ...ircSession, ...newSession };
-              setIrcSession(updated);
-              try {
-                localStorage.setItem(STORAGE_KEY_IRC_SESSION, JSON.stringify(updated));
-              } catch (_) {}
-            }}
-          />
-        </main>
-      ) : activeTab === 'irc' || activeTab === 'ircstats' ? (
-        /* Hub 4: Unified IRC Client & Leaf Mesh */
+      {/* 1. Primary Index: UnrealIRCd WebIRC Client & 352-Leaf Mesh */}
+      {activeTab === 'irc' ? (
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
           <IrcClientView
             onOpenLicense={() => setIsLicenseModalOpen(true)}
@@ -661,52 +606,8 @@ export default function App() {
             }}
           />
         </main>
-      ) : activeTab === 'store' ? (
-        /* Hub 5: Wholesale Satellite, Fiber, Wireless & Store Catalog */
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-          <StoreView
-            onOpenProductConfig={handleOpenProductConfig}
-            onQuickAddToCart={handleQuickAddToCart}
-            cartItems={cartItems}
-            onOpenCart={() => setIsCartOpen(true)}
-            onOpenLicenseModal={() => setIsLicenseModalOpen(true)}
-            onOpenSwitchMeshModal={() => setIsSwitchMeshModalOpen(true)}
-            onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
-            onOpenDomainSearch={() => {
-              setActiveTab('store');
-              setStoreSubTab('domains');
-            }}
-            initialSubTab={storeSubTab}
-          />
-        </main>
-      ) : activeTab === 'fubotv' ? (
-        /* Hub 6: Fubo.tv Live Sports, 4K Player, Multi-View & EPG Guide */
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-          <FuboTvCloneView
-            onOpenLicense={() => setIsLicenseModalOpen(true)}
-            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-            onNavigateToIrc={() => handleNavigateTab('irc')}
-          />
-        </main>
-      ) : activeTab === 'community' || activeTab === 'social' ? (
-        /* Community Lounge */
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <CommunityHubView
-            userMembership={userMembership}
-            onUpdateMembership={handleUpdateMembership}
-            onOpenMembershipModal={() => setIsMembershipModalOpen(true)}
-            onOpenHostingModal={() => setIsHostingResellerModalOpen(true)}
-            onOpenLegalCenter={() => setIsLicenseModalOpen(true)}
-            onOpenZncWebAdmin={() => setIsZncWebAdminOpen(true)}
-            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-            onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
-            onJoinIrcChannel={() => setActiveTab('irc')}
-            onNavigateToTab={(tab) => handleNavigateTab(tab)}
-            initialSubTab={activeTab === 'social' ? 'spacebook' : communitySubTab}
-          />
-        </main>
-      ) : (
-        /* Hub 6: Master Control & Carrier Downlinks (with Switch 100G, DataPacket, TVU CDN & Satellite Downlinks) */
+      ) : activeTab === 'master_control' ? (
+        /* 2. Master Control, NOC 352-Leaf Grid, Carrier Downlinks & Newsroom */
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
           <MasterControlView
             companies={companies}
@@ -717,6 +618,51 @@ export default function App() {
             onOpenZncWebAdmin={() => setIsZncWebAdminOpen(true)}
             onOpenUnrealSearch={() => setIsUnrealSearchOpen(true)}
             activeRank={activeOperRank}
+          />
+        </main>
+      ) : activeTab === 'fubotv' ? (
+        /* 3. Fubo.tv Live Sports, 4K Player, Multi-View & EPG Guide */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <FuboTvCloneView
+            onOpenLicense={() => setIsLicenseModalOpen(true)}
+            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+            onNavigateToIrc={() => handleNavigateTab('irc')}
+          />
+        </main>
+      ) : activeTab === 'store' ? (
+        /* 4. Wholesale Satellite, Fiber, Wireless & Store Catalog */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <StoreView
+            onOpenProductConfig={handleOpenProductConfig}
+            onQuickAddToCart={handleQuickAddToCart}
+            cartItems={cartItems}
+            onOpenCart={() => setIsCartOpen(true)}
+            onOpenLicenseModal={() => setIsLicenseModalOpen(true)}
+            onOpenSwitchMeshModal={() => setIsSwitchMeshModalOpen(true)}
+            onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
+            onOpenDomainSearch={() => {
+              setIsDomainSearchModalOpen(true);
+            }}
+            initialSubTab={storeSubTab}
+          />
+        </main>
+      ) : (
+        /* 5. Online Radio & MPD DJ Station */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <OnlineRadioDjStudio
+            onOpenLicense={() => setIsLicenseModalOpen(true)}
+            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+            onNavigateToIrc={() => setActiveTab('irc')}
+            activeRank={activeOperRank}
+            onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
+            ircSession={ircSession}
+            onUpdateSession={(newSession) => {
+              const updated: IrcLoginSession = { ...ircSession, ...newSession };
+              setIrcSession(updated);
+              try {
+                localStorage.setItem(STORAGE_KEY_IRC_SESSION, JSON.stringify(updated));
+              } catch (_) {}
+            }}
           />
         </main>
       )}
@@ -797,7 +743,7 @@ export default function App() {
       />
 
       {/* Floating Standalone RFQ Modal */}
-      {isRfqOpen && activeTab !== 'rfq' && (
+      {isRfqOpen && (
         <RfqOutreachModal
           isOpen={isRfqOpen}
           onClose={() => setIsRfqOpen(false)}
@@ -889,7 +835,7 @@ export default function App() {
         onClose={() => setIsIrcdAdminOpen(false)}
         activeRank={activeOperRank}
         onRankChange={setActiveOperRank}
-        onNavigateToMpd={() => setActiveTab('mpd')}
+        onNavigateToMpd={() => setActiveTab('radio_dj')}
         onNavigateToIrc={() => setActiveTab('irc')}
       />
 
@@ -915,7 +861,7 @@ export default function App() {
         isOpen={isZncWebAdminOpen}
         onClose={() => setIsZncWebAdminOpen(false)}
         onNavigateToIrc={() => setActiveTab('irc')}
-        onNavigateToStats={() => setActiveTab('ircstats')}
+        onNavigateToStats={() => setActiveTab('master_control')}
         onOpenLicense={() => setIsLicenseModalOpen(true)}
       />
 
@@ -946,7 +892,7 @@ export default function App() {
         onOpenCart={() => setIsCartOpen(true)}
         onOpenLicense={() => setIsLicenseModalOpen(true)}
         onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
-        onNavigateToStudio={() => setActiveTab('media')}
+        onNavigateToStudio={() => setActiveTab('radio_dj')}
       />
 
       {/* Orbit Tracking Map Fullscreen / Dialog Modal */}

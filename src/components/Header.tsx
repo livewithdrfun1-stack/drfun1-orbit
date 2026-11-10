@@ -31,7 +31,7 @@ import {
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { UserMembershipState } from '../types/membership';
 
-export type AppTab = 'broadcast_studio' | 'tv_newscast' | 'radio_dj' | 'irc' | 'master_control' | 'media' | 'stream' | 'mpd' | 'duplicator' | 'ircstats' | 'znc' | 'directory' | 'orbits' | 'compare' | 'rfq' | 'store' | 'social' | 'carriers' | 'community' | 'integrations' | 'domains' | 'fubotv';
+export type AppTab = 'irc' | 'master_control' | 'fubotv' | 'store' | 'radio_dj';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -140,7 +140,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onOpenCompare}
               className={`px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'compare'
+                compareCount > 0
                   ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
                   : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border-slate-800 hover:border-slate-700'
               }`}
@@ -297,7 +297,7 @@ export const Header: React.FC<HeaderProps> = ({
                 if (onOpenOrbitMapModal) {
                   onOpenOrbitMapModal();
                 } else {
-                  setActiveTab('orbits');
+                  setActiveTab('master_control');
                 }
               }}
               className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-blue-950/70 via-indigo-950/70 to-cyan-950/70 text-cyan-300 hover:text-white hover:border-cyan-400 border-cyan-500/40 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-cyan-950/40"
@@ -409,7 +409,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={() => setActiveTab('irc')}
             className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'irc' || activeTab === 'ircstats'
+              activeTab === 'irc'
                 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 font-bold shadow-md shadow-emerald-950/30 ring-1 ring-emerald-500/40'
                 : 'text-slate-400 border-transparent hover:text-emerald-300 hover:bg-slate-900/60'
             }`}
@@ -426,7 +426,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={() => setActiveTab('radio_dj')}
             className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'radio_dj' || activeTab === 'mpd'
+              activeTab === 'radio_dj'
                 ? 'bg-pink-500/20 text-pink-300 border-pink-500/60 font-bold shadow-md shadow-pink-950/30 ring-1 ring-pink-500/40'
                 : 'text-slate-400 border-transparent hover:text-pink-300 hover:bg-slate-900/60'
             }`}
@@ -443,7 +443,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={() => setActiveTab('master_control')}
             className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'master_control' || activeTab === 'directory' || activeTab === 'orbits' || activeTab === 'compare' || activeTab === 'carriers' || activeTab === 'znc'
+              activeTab === 'master_control'
                 ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/60 font-bold shadow-md shadow-cyan-950/30 ring-1 ring-cyan-500/40'
                 : 'text-slate-400 border-transparent hover:text-cyan-300 hover:bg-slate-900/60'
             }`}
