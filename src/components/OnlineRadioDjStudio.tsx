@@ -51,6 +51,8 @@ import { AnopeRankLevel } from '../types/ircdAdmin';
 import { MultistreamIrcChatRoom } from './MultistreamIrcChatRoom';
 import { UnifiedMusicIrcHub } from './UnifiedMusicIrcHub';
 import { MpdDjControlPanel } from './MpdDjControlPanel';
+import { YouTubeMusicAdsConsole } from './YouTubeMusicAdsConsole';
+import { YouTubeMusicTrack } from '../data/shoutcastMusicLibraryData';
 import { IrcLoginSession } from '../types/irc';
 import { INITIAL_MPD_BOT_INSTANCES } from '../data/mpdBotData';
 import { MpdBotInstance } from '../types/mpdBot';
@@ -80,7 +82,7 @@ export const OnlineRadioDjStudio: React.FC<OnlineRadioDjStudioProps> = ({
   const [volume, setVolume] = useState<number>(85);
   const [activeStreamQuality, setActiveStreamQuality] = useState<'320k_mp3' | '192k_aac' | 'flac_lossless'>('320k_mp3');
   const [listenerCount, setListenerCount] = useState<number>(1429);
-  const [stationMode, setStationMode] = useState<'shoutcast_live' | 'mpd_dj_deck' | 'music_catalog' | 'radio_irc'>('shoutcast_live');
+  const [stationMode, setStationMode] = useState<'shoutcast_live' | 'youtube_ads' | 'mpd_dj_deck' | 'music_catalog' | 'radio_irc'>('shoutcast_live');
   const [djBots, setDjBots] = useState<MpdBotInstance[]>(INITIAL_MPD_BOT_INSTANCES);
   const [selectedBotId, setSelectedBotId] = useState<string>(INITIAL_MPD_BOT_INSTANCES[0].id);
   const activeBot = djBots.find(b => b.id === selectedBotId) || djBots[0];
@@ -191,6 +193,21 @@ export const OnlineRadioDjStudio: React.FC<OnlineRadioDjStudioProps> = ({
           >
             <Radio className="w-3.5 h-3.5 text-pink-400" />
             <span>Live Radio Playout &amp; VU</span>
+          </button>
+
+          <button
+            onClick={() => setStationMode('youtube_ads')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              stationMode === 'youtube_ads'
+                ? 'bg-red-500/20 text-red-300 border border-red-500/40 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-red-300 hover:bg-slate-800/50'
+            }`}
+          >
+            <Music className="w-3.5 h-3.5 text-red-400" />
+            <span>YouTube Music &amp; Ads Console</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-red-500/30 text-red-300 font-bold border border-red-500/40">
+              ADS ENGINE
+            </span>
           </button>
 
           <button
@@ -374,8 +391,60 @@ export const OnlineRadioDjStudio: React.FC<OnlineRadioDjStudioProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* Quick YouTube Music & Commercial Break Launcher */}
+            <div className="bg-gradient-to-br from-red-950/40 via-slate-900 to-amber-950/30 border border-red-500/30 rounded-xl p-4 space-y-3 shadow-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <Music className="w-3.5 h-3.5 text-red-400" />
+                  YouTube Music &amp; DrFun1 FM Ads
+                </span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 font-bold border border-red-500/30">
+                  Ad Engine Active
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Cue curated tracks directly from <a href="https://music.youtube.com" target="_blank" rel="noopener noreferrer" className="text-red-400 hover:underline">music.youtube.com</a> and manage 15s/30s commercial audio sponsor breaks.
+              </p>
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  onClick={() => setStationMode('youtube_ads')}
+                  className="flex-1 py-1.5 px-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-md"
+                >
+                  <Radio className="w-3.5 h-3.5" />
+                  <span>Open Ads Console</span>
+                </button>
+                <a
+                  href="https://music.youtube.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-1.5 px-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs flex items-center gap-1 transition"
+                  title="Open music.youtube.com in new tab"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                </a>
+              </div>
+            </div>
           </div>
         </div>
+      )}
+
+      {/* Mode: YouTube Music & Commercial Ads Console */}
+      {stationMode === 'youtube_ads' && (
+        <YouTubeMusicAdsConsole
+          currentStationTrack={currentTrack}
+          onSendToDrFun1Fm={(track) => {
+            setCurrentTrack(track.title);
+            setCurrentArtist(track.artist);
+            setIsPlaying(true);
+          }}
+          onQueueTrackDeckA={(track) => {
+            setNextTrack(`${track.artist} - ${track.title} [Deck A Cued]`);
+          }}
+          onQueueTrackDeckB={(track) => {
+            setNextTrack(`${track.artist} - ${track.title} [Deck B Cued]`);
+          }}
+        />
       )}
 
       {/* Mode 2: MPD DJ Deck Console & Crossfader */}
@@ -386,6 +455,7 @@ export const OnlineRadioDjStudio: React.FC<OnlineRadioDjStudioProps> = ({
           onSelectBot={(id) => setSelectedBotId(id)}
           onOpenIrc={onNavigateToIrc}
           onOpenBroadcast={() => setStationMode('shoutcast_live')}
+          onOpenYouTubeAds={() => setStationMode('youtube_ads')}
           activeRank={activeRank}
         />
       )}
