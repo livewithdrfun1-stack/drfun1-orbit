@@ -49,6 +49,8 @@ import { ALL_NETWORK_LEAF_NODES } from '../data/unrealSearchData';
 import { SatelliteRssNewsSection } from './SatelliteRssNewsSection';
 import { FuboTvCloneView } from './FuboTvCloneView';
 import { NocDashboardSection } from './NocDashboardSection';
+import { SatelliteFleetStatusNotifier } from './SatelliteFleetStatusNotifier';
+import { StatServDashboard } from './StatServDashboard';
 
 interface MasterControlViewProps {
   companies: SatelliteCompany[];
@@ -72,7 +74,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
   activeRank = 'op'
 }) => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [activeSubTab, setActiveSubTab] = useState<'infrastructure' | 'downlinks' | 'leaf_nodes' | 'noc' | 'compliance' | 'rss_news' | 'fubotv'>('noc');
+  const [activeSubTab, setActiveSubTab] = useState<'infrastructure' | 'downlinks' | 'leaf_nodes' | 'noc' | 'fleet_status' | 'statserv' | 'compliance' | 'rss_news' | 'fubotv'>('noc');
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -133,6 +135,18 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             )}
 
             <button
+              onClick={() => setActiveSubTab('statserv')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                activeSubTab === 'statserv'
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50'
+                  : 'bg-amber-950/40 hover:bg-amber-900/50 text-amber-300 border border-amber-600/40'
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5 text-amber-400" />
+              <span>StatServ IRC Vitals</span>
+            </button>
+
+            <button
               onClick={onOpenLicense}
               className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition flex items-center gap-1.5 cursor-pointer"
             >
@@ -156,6 +170,36 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             <span>Network Operations Center (NOC)</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">
               352 Nodes Grid
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('statserv')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'statserv'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-amber-300 hover:bg-slate-800/50'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5 text-amber-400" />
+            <span>StatServ IRC Vitals</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+              pauljz/StatServ
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('fleet_status')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'fleet_status'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800/50'
+            }`}
+          >
+            <Satellite className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Satellite Fleet Status</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
+              TLE Alerts
             </span>
           </button>
 
@@ -238,6 +282,12 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Real-Time Satellite Fleet Status & TLE Change Alert Ticker */}
+      <SatelliteFleetStatusNotifier
+        variant="ticker"
+        onOpenConstellationOverlay={() => setActiveSubTab('fleet_status')}
+      />
 
       {/* Tab 1: Backbone Infrastructure */}
       {activeSubTab === 'infrastructure' && (
@@ -458,6 +508,23 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
         <FuboTvCloneView
           onOpenLicense={onOpenLicense}
           onOpenSwitchMesh={onOpenSwitchMesh}
+        />
+      )}
+
+      {/* Tab 7: Satellite Fleet Status & Real-Time TLE Alert Center */}
+      {activeSubTab === 'fleet_status' && (
+        <SatelliteFleetStatusNotifier
+          variant="full"
+          onOpenLicense={onOpenLicense}
+          onOpenConstellationOverlay={() => setActiveSubTab('noc')}
+        />
+      )}
+
+      {/* Tab 8: PaulJZ StatServ UnrealIRCd Sockets & SNOTICE Telemetry */}
+      {activeSubTab === 'statserv' && (
+        <StatServDashboard
+          onOpenLicense={onOpenLicense}
+          onOpenIrcClient={onOpenIrcdAdmin}
         />
       )}
     </div>

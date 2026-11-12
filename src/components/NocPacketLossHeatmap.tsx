@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { SwitchDedicatedNode } from '../types/irc';
 import { ALL_NETWORK_LEAF_NODES } from '../data/unrealSearchData';
+import { ConstellationCoverageOverlay } from './ConstellationCoverageOverlay';
 
 interface NodePacketTelemetry {
   nodeId: string;
@@ -119,6 +120,10 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
   const [isBurstTesting, setIsBurstTesting] = useState<boolean>(false);
   const [burstProgress, setBurstProgress] = useState<number>(0);
   const [burstMessage, setBurstMessage] = useState<string | null>(null);
+
+  // Constellation Coverage TLE Overlay State
+  const [showConstellationOverlay, setShowConstellationOverlay] = useState<boolean>(true);
+  const [satelliteCoveredNodeIds, setSatelliteCoveredNodeIds] = useState<Set<string>>(new Set());
 
   // Real-time live probing simulation
   useEffect(() => {
@@ -438,6 +443,23 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
             <span>Zero Loss Baseline</span>
           </button>
+
+          {/* Toggle Constellation Coverage Overlay */}
+          <button
+            onClick={() => setShowConstellationOverlay(!showConstellationOverlay)}
+            className={`px-3 py-1.5 rounded-xl border font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md ${
+              showConstellationOverlay
+                ? 'bg-cyan-600 text-white border-cyan-400 shadow-cyan-950/40 ring-1 ring-cyan-400'
+                : 'bg-cyan-950/60 text-cyan-300 border-cyan-500/40 hover:bg-cyan-900/50'
+            }`}
+            title="Toggle Real-Time Satellite Constellation Coverage (TLE Footprints) Overlay"
+          >
+            <Radio className={`w-3.5 h-3.5 ${showConstellationOverlay ? 'text-white animate-pulse' : 'text-cyan-400'}`} />
+            <span>Constellation Coverage</span>
+            <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-400/20 text-cyan-200 font-bold border border-cyan-400/30">
+              TLE
+            </span>
+          </button>
         </div>
       </div>
 
@@ -549,6 +571,21 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
           </div>
         </div>
       </div>
+
+      {/* ========================================================
+          1B. INTERACTIVE CONSTELLATION COVERAGE (TLE FOOTPRINTS) OVERLAY
+          ======================================================== */}
+      {showConstellationOverlay && (
+        <ConstellationCoverageOverlay
+          selectedNode={selectedNode}
+          onSelectNode={(node) => {
+            onSelectNode(node);
+            if (onRunDiagnostics) onRunDiagnostics(node);
+          }}
+          onHighlightNodesChange={(coveredSet) => setSatelliteCoveredNodeIds(coveredSet)}
+          onCloseOverlay={() => setShowConstellationOverlay(false)}
+        />
+      )}
 
       {/* ========================================================
           2. HEATMAP CONTROLS, GROUPINGS & LOSS FILTERS
@@ -701,6 +738,7 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
               const isSelected = selectedNode?.id === node.id;
               const isDp = node.id.startsWith('dp_');
               const isRn = node.id.startsWith('rn_');
+              const isSatCovered = satelliteCoveredNodeIds.has(node.id);
 
               return (
                 <div
@@ -722,11 +760,18 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
                   className={`relative p-1 rounded-lg border text-center transition-all duration-150 cursor-pointer flex flex-col justify-between items-center min-h-[48px] ${
                     color.bg
                   } ${color.border} ${
-                    isSelected ? 'ring-2 ring-white scale-110 z-20 shadow-xl' : ''
+                    isSelected
+                      ? 'ring-2 ring-white scale-110 z-20 shadow-xl'
+                      : isSatCovered
+                      ? 'ring-1 ring-cyan-400 shadow-md shadow-cyan-950/60'
+                      : ''
                   }`}
                 >
                   <div className="w-full flex items-center justify-between text-[8px] font-mono leading-none opacity-80">
-                    <span className="font-bold">{isDp ? 'DP' : isRn ? 'RN' : 'SW'}</span>
+                    <span className="font-bold flex items-center gap-0.5">
+                      {isSatCovered && <span className="text-[7px] text-cyan-300" title="Illuminated by Satellite Footprint">🛰️</span>}
+                      <span>{isDp ? 'DP' : isRn ? 'RN' : 'SW'}</span>
+                    </span>
                     {data.lossPct > 0 ? (
                       <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
                     ) : (
@@ -773,6 +818,7 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
                     const data = telemetry[node.id] || { lossPct: 0, packetsSent: 10000, packetsDropped: 0 };
                     const color = getLossColorClasses(data.lossPct);
                     const isSelected = selectedNode?.id === node.id;
+                    const isSatCovered = satelliteCoveredNodeIds.has(node.id);
 
                     return (
                       <div
@@ -783,11 +829,18 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
                         }}
                         className={`p-1.5 rounded-lg border text-center transition-all cursor-pointer flex flex-col justify-between items-center min-h-[46px] ${
                           color.bg
-                        } ${color.border} ${isSelected ? 'ring-2 ring-white scale-105 z-10' : ''}`}
-                        title={`${node.name}\nHost: ${node.host}\nLoss: ${data.lossPct}% (${data.packetsDropped} dropped)`}
+                        } ${color.border} ${
+                          isSelected
+                            ? 'ring-2 ring-white scale-105 z-10'
+                            : isSatCovered
+                            ? 'ring-1 ring-cyan-400 shadow-md shadow-cyan-950/60'
+                            : ''
+                        }`}
+                        title={`${node.name}\nHost: ${node.host}\nLoss: ${data.lossPct}% (${data.packetsDropped} dropped)${isSatCovered ? '\n🛰️ In Active Satellite Footprint' : ''}`}
                       >
-                        <span className="text-[9px] font-mono font-bold text-white truncate w-full">
-                          {node.sid}
+                        <span className="text-[9px] font-mono font-bold text-white truncate w-full flex items-center justify-center gap-0.5">
+                          {isSatCovered && <span className="text-[7px]">🛰️</span>}
+                          <span>{node.sid}</span>
                         </span>
                         <span className={`text-[8px] font-mono font-bold ${color.text}`}>
                           {color.badge}
@@ -825,6 +878,7 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
                   const data = telemetry[node.id] || { lossPct: 0, packetsSent: 10000, packetsDropped: 0 };
                   const color = getLossColorClasses(data.lossPct);
                   const isSelected = selectedNode?.id === node.id;
+                  const isSatCovered = satelliteCoveredNodeIds.has(node.id);
 
                   return (
                     <div
@@ -835,11 +889,18 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
                       }}
                       className={`p-1.5 rounded-lg border text-center transition-all cursor-pointer flex flex-col justify-between items-center min-h-[46px] ${
                         color.bg
-                      } ${color.border} ${isSelected ? 'ring-2 ring-white scale-105 z-10' : ''}`}
-                      title={`${node.name}\nHost: ${node.host}\nLoss: ${data.lossPct}% (${data.packetsDropped} dropped)`}
+                      } ${color.border} ${
+                        isSelected
+                          ? 'ring-2 ring-white scale-105 z-10'
+                          : isSatCovered
+                          ? 'ring-1 ring-cyan-400 shadow-md shadow-cyan-950/60'
+                          : ''
+                      }`}
+                      title={`${node.name}\nHost: ${node.host}\nLoss: ${data.lossPct}% (${data.packetsDropped} dropped)${isSatCovered ? '\n🛰️ In Active Satellite Footprint' : ''}`}
                     >
-                      <span className="text-[9px] font-mono font-bold text-white truncate w-full">
-                        {node.sid}
+                      <span className="text-[9px] font-mono font-bold text-white truncate w-full flex items-center justify-center gap-0.5">
+                        {isSatCovered && <span className="text-[7px]">🛰️</span>}
+                        <span>{node.sid}</span>
                       </span>
                       <span className={`text-[8px] font-mono font-bold ${color.text}`}>
                         {color.badge}
@@ -906,6 +967,19 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
               <span className="font-bold text-xs text-emerald-400">100% Sync</span>
             </div>
           </div>
+
+          {/* Active Satellite Footprint Illumination Status */}
+          {satelliteCoveredNodeIds.has(hoveredNode.node.id) && (
+            <div className="pt-1.5 border-t border-slate-800 text-[10px] text-cyan-300 font-bold flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                <Radio className="w-3 h-3 text-cyan-400 animate-pulse" />
+                <span>Constellation Footprint:</span>
+              </span>
+              <span className="text-cyan-200 font-bold bg-cyan-500/20 px-1.5 py-0.2 rounded border border-cyan-500/30">
+                ACTIVE ILLUMINATION
+              </span>
+            </div>
+          )}
 
           <div className="pt-1 border-t border-slate-800 text-[9px] text-slate-500 truncate">
             Facility: {hoveredNode.node.campusName || hoveredNode.node.location}

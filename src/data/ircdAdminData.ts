@@ -623,6 +623,18 @@ export const INITIAL_BOTSERV_BOTS: BotServBot[] = [
     kickOnBadwords: true,
     kickOnCaps: true,
     kickOnFlood: true,
+  },
+  {
+    nick: 'StatServ',
+    user: 'stats',
+    host: 'stats.drfun1.com',
+    realname: 'PaulJZ StatServ UnrealIRCd Vitals & Sockets Daemon (github.com/pauljz/StatServ.git)',
+    channelsAssigned: ['#opers', '#all-music', '#drfun1-media'],
+    fantasyCommands: ['!stats', '!users', '!lusers', '!mibbit', '!who', '!raw'],
+    badwordsCount: 0,
+    kickOnBadwords: false,
+    kickOnCaps: false,
+    kickOnFlood: false,
   }
 ];
 
