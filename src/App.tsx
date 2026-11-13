@@ -38,6 +38,7 @@ import { DevPlatformWittLawModal } from './components/DevPlatformWittLawModal';
 import { OnlineRadioDjStudio } from './components/OnlineRadioDjStudio';
 import { MasterControlView } from './components/MasterControlView';
 import { FuboTvCloneView } from './components/FuboTvCloneView';
+import { IrcDuplicatorHostingView } from './components/IrcDuplicatorHostingView';
 import { IrcLoginCredentials, IrcLoginSession } from './types/irc';
 import { UserMembershipState } from './types/membership';
 import { AnopeRankLevel } from './types/ircdAdmin';
@@ -122,6 +123,8 @@ export default function App() {
   const handleNavigateTab = (tab: string) => {
     if (tab === 'radio_dj' || tab === 'mpd' || tab === 'studio' || tab === 'media') {
       setActiveTab('radio_dj');
+    } else if (tab === 'duplicator_hosting' || tab === 'duplicator') {
+      setActiveTab('duplicator_hosting');
     } else if (tab === 'master_control' || tab === 'directory' || tab === 'orbits' || tab === 'compare' || tab === 'carriers' || tab === 'ircstats') {
       setActiveTab('master_control');
     } else if (tab === 'fubotv') {
@@ -606,6 +609,18 @@ export default function App() {
                 localStorage.setItem(STORAGE_KEY_IRC_SESSION, JSON.stringify(updated));
               } catch (_) {}
             }}
+          />
+        </main>
+      ) : activeTab === 'duplicator_hosting' ? (
+        /* 1B. Managed IRC Chat Room Duplicator Hosting */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <IrcDuplicatorHostingView
+            onQuickAddToCart={handleQuickAddToCart}
+            onOpenProductConfig={handleOpenProductConfig}
+            onOpenCart={() => setIsCartOpen(true)}
+            onOpenLicense={() => setIsLicenseModalOpen(true)}
+            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+            onNavigateToIrc={() => setActiveTab('irc')}
           />
         </main>
       ) : activeTab === 'master_control' ? (

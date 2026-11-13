@@ -45,21 +45,60 @@ export const SwitchIrcMeshModal: React.FC<SwitchIrcMeshModalProps> = ({
   };
 
   const masterHubConfig = `/* ====================================================================
- * Master Dual-Hub Configuration on irc.drfun1.com & irc.drfun1media.com (UnrealIRCd 6.1.4+)
+ * Master Quad-Hub Configuration:
+ *   Hub 1: irc.drfun1.com (SID 001)
+ *   Hub 2: irc.drfun1media.com (SID 002)
+ *   Hub 3: irc.drfun1media.net (SID 003)
+ *   Hub 4: drfun1ircd.com (SID 004)
+ * UnrealIRCd 6.1.4+ Multi-Hub Spanning Tree — ALL Nodes Linked & Leafed to ALL 4 Hubs
  * Switch.com Nodes: 500 www.switch.com Nodes per Hub (1,000 Total) via CGW Law Offices
  * DataPacket.com Leafs: 12 www.datapacket.com Leafs per Hub (24 Total)
- * RisingNet Dedicated Servers: 10 Dedicated Servers from www.risingnet.com (Synced & Leafed to Both Hubs)
+ * RisingNet Dedicated Servers: 10 Dedicated Servers from www.risingnet.com (Synced & Leafed to All Hubs)
  * App License: The Law Office of Richard A. Witt LLC (www.wittlawfirm.com / FCC FRN: 0034981290)
  * Payment Office: Owens Company (www.owenscompany.com) — Bill in Receiving
  * Core Switch Sample Nodes (${SWITCH_DEDICATED_NODES.length} Primary Gateways):
-${SWITCH_DEDICATED_NODES.map((n, i) => ` *   ${i + 1 < 10 ? ' ' : ''}${i + 1}. ${n.host} (SID ${n.sid}) - ${n.location.split(',')[0]}`).join('\n')}
- * Total Connected Satcom & Carrier Leaf Nodes: 1,034 Dual-Hub Synced Nodes + \${companies.length} Carriers
+${SWITCH_DEDICATED_NODES.map((n, i) => ` *   ${i + 1 < 10 ? ' ' : ''}${i + 1}. ${n.host} (SID ${n.sid}) - ${n.location.split(',')[0]} [All 4 Hubs]`).join('\n')}
+ * Total Connected Satcom & Carrier Leaf Nodes: 1,034 Multi-Hub Synced Nodes + ${companies.length} Carriers
  * ==================================================================== */
 
+/* Hub 1 Identity (SID 001) & Reciprocal Inter-Hub Links */
 me {
     name "irc.drfun1.com";
-    info "Satcom Teleport Core NOC Peering Hub - Switch Data Centers";
+    info "Master Core NOC Peering Hub - Switch Data Centers";
     sid "001";
+};
+
+link irc.drfun1media.com {
+    incoming { mask *.drfun1media.com; };
+    outgoing { hostname "irc.drfun1media.com"; port 6697; options { ssl; autoconnect; }; };
+    password "drfun1-mesh-leaf-auth-2026";
+    hub *;
+    class servers;
+};
+
+link irc.drfun1media.net {
+    incoming { mask *.drfun1media.net; };
+    outgoing { hostname "irc.drfun1media.net"; port 6697; options { ssl; autoconnect; }; };
+    password "drfun1-mesh-leaf-auth-2026";
+    hub *;
+    class servers;
+};
+
+link drfun1ircd.com {
+    incoming { mask *drfun1ircd.com; };
+    outgoing { hostname "drfun1ircd.com"; port 6697; options { ssl; autoconnect; }; };
+    password "drfun1-mesh-leaf-auth-2026";
+    hub *;
+    class servers;
+};
+
+/* Hub 2: irc.drfun1media.com (SID 002) | Hub 3: irc.drfun1media.net (SID 003) | Hub 4: drfun1ircd.com (SID 004) */
+link irc.drfun1.com {
+    incoming { mask *.drfun1.com; };
+    outgoing { hostname "irc.drfun1.com"; port 6697; options { ssl; autoconnect; }; };
+    password "drfun1-mesh-leaf-auth-2026";
+    hub *;
+    class servers;
 };
 
 /* High-Security TLS/SSL Listener */
@@ -76,25 +115,31 @@ set {
     default-server "irc.drfun1.com";
 };
 
+ulines {
+    "services.drfun1.com";
+    "services.drfun1media.com";
+};
+
 /* ====================================================================
- * ${SWITCH_DEDICATED_NODES.length} Dedicated Switch Datacenter Leaf Blocks (Leafed to irc.drfun1.com)
+ * ${SWITCH_DEDICATED_NODES.length} Core Switch Datacenter Leaf Blocks (Linked & Leafed to ALL 4 Hubs)
  * ==================================================================== */
 ${SWITCH_DEDICATED_NODES.map((node, i) => `link ${node.host} {
-    incoming { mask *.drfun1.com; };
-    outgoing { hostname "${node.host}"; port 6697; options { ssl; }; };
+    incoming { mask *; };
+    outgoing { hostname "${node.host}"; port 6697; options { ssl; autoconnect; }; };
     password "WittLaw_Switch_Node${i + 1}_Auth_2026";
     class servers;
     type leaf;
 };`).join('\n\n')}
 
-/* Satcom Carrier Leaf Blocks (Sample for Top Global Fleets) */
+/* Satcom Carrier Leaf Blocks (Sample for Top Global Fleets — Leafed to All 4 Hubs) */
 ${companies.slice(0, 8).map((c) => {
   const safeName = c.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16);
   return `link leaf-${safeName}.satcom.drfun1.com {
     incoming { mask *; };
-    outgoing { hostname "${c.id}.teleport.switch.com"; port 6697; options { ssl; }; };
+    outgoing { hostname "${c.id}.teleport.switch.com"; port 6697; options { ssl; autoconnect; }; };
     password "Satcom_Switch_Secure_Pass_${safeName}!";
     class servers;
+    type leaf;
 };`;
 }).join('\n\n')}
 `;
@@ -110,10 +155,10 @@ ${companies.slice(0, 8).map((c) => {
             </div>
             <div>
               <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-                <span>Switch Data Centers & UnrealIRCd Leaf Mesh Network</span>
+                <span>Switch Data Centers &amp; UnrealIRCd Multi-Hub Leaf Mesh Network</span>
               </h3>
               <p className="text-xs text-slate-400 font-mono">
-                Hub: irc.drfun1.com:6697 (SSL) · Colocation: switch.com · Transit: risingnet.com · Engine: unrealircd.com
+                Hubs: irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net &amp; drfun1ircd.com:6697 (SSL) · Engine: unrealircd.com
               </p>
             </div>
           </div>
@@ -219,10 +264,10 @@ ${companies.slice(0, 8).map((c) => {
                 </a>
               </div>
               <h4 className="text-sm font-bold text-slate-100">
-                irc.drfun1.com : 6697 (SSL)
+                4 Core Hubs : 6697 (SSL)
               </h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                UnrealIRCd 6.1+ hub-and-leaf mesh. Provides real-time out-of-band telemetry alerts, 24/7 engineer coordination, and crisis dispatch during web outages.
+              <p className="text-xs text-slate-400 leading-relaxed font-mono">
+                irc.drfun1.com · irc.drfun1media.com · irc.drfun1media.net · drfun1ircd.com
               </p>
             </div>
           </div>
@@ -305,7 +350,7 @@ ${companies.slice(0, 8).map((c) => {
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-sky-400" />
-                <span>Master Hub Configuration Preview (irc.drfun1.com)</span>
+                <span>Multi-Hub Master Configuration Preview (4 Core Hubs)</span>
               </span>
               <button
                 onClick={() => handleCopy(masterHubConfig, 'hub-config')}

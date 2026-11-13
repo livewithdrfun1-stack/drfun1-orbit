@@ -32,7 +32,7 @@ import { AnopeRankLevel } from '../types/ircdAdmin';
 import { UserMembershipState } from '../types/membership';
 import { DrFun1MediaLogo } from './DrFun1MediaLogo';
 
-export type AppTab = 'irc' | 'master_control' | 'fubotv' | 'store' | 'radio_dj';
+export type AppTab = 'irc' | 'duplicator_hosting' | 'master_control' | 'fubotv' | 'store' | 'radio_dj';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -419,6 +419,23 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
+          {/* 1B. IRC Chat Room Duplicator Hosting */}
+          <button
+            onClick={() => setActiveTab('duplicator_hosting')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'duplicator_hosting'
+                ? 'bg-purple-500/20 text-purple-200 border-purple-500/60 font-bold shadow-md shadow-purple-950/30 ring-1 ring-purple-500/40'
+                : 'text-slate-400 border-transparent hover:text-purple-300 hover:bg-slate-900/60'
+            }`}
+            title="IRC Chat Room Duplicator Hosting - 4-Hub Channel Mirroring, WordPress Cloud Sync & Provisioning"
+          >
+            <Share2 className="w-3.5 h-3.5 text-purple-400" />
+            <span>Duplicator Hosting</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">
+              4-Hub Sync
+            </span>
+          </button>
+
           {/* 2. Online Radio & MPD DJ Station */}
           <button
             onClick={() => setActiveTab('radio_dj')}
@@ -581,6 +598,14 @@ export const Header: React.FC<HeaderProps> = ({
                   badge: '1,034 Nodes (500 Switch/Hub · 12 DP · 10 RN)', 
                   color: 'emerald', 
                   icon: Terminal 
+                },
+                { 
+                  id: 'duplicator_hosting', 
+                  label: 'IRC Duplicator Hosting', 
+                  desc: '4-Hub Room Mirroring, WordPress REST Bridge & Managed Relay Nodes',
+                  badge: '4-Hub Sync', 
+                  color: 'purple', 
+                  icon: Share2 
                 },
                 { 
                   id: 'radio_dj', 

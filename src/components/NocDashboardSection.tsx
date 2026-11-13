@@ -63,7 +63,7 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
   onOpenUnrealSearch,
 }) => {
   // Filtering & Search
-  const [selectedProvider, setSelectedProvider] = useState<'all' | 'hub1' | 'hub2' | 'switch' | 'datapacket' | 'risingnet'>('all');
+  const [selectedProvider, setSelectedProvider] = useState<'all' | 'hub1' | 'hub2' | 'hub3' | 'hub4' | 'switch' | 'datapacket' | 'risingnet'>('all');
   const [selectedRegion, setSelectedRegion] = useState<string>('All Regions');
   const [selectedLatencyFilter, setSelectedLatencyFilter] = useState<'all' | 'low' | 'mid' | 'high'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -102,9 +102,17 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
       // Provider / Hub filter
       if (selectedProvider !== 'all') {
         if (selectedProvider === 'hub1') {
-          if (node.leafHub !== 'irc.drfun1.com') return false;
+          const onHub1 = Boolean(node.dualHubLinked || node.leafHubs?.includes('irc.drfun1.com') || (node.leafHub || '').includes('irc.drfun1.com'));
+          if (!onHub1) return false;
         } else if (selectedProvider === 'hub2') {
-          if (node.leafHub !== 'irc.drfun1media.com') return false;
+          const onHub2 = Boolean(node.dualHubLinked || node.leafHubs?.includes('irc.drfun1media.com') || (node.leafHub || '').includes('irc.drfun1media.com'));
+          if (!onHub2) return false;
+        } else if (selectedProvider === 'hub3') {
+          const onHub3 = Boolean(node.dualHubLinked || node.leafHubs?.includes('irc.drfun1media.net') || (node.leafHub || '').includes('irc.drfun1media.net'));
+          if (!onHub3) return false;
+        } else if (selectedProvider === 'hub4') {
+          const onHub4 = Boolean(node.dualHubLinked || node.leafHubs?.includes('drfun1ircd.com') || (node.leafHub || '').includes('drfun1ircd.com'));
+          if (!onHub4) return false;
         } else {
           const p = node.provider || (node.id.startsWith('dp_') ? 'datapacket' : node.id.startsWith('rn_') ? 'risingnet' : 'switch');
           if (selectedProvider === 'switch' && p !== 'switch' && p !== 'unrealircd') return false;
@@ -150,10 +158,14 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
     let rnCount = 0;
     let hub1Count = 0;
     let hub2Count = 0;
+    let hub3Count = 0;
+    let hub4Count = 0;
 
     ALL_NETWORK_LEAF_NODES.forEach((n) => {
-      if (n.leafHub === 'irc.drfun1.com') hub1Count++;
-      if (n.leafHub === 'irc.drfun1media.com') hub2Count++;
+      if (n.dualHubLinked || n.leafHubs?.includes('irc.drfun1.com') || (n.leafHub || '').includes('irc.drfun1.com')) hub1Count++;
+      if (n.dualHubLinked || n.leafHubs?.includes('irc.drfun1media.com') || (n.leafHub || '').includes('irc.drfun1media.com')) hub2Count++;
+      if (n.dualHubLinked || n.leafHubs?.includes('irc.drfun1media.net') || (n.leafHub || '').includes('irc.drfun1media.net')) hub3Count++;
+      if (n.dualHubLinked || n.leafHubs?.includes('drfun1ircd.com') || (n.leafHub || '').includes('drfun1ircd.com')) hub4Count++;
       const p = n.provider || (n.id.startsWith('dp_') ? 'datapacket' : n.id.startsWith('rn_') ? 'risingnet' : 'switch');
       if (p === 'datapacket') dpCount++;
       else if (p === 'risingnet') rnCount++;
@@ -166,6 +178,8 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
       total: ALL_NETWORK_LEAF_NODES.length,
       hub1Count,
       hub2Count,
+      hub3Count,
+      hub4Count,
       switchCount,
       dpCount,
       rnCount,
@@ -259,7 +273,7 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
                 </h3>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase tracking-wider flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  <span>1,034/1,034 LEAFS SYNCED TO BOTH HUBS</span>
+                  <span>1,034/1,034 LEAFS SYNCED TO ALL 4 HUBS</span>
                 </span>
                 <button
                   onClick={() => setViewMode(viewMode === 'heatmap' ? 'matrix' : 'heatmap')}
@@ -270,8 +284,8 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
                   <span>0.00% PACKET LOSS HEATMAP</span>
                 </button>
               </div>
-              <p className="text-xs text-slate-400 mt-1 max-w-3xl leading-relaxed">
-                Global Spanning-Tree mesh federating <strong className="text-white">1,034 Leaf Nodes</strong> (<strong className="text-emerald-300">500 Switch/Hub via CGW Law Offices</strong>, <strong className="text-cyan-300">12 DataPacket/Hub</strong>, <strong className="text-indigo-300">10 RisingNet Dedicated Servers</strong>) synced to BOTH <strong className="text-purple-300">irc.drfun1.com</strong> &amp; <strong className="text-sky-300">irc.drfun1media.com</strong>.
+              <p className="text-xs text-slate-400 mt-1 max-w-4xl leading-relaxed">
+                Global Spanning-Tree mesh federating <strong className="text-white">1,034 Leaf Nodes</strong> (<strong className="text-emerald-300">500 Switch/Hub via CGW Law Offices</strong>, <strong className="text-cyan-300">12 DataPacket/Hub</strong>, <strong className="text-indigo-300">10 RisingNet Dedicated Servers</strong>) synced to ALL 4 HUBS: <strong className="text-purple-300">irc.drfun1.com</strong>, <strong className="text-sky-300">irc.drfun1media.com</strong>, <strong className="text-amber-300">irc.drfun1media.net</strong> &amp; <strong className="text-emerald-300">drfun1ircd.com</strong>.
               </p>
             </div>
           </div>
@@ -318,49 +332,79 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
           </div>
         </div>
 
-        {/* Dual Core Hubs Peering Topology Strip */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-slate-800/80 text-xs font-mono">
-          {/* Primary Core Hub */}
+        {/* 4 Core Hubs Peering Topology Strip */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-3 border-t border-slate-800/80 text-xs font-mono">
+          {/* Hub 1 */}
           <div className="p-3 rounded-xl bg-slate-950 border border-cyan-500/30 flex items-center justify-between gap-2 shadow-sm">
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-1.5 text-cyan-400 font-bold">
-                <Radio className="w-3.5 h-3.5 text-cyan-400" />
-                <span>PRIMARY HUB (SID 001)</span>
+                <Radio className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                <span className="truncate">HUB 1 (SID 001)</span>
               </div>
-              <p className="text-white font-semibold mt-0.5">irc.drfun1.com:6697 SSL</p>
-              <p className="text-[11px] text-slate-500">Switch SUPERNAP Las Vegas (The Core Campus)</p>
+              <p className="text-white font-semibold mt-0.5 truncate">irc.drfun1.com:6697</p>
+              <p className="text-[11px] text-slate-500 truncate">Switch SUPERNAP Las Vegas</p>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
               ACTIVE
             </span>
           </div>
 
-          {/* Secondary / Media Hub */}
+          {/* Hub 2 */}
           <div className="p-3 rounded-xl bg-slate-950 border border-purple-500/30 flex items-center justify-between gap-2 shadow-sm">
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-1.5 text-purple-400 font-bold">
-                <Radio className="w-3.5 h-3.5 text-purple-400" />
-                <span>SECONDARY HUB (SID 002)</span>
+                <Radio className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                <span className="truncate">HUB 2 (SID 002)</span>
               </div>
-              <p className="text-white font-semibold mt-0.5">irc.drfun1media.com:6697 SSL</p>
-              <p className="text-[11px] text-slate-500">Switch Reno Citadel / Teleport Earth Station</p>
+              <p className="text-white font-semibold mt-0.5 truncate">irc.drfun1media.com:6697</p>
+              <p className="text-[11px] text-slate-500 truncate">Switch Reno Citadel</p>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+              SYNCED
+            </span>
+          </div>
+
+          {/* Hub 3 */}
+          <div className="p-3 rounded-xl bg-slate-950 border border-amber-500/30 flex items-center justify-between gap-2 shadow-sm">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-amber-400 font-bold">
+                <Radio className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="truncate">HUB 3 (SID 003)</span>
+              </div>
+              <p className="text-white font-semibold mt-0.5 truncate">irc.drfun1media.net:6697</p>
+              <p className="text-[11px] text-slate-500 truncate">Switch Citadel Tahoe</p>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+              SYNCED
+            </span>
+          </div>
+
+          {/* Hub 4 */}
+          <div className="p-3 rounded-xl bg-slate-950 border border-sky-500/30 flex items-center justify-between gap-2 shadow-sm">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-sky-400 font-bold">
+                <Radio className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                <span className="truncate">HUB 4 (SID 004)</span>
+              </div>
+              <p className="text-white font-semibold mt-0.5 truncate">drfun1ircd.com:6697</p>
+              <p className="text-[11px] text-slate-500 truncate">Switch The Keep Atlanta</p>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
               SYNCED
             </span>
           </div>
 
           {/* Anope Services Hub */}
           <div className="p-3 rounded-xl bg-slate-950 border border-emerald-500/30 flex items-center justify-between gap-2 shadow-sm">
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
-                <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                <span>ANOPE SERVICES (SID 00A)</span>
+                <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="truncate">ANOPE SERVICES (00A)</span>
               </div>
-              <p className="text-white font-semibold mt-0.5">services.drfun1.com</p>
-              <p className="text-[11px] text-slate-500">NickServ &bull; ChanServ &bull; OperServ &bull; BotServ</p>
+              <p className="text-white font-semibold mt-0.5 truncate">services.drfun1.com</p>
+              <p className="text-[11px] text-slate-500 truncate">NickServ &bull; ChanServ &bull; OperServ</p>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
               U-LINED
             </span>
           </div>
@@ -467,6 +511,30 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
             >
               <Server className="w-3.5 h-3.5 text-sky-400" />
               <span>Hub 2: irc.drfun1media.com ({providerStats.hub2Count})</span>
+            </button>
+
+            <button
+              onClick={() => setSelectedProvider('hub3')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                selectedProvider === 'hub3'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'bg-slate-950 text-slate-400 hover:text-amber-300 border border-slate-800'
+              }`}
+            >
+              <Server className="w-3.5 h-3.5 text-amber-400" />
+              <span>Hub 3: irc.drfun1media.net ({providerStats.hub3Count})</span>
+            </button>
+
+            <button
+              onClick={() => setSelectedProvider('hub4')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                selectedProvider === 'hub4'
+                  ? 'bg-violet-600 text-white shadow-sm'
+                  : 'bg-slate-950 text-slate-400 hover:text-violet-300 border border-slate-800'
+              }`}
+            >
+              <Server className="w-3.5 h-3.5 text-violet-400" />
+              <span>Hub 4: drfun1ircd.com ({providerStats.hub4Count})</span>
             </button>
 
             <button
@@ -897,9 +965,9 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
             </div>
 
             <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <span className="text-[10px] text-slate-500 block uppercase">Hub Connection</span>
-              <p className="text-cyan-400 font-bold truncate">irc.drfun1.com:6697</p>
-              <p className="text-[11px] text-slate-400">Backup: irc.drfun1media.com</p>
+              <span className="text-[10px] text-slate-500 block uppercase">4-Hub Leaf Connections (6697 SSL)</span>
+              <p className="text-emerald-400 font-bold truncate text-[11px]">irc.drfun1.com (001) &bull; irc.drfun1media.com (002)</p>
+              <p className="text-[11px] text-cyan-300 truncate">irc.drfun1media.net (003) &bull; drfun1ircd.com (004)</p>
             </div>
           </div>
 

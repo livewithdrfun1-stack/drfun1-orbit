@@ -182,8 +182,8 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const activeNode = ALL_1034_LEAF_NODES.find(n => n.id === activeNodeId) || SWITCH_DEDICATED_NODES.find(n => n.id === activeNodeId) || ALL_1034_LEAF_NODES[0];
-  const [selectedHub, setSelectedHub] = useState<'irc.drfun1.com' | 'irc.drfun1media.com'>('irc.drfun1.com');
-  const [topologyFilter, setTopologyFilter] = useState<'all' | 'hub1' | 'hub2' | 'switch' | 'datapacket' | 'risingnet' | 'hubs'>('all');
+  const [selectedHub, setSelectedHub] = useState<'irc.drfun1.com' | 'irc.drfun1media.com' | 'irc.drfun1media.net' | 'drfun1ircd.com'>('irc.drfun1.com');
+  const [topologyFilter, setTopologyFilter] = useState<'all' | 'hub1' | 'hub2' | 'hub3' | 'hub4' | 'switch' | 'datapacket' | 'risingnet' | 'hubs'>('all');
   const [topologySearch, setTopologySearch] = useState<string>('');
   const activeChannelData = ALL_DRFUN1_MEDIA_CHANNELS.find(c => c.name === currentChannel) || ALL_DRFUN1_MEDIA_CHANNELS[0];
   const currentMessages = channelMessages[currentChannel] || [];
@@ -228,7 +228,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
         timestamp: new Date().toLocaleTimeString(),
         sender: '***',
         channel: currentChannel,
-        content: `Connected to ${targetNode?.host}:6697 [TLSv1.3 AES-256]. Latency: ${targetNode?.latencyMs} ms. Leaf peers: ${targetNode?.leafPeers}. Peered to Dual Hubs (${targetNode?.leafHub} & irc.drfun1media.com). Anope services synced.`,
+        content: `Connected to ${targetNode?.host}:6697 [TLSv1.3 AES-256]. Latency: ${targetNode?.latencyMs} ms. Leaf peers: ${targetNode?.leafPeers}. Linked & Leafed to ALL 4 Hubs (irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com). Anope services synced.`,
         type: 'system',
       };
 
@@ -298,7 +298,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
       timestamp: new Date().toLocaleTimeString(),
       sender: '***',
       channel: currentChannel,
-      content: `[UNREALIRCD DUAL-HUB BURST] Initializing leaf link synchronization for 1,034 Nodes: 500 Switch.com nodes/hub via CGW Law Offices + 12 DataPacket.com leafs/hub + 10 RisingNet.com dedicated servers synced to BOTH irc.drfun1.com:6697 (SID 001) & irc.drfun1media.com:6697 (SID 002).`,
+      content: `[UNREALIRCD MULTI-HUB BURST] Initializing leaf link synchronization for 1,034 Nodes: 500 Switch.com nodes/hub via CGW Law Offices + 12 DataPacket.com leafs/hub + 10 RisingNet.com dedicated servers synced to ALL 4 Hubs: irc.drfun1.com (SID 001), irc.drfun1media.com (SID 002), irc.drfun1media.net (SID 003) & drfun1ircd.com (SID 004).`,
       type: 'system',
     };
 
@@ -307,7 +307,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
       timestamp: new Date().toLocaleTimeString(),
       sender: '***',
       channel: currentChannel,
-      content: `[DUAL CORE HUB ACTIVE] irc.drfun1.com:6697 [SID 001] <=== 100 Gbps Direct Optical Cross-Connect ===> irc.drfun1media.com:6697 [SID 002] | License: www.wittlawfirm.com | Payment Office: Owens Company (Bill in Receiving)`,
+      content: `[4 CORE HUBS ACTIVE] irc.drfun1.com [001] <==> irc.drfun1media.com [002] <==> irc.drfun1media.net [003] <==> drfun1ircd.com [004] (100G Optical Cross-Connect) | License: www.wittlawfirm.com | Payment Office: Owens Company (Bill in Receiving)`,
       type: 'system',
     };
 
@@ -356,7 +356,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
           timestamp: new Date().toLocaleTimeString(),
           sender: '***',
           channel: currentChannel,
-          content: `[LEAF LINK ESTABLISHED] ${node.host} (SID ${node.sid}) <--> irc.drfun1.com & irc.drfun1media.com:6697 [${node.leafBurstStats?.encryption || 'TLSv1.3'}] | Latency: ${node.latencyMs}ms | Synced: ${node.usersOnline} users | ${providerTag}`,
+          content: `[LEAF LINK ESTABLISHED] ${node.host} (SID ${node.sid}) <--> irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com:6697 [${node.leafBurstStats?.encryption || 'TLSv1.3'}] | Latency: ${node.latencyMs}ms | Synced: ${node.usersOnline} users | ${providerTag}`,
           type: 'system',
         };
         setChannelMessages(prev => ({
@@ -374,7 +374,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
         timestamp: new Date().toLocaleTimeString(),
         sender: 'Switch_NOC_Bot',
         channel: currentChannel,
-        content: `[1,034 LEAF NODES SYNC COMPLETE] All 1,000 Switch.com nodes (500/hub via CGW Law Offices), 24 DataPacket.com nodes (12/hub), and 10 RisingNet.com dedicated servers are 100% synced & leafed to BOTH irc.drfun1.com (SID 001) & irc.drfun1media.com (SID 002). Licensed via www.wittlawfirm.com · Payment Office: Owens Company (Bill in Receiving).`,
+        content: `[1,034 LEAF NODES SYNC COMPLETE] All 1,000 Switch.com nodes (500/hub via CGW Law Offices), 24 DataPacket.com nodes (12/hub), and 10 RisingNet.com dedicated servers are 100% synced & leafed to ALL 4 Hubs: irc.drfun1.com (001), irc.drfun1media.com (002), irc.drfun1media.net (003) & drfun1ircd.com (004). Licensed via www.wittlawfirm.com · Payment Office: Owens Company (Bill in Receiving).`,
         type: 'notice',
       };
       setChannelMessages(prev => ({
@@ -434,9 +434,11 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
 
       case 'map':
       case 'links':
-        addSysMsg('=== UnrealIRCd 6.1.4 Dual-Hub Server Topology (1,034 Synced Leaf Nodes) ===');
-        addSysMsg('`-- irc.drfun1.com [CORE HUB - SID 001] (500 Switch via CGW + 12 DataPacket + 10 RisingNet Dual-Synced)');
-        addSysMsg('`-- irc.drfun1media.com [TELEPORT HUB - SID 002] (500 Switch via CGW + 12 DataPacket + 10 RisingNet Dual-Synced)');
+        addSysMsg('=== UnrealIRCd 6.1.4 Quad-Hub Server Topology (1,034 Synced Leaf Nodes) ===');
+        addSysMsg('`-- irc.drfun1.com [CORE HUB - SID 001] (All 1,034 Switch/DataPacket/RisingNet Nodes Synced)');
+        addSysMsg('`-- irc.drfun1media.com [TELEPORT HUB - SID 002] (All 1,034 Switch/DataPacket/RisingNet Nodes Synced)');
+        addSysMsg('`-- irc.drfun1media.net [MEDIANET RELAY HUB - SID 003] (All 1,034 Switch/DataPacket/RisingNet Nodes Synced)');
+        addSysMsg('`-- drfun1ircd.com [DRFUN1IRCD HUB - SID 004] (All 1,034 Switch/DataPacket/RisingNet Nodes Synced)');
         addSysMsg('`-- services.drfun1.com [ANOPE SERVICES - SID 00A] (ChanServ, NickServ, BotServ)');
         addSysMsg('*** Legal: www.wittlawfirm.com | Switch Counsel: CGW Law Offices | Payment: Owens Company (Bill in Receiving)');
         break;
@@ -447,11 +449,10 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
         break;
 
       case 'hub':
-        addSysMsg(`=== UnrealIRCd Dual Core Hubs: irc.drfun1.com & irc.drfun1media.com:6697 (TLS 1.3) ===`);
-        addSysMsg(`Master Hub: irc.drfun1.com (SID 001) - 500 Switch Nodes (CGW Law Offices) + 12 DataPacket Leafs + 10 RisingNet Servers`);
-        addSysMsg(`Media Hub: irc.drfun1media.com (SID 002) - 500 Switch Nodes (CGW Law Offices) + 12 DataPacket Leafs + 10 RisingNet Servers`);
+        addSysMsg(`=== UnrealIRCd Core Hubs: irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com:6697 (TLS 1.3) ===`);
+        addSysMsg(`Hub 1: irc.drfun1.com (SID 001) · Hub 2: irc.drfun1media.com (SID 002) · Hub 3: irc.drfun1media.net (SID 003) · Hub 4: drfun1ircd.com (SID 004)`);
         addSysMsg(`Anope 2.1 Services: services.drfun1.com (SID 00A) & services.drfun1media.com (SID 00B)`);
-        addSysMsg(`Active Leafs: 1,034/1,034 Nodes (1,000 Switch via CGW, 24 DataPacket, 10 RisingNet Dedicated) Dual-Hub Synced`);
+        addSysMsg(`Active Leafs: 1,034/1,034 Nodes (1,000 Switch via CGW, 24 DataPacket, 10 RisingNet Dedicated) Linked & Leafed to All 4 Hubs`);
         break;
 
       case 'ping':
@@ -509,8 +510,10 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
   });
 
   const topologyFilteredNodes = ALL_1034_LEAF_NODES.filter(node => {
-    if (topologyFilter === 'hub1' && node.leafHub !== 'irc.drfun1.com') return false;
-    if (topologyFilter === 'hub2' && node.leafHub !== 'irc.drfun1media.com') return false;
+    if (topologyFilter === 'hub1' && !(node.dualHubLinked || node.leafHubs?.includes('irc.drfun1.com') || (node.leafHub || '').includes('irc.drfun1.com'))) return false;
+    if (topologyFilter === 'hub2' && !(node.dualHubLinked || node.leafHubs?.includes('irc.drfun1media.com') || (node.leafHub || '').includes('irc.drfun1media.com'))) return false;
+    if (topologyFilter === 'hub3' && !(node.dualHubLinked || node.leafHubs?.includes('irc.drfun1media.net') || (node.leafHub || '').includes('irc.drfun1media.net'))) return false;
+    if (topologyFilter === 'hub4' && !(node.dualHubLinked || node.leafHubs?.includes('drfun1ircd.com') || (node.leafHub || '').includes('drfun1ircd.com'))) return false;
     if (topologyFilter === 'switch' && node.provider !== 'switch' && node.provider !== 'unrealircd') return false;
     if (topologyFilter === 'datapacket' && node.provider !== 'datapacket') return false;
     if (topologyFilter === 'risingnet' && node.provider !== 'risingnet') return false;
@@ -699,15 +702,15 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
       <div className="bg-slate-950/95 border-b border-purple-500/20 px-4 py-2 sm:px-6">
         <div className="max-w-7xl mx-auto flex flex-col xl:flex-row xl:items-center justify-between gap-3 text-xs">
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Dual Hub Selector */}
-            <div className="flex items-center gap-1 bg-purple-950/60 border border-purple-500/40 p-1 rounded-lg">
+            {/* Core Hubs Selector */}
+            <div className="flex flex-wrap items-center gap-1 bg-purple-950/60 border border-purple-500/40 p-1 rounded-lg">
               <span className="text-[11px] font-mono text-purple-300 font-semibold px-2 flex items-center gap-1.5">
                 <Network className="w-3.5 h-3.5 text-purple-400" />
-                Dual Hubs:
+                Hubs:
               </span>
               <button
                 onClick={() => setSelectedHub('irc.drfun1.com')}
-                className={`px-2.5 py-1 rounded font-mono text-xs transition-colors flex items-center gap-1.5 font-bold ${
+                className={`px-2 py-1 rounded font-mono text-[11px] transition-colors flex items-center gap-1 font-bold ${
                   selectedHub === 'irc.drfun1.com'
                     ? 'bg-purple-600 text-white shadow-sm ring-1 ring-purple-300/50'
                     : 'text-purple-300 hover:text-white hover:bg-purple-900/50'
@@ -715,11 +718,11 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                 title="Switch SUPERNAP Las Vegas Core (SID 001)"
               >
                 <span>irc.drfun1.com:6697</span>
-                <span className="text-[10px] bg-purple-900/80 px-1 py-0.5 rounded text-purple-200">SID 001</span>
+                <span className="text-[9px] bg-purple-900/80 px-1 py-0.5 rounded text-purple-200">001</span>
               </button>
               <button
                 onClick={() => setSelectedHub('irc.drfun1media.com')}
-                className={`px-2.5 py-1 rounded font-mono text-xs transition-colors flex items-center gap-1.5 font-bold ${
+                className={`px-2 py-1 rounded font-mono text-[11px] transition-colors flex items-center gap-1 font-bold ${
                   selectedHub === 'irc.drfun1media.com'
                     ? 'bg-purple-600 text-white shadow-sm ring-1 ring-purple-300/50'
                     : 'text-purple-300 hover:text-white hover:bg-purple-900/50'
@@ -727,22 +730,46 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                 title="Switch SUPERNAP Broadcast Teleport (SID 002)"
               >
                 <span>irc.drfun1media.com:6697</span>
-                <span className="text-[10px] bg-purple-900/80 px-1 py-0.5 rounded text-purple-200">SID 002</span>
+                <span className="text-[9px] bg-purple-900/80 px-1 py-0.5 rounded text-purple-200">002</span>
+              </button>
+              <button
+                onClick={() => setSelectedHub('irc.drfun1media.net')}
+                className={`px-2 py-1 rounded font-mono text-[11px] transition-colors flex items-center gap-1 font-bold ${
+                  selectedHub === 'irc.drfun1media.net'
+                    ? 'bg-purple-600 text-white shadow-sm ring-1 ring-purple-300/50'
+                    : 'text-purple-300 hover:text-white hover:bg-purple-900/50'
+                }`}
+                title="Switch Citadel Reno MediaNet Relay Hub (SID 003)"
+              >
+                <span>irc.drfun1media.net:6697</span>
+                <span className="text-[9px] bg-purple-900/80 px-1 py-0.5 rounded text-purple-200">003</span>
+              </button>
+              <button
+                onClick={() => setSelectedHub('drfun1ircd.com')}
+                className={`px-2 py-1 rounded font-mono text-[11px] transition-colors flex items-center gap-1 font-bold ${
+                  selectedHub === 'drfun1ircd.com'
+                    ? 'bg-purple-600 text-white shadow-sm ring-1 ring-purple-300/50'
+                    : 'text-purple-300 hover:text-white hover:bg-purple-900/50'
+                }`}
+                title="Switch The Keep Atlanta DrFun1IRCd Federation Hub (SID 004)"
+              >
+                <span>drfun1ircd.com:6697</span>
+                <span className="text-[9px] bg-purple-900/80 px-1 py-0.5 rounded text-purple-200">004</span>
               </button>
             </div>
 
             {/* Anope Services Badge */}
             <div className="hidden sm:flex items-center gap-1.5 bg-slate-900/90 border border-slate-800 px-2.5 py-1 rounded-lg font-mono text-[11px] text-slate-300">
               <ShieldCheck className="w-3.5 h-3.5 text-sky-400" />
-              <span className="text-slate-400">Anope 2.1 Services:</span>
-              <span className="text-emerald-400 font-semibold">Online (SID 00A/00B)</span>
+              <span className="text-slate-400">Anope 2.1:</span>
+              <span className="text-emerald-400 font-semibold">Online (00A)</span>
             </div>
 
             {/* Sync Counter */}
             <div className="flex items-center gap-2 text-slate-300 font-mono text-[11px]">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-300 font-semibold">1,034/1,034 Nodes Synced to Both Hubs</span>
-              <span className="text-slate-500 hidden md:inline">(500 Switch/Hub via CGW · 12 DP/Hub · 10 RisingNet)</span>
+              <span className="text-emerald-300 font-semibold">1,034/1,034 Synced to All 4 Hubs</span>
+              <span className="text-slate-500 hidden 2xl:inline">(500 Switch/Hub via CGW · 12 DP/Hub · 10 RisingNet)</span>
             </div>
           </div>
 
@@ -757,7 +784,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
               }`}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isBurstingSync ? 'animate-spin' : ''}`} />
-              <span>{isBurstingSync ? 'Synchronizing 1,034 Nodes...' : 'Leaf All 1,034 Nodes to Both Hubs'}</span>
+              <span>{isBurstingSync ? 'Synchronizing 1,034 Nodes...' : 'Leaf All 1,034 Nodes to All Hubs'}</span>
             </button>
 
             <button
@@ -1040,10 +1067,10 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
               <span className="text-emerald-400 font-bold">{activeNode.subdomain.split('.')[0]} (SID {activeNode.sid})</span>
             </div>
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-[10px]">Leaf Hub:</span>
-              <span className="text-purple-300 font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                {activeNode.leafHub}
+              <span className="text-[10px]">Leaf Hubs:</span>
+              <span className="text-purple-300 font-bold flex items-center gap-1 truncate max-w-[140px]" title={activeNode.leafHub}>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span className="truncate">All 4 Hubs (001–004)</span>
               </span>
             </div>
             <div className="flex items-center justify-between text-slate-400">
@@ -1295,89 +1322,149 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
 
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-              {/* Dual Core Hubs & Anope Services Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* 4 Core Hubs & Anope Services Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
                 {/* Core Hub 1: irc.drfun1.com */}
-                <div className={`p-4 rounded-xl border transition-all relative overflow-hidden ${
+                <div className={`p-3.5 rounded-xl border transition-all relative overflow-hidden ${
                   selectedHub === 'irc.drfun1.com'
                     ? 'bg-gradient-to-br from-purple-950/50 via-slate-900 to-indigo-950/50 border-purple-400 ring-1 ring-purple-400/40 shadow-lg'
                     : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
                 }`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="px-2 py-0.5 rounded bg-purple-500/30 text-purple-200 text-[10px] font-mono font-bold uppercase tracking-wider">
-                      Master Core Hub (SID 001)
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="px-2 py-0.5 rounded bg-purple-500/30 text-purple-200 text-[10px] font-mono font-bold uppercase">
+                      Hub 1 (SID 001)
                     </span>
                     <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 font-semibold">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                      Authoritative
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                      Active
                     </span>
                   </div>
-                  <h4 className="text-base font-bold font-mono text-white">irc.drfun1.com:6697</h4>
-                  <p className="text-[11px] text-slate-400 font-mono mt-0.5">Switch SUPERNAP Las Vegas Core · Tier 5</p>
-                  <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
-                    <span className="text-slate-400">Backbone: <span className="text-sky-300">risingnet.com</span></span>
+                  <h4 className="text-sm font-bold font-mono text-white truncate">irc.drfun1.com:6697</h4>
+                  <p className="text-[10px] text-slate-400 font-mono mt-0.5 truncate">Switch SUPERNAP LV Core</p>
+                  <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono">
+                    <span className="text-sky-300">risingnet.com</span>
                     <button
                       onClick={() => setSelectedHub('irc.drfun1.com')}
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      className={`px-2 py-0.5 rounded font-bold ${
                         selectedHub === 'irc.drfun1.com' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-300 hover:text-white'
                       }`}
                     >
-                      {selectedHub === 'irc.drfun1.com' ? 'Active Target' : 'Select Hub'}
+                      {selectedHub === 'irc.drfun1.com' ? 'Active' : 'Select'}
                     </button>
                   </div>
                 </div>
 
                 {/* Core Hub 2: irc.drfun1media.com */}
-                <div className={`p-4 rounded-xl border transition-all relative overflow-hidden ${
+                <div className={`p-3.5 rounded-xl border transition-all relative overflow-hidden ${
                   selectedHub === 'irc.drfun1media.com'
                     ? 'bg-gradient-to-br from-purple-950/50 via-slate-900 to-indigo-950/50 border-purple-400 ring-1 ring-purple-400/40 shadow-lg'
                     : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
                 }`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="px-2 py-0.5 rounded bg-sky-500/30 text-sky-200 text-[10px] font-mono font-bold uppercase tracking-wider">
-                      Media Teleport Hub (SID 002)
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="px-2 py-0.5 rounded bg-sky-500/30 text-sky-200 text-[10px] font-mono font-bold uppercase">
+                      Hub 2 (SID 002)
                     </span>
                     <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 font-semibold">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                      Redundant Peer
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      Synced
                     </span>
                   </div>
-                  <h4 className="text-base font-bold font-mono text-white">irc.drfun1media.com:6697</h4>
-                  <p className="text-[11px] text-slate-400 font-mono mt-0.5">Switch SUPERNAP Broadcast Teleport · Tier 5</p>
-                  <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
-                    <span className="text-slate-400">Transit: <span className="text-emerald-300">switch.com 100% Green</span></span>
+                  <h4 className="text-sm font-bold font-mono text-white truncate">irc.drfun1media.com:6697</h4>
+                  <p className="text-[10px] text-slate-400 font-mono mt-0.5 truncate">Broadcast Teleport</p>
+                  <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono">
+                    <span className="text-emerald-300">switch.com Green</span>
                     <button
                       onClick={() => setSelectedHub('irc.drfun1media.com')}
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      className={`px-2 py-0.5 rounded font-bold ${
                         selectedHub === 'irc.drfun1media.com' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-300 hover:text-white'
                       }`}
                     >
-                      {selectedHub === 'irc.drfun1media.com' ? 'Active Target' : 'Select Hub'}
+                      {selectedHub === 'irc.drfun1media.com' ? 'Active' : 'Select'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Core Hub 3: irc.drfun1media.net */}
+                <div className={`p-3.5 rounded-xl border transition-all relative overflow-hidden ${
+                  selectedHub === 'irc.drfun1media.net'
+                    ? 'bg-gradient-to-br from-purple-950/50 via-slate-900 to-indigo-950/50 border-purple-400 ring-1 ring-purple-400/40 shadow-lg'
+                    : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                }`}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="px-2 py-0.5 rounded bg-indigo-500/30 text-indigo-200 text-[10px] font-mono font-bold uppercase">
+                      Hub 3 (SID 003)
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 font-semibold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      Synced
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-bold font-mono text-white truncate">irc.drfun1media.net:6697</h4>
+                  <p className="text-[10px] text-slate-400 font-mono mt-0.5 truncate">Switch Citadel Reno</p>
+                  <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono">
+                    <span className="text-indigo-300">MediaNet Relay</span>
+                    <button
+                      onClick={() => setSelectedHub('irc.drfun1media.net')}
+                      className={`px-2 py-0.5 rounded font-bold ${
+                        selectedHub === 'irc.drfun1media.net' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      {selectedHub === 'irc.drfun1media.net' ? 'Active' : 'Select'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Core Hub 4: drfun1ircd.com */}
+                <div className={`p-3.5 rounded-xl border transition-all relative overflow-hidden ${
+                  selectedHub === 'drfun1ircd.com'
+                    ? 'bg-gradient-to-br from-purple-950/50 via-slate-900 to-indigo-950/50 border-purple-400 ring-1 ring-purple-400/40 shadow-lg'
+                    : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                }`}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="px-2 py-0.5 rounded bg-amber-500/30 text-amber-200 text-[10px] font-mono font-bold uppercase">
+                      Hub 4 (SID 004)
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 font-semibold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      Synced
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-bold font-mono text-white truncate">drfun1ircd.com:6697</h4>
+                  <p className="text-[10px] text-slate-400 font-mono mt-0.5 truncate">Switch The Keep ATL</p>
+                  <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono">
+                    <span className="text-amber-300">IRCd Federation</span>
+                    <button
+                      onClick={() => setSelectedHub('drfun1ircd.com')}
+                      className={`px-2 py-0.5 rounded font-bold ${
+                        selectedHub === 'drfun1ircd.com' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      {selectedHub === 'drfun1ircd.com' ? 'Active' : 'Select'}
                     </button>
                   </div>
                 </div>
 
                 {/* Anope Services Hub */}
-                <div className="p-4 rounded-xl border border-slate-800 bg-slate-950/60 relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/30 text-emerald-200 text-[10px] font-mono font-bold uppercase tracking-wider">
-                      Anope 2.1 (SID 00A/00B)
+                <div className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/30 text-emerald-200 text-[10px] font-mono font-bold uppercase">
+                      Anope 2.1 (00A)
                     </span>
                     <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 font-semibold">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                      U-lines Online
+                      <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                      U-lines
                     </span>
                   </div>
-                  <h4 className="text-base font-bold font-mono text-white">services.drfun1.com</h4>
-                  <p className="text-[11px] text-slate-400 font-mono mt-0.5">ChanServ · NickServ · BotServ (DrFun1Bot) · OperServ</p>
-                  <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400">
-                    <span>Protocol: <strong className="text-purple-300">unreal4</strong></span>
-                    <span className="text-emerald-400 font-semibold">Synchronized</span>
+                  <h4 className="text-sm font-bold font-mono text-white truncate">services.drfun1.com</h4>
+                  <p className="text-[10px] text-slate-400 font-mono mt-0.5 truncate">ChanServ · NickServ · BotServ</p>
+                  <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                    <span>Proto: <strong className="text-purple-300">unreal4</strong></span>
+                    <span className="text-emerald-400 font-semibold">Synced</span>
                   </div>
                 </div>
               </div>
 
-              {/* Connecting Tree Visualizer / 1,000 Leaf Nodes Explorer */}
+              {/* Connecting Tree Visualizer / 1,034 Leaf Nodes Explorer */}
               <div className="space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-1.5">
@@ -1399,7 +1486,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                           : 'bg-slate-800/70 text-slate-300 hover:bg-slate-800 hover:text-white'
                       }`}
                     >
-                      Hub 1: irc.drfun1.com ({HUB1_ALL_LEAF_NODES.length})
+                      Hub 1: irc.drfun1.com ({ALL_1034_LEAF_NODES.length})
                     </button>
                     <button
                       onClick={() => setTopologyFilter('hub2')}
@@ -1409,7 +1496,27 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                           : 'bg-slate-800/70 text-slate-300 hover:bg-slate-800 hover:text-white'
                       }`}
                     >
-                      Hub 2: irc.drfun1media.com ({HUB2_ALL_LEAF_NODES.length})
+                      Hub 2: irc.drfun1media.com ({ALL_1034_LEAF_NODES.length})
+                    </button>
+                    <button
+                      onClick={() => setTopologyFilter('hub3')}
+                      className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-colors ${
+                        topologyFilter === 'hub3'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-slate-800/70 text-slate-300 hover:bg-slate-800 hover:text-white'
+                      }`}
+                    >
+                      Hub 3: irc.drfun1media.net ({ALL_1034_LEAF_NODES.length})
+                    </button>
+                    <button
+                      onClick={() => setTopologyFilter('hub4')}
+                      className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-colors ${
+                        topologyFilter === 'hub4'
+                          ? 'bg-amber-600 text-white shadow-sm'
+                          : 'bg-slate-800/70 text-slate-300 hover:bg-slate-800 hover:text-white'
+                      }`}
+                    >
+                      Hub 4: drfun1ircd.com ({ALL_1034_LEAF_NODES.length})
                     </button>
                     <button
                       onClick={() => setTopologyFilter('switch')}
@@ -1456,8 +1563,8 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                 </div>
 
                 <div className="text-[11px] font-mono text-slate-400 flex items-center justify-between">
-                  <span>Showing {topologyFilteredNodes.length} of {ALL_1034_LEAF_NODES.length} Leaf Nodes (Synced to Both Hubs: irc.drfun1.com &amp; irc.drfun1media.com)</span>
-                  <span>Click any leaf to view its dual-hub UnrealIRCd link block</span>
+                  <span>Showing {topologyFilteredNodes.length} of {ALL_1034_LEAF_NODES.length} Leaf Nodes (Synced to All 4 Hubs: irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net &amp; drfun1ircd.com)</span>
+                  <span>Click any leaf to view its multi-hub UnrealIRCd link block</span>
                 </div>
 
                 {/* Nodes Grid */}
@@ -1546,7 +1653,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                             : 'SWITCH.COM UNREALIRCD.ORG (100% GREEN)'} (SID {selectedLeafInspection.sid})
                         </span>
                         <span className="text-xs font-mono text-slate-400">
-                          Redundant Link to: <strong className="text-purple-300">irc.drfun1.com &amp; irc.drfun1media.com:6697</strong>
+                          Linked &amp; Leafed to: <strong className="text-purple-300">irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net &amp; drfun1ircd.com:6697</strong>
                         </span>
                       </div>
                       <h4 className="text-sm font-bold text-white mt-1">

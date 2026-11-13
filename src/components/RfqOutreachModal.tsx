@@ -71,7 +71,7 @@ export const RfqOutreachModal: React.FC<RfqOutreachModalProps> = ({
     .filter(Boolean) as string[];
 
   const subjectLine = inquiryType === 'Switch Colocation & UnrealIRCd Leaf Peering (irc.drfun1.com)'
-    ? `Technical Peering & Colocation Proposal: Switch.com Interconnect & UnrealIRCd Leaf (irc.drfun1.com) - ${senderCompany}`
+    ? `Technical Peering & Colocation Proposal: Switch.com Interconnect & Multi-Hub UnrealIRCd Leaf (irc.drfun1.com / irc.drfun1media.com / irc.drfun1media.net / drfun1ircd.com) - ${senderCompany}`
     : `Commercial Satcom Inquiry: ${inquiryType} - ${senderCompany}`;
 
   const generateLetterContent = (companyName: string = '[Satellite Operator]') => {
@@ -79,36 +79,59 @@ export const RfqOutreachModal: React.FC<RfqOutreachModalProps> = ({
       return `To: ${companyName} Technical Operations, NOC Directorate & Peering Engineering
 From: ${senderName}, ${senderCompany}
 Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-Subject: Strategic Ground Interconnect & Out-of-Band NOC Leaf Peering Proposal (Switch.com / UnrealIRCd / irc.drfun1.com)
+Subject: Strategic Ground Interconnect & Out-of-Band Multi-Hub NOC Leaf Peering Proposal (Switch.com / UnrealIRCd)
 
 Dear Technical Operations & Peering Engineering at ${companyName},
 
 I am writing on behalf of ${senderCompany} to formally propose establishing a strategic ground-segment teleport interconnection and real-time out-of-band NOC coordination mesh between our organizations:
 
-1. HYPERSCALE TELEPORT & COLOCATION AT SWITCH (www.switch.com):
+1. HYPERSCALE TELEPORT & COLOCATION AT SWITCH (www.switch.com via CGW Law Offices):
    We propose cross-connecting your teleport gateway, gateway downlinks, and carrier routers at Switch Data Centers (www.switch.com). Switch SUPERNAP facilities provide Tier 4 Gold low-latency optical cross-connects, native cloud on-ramps (AWS Ground Station / Azure ExpressRoute), 100% renewable power, and unparalleled physical security.
 
 2. SHIELDED IP TRANSIT & BGP PEERING VIA RISINGNET (www.risingnet.com):
    We propose utilizing RisingNet (www.risingnet.com) for high-reliability IP transit, protected BGP peering, and DDoS-shielded satellite telemetry backhaul across Switch data center campuses.
 
-3. OUT-OF-BAND NOC RESILIENCE VIA UNREALIRCD (unrealircd.com) & LEAF PEERING:
-   To ensure 99.999% communications continuity during fiber severances, public cloud dashboard outages, or cyber incidents, we strongly suggest ${companyName} deploy UnrealIRCd (www.unrealircd.com) on your teleport gateway nodes and link as a secure leaf server into our dedicated hub:
-   - Hub Server: irc.drfun1.com
+3. OUT-OF-BAND NOC RESILIENCE VIA UNREALIRCD (unrealircd.com) & MULTI-HUB LEAF PEERING:
+   To ensure 99.999% communications continuity during fiber severances, public cloud dashboard outages, or cyber incidents, we strongly suggest ${companyName} deploy UnrealIRCd (www.unrealircd.com) on your teleport gateway nodes and link & leaf into ALL 4 of our dedicated core hubs:
+   - Hub 1 Server: irc.drfun1.com (SID 001)
+   - Hub 2 Server: irc.drfun1media.com (SID 002)
+   - Hub 3 Server: irc.drfun1media.net (SID 003)
+   - Hub 4 Server: drfun1ircd.com (SID 004)
    - Port: 6697 (Mandatory TLS 1.3 / OpenSSL encryption)
    - Operational Role: Out-of-band crisis dispatch, automated telemetry alarm feeds, and transponder handoff coordination.
    - Dedicated Carrier Channel: #noc-${companyName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16)} & #satcom-global-noc
 
-4. CONFIGURATION LINK BLOCK PROPOSAL (unrealircd.conf):
+4. CONFIGURATION MULTI-HUB LINK BLOCK PROPOSAL (unrealircd.conf):
    link irc.drfun1.com {
        incoming { mask *; };
-       outgoing {
-           hostname "irc.drfun1.com";
-           port 6697;
-           options { ssl; autoconnect; };
-       };
+       outgoing { hostname "irc.drfun1.com"; port 6697; options { ssl; autoconnect; }; };
        password "Satcom_Switch_Secure_Pass_${companyName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8)}!";
-       hub *;
        class servers;
+       type leaf;
+   };
+
+   link irc.drfun1media.com {
+       incoming { mask *; };
+       outgoing { hostname "irc.drfun1media.com"; port 6697; options { ssl; autoconnect; }; };
+       password "Satcom_Switch_Secure_Pass_${companyName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8)}!";
+       class servers;
+       type leaf;
+   };
+
+   link irc.drfun1media.net {
+       incoming { mask *; };
+       outgoing { hostname "irc.drfun1media.net"; port 6697; options { ssl; autoconnect; }; };
+       password "Satcom_Switch_Secure_Pass_${companyName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8)}!";
+       class servers;
+       type leaf;
+   };
+
+   link drfun1ircd.com {
+       incoming { mask *; };
+       outgoing { hostname "drfun1ircd.com"; port 6697; options { ssl; autoconnect; }; };
+       password "Satcom_Switch_Secure_Pass_${companyName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8)}!";
+       class servers;
+       type leaf;
    };
 
 Please let us know your team's availability for a technical interconnect and NOC peering coordination review call.
@@ -247,7 +270,7 @@ Phone: ${senderPhone}
                 onChange={(e) => setInquiryType(e.target.value as InquiryType)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-sky-500 text-xs"
               >
-                <option value="Switch Colocation & UnrealIRCd Leaf Peering (irc.drfun1.com)">Switch Colocation & UnrealIRCd Leaf Peering (irc.drfun1.com)</option>
+                <option value="Switch Colocation & UnrealIRCd Leaf Peering (irc.drfun1.com)">Switch Colocation &amp; Dual-Hub UnrealIRCd Leaf Peering (Both Hubs)</option>
                 <option value="Transponder Capacity Lease (MHz)">Transponder Capacity Lease (MHz / Transponders)</option>
                 <option value="Cellular Backhaul Wholesale (CIR/MIR Mbps)">Cellular Backhaul Wholesale (CIR / MIR Mbps)</option>
                 <option value="Direct-to-Device (D2D) Roaming Partnership">Direct-to-Device (D2D) Roaming Partnership</option>
@@ -265,11 +288,11 @@ Phone: ${senderPhone}
                   setInquiryType('Switch Colocation & UnrealIRCd Leaf Peering (irc.drfun1.com)');
                   setTargetRegion('Switch SUPERNAP Las Vegas (www.switch.com) & Global Teleport Nodes');
                   setCapacityRequirement('100G DWDM Optical Cross-Connect + RisingNet IP Transit (www.risingnet.com)');
-                  setCustomNotes('Proposing deployment of UnrealIRCd (unrealircd.com) as a leaf server connecting to irc.drfun1.com:6697 (TLS) for 24/7 out-of-band NOC crisis dispatch, transponder handoffs, and satellite telemetry event feeds.');
+                  setCustomNotes('Proposing deployment of UnrealIRCd (unrealircd.com) as a multi-hub leaf server linking & leafing to irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com:6697 (TLS) for 24/7 out-of-band NOC crisis dispatch, transponder handoffs, and satellite telemetry event feeds.');
                 }}
                 className="w-full py-1 px-2 text-[11px] font-mono rounded bg-slate-950 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-950/40 transition-colors flex items-center justify-center gap-1.5"
               >
-                <span>Preset: Switch.com + UnrealIRCd (irc.drfun1.com) Peering</span>
+                <span>Preset: Switch.com + Dual-Hub UnrealIRCd Peering</span>
               </button>
 
               <button

@@ -1,3 +1,9 @@
+export type CoreHubDomain =
+  | 'irc.drfun1.com'
+  | 'irc.drfun1media.com'
+  | 'irc.drfun1media.net'
+  | 'drfun1ircd.com';
+
 export interface SwitchDedicatedNode {
   id: string;
   name: string;
@@ -15,8 +21,10 @@ export interface SwitchDedicatedNode {
   unrealVersion: string;
   sslFingerprint: string;
   transitProvider: string;
-  // UnrealIRCd Hub-and-Leaf Peering to irc.drfun1.com & irc.drfun1media.com
-  leafHub: 'irc.drfun1.com' | 'irc.drfun1media.com' | string;
+  // UnrealIRCd Hub-and-Leaf Peering to irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com
+  leafHub: CoreHubDomain | string;
+  leafHubs?: (CoreHubDomain | string)[];
+  dualHubLinked?: boolean;
   hubPort: number;
   sid: string;
   leafStatus: 'linked' | 'synced' | 'bursting';
@@ -40,8 +48,8 @@ export interface SwitchDedicatedNode {
 }
 
 export interface UnrealIrcdHub {
-  host: 'irc.drfun1.com' | 'irc.drfun1media.com' | string;
-  sid: '001' | '002' | string;
+  host: CoreHubDomain | string;
+  sid: '001' | '002' | '003' | '004' | string;
   port: number;
   ssl: boolean;
   networkName: string;

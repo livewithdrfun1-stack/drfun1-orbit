@@ -13,16 +13,18 @@ export const UNREAL_HUB_DETAILS: UnrealIrcdHub = {
   paymentOffice: 'Owens Company (www.owenscompany.com)',
   billingOffice: 'Bill in Receiving (Owens Company Accounts Payable)',
   leafNodes: [
-    'irc.drfun1media.com (Dual Core Hub Peering · SID 002)',
+    'irc.drfun1media.com (Hub Peering · SID 002)',
+    'irc.drfun1media.net (Hub Peering · SID 003)',
+    'drfun1ircd.com (Hub Peering · SID 004)',
     '500 Dedicated Switch.com Nodes via CGW Law Offices (SIDs 101-600)',
     '12 DataPacket.com 100G No-Ads Dedicated Leafs (SIDs D01-D12)',
-    '10 Dedicated Bare-Metal Servers from RisingNet.com (Synced & Leafed to Both Hubs)',
-    'Dual-Hub Spanning Tree Synchronized across all 1,034 Leaf Nodes',
+    '10 Dedicated Bare-Metal Servers from RisingNet.com (Synced & Leafed to All Hubs)',
+    'Multi-Hub Spanning Tree Synchronized across all 1,034 Leaf Nodes',
   ],
   totalSyncedChannels: 855000,
   totalSyncedUsers: 39150,
   aggregateBandwidth: '10+ Tbps Global Terrestrial, Subsea & Space Interconnect (1,034 Total Nodes · 500 Switch/Hub via CGW · 12 DataPacket/Hub · 10 RisingNet)',
-  redundantPeerHub: 'irc.drfun1media.com',
+  redundantPeerHub: 'irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com',
   anopeServicesHost: 'services.drfun1.com',
 };
 
@@ -39,28 +41,93 @@ export const UNREAL_MEDIA_HUB_DETAILS: UnrealIrcdHub = {
   paymentOffice: 'Owens Company (www.owenscompany.com)',
   billingOffice: 'Bill in Receiving (Owens Company Accounts Payable)',
   leafNodes: [
-    'irc.drfun1.com (Dual Core Hub Peering · SID 001)',
+    'irc.drfun1.com (Hub Peering · SID 001)',
+    'irc.drfun1media.net (Hub Peering · SID 003)',
+    'drfun1ircd.com (Hub Peering · SID 004)',
     '500 Dedicated Switch.com Nodes via CGW Law Offices (SIDs 601-B00)',
     '12 DataPacket.com 100G No-Ads Dedicated Leafs (SIDs D13-D24)',
-    '10 Dedicated Bare-Metal Servers from RisingNet.com (Synced & Leafed to Both Hubs)',
-    'Dual-Hub Spanning Tree Synchronized across all 1,034 Leaf Nodes',
+    '10 Dedicated Bare-Metal Servers from RisingNet.com (Synced & Leafed to All Hubs)',
+    'Multi-Hub Spanning Tree Synchronized across all 1,034 Leaf Nodes',
   ],
   totalSyncedChannels: 855000,
   totalSyncedUsers: 39150,
   aggregateBandwidth: '10+ Tbps Global Terrestrial, Subsea & Space Interconnect (1,034 Total Nodes · 500 Switch/Hub via CGW · 12 DataPacket/Hub · 10 RisingNet)',
-  redundantPeerHub: 'irc.drfun1.com',
+  redundantPeerHub: 'irc.drfun1.com, irc.drfun1media.net & drfun1ircd.com',
   anopeServicesHost: 'services.drfun1media.com',
+};
+
+export const UNREAL_MEDIA_NET_HUB_DETAILS: UnrealIrcdHub = {
+  host: 'irc.drfun1media.net',
+  sid: '003',
+  port: 6697,
+  ssl: true,
+  networkName: 'DrFun1-MediaNet-Relay-Mesh',
+  transitProvider: 'RisingNet Global Transit (www.risingnet.com)',
+  colocation: 'Switch Citadel Campus (Tahoe Reno, NV) via CGW Law Offices',
+  licensee: 'Richard Alan Witt (www.wittlawfirm.com / FCC FRN: 0034981290)',
+  legalCounsel: 'CGW Law Offices (Curtis, Gregory & Wilson Law Offices)',
+  paymentOffice: 'Owens Company (www.owenscompany.com)',
+  billingOffice: 'Bill in Receiving (Owens Company Accounts Payable)',
+  leafNodes: [
+    'irc.drfun1.com (Hub Peering · SID 001)',
+    'irc.drfun1media.com (Hub Peering · SID 002)',
+    'drfun1ircd.com (Hub Peering · SID 004)',
+    '1,000 Dedicated Switch.com Nodes via CGW Law Offices (Linked & Leafed)',
+    '24 DataPacket.com 100G No-Ads Dedicated Leafs (Linked & Leafed)',
+    '10 Dedicated Bare-Metal Servers from RisingNet.com (Synced & Leafed)',
+  ],
+  totalSyncedChannels: 855000,
+  totalSyncedUsers: 39150,
+  aggregateBandwidth: '10+ Tbps Global Terrestrial, Subsea & Space Interconnect (All 1,034 Leaf Nodes Synced)',
+  redundantPeerHub: 'irc.drfun1.com, irc.drfun1media.com & drfun1ircd.com',
+  anopeServicesHost: 'services.drfun1.com',
+};
+
+export const UNREAL_IRCD_COM_HUB_DETAILS: UnrealIrcdHub = {
+  host: 'drfun1ircd.com',
+  sid: '004',
+  port: 6697,
+  ssl: true,
+  networkName: 'DrFun1IRCd-Core-Federation',
+  transitProvider: 'RisingNet Global Transit (www.risingnet.com)',
+  colocation: 'Switch The Keep Campus (Atlanta, GA) & Las Vegas Core via CGW Law Offices',
+  licensee: 'Richard Alan Witt (www.wittlawfirm.com / FCC FRN: 0034981290)',
+  legalCounsel: 'CGW Law Offices (Curtis, Gregory & Wilson Law Offices)',
+  paymentOffice: 'Owens Company (www.owenscompany.com)',
+  billingOffice: 'Bill in Receiving (Owens Company Accounts Payable)',
+  leafNodes: [
+    'irc.drfun1.com (Hub Peering · SID 001)',
+    'irc.drfun1media.com (Hub Peering · SID 002)',
+    'irc.drfun1media.net (Hub Peering · SID 003)',
+    '1,000 Dedicated Switch.com Nodes via CGW Law Offices (Linked & Leafed)',
+    '24 DataPacket.com 100G No-Ads Dedicated Leafs (Linked & Leafed)',
+    '10 Dedicated Bare-Metal Servers from RisingNet.com (Synced & Leafed)',
+  ],
+  totalSyncedChannels: 855000,
+  totalSyncedUsers: 39150,
+  aggregateBandwidth: '10+ Tbps Global Terrestrial, Subsea & Space Interconnect (All 1,034 Leaf Nodes Synced)',
+  redundantPeerHub: 'irc.drfun1.com, irc.drfun1media.com & irc.drfun1media.net',
+  anopeServicesHost: 'services.drfun1.com',
 };
 
 export const DUAL_UNREAL_HUBS: UnrealIrcdHub[] = [
   UNREAL_HUB_DETAILS,
   UNREAL_MEDIA_HUB_DETAILS,
+  UNREAL_MEDIA_NET_HUB_DETAILS,
+  UNREAL_IRCD_COM_HUB_DETAILS,
 ];
+
+export const ALL_UNREAL_HUBS: UnrealIrcdHub[] = DUAL_UNREAL_HUBS;
 
 export const ANOPE_SERVICES_DETAILS: AnopeServicesHub = {
   host: 'services.drfun1.com',
   sid: '00A',
-  linkedHubs: ['irc.drfun1.com:6697', 'irc.drfun1media.com:6697'],
+  linkedHubs: [
+    'irc.drfun1.com:6697',
+    'irc.drfun1media.com:6697',
+    'irc.drfun1media.net:6697',
+    'drfun1ircd.com:6697',
+  ],
   anopeVersion: 'Anope-2.1.0-Release (git.anope.org)',
   nickServCount: 4210,
   chanServCount: 184,
@@ -69,7 +136,7 @@ export const ANOPE_SERVICES_DETAILS: AnopeServicesHub = {
   status: 'active',
 };
 
-export const SWITCH_DEDICATED_NODES: SwitchDedicatedNode[] = [
+const RAW_SWITCH_DEDICATED_NODES: SwitchDedicatedNode[] = [
   {
     id: 'dev_drfun1media_node',
     name: 'DrFun1 Media Development Gateway & Broadcast Hub (dev.drfun1media.com)',
@@ -1213,6 +1280,43 @@ link irc.drfun1.com {
 };`,
   },
 ];
+
+export const SWITCH_DEDICATED_NODES: SwitchDedicatedNode[] = RAW_SWITCH_DEDICATED_NODES.map((node) => {
+  const normalizedBlock = node.unrealLinkBlock.replace(
+    /options\s*\{\s*ssl;\s*\}/g,
+    'options { ssl; autoconnect; }'
+  );
+  const hasHub1 = normalizedBlock.includes('link irc.drfun1.com');
+  const hasHub2 = normalizedBlock.includes('link irc.drfun1media.com');
+  const hasHub3 = normalizedBlock.includes('link irc.drfun1media.net');
+  const hasHub4 = normalizedBlock.includes('link drfun1ircd.com');
+  const appendedHub1 = hasHub1
+    ? ''
+    : `\n\n/* Hub 1 Leaf Link to Master Core Hub irc.drfun1.com (SID 001) */\nlink irc.drfun1.com {\n    incoming { mask *.drfun1.com; };\n    outgoing {\n        hostname "irc.drfun1.com";\n        port 6697;\n        options { ssl; autoconnect; };\n    };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n    type leaf;\n};`;
+  const appendedHub2 = hasHub2
+    ? ''
+    : `\n\n/* Hub 2 Leaf Link to Media Teleport Hub irc.drfun1media.com (SID 002) */\nlink irc.drfun1media.com {\n    incoming { mask *.drfun1media.com; };\n    outgoing {\n        hostname "irc.drfun1media.com";\n        port 6697;\n        options { ssl; autoconnect; };\n    };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n    type leaf;\n};`;
+  const appendedHub3 = hasHub3
+    ? ''
+    : `\n\n/* Hub 3 Leaf Link to MediaNet Relay Hub irc.drfun1media.net (SID 003) */\nlink irc.drfun1media.net {\n    incoming { mask *.drfun1media.net; };\n    outgoing {\n        hostname "irc.drfun1media.net";\n        port 6697;\n        options { ssl; autoconnect; };\n    };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n    type leaf;\n};`;
+  const appendedHub4 = hasHub4
+    ? ''
+    : `\n\n/* Hub 4 Leaf Link to DrFun1IRCd Federation Hub drfun1ircd.com (SID 004) */\nlink drfun1ircd.com {\n    incoming { mask *drfun1ircd.com; };\n    outgoing {\n        hostname "drfun1ircd.com";\n        port 6697;\n        options { ssl; autoconnect; };\n    };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n    type leaf;\n};`;
+  const appendedUlines = normalizedBlock.includes('ulines')
+    ? ''
+    : `\n\nulines {\n    "services.drfun1.com";\n    "services.drfun1media.com";\n};`;
+
+  return {
+    ...node,
+    leafHub: 'irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com',
+    leafHubs: ['irc.drfun1.com', 'irc.drfun1media.com', 'irc.drfun1media.net', 'drfun1ircd.com'],
+    dualHubLinked: true,
+    legalCounsel: node.legalCounsel || 'CGW Law Offices (Curtis, Gregory & Wilson Law Offices)',
+    paymentOffice: node.paymentOffice || 'Owens Company (www.owenscompany.com)',
+    billingOffice: node.billingOffice || 'Bill in Receiving (Owens Company Accounts Payable)',
+    unrealLinkBlock: `${normalizedBlock}${appendedHub1}${appendedHub2}${appendedHub3}${appendedHub4}${appendedUlines}`,
+  };
+});
 
 
 export const ALL_DRFUN1_MEDIA_CHANNELS: IrcChannel[] = [
@@ -3613,6 +3717,30 @@ serverinfo {
 
 uplink irc.drfun1.com {
     host "127.0.0.1";
+    port 6697;
+    password "WittLaw_Switch_NeoStats_Sync_2026";
+    ssl yes;
+    protocol "unreal";
+};
+
+uplink irc.drfun1media.com {
+    host "irc.drfun1media.com";
+    port 6697;
+    password "WittLaw_Switch_NeoStats_Sync_2026";
+    ssl yes;
+    protocol "unreal";
+};
+
+uplink irc.drfun1media.net {
+    host "irc.drfun1media.net";
+    port 6697;
+    password "WittLaw_Switch_NeoStats_Sync_2026";
+    ssl yes;
+    protocol "unreal";
+};
+
+uplink drfun1ircd.com {
+    host "drfun1ircd.com";
     port 6697;
     password "WittLaw_Switch_NeoStats_Sync_2026";
     ssl yes;

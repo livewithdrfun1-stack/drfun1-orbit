@@ -18,12 +18,22 @@ import { SWITCH_DEDICATED_NODES } from './ircData';
 export const UNREAL_HUB_TARGET = {
   hostname: 'irc.drfun1.com',
   secondaryHostname: 'irc.drfun1media.com',
+  netHubHostname: 'irc.drfun1media.net',
+  ircdHubHostname: 'drfun1ircd.com',
+  hubDomains: [
+    'irc.drfun1.com',
+    'irc.drfun1media.com',
+    'irc.drfun1media.net',
+    'drfun1ircd.com',
+  ] as const,
   anopeHostname: 'services.drfun1.com',
   anopeSecondaryHostname: 'services.drfun1media.com',
   sslPort: 6697,
   plainPort: 6667,
   hubSid: '001',
   mediaHubSid: '002',
+  netHubSid: '003',
+  ircdHubSid: '004',
   anopeSid: '00A',
   networkName: 'DrFun1 Media IRC Network',
   leafAuthSecret: 'drfun1-mesh-leaf-auth-2026',
@@ -38,7 +48,7 @@ export const UNREAL_HUB_TARGET = {
   totalHub2LeafNodes: 517, // 500 Switch + 12 DataPacket + 5 RisingNet
   totalSwitchNodes: 1000,  // 500 per hub via CGW Law Offices
   totalDataPacketNodes: 24, // 12 per hub
-  totalRisingNetNodes: 10, // 10 dedicated servers synced & leafed to both hubs
+  totalRisingNetNodes: 10, // 10 dedicated servers synced & leafed to all hubs
   totalLeafNodes: 1034,
 };
 
@@ -114,7 +124,9 @@ function createDataPacketNode(def: DataPacketLeafDef, idx: number, targetHub: 'i
     unrealVersion: 'UnrealIRCd-6.1.4',
     sslFingerprint: `DP:${(idx + 21).toString(16).toUpperCase()}:A7:E9:55:12:3C:99:FA:44:88:B1:00:26:DD:4A:EE`,
     transitProvider: 'DataPacket.com 100+ Tbps Optical BGP (Zero Ads / Ad-Free Stream Relay)',
-    leafHub: targetHub,
+    leafHub: 'irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com',
+    leafHubs: ['irc.drfun1.com', 'irc.drfun1media.com', 'irc.drfun1media.net', 'drfun1ircd.com'],
+    dualHubLinked: true,
     hubPort: 6697,
     sid: def.sid,
     leafStatus: 'synced',
@@ -131,7 +143,7 @@ function createDataPacketNode(def: DataPacketLeafDef, idx: number, targetHub: 'i
       encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384'
     },
     unrealLinkBlock: `/* DataPacket.com 100G No-Ads Leaf Node ${def.sid} (${def.metro}) */
-/* Dual-Hub Redundant Leaf to irc.drfun1.com & irc.drfun1media.com */
+/* Multi-Hub Synced & Leafed to irc.drfun1.com (001), irc.drfun1media.com (002), irc.drfun1media.net (003) & drfun1ircd.com (004) */
 /* Policy: datapacket.com no ads | Legal: CGW Law Offices | Payment: Owens Company (Bill in Receiving) */
 
 link irc.drfun1.com {
@@ -140,10 +152,11 @@ link irc.drfun1.com {
         bind-ip *;
         hostname "irc.drfun1.com";
         port 6697;
-        options { ssl; };
+        options { ssl; autoconnect; };
     };
     password "${UNREAL_HUB_TARGET.leafAuthSecret}";
     class servers;
+    type leaf;
 };
 
 link irc.drfun1media.com {
@@ -152,10 +165,37 @@ link irc.drfun1media.com {
         bind-ip *;
         hostname "irc.drfun1media.com";
         port 6697;
-        options { ssl; };
+        options { ssl; autoconnect; };
     };
     password "${UNREAL_HUB_TARGET.leafAuthSecret}";
     class servers;
+    type leaf;
+};
+
+link irc.drfun1media.net {
+    incoming { mask *; };
+    outgoing {
+        bind-ip *;
+        hostname "irc.drfun1media.net";
+        port 6697;
+        options { ssl; autoconnect; };
+    };
+    password "${UNREAL_HUB_TARGET.leafAuthSecret}";
+    class servers;
+    type leaf;
+};
+
+link drfun1ircd.com {
+    incoming { mask *; };
+    outgoing {
+        bind-ip *;
+        hostname "drfun1ircd.com";
+        port 6697;
+        options { ssl; autoconnect; };
+    };
+    password "${UNREAL_HUB_TARGET.leafAuthSecret}";
+    class servers;
+    type leaf;
 };
 
 ulines {
@@ -258,7 +298,9 @@ export const RISINGNET_10_DEDICATED_SERVERS: SwitchDedicatedNode[] = RISINGNET_1
     unrealVersion: 'UnrealIRCd-6.1.4',
     sslFingerprint: `RN:${(idx + 41).toString(16).toUpperCase()}:B9:4C:12:88:DF:99:E1:33:AA:77:00:26:FA:11:05`,
     transitProvider: 'RisingNet Optical Backbone & Dedicated Bare-Metal Server (www.risingnet.com)',
-    leafHub: def.primaryHub,
+    leafHub: 'irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com',
+    leafHubs: ['irc.drfun1.com', 'irc.drfun1media.com', 'irc.drfun1media.net', 'drfun1ircd.com'],
+    dualHubLinked: true,
     hubPort: 6697,
     sid: def.sid,
     leafStatus: 'synced',
@@ -274,7 +316,7 @@ export const RISINGNET_10_DEDICATED_SERVERS: SwitchDedicatedNode[] = RISINGNET_1
       encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384'
     },
     unrealLinkBlock: `/* RisingNet.com Dedicated Server ${def.sid} (${def.metro}) */
-/* Dual-Hub Redundant Synchronized Link Block to Both irc.drfun1.com & irc.drfun1media.com */
+/* Multi-Hub Synchronized & Leafed to irc.drfun1.com (001), irc.drfun1media.com (002), irc.drfun1media.net (003) & drfun1ircd.com (004) */
 /* Provider: RisingNet.com | Legal: CGW Law Offices | Payment: Owens Company (Bill in Receiving) */
 
 link irc.drfun1.com {
@@ -283,10 +325,11 @@ link irc.drfun1.com {
         bind-ip *;
         hostname "irc.drfun1.com";
         port 6697;
-        options { ssl; };
+        options { ssl; autoconnect; };
     };
     password "${UNREAL_HUB_TARGET.leafAuthSecret}";
     class servers;
+    type leaf;
 };
 
 link irc.drfun1media.com {
@@ -295,10 +338,37 @@ link irc.drfun1media.com {
         bind-ip *;
         hostname "irc.drfun1media.com";
         port 6697;
-        options { ssl; };
+        options { ssl; autoconnect; };
     };
     password "${UNREAL_HUB_TARGET.leafAuthSecret}";
     class servers;
+    type leaf;
+};
+
+link irc.drfun1media.net {
+    incoming { mask *; };
+    outgoing {
+        bind-ip *;
+        hostname "irc.drfun1media.net";
+        port 6697;
+        options { ssl; autoconnect; };
+    };
+    password "${UNREAL_HUB_TARGET.leafAuthSecret}";
+    class servers;
+    type leaf;
+};
+
+link drfun1ircd.com {
+    incoming { mask *; };
+    outgoing {
+        bind-ip *;
+        hostname "drfun1ircd.com";
+        port 6697;
+        options { ssl; autoconnect; };
+    };
+    password "${UNREAL_HUB_TARGET.leafAuthSecret}";
+    class servers;
+    type leaf;
 };
 
 ulines {
@@ -762,7 +832,9 @@ function generate500SwitchNodesForHub(
       unrealVersion: 'UnrealIRCd-6.1.4 (unrealircd.org)',
       sslFingerprint: `${hubPrefix.toUpperCase()}:${sidStr.slice(0, 2)}:${(i % 99).toString(16).padStart(2, '0').toUpperCase()}:4B:1A:89:C2:5E:F0:77:1A:BC:88:01:DF`,
       transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)',
-      leafHub: targetHub,
+      leafHub: 'irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com',
+      leafHubs: ['irc.drfun1.com', 'irc.drfun1media.com', 'irc.drfun1media.net', 'drfun1ircd.com'],
+      dualHubLinked: true,
       hubPort: 6697,
       sid: sidStr,
       leafStatus: 'synced',
@@ -779,7 +851,7 @@ function generate500SwitchNodesForHub(
         encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384'
       },
       unrealLinkBlock: `/* Switch.com 100% Green Tier 5 Leaf Node ${sidStr} (${seed.city}) via CGW Law Offices */
-/* Dual-Hub Redundant Link to Both irc.drfun1.com & irc.drfun1media.com */
+/* Multi-Hub Synced & Leafed to irc.drfun1.com (001), irc.drfun1media.com (002), irc.drfun1media.net (003) & drfun1ircd.com (004) */
 /* License: www.wittlawfirm.com | Legal: CGW Law Offices | Payment: Owens Company (Bill in Receiving) */
 
 link irc.drfun1.com {
@@ -788,10 +860,11 @@ link irc.drfun1.com {
         bind-ip *;
         hostname "irc.drfun1.com";
         port 6697;
-        options { ssl; };
+        options { ssl; autoconnect; };
     };
     password "${UNREAL_HUB_TARGET.leafAuthSecret}";
     class servers;
+    type leaf;
 };
 
 link irc.drfun1media.com {
@@ -800,10 +873,37 @@ link irc.drfun1media.com {
         bind-ip *;
         hostname "irc.drfun1media.com";
         port 6697;
-        options { ssl; };
+        options { ssl; autoconnect; };
     };
     password "${UNREAL_HUB_TARGET.leafAuthSecret}";
     class servers;
+    type leaf;
+};
+
+link irc.drfun1media.net {
+    incoming { mask *; };
+    outgoing {
+        bind-ip *;
+        hostname "irc.drfun1media.net";
+        port 6697;
+        options { ssl; autoconnect; };
+    };
+    password "${UNREAL_HUB_TARGET.leafAuthSecret}";
+    class servers;
+    type leaf;
+};
+
+link drfun1ircd.com {
+    incoming { mask *; };
+    outgoing {
+        bind-ip *;
+        hostname "drfun1ircd.com";
+        port 6697;
+        options { ssl; autoconnect; };
+    };
+    password "${UNREAL_HUB_TARGET.leafAuthSecret}";
+    class servers;
+    type leaf;
 };
 
 ulines {
@@ -901,12 +1001,12 @@ export const INITIAL_UNREAL_SEARCH_INDEX: UnrealServerRecord[] = [
     onlineOpers: 14,
     latencyToHubMs: 0.8,
     cipherSuite: 'TLS_AES_256_GCM_SHA384 (ECDHE-X25519)',
-    description: 'Master Core Hub for the DrFun1 Satcom Broadcast & Space Telemetry Mesh. Redundantly peered to irc.drfun1media.com with 1,034 leaf nodes (500 Switch/hub via CGW Law Offices, 12 DataPacket/hub, 10 RisingNet dedicated servers).',
+    description: 'Master Core Hub for the DrFun1 Satcom Broadcast & Space Telemetry Mesh. Redundantly peered to irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com with 1,034 leaf nodes (500 Switch/hub via CGW Law Offices, 12 DataPacket/hub, 10 RisingNet dedicated servers).',
     adminContact: 'admin@drfun1.com',
     websiteUrl: 'https://stats.drfun1ircd.com',
     tags: ['Master Hub', 'Switch SUPERNAP', 'Anope 2.1', 'ZNC Bouncer', 'Broadcast'],
     sampleChannels: ['#drfun1tv', '#space', '#broadcast', '#satcom', '#help'],
-    linkBlockSnippet: `/* Self Master Hub */\nme {\n    name "irc.drfun1.com";\n    info "Master Hub - Switch SUPERNAP";\n    sid "001";\n};\npeer irc.drfun1media.com {\n    port 6697;\n    options { ssl; };\n};`
+    linkBlockSnippet: `/* Self Master Hub */\nme {\n    name "irc.drfun1.com";\n    info "Master Hub - Switch SUPERNAP";\n    sid "001";\n};\npeer irc.drfun1media.com {\n    port 6697;\n    options { ssl; };\n};\npeer irc.drfun1media.net {\n    port 6697;\n    options { ssl; };\n};\npeer drfun1ircd.com {\n    port 6697;\n    options { ssl; };\n};`
   },
   {
     id: 'hub_drfun1media_vegas',
@@ -934,13 +1034,69 @@ export const INITIAL_UNREAL_SEARCH_INDEX: UnrealServerRecord[] = [
     websiteUrl: 'https://stats.drfun1ircd.com',
     tags: ['Media Hub', 'Switch SUPERNAP', 'Anope 2.1', 'Live TV Playout'],
     sampleChannels: ['#drfun1-primetv', '#drfun1-media', '#paramount-cbs', '#all-music'],
-    linkBlockSnippet: `/* Self Secondary Hub */\nme {\n    name "irc.drfun1media.com";\n    info "Media Broadcast Hub - Switch SUPERNAP";\n    sid "002";\n};\npeer irc.drfun1.com {\n    port 6697;\n    options { ssl; };\n};`
+    linkBlockSnippet: `/* Self Secondary Hub */\nme {\n    name "irc.drfun1media.com";\n    info "Media Broadcast Hub - Switch SUPERNAP";\n    sid "002";\n};\npeer irc.drfun1.com {\n    port 6697;\n    options { ssl; };\n};\npeer irc.drfun1media.net {\n    port 6697;\n    options { ssl; };\n};\npeer drfun1ircd.com {\n    port 6697;\n    options { ssl; };\n};`
+  },
+  {
+    id: 'hub_drfun1medianet_reno',
+    name: 'irc.drfun1media.net',
+    networkName: 'DrFun1 Media Global Mesh',
+    hubHost: 'irc.drfun1media.net',
+    isLeafedToDrFun1: true,
+    leafVerifiedAt: '2026-02-15T00:00:00Z',
+    unrealVersion: 'UnrealIRCd-6.1.4',
+    anopeVersion: 'Anope-2.1.0',
+    sslPort: 6697,
+    plainPort: 6667,
+    ipOrHostname: 'irc.drfun1media.net',
+    country: 'United States',
+    region: 'North America',
+    locationCity: 'Tahoe Reno, NV',
+    datacenter: 'Switch Citadel Campus Tahoe Reno (www.switch.com)',
+    onlineUsers: 3680,
+    onlineChannels: 156,
+    onlineOpers: 11,
+    latencyToHubMs: 0.6,
+    cipherSuite: 'TLS_AES_256_GCM_SHA384 (ECDHE-X25519)',
+    description: 'MediaNet Global Relay Hub peered to irc.drfun1.com, irc.drfun1media.com, and drfun1ircd.com with all 1,034 federated leaf nodes synced & leafed.',
+    adminContact: 'livewithdrfun1@gmail.com',
+    websiteUrl: 'https://stats.drfun1ircd.com',
+    tags: ['MediaNet Hub', 'SID 003', 'Switch Citadel', 'Anope 2.1', 'Multi-Hub Peer'],
+    sampleChannels: ['#drfun1-media', '#drfun1-primetv', '#satcom', '#all-music'],
+    linkBlockSnippet: `/* Self Hub 3 */\nme {\n    name "irc.drfun1media.net";\n    info "MediaNet Relay Hub - Switch Citadel";\n    sid "003";\n};\npeer irc.drfun1.com { port 6697; options { ssl; }; };\npeer irc.drfun1media.com { port 6697; options { ssl; }; };\npeer drfun1ircd.com { port 6697; options { ssl; }; };`
+  },
+  {
+    id: 'hub_drfun1ircd_atlanta',
+    name: 'drfun1ircd.com',
+    networkName: 'DrFun1 Media Global Mesh',
+    hubHost: 'drfun1ircd.com',
+    isLeafedToDrFun1: true,
+    leafVerifiedAt: '2026-02-15T00:00:00Z',
+    unrealVersion: 'UnrealIRCd-6.1.4',
+    anopeVersion: 'Anope-2.1.0',
+    sslPort: 6697,
+    plainPort: 6667,
+    ipOrHostname: 'drfun1ircd.com',
+    country: 'United States',
+    region: 'North America',
+    locationCity: 'Atlanta, GA',
+    datacenter: 'Switch The Keep Campus Atlanta & Core Backbone (www.switch.com)',
+    onlineUsers: 3810,
+    onlineChannels: 162,
+    onlineOpers: 12,
+    latencyToHubMs: 0.5,
+    cipherSuite: 'TLS_AES_256_GCM_SHA384 (ECDHE-X25519)',
+    description: 'DrFun1IRCd Core Federation Hub peered to irc.drfun1.com, irc.drfun1media.com, and irc.drfun1media.net serving all 1,034 Switch, DataPacket & RisingNet leaf nodes.',
+    adminContact: 'admin@drfun1ircd.com',
+    websiteUrl: 'https://stats.drfun1ircd.com',
+    tags: ['IRCd Hub', 'SID 004', 'Switch The Keep', 'Anope 2.1', 'Core Federation'],
+    sampleChannels: ['#lobby', '#satcom-global-noc', '#stats', '#risingnet-transit'],
+    linkBlockSnippet: `/* Self Hub 4 */\nme {\n    name "drfun1ircd.com";\n    info "DrFun1IRCd Core Federation Hub - Switch The Keep";\n    sid "004";\n};\npeer irc.drfun1.com { port 6697; options { ssl; }; };\npeer irc.drfun1media.com { port 6697; options { ssl; }; };\npeer irc.drfun1media.net { port 6697; options { ssl; }; };`
   },
   {
     id: 'anope_services_core',
     name: 'services.drfun1.com',
     networkName: 'DrFun1 Media Global Mesh',
-    hubHost: 'irc.drfun1.com & irc.drfun1media.com',
+    hubHost: 'irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com',
     isLeafedToDrFun1: true,
     leafVerifiedAt: '2026-02-15T00:00:00Z',
     unrealVersion: 'Anope-2.1.0-Release',
@@ -957,18 +1113,18 @@ export const INITIAL_UNREAL_SEARCH_INDEX: UnrealServerRecord[] = [
     onlineOpers: 18,
     latencyToHubMs: 0.2,
     cipherSuite: 'TLS_AES_256_GCM_SHA384',
-    description: 'Anope 2.1 IRC Services powering NickServ, ChanServ, OperServ, BotServ (DrFun1Bot & OrbitGuard), HostServ, and MemoServ across all 1,034 leaf nodes (500 Switch/hub via CGW Law Offices, 12 DataPacket/hub, 10 RisingNet dedicated servers).',
+    description: 'Anope 2.1 IRC Services powering NickServ, ChanServ, OperServ, BotServ (DrFun1Bot & OrbitGuard), HostServ, and MemoServ across all 4 hub domains and 1,034 leaf nodes.',
     adminContact: 'admin@drfun1.com',
     websiteUrl: 'https://anope.org',
     tags: ['Anope Services', 'NickServ', 'ChanServ', 'OperServ', 'BotServ'],
     sampleChannels: ['#services', '#orbit-ops', '#all-music', '#drfun1-primetv'],
-    linkBlockSnippet: `/* Anope 2.1 Services Link Block */\nlink services.drfun1.com {\n    incoming { mask *; };\n    outgoing {\n        hostname "irc.drfun1.com";\n        port 6697;\n        options { ssl; };\n    };\n    password "drfun1-anope-services-auth-2026";\n    class servers;\n};\nulines {\n    "services.drfun1.com";\n    "services.drfun1media.com";\n};`
+    linkBlockSnippet: `/* Anope 2.1 Services Multi-Hub Link Block */\nlink irc.drfun1.com {\n    incoming { mask *; };\n    outgoing { hostname "irc.drfun1.com"; port 6697; options { ssl; autoconnect; }; };\n    password "drfun1-anope-services-auth-2026";\n    class servers;\n    type leaf;\n};\nlink irc.drfun1media.com {\n    incoming { mask *; };\n    outgoing { hostname "irc.drfun1media.com"; port 6697; options { ssl; autoconnect; }; };\n    password "drfun1-anope-services-auth-2026";\n    class servers;\n    type leaf;\n};\nlink irc.drfun1media.net {\n    incoming { mask *; };\n    outgoing { hostname "irc.drfun1media.net"; port 6697; options { ssl; autoconnect; }; };\n    password "drfun1-anope-services-auth-2026";\n    class servers;\n    type leaf;\n};\nlink drfun1ircd.com {\n    incoming { mask *; };\n    outgoing { hostname "drfun1ircd.com"; port 6697; options { ssl; autoconnect; }; };\n    password "drfun1-anope-services-auth-2026";\n    class servers;\n    type leaf;\n};\nulines {\n    "services.drfun1.com";\n    "services.drfun1media.com";\n};`
   },
   {
     id: 'leaf_dp01_ashburn',
     name: 'dp01.ashburn.datapacket.drfun1.com',
     networkName: 'DrFun1 Media Global Mesh',
-    hubHost: 'irc.drfun1.com & irc.drfun1media.com',
+    hubHost: 'irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com',
     isLeafedToDrFun1: true,
     leafVerifiedAt: '2026-02-15T09:12:00Z',
     unrealVersion: 'UnrealIRCd-6.1.4',
@@ -985,18 +1141,18 @@ export const INITIAL_UNREAL_SEARCH_INDEX: UnrealServerRecord[] = [
     onlineOpers: 6,
     latencyToHubMs: 14.2,
     cipherSuite: 'TLS_AES_256_GCM_SHA384 (TLS 1.3)',
-    description: 'DataPacket.com 100 Gbps dedicated unmetered no-ads leaf node (1 of 12 per hub, 24 total) connected directly to dual hubs (irc.drfun1.com & irc.drfun1media.com) with strict zero commercial advertising policy. Legal: CGW Law Offices | Payment: Owens Company (Bill in Receiving).',
+    description: 'DataPacket.com 100 Gbps dedicated unmetered no-ads leaf node (1 of 12 per hub, 24 total) linked & leafed to ALL 4 hubs (irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com) with strict zero commercial advertising policy. Legal: CGW Law Offices | Payment: Owens Company (Bill in Receiving).',
     adminContact: 'datapacket-noc@drfun1.com',
     websiteUrl: 'https://www.datapacket.com',
-    tags: ['DataPacket.com', '100 Gbps', 'No Ads', 'Zero Advertising', 'Verified Leaf', 'DDoS Immune', '12 Per Hub'],
+    tags: ['DataPacket.com', '100 Gbps', 'No Ads', 'Zero Advertising', 'Verified Leaf', 'DDoS Immune', '12 Per Hub', 'All 4 Hubs'],
     sampleChannels: ['#drfun1tv', '#space', '#all-855000-channels'],
-    linkBlockSnippet: `link irc.drfun1.com {\n    incoming { mask *; };\n    outgoing {\n        bind-ip *;\n        hostname irc.drfun1.com;\n        port 6697;\n        options { ssl; };\n    };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n};`
+    linkBlockSnippet: `link irc.drfun1.com {\n    incoming { mask *; };\n    outgoing { bind-ip *; hostname "irc.drfun1.com"; port 6697; options { ssl; autoconnect; }; };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n    type leaf;\n};\nlink irc.drfun1media.com {\n    incoming { mask *; };\n    outgoing { bind-ip *; hostname "irc.drfun1media.com"; port 6697; options { ssl; autoconnect; }; };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n    type leaf;\n};\nlink irc.drfun1media.net {\n    incoming { mask *; };\n    outgoing { bind-ip *; hostname "irc.drfun1media.net"; port 6697; options { ssl; autoconnect; }; };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n    type leaf;\n};\nlink drfun1ircd.com {\n    incoming { mask *; };\n    outgoing { bind-ip *; hostname "drfun1ircd.com"; port 6697; options { ssl; autoconnect; }; };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n    type leaf;\n};`
   },
   {
     id: 'leaf_rn01_ashburn',
     name: 'rn01.ashburn.risingnet.drfun1.com',
     networkName: 'DrFun1 Media Global Mesh',
-    hubHost: 'irc.drfun1.com & irc.drfun1media.com',
+    hubHost: 'irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com',
     isLeafedToDrFun1: true,
     leafVerifiedAt: '2026-02-15T09:15:00Z',
     unrealVersion: 'UnrealIRCd-6.1.4',
@@ -1013,23 +1169,25 @@ export const INITIAL_UNREAL_SEARCH_INDEX: UnrealServerRecord[] = [
     onlineOpers: 5,
     latencyToHubMs: 12.1,
     cipherSuite: 'TLS_AES_256_GCM_SHA384 (TLS 1.3)',
-    description: 'RisingNet 100G Optical DWDM backbone dedicated server (1 of 10) leafed and synchronized to dual hubs (irc.drfun1.com & irc.drfun1media.com).',
+    description: 'RisingNet 100G Optical DWDM backbone dedicated server (1 of 10) linked, leafed, and synchronized to ALL 4 hubs (irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com).',
     adminContact: 'risingnet-noc@drfun1.com',
     websiteUrl: 'https://www.risingnet.com',
-    tags: ['RisingNet.com', '100G DWDM', 'Dedicated Server', 'BGP Tier-1', '10 Dedicated Servers'],
+    tags: ['RisingNet.com', '100G DWDM', 'Dedicated Server', 'BGP Tier-1', '10 Dedicated Servers', 'All 4 Hubs'],
     sampleChannels: ['#risingnet-transit', '#all-bands', '#drfun1-media'],
-    linkBlockSnippet: `link irc.drfun1.com {\n    incoming { mask *; };\n    outgoing {\n        bind-ip *;\n        hostname irc.drfun1.com;\n        port 6697;\n        options { ssl; };\n    };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n};`
+    linkBlockSnippet: `link irc.drfun1.com {\n    incoming { mask *; };\n    outgoing { bind-ip *; hostname "irc.drfun1.com"; port 6697; options { ssl; autoconnect; }; };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n    type leaf;\n};\nlink irc.drfun1media.com {\n    incoming { mask *; };\n    outgoing { bind-ip *; hostname "irc.drfun1media.com"; port 6697; options { ssl; autoconnect; }; };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n    type leaf;\n};\nlink irc.drfun1media.net {\n    incoming { mask *; };\n    outgoing { bind-ip *; hostname "irc.drfun1media.net"; port 6697; options { ssl; autoconnect; }; };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n    type leaf;\n};\nlink drfun1ircd.com {\n    incoming { mask *; };\n    outgoing { bind-ip *; hostname "drfun1ircd.com"; port 6697; options { ssl; autoconnect; }; };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n    type leaf;\n};`
   }
 ];
 
 export function generateUnrealLeafConfigSnippet(serverHostname: string, networkName: string): string {
   return `/* ====================================================================
- * UnrealIRCd 6.1.x Dual-Hub Link Block Configuration
+ * UnrealIRCd 6.1.x Multi-Hub Link Block Configuration (4 Core Hubs)
  * Add this block to your unrealircd.conf on: ${serverHostname || 'your-server.domain.com'}
  * 
  * Target Hubs:
  *   1. irc.drfun1.com:6697 SSL (Master Core Hub - Switch SUPERNAP Las Vegas, SID 001)
  *   2. irc.drfun1media.com:6697 SSL (Broadcast Media Hub - Switch Teleport, SID 002)
+ *   3. irc.drfun1media.net:6697 SSL (MediaNet Relay Hub - Switch Citadel Reno, SID 003)
+ *   4. drfun1ircd.com:6697 SSL (Core Federation Hub - Switch The Keep Atlanta, SID 004)
  * IRC Services: Anope 2.1 (services.drfun1.com / services.drfun1media.com)
  * Network: DrFun1 Media & Witt Law Firm Mesh (www.wittlawfirm.com)
  * Master Licensee: Richard Alan Witt (www.wittlawfirm.com / FCC FRN: 0034981290)
@@ -1038,34 +1196,60 @@ export function generateUnrealLeafConfigSnippet(serverHostname: string, networkN
  * Topology: 1,034 Leaf Nodes (500 Switch/hub via CGW Law Offices, 12 DataPacket/hub, 10 RisingNet dedicated servers)
  * ==================================================================== */
 
-/* Primary Hub Link Block */
+/* Hub 1 Link Block (SID 001) */
 link irc.drfun1.com {
-    incoming {
-        mask *;
-    };
+    incoming { mask *; };
     outgoing {
         bind-ip *;
         hostname "irc.drfun1.com";
         port 6697;
-        options { ssl; };
+        options { ssl; autoconnect; };
     };
     password "${UNREAL_HUB_TARGET.leafAuthSecret}";
     class servers;
+    type leaf;
 };
 
-/* Secondary / Media Hub Link Block */
+/* Hub 2 Link Block (SID 002) */
 link irc.drfun1media.com {
-    incoming {
-        mask *;
-    };
+    incoming { mask *; };
     outgoing {
         bind-ip *;
         hostname "irc.drfun1media.com";
         port 6697;
-        options { ssl; };
+        options { ssl; autoconnect; };
     };
     password "${UNREAL_HUB_TARGET.leafAuthSecret}";
     class servers;
+    type leaf;
+};
+
+/* Hub 3 Link Block (SID 003) */
+link irc.drfun1media.net {
+    incoming { mask *; };
+    outgoing {
+        bind-ip *;
+        hostname "irc.drfun1media.net";
+        port 6697;
+        options { ssl; autoconnect; };
+    };
+    password "${UNREAL_HUB_TARGET.leafAuthSecret}";
+    class servers;
+    type leaf;
+};
+
+/* Hub 4 Link Block (SID 004) */
+link drfun1ircd.com {
+    incoming { mask *; };
+    outgoing {
+        bind-ip *;
+        hostname "drfun1ircd.com";
+        port 6697;
+        options { ssl; autoconnect; };
+    };
+    password "${UNREAL_HUB_TARGET.leafAuthSecret}";
+    class servers;
+    type leaf;
 };
 
 /* Anope 2.1 Services U-Lines */

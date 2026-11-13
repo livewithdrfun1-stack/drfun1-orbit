@@ -424,7 +424,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
         ` 4  ${isDataPacket ? 'datapacket-baremetal-leaf' : isUnreal ? 'unrealircd-leaf-mesh' : 'switch-core-ring'}.drfun1.com (10.240.${node.provider === 'datapacket' ? '21' : '10'}.${node.sid})  ${(node.latencyMs * 0.75).toFixed(2)} ms`,
         ` 5  ${node.subdomain} [SID ${node.sid}] (UnrealIRCd 6.1.4 TLSv1.3 AES-256)  ${node.latencyMs.toFixed(2)} ms`,
         `>>> Route Status: 0.00% Packet Loss across ${node.fiberCapacity}`,
-        `>>> Verified Leaf Handshake: Leafed to irc.drfun1.com:6697 (SID 001)`,
+        `>>> Verified 4-Hub Handshake: Linked & Leafed to irc.drfun1.com (001), irc.drfun1media.com (002), irc.drfun1media.net (003) & drfun1ircd.com (004) :6697`,
         `>>> SSL Fingerprint Verified: ${node.sslFingerprint.slice(0, 32)}...`
       ]);
       setIsTracing(false);
@@ -472,10 +472,10 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                   855,000 Channels
                 </span>
                 <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded-md hidden sm:inline">
-                  517 Leafs Hub 1 (irc.drfun1.com)
+                  4 Core Hubs (001–004)
                 </span>
                 <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 bg-sky-500/20 text-sky-300 border border-sky-500/40 rounded-md hidden md:inline">
-                  517 Leafs Hub 2 (irc.drfun1media.com)
+                  irc.drfun1.com &bull; drfun1media.com/.net &bull; drfun1ircd.com
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
@@ -914,14 +914,14 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                     Master Core Hub
                   </span>
                   <span className="text-xs font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/40 font-bold">
-                    SID: 001
+                    SID: 001–004
                   </span>
                   <span className="text-xs font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/40">
-                    1,034 Dual-Hub Leaves Verified
+                    1,034 Multi-Hub Leaves Verified
                   </span>
                 </div>
-                <h3 className="text-lg sm:text-xl font-black font-mono text-white tracking-wide">
-                  irc.drfun1.com &amp; irc.drfun1media.com:6697 (SSL)
+                <h3 className="text-base sm:text-lg font-black font-mono text-white tracking-wide">
+                  irc.drfun1.com &bull; irc.drfun1media.com &bull; irc.drfun1media.net &bull; drfun1ircd.com :6697 (SSL)
                 </h3>
                 <p className="text-xs text-slate-300 max-w-2xl">
                   500 www.switch.com nodes/hub via CGW Law Offices (1,000) &bull; 12 www.datapacket.com leafs/hub (24) &bull; 10 risingnet.com dedicated servers &bull; License: www.wittlawfirm.com &bull; Payment: Owens Company (Bill in Receiving)
@@ -960,7 +960,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                   )}
                 </span>
                 <span className="text-slate-600">|</span>
-                <span className="text-[11px] text-purple-300">All Leafed to irc.drfun1.com &amp; irc.drfun1media.com:6697</span>
+                <span className="text-[11px] text-purple-300">All Leafed to irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net &amp; drfun1ircd.com:6697</span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -1063,8 +1063,8 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                         {/* Fingerprint & Encryption */}
                         <div className="bg-slate-950/80 p-2 rounded-lg border border-slate-800 text-[10px] font-mono space-y-1">
                           <div className="flex items-center justify-between text-slate-400">
-                            <span>Link Target:</span>
-                            <span className="text-emerald-300 font-bold">irc.drfun1.com:6697</span>
+                            <span>Link Targets:</span>
+                            <span className="text-emerald-300 font-bold truncate max-w-[170px]" title="irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com :6697">All 4 Hubs (001–004):6697</span>
                           </div>
                           <div className="flex items-center justify-between text-slate-400">
                             <span>Uplink Speed:</span>
@@ -1188,7 +1188,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                     <span>UnrealIRCd 6.1.4 Global Star-Mesh Interconnect (1,034 Synced &amp; Leafed Nodes)</span>
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Dual Hubs: <span className="text-emerald-400 font-mono font-bold">irc.drfun1.com &amp; irc.drfun1media.com:6697</span> &bull; 500 Switch/Hub via CGW Law Offices (1,000) &bull; 12 DataPacket/Hub (24) &bull; 10 RisingNet Dedicated Servers
+                    4 Core Hubs: <span className="text-emerald-400 font-mono font-bold">irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net &amp; drfun1ircd.com:6697</span> &bull; 500 Switch/Hub via CGW Law Offices (1,000) &bull; 12 DataPacket/Hub (24) &bull; 10 RisingNet Dedicated Servers
                   </p>
                 </div>
 
@@ -1213,9 +1213,9 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                   </div>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-base font-black font-mono text-white">irc.drfun1.com &amp; irc.drfun1media.com:6697 (SSL)</span>
+                      <span className="text-sm sm:text-base font-black font-mono text-white">irc.drfun1.com &bull; irc.drfun1media.com &bull; irc.drfun1media.net &bull; drfun1ircd.com :6697 (SSL)</span>
                       <span className="text-[10px] font-mono bg-purple-500/30 text-purple-200 px-2 py-0.5 rounded border border-purple-400/50 font-bold">
-                        DUAL HUBS &bull; SID 001 / 002
+                        4 CORE HUBS &bull; SID 001–004
                       </span>
                       <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/40">
                         ONLINE &bull; 100G DWDM
@@ -1229,7 +1229,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
 
                 <div className="text-right text-xs font-mono sm:border-l sm:border-slate-800 sm:pl-4">
                   <span className="text-emerald-400 font-black text-sm block">855,000 Channels Synced</span>
-                  <span className="text-purple-300 font-semibold text-[11px] block">1,034 Federated Leafs Synced to Both Hubs</span>
+                  <span className="text-purple-300 font-semibold text-[11px] block">1,034 Federated Leafs Synced to All 4 Hubs</span>
                   <span className="text-slate-400 text-[10px]">500 Switch/Hub · 12 DP/Hub · 10 RisingNet</span>
                 </div>
               </div>
@@ -1266,7 +1266,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                         {dp.location.split(',')[0]}
                       </span>
                       <div className="flex items-center justify-between text-[9px] font-mono pt-1 border-t border-slate-900">
-                        <span className="text-sky-300 truncate">{dp.leafHub}</span>
+                        <span className="text-sky-300 truncate" title={dp.leafHub}>All 4 Hubs (001–004)</span>
                         <span className="text-emerald-400">Leafed</span>
                       </div>
                     </div>
@@ -1367,11 +1367,11 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                   <div className="flex items-center gap-2">
                     <Server className="w-4 h-4 text-sky-400" />
                     <h4 className="text-sm font-black font-mono text-sky-200">
-                      3. RISINGNET.COM DEDICATED SERVERS (10 SERVERS &bull; SYNCED &amp; LEAFED TO BOTH HUBS)
+                      3. RISINGNET.COM DEDICATED SERVERS (10 SERVERS &bull; SYNCED &amp; LEAFED TO ALL 4 HUBS)
                     </h4>
                   </div>
                   <span className="text-xs font-mono text-slate-400">
-                    All 10 Dedicated Servers (SIDs R01–R10) Dual-Synced to irc.drfun1.com &amp; irc.drfun1media.com
+                    All 10 Servers (SIDs R01–R10) Synced to irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net &amp; drfun1ircd.com
                   </span>
                 </div>
 
@@ -1673,7 +1673,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
             {/* Config Block Display */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                <span>UnrealIRCd Link Block (Leaf -&gt; irc.drfun1.com)</span>
+                <span>UnrealIRCd Multi-Hub Link Block (Leaf -&gt; All 4 Hubs: irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net &amp; drfun1ircd.com)</span>
                 <button
                   onClick={() => handleCopy(inspectLeafNode.unrealLinkBlock, 'modal_link_block')}
                   className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 rounded flex items-center gap-1 cursor-pointer"

@@ -95,11 +95,17 @@ export const IrcStartupLoginModal: React.FC<IrcStartupLoginModalProps> = ({
 
     const isMaster = selectedNodeId === 'master_hub';
     const isMediaHub = selectedNodeId === 'media_hub';
+    const isMediaNetHub = selectedNodeId === 'medianet_hub';
+    const isIrcdHub = selectedNodeId === 'ircd_hub';
     const chosenNode = ALL_1034_LEAF_NODES.find(n => n.id === selectedNodeId) || SWITCH_DEDICATED_NODES.find(n => n.id === selectedNodeId);
     const serverHost = isMaster 
       ? 'irc.drfun1.com' 
       : isMediaHub 
       ? 'irc.drfun1media.com' 
+      : isMediaNetHub
+      ? 'irc.drfun1media.net'
+      : isIrcdHub
+      ? 'drfun1ircd.com'
       : (chosenNode?.host || 'irc.drfun1.com');
     const serverPort = 6697;
 
@@ -210,12 +216,18 @@ export const IrcStartupLoginModal: React.FC<IrcStartupLoginModalProps> = ({
               onChange={(e) => setSelectedNodeId(e.target.value)}
               className="w-full bg-slate-950 border border-slate-700 focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none transition-colors cursor-pointer"
             >
-              <optgroup label="Dual Core Hubs (Switch SUPERNAP NV 100G Optical Core)">
+              <optgroup label="Core IRCd Hubs (Switch SUPERNAP / Citadel / The Keep 100G Optical Core)">
                 <option value="master_hub">
-                  Dual Hub 001 &bull; irc.drfun1.com:6697 (TLS 1.3 SSL) &bull; Las Vegas SUPERNAP Core
+                  Hub 001 &bull; irc.drfun1.com:6697 (TLS 1.3 SSL) &bull; Las Vegas SUPERNAP Core
                 </option>
                 <option value="media_hub">
-                  Dual Hub 002 &bull; irc.drfun1media.com:6697 (TLS 1.3 SSL) &bull; Broadcast Teleport Hub
+                  Hub 002 &bull; irc.drfun1media.com:6697 (TLS 1.3 SSL) &bull; Broadcast Teleport Hub
+                </option>
+                <option value="medianet_hub">
+                  Hub 003 &bull; irc.drfun1media.net:6697 (TLS 1.3 SSL) &bull; MediaNet Relay Hub (Reno)
+                </option>
+                <option value="ircd_hub">
+                  Hub 004 &bull; drfun1ircd.com:6697 (TLS 1.3 SSL) &bull; Core Federation Hub (Atlanta)
                 </option>
               </optgroup>
               <optgroup label="Hub 1 Switch.com Nodes (500 Dedicated Nodes on irc.drfun1.com via CGW Law Offices)">

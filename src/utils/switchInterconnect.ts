@@ -35,24 +35,68 @@ export function getSwitchInterconnectForCompany(
   const channelName = `#noc-${safeSanitizedName}`;
 
   const linkConfig = `/* ====================================================================
- * UnrealIRCd Leaf Configuration for ${companyName}
- * Peering Hub: irc.drfun1.com | Port: 6697 (SSL/TLS required)
- * Colocation Facility: Switch Data Centers (www.switch.com)
+ * UnrealIRCd Multi-Hub Leaf Configuration for ${companyName}
+ * Peering Hubs: irc.drfun1.com (SID 001), irc.drfun1media.com (SID 002), irc.drfun1media.net (SID 003) & drfun1ircd.com (SID 004) | Port: 6697 (SSL/TLS)
+ * Colocation Facility: Switch Data Centers (www.switch.com) via CGW Law Offices
  * Tier-1 IP Transit: RisingNet BGP Transit (www.risingnet.com)
+ * License: www.wittlawfirm.com | Payment Office: Owens Company (Bill in Receiving)
  * ==================================================================== */
 
+/* Hub 1 Link (SID 001) */
 link irc.drfun1.com {
-    incoming {
-        mask *;
-    };
+    incoming { mask *; };
     outgoing {
         hostname "irc.drfun1.com";
         port 6697;
         options { ssl; autoconnect; };
     };
     password "Satcom_Switch_Secure_Pass_${safeSanitizedName}!";
-    hub *;
     class servers;
+    type leaf;
+};
+
+/* Hub 2 Link (SID 002) */
+link irc.drfun1media.com {
+    incoming { mask *; };
+    outgoing {
+        hostname "irc.drfun1media.com";
+        port 6697;
+        options { ssl; autoconnect; };
+    };
+    password "Satcom_Switch_Secure_Pass_${safeSanitizedName}!";
+    class servers;
+    type leaf;
+};
+
+/* Hub 3 Link (SID 003) */
+link irc.drfun1media.net {
+    incoming { mask *; };
+    outgoing {
+        hostname "irc.drfun1media.net";
+        port 6697;
+        options { ssl; autoconnect; };
+    };
+    password "Satcom_Switch_Secure_Pass_${safeSanitizedName}!";
+    class servers;
+    type leaf;
+};
+
+/* Hub 4 Link (SID 004) */
+link drfun1ircd.com {
+    incoming { mask *; };
+    outgoing {
+        hostname "drfun1ircd.com";
+        port 6697;
+        options { ssl; autoconnect; };
+    };
+    password "Satcom_Switch_Secure_Pass_${safeSanitizedName}!";
+    class servers;
+    type leaf;
+};
+
+ulines {
+    "services.drfun1.com";
+    "services.drfun1media.com";
 };
 
 /* Listen block on Switch-hosted interface */
@@ -62,7 +106,7 @@ listen {
     options { ssl; };
 };
 
-/* Operator channel auto-join on leaf connect */
+/* Operator channel auto-join on multi-hub leaf connect */
 set {
     auto-join "${channelName},#satcom-global-noc,#switch-teleport-status";
     network-name "Satcom-Switch-DrFun1-Mesh";
@@ -78,10 +122,10 @@ set {
     unrealIrcdDaemon: {
       software: 'UnrealIRCd 6.1+ (TLS 1.3 / OpenSSL)',
       website: 'https://www.unrealircd.com',
-      hubHost: 'irc.drfun1.com',
+      hubHost: 'irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com',
       port: 6697,
       channel: channelName,
-      leafRole: `Carrier Leaf Node (${cleanLeafServerName}) connected to irc.drfun1.com Hub`,
+      leafRole: `Multi-Hub Leaf Node (${cleanLeafServerName}) linked & leafed to irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com`,
       suggestedLinkConfig: linkConfig,
     },
   };

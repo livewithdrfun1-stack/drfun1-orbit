@@ -360,7 +360,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              1,000 dedicated Switch.com Tier 5 Platinum nodes (500 per hub) contracted and represented via <strong className="text-white">CGW Law Offices</strong>, synced &amp; leafed to both irc.drfun1.com &amp; irc.drfun1media.com.
+              1,000 dedicated Switch.com Tier 5 Platinum nodes (500 per hub) contracted and represented via <strong className="text-white">CGW Law Offices</strong>, synced &amp; leafed to irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net &amp; drfun1ircd.com.
             </p>
             <div className="space-y-1.5 font-mono text-xs">
               <div className="flex justify-between p-2 rounded bg-slate-950 border border-slate-800 text-slate-300">
@@ -373,7 +373,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
               </div>
               <div className="flex justify-between p-2 rounded bg-slate-950 border border-slate-800 text-slate-300">
                 <span className="text-slate-500">Synced Hubs:</span>
-                <span className="text-purple-400 font-bold">irc.drfun1.com &amp; irc.drfun1media.com</span>
+                <span className="text-purple-400 font-bold text-right">irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net &amp; drfun1ircd.com</span>
               </div>
             </div>
           </div>
@@ -420,7 +420,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              10 dedicated Tier-1 bare-metal servers from www.risingnet.com provisioned with 100G DWDM transit, all synchronized and leafed to BOTH irc.drfun1.com &amp; irc.drfun1media.com.
+              10 dedicated Tier-1 bare-metal servers from www.risingnet.com provisioned with 100G DWDM transit, all synchronized and leafed to irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net &amp; drfun1ircd.com.
             </p>
             <div className="space-y-1.5 font-mono text-xs">
               <div className="flex justify-between p-2 rounded bg-slate-950 border border-slate-800 text-slate-300">
@@ -429,7 +429,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
               </div>
               <div className="flex justify-between p-2 rounded bg-slate-950 border border-slate-800 text-slate-300">
                 <span className="text-slate-500">Hub Federation:</span>
-                <span className="text-emerald-400 font-bold">Leafed to Both Hubs</span>
+                <span className="text-emerald-400 font-bold">Leafed to All 4 Hubs (001–004)</span>
               </div>
               <div className="flex justify-between p-2 rounded bg-slate-950 border border-slate-800 text-slate-300">
                 <span className="text-slate-500">Payment Office:</span>
@@ -557,7 +557,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
                 CGW Law Offices Switch.com Representation
               </div>
               <p className="text-slate-300 leading-relaxed">
-                All <strong>1,000 www.switch.com nodes</strong> (500 nodes per hub across <code>irc.drfun1.com</code> &amp; <code>irc.drfun1media.com</code>) are procured and represented via <strong>CGW Law Offices</strong>, federated alongside <strong>24 DataPacket leafs</strong> (12/hub) and <strong>10 RisingNet dedicated servers</strong>.
+                All <strong>1,000 www.switch.com nodes</strong> (500 nodes per hub across <code>irc.drfun1.com</code>, <code>irc.drfun1media.com</code>, <code>irc.drfun1media.net</code> &amp; <code>drfun1ircd.com</code>) are procured and represented via <strong>CGW Law Offices</strong>, federated alongside <strong>24 DataPacket leafs</strong> (12/hub) and <strong>10 RisingNet dedicated servers</strong>.
               </p>
             </div>
           </div>

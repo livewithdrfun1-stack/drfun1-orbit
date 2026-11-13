@@ -809,7 +809,7 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
                     </span>
                   </div>
                   <span className="text-slate-500 text-[11px]">
-                    All links leafed to irc.drfun1.com (SID 001)
+                    All links linked &amp; leafed to irc.drfun1.com (001), irc.drfun1media.com (002), irc.drfun1media.net (003) &amp; drfun1ircd.com (004)
                   </span>
                 </div>
 
