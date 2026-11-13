@@ -39,6 +39,7 @@ import { OnlineRadioDjStudio } from './components/OnlineRadioDjStudio';
 import { MasterControlView } from './components/MasterControlView';
 import { FuboTvCloneView } from './components/FuboTvCloneView';
 import { IrcDuplicatorHostingView } from './components/IrcDuplicatorHostingView';
+import { SatcomCompaniesView } from './components/SatcomCompaniesView';
 import { IrcLoginCredentials, IrcLoginSession } from './types/irc';
 import { UserMembershipState } from './types/membership';
 import { AnopeRankLevel } from './types/ircdAdmin';
@@ -125,7 +126,9 @@ export default function App() {
       setActiveTab('radio_dj');
     } else if (tab === 'duplicator_hosting' || tab === 'duplicator') {
       setActiveTab('duplicator_hosting');
-    } else if (tab === 'master_control' || tab === 'directory' || tab === 'orbits' || tab === 'compare' || tab === 'carriers' || tab === 'ircstats') {
+    } else if (tab === 'satcom_companies' || tab === 'directory' || tab === 'carriers') {
+      setActiveTab('satcom_companies');
+    } else if (tab === 'master_control' || tab === 'orbits' || tab === 'compare' || tab === 'ircstats') {
       setActiveTab('master_control');
     } else if (tab === 'fubotv') {
       setActiveTab('fubotv');
@@ -621,6 +624,29 @@ export default function App() {
             onOpenLicense={() => setIsLicenseModalOpen(true)}
             onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
             onNavigateToIrc={() => setActiveTab('irc')}
+          />
+        </main>
+      ) : activeTab === 'satcom_companies' ? (
+        /* 1C. Full Interactive List of SATCOM Companies */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          <SatcomCompaniesView
+            companies={companies}
+            filteredCompanies={filteredCompanies}
+            filters={filters}
+            onChangeFilters={setFilters}
+            viewMode={viewMode}
+            onChangeViewMode={setViewMode}
+            bookmarkedIds={bookmarkedIds}
+            onToggleBookmark={handleToggleBookmark}
+            comparedIds={comparedIds}
+            onToggleCompare={handleToggleCompare}
+            onSelectCompany={(c) => setSelectedCompany(c)}
+            onOpenRfq={(c) => handleOpenRfq(c)}
+            onOpenSlaCalculator={(c) => handleOpenSlaCalculator(c)}
+            onOpenCompareModal={() => setIsCompareModalOpen(true)}
+            onOpenAddModal={() => setIsAddModalOpen(true)}
+            onExportCsv={handleExportCsv}
+            onOpenOrbitMap={() => setIsOrbitMapModalOpen(true)}
           />
         </main>
       ) : activeTab === 'master_control' ? (

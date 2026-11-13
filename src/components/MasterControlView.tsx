@@ -470,7 +470,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 font-mono text-xs">
-                {companies.slice(0, 15).map((comp) => (
+                {companies.map((comp) => (
                   <tr key={comp.id} className="hover:bg-slate-950/40 transition">
                     <td className="py-3 px-4 font-sans font-bold text-white">
                       <div>{comp.name}</div>

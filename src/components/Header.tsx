@@ -32,7 +32,7 @@ import { AnopeRankLevel } from '../types/ircdAdmin';
 import { UserMembershipState } from '../types/membership';
 import { DrFun1MediaLogo } from './DrFun1MediaLogo';
 
-export type AppTab = 'irc' | 'duplicator_hosting' | 'master_control' | 'fubotv' | 'store' | 'radio_dj';
+export type AppTab = 'irc' | 'duplicator_hosting' | 'satcom_companies' | 'master_control' | 'fubotv' | 'store' | 'radio_dj';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -436,6 +436,23 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
+          {/* 1C. SATCOM Companies Directory */}
+          <button
+            onClick={() => setActiveTab('satcom_companies')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'satcom_companies'
+                ? 'bg-sky-500/20 text-sky-200 border-sky-500/60 font-bold shadow-md shadow-sky-950/30 ring-1 ring-sky-500/40'
+                : 'text-slate-400 border-transparent hover:text-sky-300 hover:bg-slate-900/60'
+            }`}
+            title="Full Directory of SATCOM Companies, LEO/MEO/GEO Operators, Wholesale Contacts & Interconnects"
+          >
+            <Satellite className="w-3.5 h-3.5 text-sky-400" />
+            <span>SATCOM Companies</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold">
+              36+ Operators
+            </span>
+          </button>
+
           {/* 2. Online Radio & MPD DJ Station */}
           <button
             onClick={() => setActiveTab('radio_dj')}
@@ -606,6 +623,14 @@ export const Header: React.FC<HeaderProps> = ({
                   badge: '4-Hub Sync', 
                   color: 'purple', 
                   icon: Share2 
+                },
+                { 
+                  id: 'satcom_companies', 
+                  label: 'SATCOM Companies Directory', 
+                  desc: 'Full List of LEO/MEO/GEO Satellite Operators, Bands & Wholesale Desks',
+                  badge: '36+ Operators', 
+                  color: 'sky', 
+                  icon: Satellite 
                 },
                 { 
                   id: 'radio_dj', 
