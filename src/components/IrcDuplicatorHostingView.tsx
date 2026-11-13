@@ -5,6 +5,7 @@ import {
   Code2,
   Copy,
   Database,
+  Download,
   Globe,
   Pause,
   Play,
@@ -33,10 +34,17 @@ import {
   CORE_DUPLICATOR_HUBS,
   DUPLICATOR_HOSTING_PLANS,
   generateDuplicatorConfigSnippet,
+  generateIframeEmbedJs,
+  generateIframeSrcDocHtml,
+  generateStandaloneIframeAssetJs,
   generateWordPressEmbedSnippet,
+  generateWordPressPluginPhp,
+  generateWordPressReadmeTxt,
+  IframeEmbedOptions,
   INITIAL_DUPLICATOR_EVENTS,
   INITIAL_DUPLICATOR_RULES,
 } from '../data/duplicatorHostingData';
+import { createZipBlob, triggerBlobDownload } from '../utils/zipBuilder';
 
 const STORAGE_KEY_RULES = 'drfun1_irc_duplicator_rules_v1';
 const STORAGE_KEY_EVENTS = 'drfun1_irc_duplicator_events_v1';
@@ -50,7 +58,7 @@ interface IrcDuplicatorHostingViewProps {
   onNavigateToIrc: () => void;
 }
 
-type DuplicatorSubTab = 'rules' | 'sandbox' | 'plans' | 'config';
+type DuplicatorSubTab = 'rules' | 'wp_iframe' | 'sandbox' | 'plans' | 'config';
 
 export const IrcDuplicatorHostingView: React.FC<IrcDuplicatorHostingViewProps> = ({
   onQuickAddToCart,
@@ -341,6 +349,100 @@ export const IrcDuplicatorHostingView: React.FC<IrcDuplicatorHostingViewProps> =
     );
   };
 
+  // Iframe JS Embed Customizer Options
+  const [iframeOptions, setIframeOptions] = useState<IframeEmbedOptions>({
+    heightPx: 420,
+    nickPrefix: 'WebVisitor',
+    theme: 'purple-gold',
+  });
+
+  // Listen for real postMessage packets dispatched from the live iframe widget
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data;
+      if (!data || data.type !== 'DRFUN1_IRC_DUPLICATOR_PACKET' || !data.message) return;
+      const targetRule = rules.find((r) => r.id === data.ruleId) || selectedRule;
+      if (!targetRule) return;
+
+      const now = new Date();
+      const ts = `${now.toISOString().slice(11, 19)}.${String(
+        now.getUTCMilliseconds()
+      ).padStart(3, '0')}`;
+      const latency = Number((0.6 + Math.random() * 0.5).toFixed(2));
+      const evt: DuplicatorPacketEvent = {
+        id: `evt_iframe_${Date.now()}`,
+        timestamp: ts,
+        ruleId: targetRule.id,
+        ruleLabel: `${targetRule.label} (Iframe JS)`,
+        nick: String(data.nick || 'IframeUser'),
+        sourceHub: targetRule.sourceHub,
+        sourceChannel: targetRule.sourceChannel,
+        message: String(data.message),
+        replicatedTo: targetRule.targetHubs,
+        targetChannel: targetRule.targetChannel,
+        latencyMs: latency,
+        wordpressDispatched: targetRule.wordpressSyncEnabled,
+        hmacDigest: `sha256=${Math.random().toString(16).slice(2, 6)}...${Math.random()
+          .toString(16)
+          .slice(2, 6)}`,
+      };
+
+      setEvents((prev) => [evt, ...prev].slice(0, 40));
+      setRules((prev) =>
+        prev.map((r) =>
+          r.id === targetRule.id
+            ? {
+                ...r,
+                replicatedMessages24h: r.replicatedMessages24h + 1,
+                lastEventAt: now.toISOString().slice(11, 19) + ' UTC',
+              }
+            : r
+        )
+      );
+      showToast(
+        `Iframe JS replicated "${String(data.message).slice(0, 42)}" to ${targetRule.targetHubs.length} hubs`
+      );
+    };
+
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [rules, selectedRule]);
+
+  const handleDownloadWordPressZip = (rule: DuplicatorRelayRule) => {
+    const zipBlob = createZipBlob([
+      {
+        path: 'drfun1-irc-chat-duplicator/drfun1-irc-chat-duplicator.php',
+        content: generateWordPressPluginPhp(rule),
+      },
+      {
+        path: 'drfun1-irc-chat-duplicator/assets/duplicator-iframe.js',
+        content: generateStandaloneIframeAssetJs(rule),
+      },
+      {
+        path: 'drfun1-irc-chat-duplicator/readme.txt',
+        content: generateWordPressReadmeTxt(rule),
+      },
+    ]);
+    triggerBlobDownload(zipBlob, `drfun1-irc-chat-duplicator-${rule.id}.zip`);
+    showToast(`Downloaded WordPress plugin ZIP for ${rule.sourceChannel}`);
+  };
+
+  const handleDownloadWordPressPhp = (rule: DuplicatorRelayRule) => {
+    const blob = new Blob([generateWordPressPluginPhp(rule)], {
+      type: 'application/x-php;charset=utf-8',
+    });
+    triggerBlobDownload(blob, `drfun1-irc-chat-duplicator-${rule.id}.php`);
+    showToast(`Downloaded standalone WordPress PHP plugin for ${rule.sourceChannel}`);
+  };
+
+  const handleDownloadIframeJs = (rule: DuplicatorRelayRule) => {
+    const blob = new Blob([generateStandaloneIframeAssetJs(rule)], {
+      type: 'application/javascript;charset=utf-8',
+    });
+    triggerBlobDownload(blob, `drfun1-duplicator-iframe-${rule.id}.js`);
+    showToast(`Downloaded iframe JavaScript loader for ${rule.sourceChannel}`);
+  };
+
   const handleOrderPlan = (plan: DuplicatorHostingPlan, openConfigModal: boolean) => {
     const product = buildPlanCartProduct(plan);
     if (openConfigModal) {
@@ -387,6 +489,16 @@ export const IrcDuplicatorHostingView: React.FC<IrcDuplicatorHostingViewProps> =
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            {selectedRule && (
+              <button
+                onClick={() => handleDownloadWordPressZip(selectedRule)}
+                className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download WordPress (.zip)</span>
+              </button>
+            )}
+
             <button
               onClick={() => {
                 setActiveSubTab('rules');
@@ -399,11 +511,11 @@ export const IrcDuplicatorHostingView: React.FC<IrcDuplicatorHostingViewProps> =
             </button>
 
             <button
-              onClick={() => setActiveSubTab('plans')}
+              onClick={() => setActiveSubTab('wp_iframe')}
               className="px-4 py-2 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
             >
-              <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
-              <span>Hosting Plans</span>
+              <Code2 className="w-3.5 h-3.5 text-sky-400" />
+              <span>Iframe JS Embed</span>
             </button>
 
             <button
@@ -488,6 +600,7 @@ export const IrcDuplicatorHostingView: React.FC<IrcDuplicatorHostingViewProps> =
           {(
             [
               { id: 'rules', label: 'Mirror Pipelines', icon: Server },
+              { id: 'wp_iframe', label: 'WordPress Download & Iframe JS', icon: Download },
               { id: 'sandbox', label: 'Live Replication Sandbox', icon: Activity },
               { id: 'plans', label: 'Hosting Plans & Ordering', icon: ShoppingBag },
               { id: 'config', label: 'UnrealIRCd & WordPress Config', icon: Code2 },
@@ -950,6 +1063,217 @@ export const IrcDuplicatorHostingView: React.FC<IrcDuplicatorHostingViewProps> =
       )}
 
       {/* ===================================================================
+          TAB 1B: WORDPRESS PLUGIN DOWNLOAD & IFRAME JAVASCRIPT STUDIO
+          =================================================================== */}
+      {activeSubTab === 'wp_iframe' && selectedRule && (
+        <div className="space-y-6">
+          {/* WordPress Plugin Package Downloads */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-5">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+              <div className="space-y-1">
+                <p className="text-xs font-mono text-sky-300">
+                  WordPress 5.8 – 6.7+ · Installs via Plugins -&gt; Add New -&gt; Upload Plugin
+                </p>
+                <h2 className="text-lg font-bold text-white">
+                  WordPress IRC Duplicator Plugin Download
+                </h2>
+                <p className="text-xs text-slate-300 max-w-2xl">
+                  Includes the WordPress REST webhook handler,{' '}
+                  <code className="text-amber-300 font-mono">[drfun1_irc_duplicator]</code>{' '}
+                  shortcode, and standalone iframe JavaScript bootloader pre-bound to your selected
+                  mirror pipeline.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  value={selectedRule.id}
+                  onChange={(e) => setSelectedRuleId(e.target.value)}
+                  className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white font-mono focus:outline-none focus:border-sky-500"
+                  aria-label="Select pipeline for WordPress plugin build"
+                >
+                  {rules.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.label} ({r.sourceChannel})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-1.5">
+                <div className="font-mono font-semibold text-white">
+                  1. drfun1-irc-chat-duplicator.zip
+                </div>
+                <p className="text-slate-400">
+                  Complete WordPress plugin archive containing PHP shortcode + REST API, JavaScript
+                  iframe loader asset, and readme.txt.
+                </p>
+                <button
+                  onClick={() => handleDownloadWordPressZip(selectedRule)}
+                  className="mt-2 px-3.5 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Plugin (.zip)</span>
+                </button>
+              </div>
+
+              <div className="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-1.5">
+                <div className="font-mono font-semibold text-white">
+                  2. drfun1-irc-chat-duplicator.php
+                </div>
+                <p className="text-slate-400">
+                  Single-file WordPress plugin PHP with HMAC SHA-256 webhook verification and
+                  multi-hub shortcode registration.
+                </p>
+                <button
+                  onClick={() => handleDownloadWordPressPhp(selectedRule)}
+                  className="mt-2 px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-100 font-medium flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Download PHP Plugin</span>
+                </button>
+              </div>
+
+              <div className="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-1.5">
+                <div className="font-mono font-semibold text-white">
+                  3. assets/duplicator-iframe.js
+                </div>
+                <p className="text-slate-400">
+                  Zero-dependency JavaScript iframe embedder with postMessage relay to all 4 core
+                  UnrealIRCd hubs (:6697 SSL).
+                </p>
+                <button
+                  onClick={() => handleDownloadIframeJs(selectedRule)}
+                  className="mt-2 px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-100 font-medium flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Download Iframe JS</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* JavaScript Iframe Code Generator & Live Interactive Preview */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* JS Code Generator */}
+            <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div>
+                  <h3 className="text-base font-semibold text-white">
+                    JavaScript Code for Embedded Iframe
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Paste into any WordPress Custom HTML block, theme template, or static site.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() =>
+                    handleCopy(
+                      generateIframeEmbedJs(selectedRule, iframeOptions),
+                      'iframe_js_embed'
+                    )
+                  }
+                  className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0"
+                >
+                  {copiedKey === 'iframe_js_embed' ? (
+                    <Check className="w-3.5 h-3.5" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                  <span>{copiedKey === 'iframe_js_embed' ? 'Copied JS' : 'Copy Iframe JS'}</span>
+                </button>
+              </div>
+
+              {/* Iframe Customizer Controls */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <label className="space-y-1 block">
+                  <span className="text-slate-400 block">Iframe Height (px)</span>
+                  <select
+                    value={iframeOptions.heightPx}
+                    onChange={(e) =>
+                      setIframeOptions((prev) => ({
+                        ...prev,
+                        heightPx: Number(e.target.value),
+                      }))
+                    }
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono"
+                  >
+                    <option value={340}>340 px</option>
+                    <option value={420}>420 px</option>
+                    <option value={520}>520 px</option>
+                    <option value={620}>620 px</option>
+                  </select>
+                </label>
+
+                <label className="space-y-1 block">
+                  <span className="text-slate-400 block">Visitor Nick Prefix</span>
+                  <input
+                    type="text"
+                    value={iframeOptions.nickPrefix}
+                    onChange={(e) =>
+                      setIframeOptions((prev) => ({
+                        ...prev,
+                        nickPrefix: e.target.value || 'WebVisitor',
+                      }))
+                    }
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono"
+                  />
+                </label>
+
+                <label className="space-y-1 block">
+                  <span className="text-slate-400 block">Accent Theme</span>
+                  <select
+                    value={iframeOptions.theme}
+                    onChange={(e) =>
+                      setIframeOptions((prev) => ({
+                        ...prev,
+                        theme: e.target.value as 'dark-slate' | 'purple-gold',
+                      }))
+                    }
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono"
+                  >
+                    <option value="purple-gold">Purple &amp; Gold</option>
+                    <option value="dark-slate">Dark Slate Blue</option>
+                  </select>
+                </label>
+              </div>
+
+              <pre className="p-4 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-mono text-amber-200 overflow-x-auto leading-relaxed max-h-[380px]">
+                {generateIframeEmbedJs(selectedRule, iframeOptions)}
+              </pre>
+            </div>
+
+            {/* Live Running Sandboxed Iframe Preview */}
+            <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div>
+                  <h3 className="text-base font-semibold text-white">
+                    Live Interactive Iframe Preview
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Messages submitted inside this iframe postMessage directly to the duplicator
+                    replication ledger.
+                  </p>
+                </div>
+                <span className="text-[11px] font-mono text-emerald-400">sandbox=&quot;allow-scripts allow-forms&quot;</span>
+              </div>
+
+              <iframe
+                title={`Live Preview - ${selectedRule.sourceChannel}`}
+                sandbox="allow-scripts allow-forms"
+                srcDoc={generateIframeSrcDocHtml(selectedRule, iframeOptions)}
+                style={{ height: `${iframeOptions.heightPx}px` }}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================
           TAB 2: LIVE REPLICATION SANDBOX & PACKET LEDGER
           =================================================================== */}
       {activeSubTab === 'sandbox' && (
@@ -1256,19 +1580,28 @@ export const IrcDuplicatorHostingView: React.FC<IrcDuplicatorHostingViewProps> =
                   <Globe className="w-4 h-4 text-sky-400" />
                   <span>WordPress Duplicator Shortcode &amp; Webhook Secret</span>
                 </h3>
-                <button
-                  onClick={() =>
-                    handleCopy(generateWordPressEmbedSnippet(selectedRule), 'wp_dup_snippet')
-                  }
-                  className="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 flex items-center gap-1.5 cursor-pointer"
-                >
-                  {copiedKey === 'wp_dup_snippet' ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  ) : (
-                    <Copy className="w-3.5 h-3.5" />
-                  )}
-                  <span>{copiedKey === 'wp_dup_snippet' ? 'Copied' : 'Copy Snippet'}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleDownloadWordPressZip(selectedRule)}
+                    className="px-3 py-1 rounded bg-sky-600 hover:bg-sky-500 text-xs text-white font-semibold flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download .zip</span>
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleCopy(generateWordPressEmbedSnippet(selectedRule), 'wp_dup_snippet')
+                    }
+                    className="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    {copiedKey === 'wp_dup_snippet' ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                    <span>{copiedKey === 'wp_dup_snippet' ? 'Copied' : 'Copy Snippet'}</span>
+                  </button>
+                </div>
               </div>
               <pre className="p-4 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-mono text-sky-300 overflow-x-auto leading-relaxed max-h-[420px]">
                 {generateWordPressEmbedSnippet(selectedRule)}
