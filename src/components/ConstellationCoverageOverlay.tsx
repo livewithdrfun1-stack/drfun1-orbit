@@ -8,7 +8,7 @@
  * Real-time satellite footprint projections using satellite TLE (Two-Line Element) data:
  * - Orbital propagation from NORAD Two-Line Element sets (Keplerian orbital parameters)
  * - Dynamic sub-satellite nadir tracking, ground tracks, and elevation mask cones
- * - Real-time footprint coverage intersection with the 352-leaf mesh (Switch, DataPacket, RisingNet)
+ * - Real-time footprint coverage intersection with the 1,000-leaf mesh (500 per hub: Switch, DataPacket, RisingNet)
  * - Slant range distance, propagation delay, Doppler shift, and carrier RF downlinks
  * - Day/Night Solar Terminator projection & interactive TLE telemetry terminal
  */
@@ -345,7 +345,7 @@ export function parseTle(line1: string, line2: string): ParsedTleData {
   };
 }
 
-// Helper: Real-time ground coordinates for 352 leaf nodes
+// Helper: Real-time ground coordinates for 1,000 leaf nodes (500 per hub)
 export function getNodeCoordinates(node: SwitchDedicatedNode): { lat: number; lon: number } {
   // 1. DataPacket nodes
   if (node.id === 'dp_ash') return { lat: 39.04, lon: -77.48 }; // Ashburn
@@ -667,7 +667,7 @@ export const ConstellationCoverageOverlay: React.FC<ConstellationCoverageOverlay
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Real-time footprint projection over the 352-leaf mesh using official Two-Line Element (TLE) ephemeris parameters.
+              Real-time footprint projection over the 1,000-leaf mesh (500 per hub) using official Two-Line Element (TLE) ephemeris parameters.
             </p>
           </div>
         </div>
@@ -862,7 +862,7 @@ export const ConstellationCoverageOverlay: React.FC<ConstellationCoverageOverlay
           <span className="text-white font-bold text-[11px] flex items-center gap-1.5">
             <span className={`w-2 h-2 rounded-full ${coveredNodesData.nodes.length > 0 ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`} />
             <span className={coveredNodesData.nodes.length > 0 ? 'text-emerald-300' : 'text-slate-400'}>
-              {coveredNodesData.nodes.length} of 352 Leaf Nodes
+              {coveredNodesData.nodes.length} of {ALL_NETWORK_LEAF_NODES.length} Leaf Nodes
             </span>
           </span>
         </div>
@@ -1028,7 +1028,7 @@ export const ConstellationCoverageOverlay: React.FC<ConstellationCoverageOverlay
               </g>
             )}
 
-            {/* 352 Leaf Mesh Nodes Plotted */}
+            {/* 1,000 Leaf Mesh Nodes Plotted (500 Per Hub) */}
             {showMeshNodes && (
               <g>
                 {ALL_NETWORK_LEAF_NODES.map((node) => {

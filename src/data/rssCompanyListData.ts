@@ -341,7 +341,7 @@ export const ASSOCIATED_RSS_COMPANIES: AssociatedRssCompany[] = [
     rssFeedTitle: 'FCC Space Bureau & DrFun1 Regulatory Wire',
     description: 'Flagship commercial satellite teleport and broadcast transmission infrastructure owned by DrFun1 Media Inc. & DrFun1 ECOM Inc., certified under Certificate ID: RAW-SATCOM-2026-LIC-0881.',
     drfun1Association: 'Proprietary core operational hub. Licensed to Richard Alan Witt (The Law Office of Richard A. Witt LLC) under FCC FRN: 0034981290. Operates 18 FCC Part 25 Earth Stations colocated at Switch SUPERNAP campuses with RisingNet IP transit.',
-    keyCapabilities: ['18 FCC Part 25 Earth Stations', 'Dual Core UnrealIRCd Hubs (001/002)', 'Linear 24/7 TV & Radio Playout', '352 Synchronized Leaf Nodes'],
+    keyCapabilities: ['18 FCC Part 25 Earth Stations', 'Dual Core UnrealIRCd Hubs (001/002)', 'Linear 24/7 TV & Radio Playout', '1,000 Synchronized Leaf Nodes (500 Per Hub)'],
     frequencyOrBandwidth: 'C-Band, Ku-Band, Ka-Band & 100G Optical Ring',
     regulatoryStatus: 'Certified FCC FRN 0034981290 / ICFS Approved',
     activeFeedCount: 30,

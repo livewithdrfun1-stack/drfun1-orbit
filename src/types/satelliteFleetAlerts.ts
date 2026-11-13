@@ -53,3 +53,39 @@ export interface FleetConstellationSummary {
   tleChanges24h: number;
   badgeColor: string;
 }
+
+export type FleetStabilityMetricType = 'tle_latency' | 'uptime_pct' | 'stability_score' | 'orbit_drift';
+export type StabilityTimeWindow = 'live' | '1h' | '6h' | '24h' | '7d';
+
+export interface ConstellationStabilityPoint {
+  timestamp: string;
+  timeLabel: string;
+  epochId: string;
+  starlink: number;
+  oneweb: number;
+  o3b: number;
+  iridium: number;
+  astSpaceMobile: number;
+  fleetAverage: number;
+  hasEvent?: boolean;
+  eventDescription?: string;
+  eventConstellation?: string;
+}
+
+export interface TrackedConstellationMeta {
+  id: 'starlink' | 'oneweb' | 'o3b' | 'iridium' | 'astSpaceMobile';
+  name: string;
+  shortName: string;
+  operator: string;
+  orbitType: string;
+  altitudeKm: number;
+  activeSatellites: number;
+  color: string;
+  primaryFrequency: string;
+  baselineLatencyMin: number;
+  baselineUptimePct: number;
+  baselineStabilityScore: number;
+  tleUpdateInterval: string;
+  description: string;
+}
+

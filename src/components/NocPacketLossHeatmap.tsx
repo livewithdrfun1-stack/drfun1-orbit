@@ -5,10 +5,10 @@
  * DrFun1 Media Inc. & DrFun1 ECOM Inc.
  * 
  * NOC Packet Loss Heatmap View Component
- * Real-time color-coded visual matrix representing packet loss percentages across all 352 leaf nodes:
- * - 335 Switch.com Tier 5 Platinum nodes
- * - 12 DataPacket 100G No-Ads edge POPs
- * - 5 RisingNet BGP clean-pipe transit nodes
+ * Real-time color-coded visual matrix representing packet loss percentages across all 1,034 federated leaf nodes:
+ * - 500 www.switch.com Nodes/Hub via CGW Law Offices (1,000 total)
+ * - 12 www.datapacket.com Leafs/Hub (24 total)
+ * - 10 www.risingnet.com Dedicated Servers synced & leafed to BOTH irc.drfun1.com & irc.drfun1media.com
  * Features live ICMP probe simulation, carrier/regional groupings, burst test injection, and node inspection.
  */
 
@@ -62,15 +62,15 @@ const generateInitialPacketLoss = (): Record<string, NodePacketTelemetry> => {
   const map: Record<string, NodePacketTelemetry> = {};
 
   ALL_NETWORK_LEAF_NODES.forEach((node, index) => {
-    // Inject tiny trace loss on ~4 out of 352 nodes (typically trans-oceanic or edge peering)
+    // Inject tiny trace loss on ~4 out of 1,034 nodes (typically trans-oceanic or edge peering)
     let lossPct = 0.0;
     let packetsDropped = 0;
     const packetsSent = 10000;
 
-    if (node.id === 'dp_tyo' || node.id === 'dp_sgp') {
+    if (node.id === 'dp_h1_tokyo' || node.id === 'dp_h1_singapore') {
       lossPct = 0.02; // 2 out of 10,000 dropped on trans-Pacific route
       packetsDropped = 2;
-    } else if (node.id === 'dp_sao') {
+    } else if (node.id === 'dp_h2_saopaulo') {
       lossPct = 0.04;
       packetsDropped = 4;
     } else if (index === 184) {
@@ -158,12 +158,12 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
     return () => clearInterval(interval);
   }, [isLiveProbing]);
 
-  // Execute synthetic 1,000-packet probe sweep across all 352 nodes
+  // Execute synthetic 1,000-packet probe sweep across all 1,034 nodes
   const handleRunBurstTest = () => {
     if (isBurstTesting) return;
     setIsBurstTesting(true);
     setBurstProgress(0);
-    setBurstMessage('Initializing 352-node ICMP Jumbo-Frame Burst (1,000 pkts/node)...');
+    setBurstMessage('Initializing 1,034-node ICMP Jumbo-Frame Burst (1,000 pkts/node across Dual Hubs)...');
 
     let currentStep = 0;
     const totalSteps = 10;
@@ -172,14 +172,14 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
       setBurstProgress(currentStep * 10);
 
       if (currentStep === 4) {
-        setBurstMessage('Flooding 352,000 packets across Switch 100G & DataPacket BGP...');
+        setBurstMessage('Flooding 1,034,000 packets across Switch (CGW), DataPacket 100G & RisingNet Dedicated...');
       } else if (currentStep === 7) {
         setBurstMessage('Analyzing Return Echo Frames & Calculating Spanning Loss Matrix...');
       } else if (currentStep >= totalSteps) {
         clearInterval(timer);
         setIsBurstTesting(false);
         setBurstProgress(100);
-        setBurstMessage('Sweep Complete: 352/352 nodes probed with 0.001% aggregate loss.');
+        setBurstMessage('Sweep Complete: 1,034/1,034 nodes probed across Both Hubs (500 Switch/Hub via CGW, 12 DP/Hub, 10 RisingNet) with 0.001% aggregate loss.');
         setTimeout(() => setBurstMessage(null), 4000);
 
         // Update telemetry with refreshed values
@@ -189,7 +189,7 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
             if (updated[node.id]) {
               const cur = updated[node.id];
               const addedSent = 1000;
-              const addedDrop = node.id === 'dp_tyo' ? 1 : 0;
+              const addedDrop = node.id === 'dp_h1_tokyo' ? 1 : 0;
               const totalSent = cur.packetsSent + addedSent;
               const totalDrop = cur.packetsDropped + addedDrop;
               const loss = Number(((totalDrop / totalSent) * 100).toFixed(3));
@@ -332,19 +332,19 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
   const providerGroups = useMemo(() => {
     const groups: { title: string; providerCode: string; icon: any; nodes: SwitchDedicatedNode[] }[] = [
       {
-        title: 'Switch.com Tier 5 Platinum Nodes',
+        title: 'Switch.com Tier 5 Platinum Nodes (500/Hub via CGW Law Offices)',
         providerCode: 'switch',
         icon: Server,
         nodes: filteredNodes.filter((n) => !n.id.startsWith('dp_') && !n.id.startsWith('rn_'))
       },
       {
-        title: 'DataPacket.com 100G No-Ads Edge Transit POPs',
+        title: 'DataPacket.com 100G No-Ads Leafs (12/Hub · 24 Total)',
         providerCode: 'datapacket',
         icon: Zap,
         nodes: filteredNodes.filter((n) => n.id.startsWith('dp_'))
       },
       {
-        title: 'RisingNet BGP Clean-Pipe Scrubbing Core',
+        title: 'RisingNet.com Dedicated Servers (10 Dual-Hub Synced)',
         providerCode: 'risingnet',
         icon: Activity,
         nodes: filteredNodes.filter((n) => n.id.startsWith('rn_'))
@@ -383,7 +383,7 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
-                Real-Time Packet Loss Heatmap (352-Leaf Mesh)
+                Real-Time Packet Loss Heatmap (1,034-Leaf Dual-Hub Mesh)
               </h3>
               <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase tracking-wider flex items-center gap-1.5">
                 <span className={`w-1.5 h-1.5 rounded-full bg-emerald-400 ${isLiveProbing ? 'animate-ping' : ''}`} />
@@ -394,7 +394,7 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-              Continuous 100-packet micro-probes monitoring frame delivery rates across 335 Switch, 12 DataPacket &amp; 5 RisingNet leaf nodes.
+              Continuous 100-packet micro-probes monitoring frame delivery across 1,034 nodes (500 Switch/hub via CGW Law Offices · 12 DataPacket/hub · 10 RisingNet dedicated servers) synced to BOTH hubs.
             </p>
           </div>
         </div>
@@ -428,10 +428,10 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
             onClick={handleRunBurstTest}
             disabled={isBurstTesting}
             className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-purple-950/30 disabled:opacity-50"
-            title="Send 1,000 jumbo frame packets to all 352 leaf nodes simultaneously"
+            title="Send 1,000 jumbo frame packets to all 1,034 leaf nodes simultaneously across Both Hubs"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isBurstTesting ? 'animate-spin' : ''}`} />
-            <span>{isBurstTesting ? `Probing (${burstProgress}%)` : 'Burst Test 352 Nodes'}</span>
+            <span>{isBurstTesting ? `Probing (${burstProgress}%)` : 'Burst Test 1,034 Nodes'}</span>
           </button>
 
           {/* Reset Anomalies */}
@@ -503,10 +503,10 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
           </div>
           <div className="text-xl font-bold text-emerald-300 tabular-nums flex items-baseline gap-1.5">
             <span>{aggregateStats.zeroLossCount}</span>
-            <span className="text-xs text-slate-400 font-normal">/ 352</span>
+            <span className="text-xs text-slate-400 font-normal">/ {ALL_NETWORK_LEAF_NODES.length}</span>
           </div>
           <div className="text-[10px] text-emerald-400 truncate">
-            {((aggregateStats.zeroLossCount / 352) * 100).toFixed(1)}% Pristine Health
+            {((aggregateStats.zeroLossCount / ALL_NETWORK_LEAF_NODES.length) * 100).toFixed(1)}% Pristine Health
           </div>
         </div>
 
@@ -604,7 +604,7 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
                   : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
               }`}
             >
-              Unified 352 Matrix
+              Unified 1,034 Matrix (Dual-Hub)
             </button>
 
             <button
@@ -723,11 +723,11 @@ export const NocPacketLossHeatmap: React.FC<NocPacketLossHeatmapProps> = ({
       {/* ========================================================
           3. HEATMAP COLOR-CODED GRID RENDERER
           ======================================================== */}
-      {/* 3A. UNIFIED 352-NODE MATRIX VIEW */}
+      {/* 3A. UNIFIED 1,000-NODE MATRIX VIEW */}
       {grouping === 'flat' && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-mono text-slate-400 px-1">
-            <span>Unified High-Density Grid (Showing {filteredNodes.length} of 352 Nodes)</span>
+            <span>Unified High-Density Grid (Showing {filteredNodes.length} of {ALL_NETWORK_LEAF_NODES.length} Nodes · Dual-Hub Synced)</span>
             <span className="text-[11px] text-slate-500">Hover cell for probe telemetry · Click to inspect node</span>
           </div>
 

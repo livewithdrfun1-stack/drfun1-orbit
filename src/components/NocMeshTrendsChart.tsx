@@ -5,10 +5,10 @@
  * DrFun1 Media Inc. & DrFun1 ECOM Inc.
  * 
  * NOC Mesh Trends Line Chart Component
- * High-precision timeseries latency & jitter analytics for the 352-leaf mesh:
- * - 335 Switch.com Tier 5 Platinum nodes
- * - 12 DataPacket 100G No-Ads edge nodes
- * - 5 RisingNet BGP clean-pipe transit routers
+ * High-precision timeseries latency & jitter analytics for the 1,034-node dual-hub mesh:
+ * - 500 Switch.com nodes per hub (1,000 total) via CGW Law Offices
+ * - 12 DataPacket.com leafs per hub (24 total)
+ * - 10 RisingNet.com dedicated servers synced and leafed to both hubs (irc.drfun1.com & irc.drfun1media.com)
  * Powered by Recharts with dual-axis telemetry, live streaming, and node selection.
  */
 
@@ -255,12 +255,12 @@ export const NocMeshTrendsChart: React.FC<NocMeshTrendsChartProps> = ({
   // Notable reference nodes for quick selection
   const featuredNodes = useMemo(() => {
     return [
-      ALL_NETWORK_LEAF_NODES.find((n) => n.id === 'dp_fra'), // Frankfurt 100G
-      ALL_NETWORK_LEAF_NODES.find((n) => n.id === 'dp_ash'), // Ashburn 100G
-      ALL_NETWORK_LEAF_NODES.find((n) => n.id === 'dp_lon'), // London 100G
-      ALL_NETWORK_LEAF_NODES.find((n) => n.id === 'dp_tyo'), // Tokyo 40G
-      ALL_NETWORK_LEAF_NODES.find((n) => n.id === 'rn_lax1'), // RisingNet Clean-Pipe LAX
-      ALL_NETWORK_LEAF_NODES[0], // First Switch Node
+      ALL_NETWORK_LEAF_NODES.find((n) => n.id === 'dp_h1_frankfurt'), // Frankfurt 100G
+      ALL_NETWORK_LEAF_NODES.find((n) => n.id === 'dp_h1_ashburn'), // Ashburn 100G
+      ALL_NETWORK_LEAF_NODES.find((n) => n.id === 'dp_h1_london'), // London 100G
+      ALL_NETWORK_LEAF_NODES.find((n) => n.id === 'dp_h1_tokyo'), // Tokyo 40G
+      ALL_NETWORK_LEAF_NODES.find((n) => n.id === 'rn_server_losangeles'), // RisingNet Dedicated Server LAX
+      ALL_NETWORK_LEAF_NODES[0], // First Switch Node via CGW Law Offices
     ].filter(Boolean) as SwitchDedicatedNode[];
   }, []);
 
@@ -288,7 +288,7 @@ export const NocMeshTrendsChart: React.FC<NocMeshTrendsChartProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-              Real-time multi-carrier RTT and micro-jitter dispersion across 352 leaf nodes (Switch Tier 5, DataPacket 100G No-Ads &amp; RisingNet).
+              Real-time multi-carrier RTT and micro-jitter dispersion across 1,034 nodes (500 Switch/Hub via CGW Law Offices, 12 DataPacket/Hub &amp; 10 RisingNet Dedicated Servers synced to both hubs).
             </p>
           </div>
         </div>
@@ -484,7 +484,7 @@ export const NocMeshTrendsChart: React.FC<NocMeshTrendsChartProps> = ({
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span>Average Mesh (352)</span>
+            <span>Average Mesh (1,000 Nodes · 500/Hub)</span>
           </button>
 
           <button

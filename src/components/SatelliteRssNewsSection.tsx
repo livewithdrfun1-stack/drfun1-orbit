@@ -1219,7 +1219,7 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
                       </div>
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-slate-500">Tier-1 IP Transit:</span>
-                        <span className="text-sky-400 font-bold">RisingNet (352 Nodes)</span>
+                        <span className="text-sky-400 font-bold">RisingNet (1,000 Nodes · 500/Hub)</span>
                       </div>
                     </div>
                   </div>

@@ -5,12 +5,12 @@
  * DrFun1 Media Inc. & DrFun1 ECOM Inc.
  * 
  * Network Operations Center (NOC) Dashboard
- * Visualizes global node connectivity for the 352-leaf mesh:
- * - 335 Switch.com Tier 5 Platinum Leaf Nodes
- * - 12 DataPacket.com 100G No-Ads High-Capacity Edge Nodes
- * - 5 RisingNet Tier-1 BGP Clean-Pipe Optical Nodes
+ * Visualizes global node connectivity for the 1,034-leaf mesh:
+ * - 500 www.switch.com Nodes/Hub via CGW Law Offices (1,000 total)
+ * - 12 www.datapacket.com Leafs/Hub (24 total)
+ * - 10 www.risingnet.com Dedicated Servers synced & leafed to BOTH hubs
  * Dual Core Master Hubs: irc.drfun1.com & irc.drfun1media.com (Port 6697 SSL, SID 001/002)
- * Legal & Regulatory: The Law Office of Richard A. Witt LLC | FCC FRN: 0034981290
+ * License: www.wittlawfirm.com | Payment Office: www.owenscompany.com (Bill in Receiving)
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -63,7 +63,7 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
   onOpenUnrealSearch,
 }) => {
   // Filtering & Search
-  const [selectedProvider, setSelectedProvider] = useState<'all' | 'switch' | 'datapacket' | 'risingnet'>('all');
+  const [selectedProvider, setSelectedProvider] = useState<'all' | 'hub1' | 'hub2' | 'switch' | 'datapacket' | 'risingnet'>('all');
   const [selectedRegion, setSelectedRegion] = useState<string>('All Regions');
   const [selectedLatencyFilter, setSelectedLatencyFilter] = useState<'all' | 'low' | 'mid' | 'high'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -99,12 +99,18 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
   // Filtered Leaf Nodes
   const filteredNodes = useMemo(() => {
     return ALL_NETWORK_LEAF_NODES.filter((node) => {
-      // Provider filter
+      // Provider / Hub filter
       if (selectedProvider !== 'all') {
-        const p = node.provider || (node.id.startsWith('dp_') ? 'datapacket' : node.id.startsWith('rn_') ? 'risingnet' : 'switch');
-        if (selectedProvider === 'switch' && p !== 'switch' && p !== 'unrealircd') return false;
-        if (selectedProvider === 'datapacket' && p !== 'datapacket') return false;
-        if (selectedProvider === 'risingnet' && p !== 'risingnet') return false;
+        if (selectedProvider === 'hub1') {
+          if (node.leafHub !== 'irc.drfun1.com') return false;
+        } else if (selectedProvider === 'hub2') {
+          if (node.leafHub !== 'irc.drfun1media.com') return false;
+        } else {
+          const p = node.provider || (node.id.startsWith('dp_') ? 'datapacket' : node.id.startsWith('rn_') ? 'risingnet' : 'switch');
+          if (selectedProvider === 'switch' && p !== 'switch' && p !== 'unrealircd') return false;
+          if (selectedProvider === 'datapacket' && p !== 'datapacket') return false;
+          if (selectedProvider === 'risingnet' && p !== 'risingnet') return false;
+        }
       }
 
       // Region filter
@@ -142,8 +148,12 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
     let switchCount = 0;
     let dpCount = 0;
     let rnCount = 0;
+    let hub1Count = 0;
+    let hub2Count = 0;
 
     ALL_NETWORK_LEAF_NODES.forEach((n) => {
+      if (n.leafHub === 'irc.drfun1.com') hub1Count++;
+      if (n.leafHub === 'irc.drfun1media.com') hub2Count++;
       const p = n.provider || (n.id.startsWith('dp_') ? 'datapacket' : n.id.startsWith('rn_') ? 'risingnet' : 'switch');
       if (p === 'datapacket') dpCount++;
       else if (p === 'risingnet') rnCount++;
@@ -154,6 +164,8 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
 
     return {
       total: ALL_NETWORK_LEAF_NODES.length,
+      hub1Count,
+      hub2Count,
       switchCount,
       dpCount,
       rnCount,
@@ -247,7 +259,7 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
                 </h3>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase tracking-wider flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  <span>352/352 LEAFS OPERATIONAL</span>
+                  <span>1,034/1,034 LEAFS SYNCED TO BOTH HUBS</span>
                 </span>
                 <button
                   onClick={() => setViewMode(viewMode === 'heatmap' ? 'matrix' : 'heatmap')}
@@ -259,7 +271,7 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
                 </button>
               </div>
               <p className="text-xs text-slate-400 mt-1 max-w-3xl leading-relaxed">
-                Global Spanning-Tree leaf mesh topology federating <strong className="text-white">335 Switch.com</strong> Tier 5 nodes, <strong className="text-cyan-300">12 DataPacket.com</strong> 100G No-Ads edge nodes, and <strong className="text-indigo-300">5 RisingNet</strong> BGP routers into Master Dual Hubs.
+                Global Spanning-Tree mesh federating <strong className="text-white">1,034 Leaf Nodes</strong> (<strong className="text-emerald-300">500 Switch/Hub via CGW Law Offices</strong>, <strong className="text-cyan-300">12 DataPacket/Hub</strong>, <strong className="text-indigo-300">10 RisingNet Dedicated Servers</strong>) synced to BOTH <strong className="text-purple-300">irc.drfun1.com</strong> &amp; <strong className="text-sky-300">irc.drfun1media.com</strong>.
               </p>
             </div>
           </div>
@@ -365,19 +377,19 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
           <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800">
             <span className="text-[10px] text-slate-500 block">Switch.com Nodes</span>
             <span className="text-base font-bold text-emerald-400 tabular-nums">{providerStats.switchCount}</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Tier 5 Platinum</span>
+            <span className="text-[10px] text-emerald-300 block mt-0.5">500/Hub via CGW Law Offices</span>
           </div>
 
           <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800">
-            <span className="text-[10px] text-slate-500 block">DataPacket.com Nodes</span>
+            <span className="text-[10px] text-slate-500 block">DataPacket.com Leafs</span>
             <span className="text-base font-bold text-cyan-400 tabular-nums">{providerStats.dpCount}</span>
-            <span className="text-[10px] text-cyan-300 block mt-0.5">100G No-Ads Edge</span>
+            <span className="text-[10px] text-cyan-300 block mt-0.5">12 Leafs/Hub (No-Ads)</span>
           </div>
 
           <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800">
-            <span className="text-[10px] text-slate-500 block">RisingNet BGP Transit</span>
+            <span className="text-[10px] text-slate-500 block">RisingNet Dedicated</span>
             <span className="text-base font-bold text-indigo-400 tabular-nums">{providerStats.rnCount}</span>
-            <span className="text-[10px] text-indigo-300 block mt-0.5">1.2 Tbps Scrubbing</span>
+            <span className="text-[10px] text-indigo-300 block mt-0.5">10 Servers Dual-Hub Synced</span>
           </div>
 
           <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800">
@@ -391,6 +403,16 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
             <span className="text-base font-bold text-purple-400 tabular-nums">855,000</span>
             <span className="text-[10px] text-emerald-400 block mt-0.5">Synchronized</span>
           </div>
+        </div>
+
+        {/* Licensing, Counsel & Payment Office Banner */}
+        <div className="px-3 py-2 rounded-xl bg-slate-950/80 border border-purple-500/30 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-slate-300">
+          <span>
+            App Licensed: <strong className="text-amber-300">www.wittlawfirm.com</strong> (FRN 0034981290) &bull; Switch Counsel: <strong className="text-emerald-300">CGW Law Offices</strong>
+          </span>
+          <span>
+            Payment Office: <strong className="text-cyan-300">Owens Company (www.owenscompany.com)</strong> &bull; Attention: <strong className="text-white">Bill in Receiving</strong>
+          </span>
         </div>
       </div>
 
@@ -410,7 +432,7 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
       <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3 font-mono text-xs shadow-xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           
-          {/* Provider Filter Tabs */}
+          {/* Provider & Hub Filter Tabs */}
           <div className="flex items-center gap-1 overflow-x-auto pb-1">
             <button
               onClick={() => setSelectedProvider('all')}
@@ -420,19 +442,43 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
                   : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
               }`}
             >
-              All Leaf Nodes (352)
+              All Leaf Nodes ({ALL_NETWORK_LEAF_NODES.length})
+            </button>
+
+            <button
+              onClick={() => setSelectedProvider('hub1')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                selectedProvider === 'hub1'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'bg-slate-950 text-slate-400 hover:text-emerald-300 border border-slate-800'
+              }`}
+            >
+              <Server className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Hub 1: irc.drfun1.com ({providerStats.hub1Count})</span>
+            </button>
+
+            <button
+              onClick={() => setSelectedProvider('hub2')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                selectedProvider === 'hub2'
+                  ? 'bg-sky-600 text-white shadow-sm'
+                  : 'bg-slate-950 text-slate-400 hover:text-sky-300 border border-slate-800'
+              }`}
+            >
+              <Server className="w-3.5 h-3.5 text-sky-400" />
+              <span>Hub 2: irc.drfun1media.com ({providerStats.hub2Count})</span>
             </button>
 
             <button
               onClick={() => setSelectedProvider('switch')}
               className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                 selectedProvider === 'switch'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-slate-950 text-slate-400 hover:text-emerald-300 border border-slate-800'
+                  ? 'bg-teal-600 text-white shadow-sm'
+                  : 'bg-slate-950 text-slate-400 hover:text-teal-300 border border-slate-800'
               }`}
             >
-              <Server className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Switch.com (335)</span>
+              <Server className="w-3.5 h-3.5 text-teal-400" />
+              <span>Switch.com ({providerStats.switchCount})</span>
             </button>
 
             <button
@@ -444,7 +490,7 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
               }`}
             >
               <Zap className="w-3.5 h-3.5 text-cyan-400" />
-              <span>DataPacket 100G No-Ads (12)</span>
+              <span>DataPacket ({providerStats.dpCount})</span>
             </button>
 
             <button
@@ -456,7 +502,7 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
               }`}
             >
               <Activity className="w-3.5 h-3.5 text-indigo-400" />
-              <span>RisingNet BGP (5)</span>
+              <span>RisingNet ({providerStats.rnCount})</span>
             </button>
           </div>
 
@@ -483,7 +529,7 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
               >
                 <Activity className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Loss Heatmap</span>
-                <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-400/20 text-emerald-200 font-bold">352</span>
+                <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-400/20 text-emerald-200 font-bold">{ALL_NETWORK_LEAF_NODES.length}</span>
               </button>
 
               <button
@@ -569,7 +615,7 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
       </div>
 
       {/* ========================================================
-          3A. REAL-TIME PACKET LOSS HEATMAP (352-LEAF MESH)
+          3A. REAL-TIME PACKET LOSS HEATMAP (1,000-LEAF MESH · 500 PER HUB)
           ======================================================== */}
       {viewMode === 'heatmap' && (
         <NocPacketLossHeatmap
@@ -584,7 +630,7 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
       )}
 
       {/* ========================================================
-          3B. MAIN VISUAL GRID: HIGH-DENSITY 352-LEAF MATRIX
+          3B. MAIN VISUAL GRID: HIGH-DENSITY 1,000-LEAF MATRIX
           ======================================================== */}
       {viewMode === 'matrix' && (
         <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4">
@@ -592,10 +638,10 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
             <div className="flex items-center gap-2">
               <span className="font-bold text-white flex items-center gap-1.5">
                 <Grid className="w-4 h-4 text-purple-400" />
-                <span>352-Leaf Mesh Global Matrix</span>
+                <span>1,034-Leaf Dual-Hub Mesh (500 Switch/Hub via CGW · 12 DP/Hub · 10 RisingNet)</span>
               </span>
               <span className="text-slate-500">·</span>
-              <span className="text-slate-400">Showing {filteredNodes.length} of 352 Nodes</span>
+              <span className="text-slate-400">Showing {filteredNodes.length} of {ALL_NETWORK_LEAF_NODES.length} Nodes</span>
             </div>
 
             {/* Legend */}

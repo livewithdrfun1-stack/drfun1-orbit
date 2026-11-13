@@ -25,13 +25,17 @@ interface OrbitTrackingMapModalProps {
   onClose: () => void;
   onOpenLicense?: () => void;
   onOpenSwitchMesh?: () => void;
+  selectedConstellations?: string[];
+  onConstellationChange?: (constellations: string[]) => void;
 }
 
 export const OrbitTrackingMapModal: React.FC<OrbitTrackingMapModalProps> = ({
   isOpen,
   onClose,
   onOpenLicense,
-  onOpenSwitchMesh
+  onOpenSwitchMesh,
+  selectedConstellations,
+  onConstellationChange
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -108,6 +112,8 @@ export const OrbitTrackingMapModal: React.FC<OrbitTrackingMapModalProps> = ({
             onOpenLicense={onOpenLicense}
             onOpenSwitchMesh={onOpenSwitchMesh}
             isModalView={true}
+            selectedConstellations={selectedConstellations}
+            onConstellationChange={onConstellationChange}
           />
         </div>
 

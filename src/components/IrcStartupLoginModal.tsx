@@ -14,6 +14,14 @@ import {
   SWITCH_DEDICATED_NODES, 
   ALL_DRFUN1_MEDIA_CHANNELS 
 } from '../data/ircData';
+import {
+  ALL_1034_LEAF_NODES,
+  HUB1_500_SWITCH_NODES,
+  HUB2_500_SWITCH_NODES,
+  HUB1_12_DATAPACKET_NODES,
+  HUB2_12_DATAPACKET_NODES,
+  RISINGNET_10_DEDICATED_SERVERS
+} from '../data/unrealSearchData';
 import { 
   Terminal, 
   Server, 
@@ -32,6 +40,7 @@ import {
   Sliders,
   Sparkles
 } from 'lucide-react';
+import { DrFun1MediaLogo } from './DrFun1MediaLogo';
 
 interface IrcStartupLoginModalProps {
   isOpen: boolean;
@@ -86,7 +95,7 @@ export const IrcStartupLoginModal: React.FC<IrcStartupLoginModalProps> = ({
 
     const isMaster = selectedNodeId === 'master_hub';
     const isMediaHub = selectedNodeId === 'media_hub';
-    const chosenNode = SWITCH_DEDICATED_NODES.find(n => n.id === selectedNodeId);
+    const chosenNode = ALL_1034_LEAF_NODES.find(n => n.id === selectedNodeId) || SWITCH_DEDICATED_NODES.find(n => n.id === selectedNodeId);
     const serverHost = isMaster 
       ? 'irc.drfun1.com' 
       : isMediaHub 
@@ -123,12 +132,12 @@ export const IrcStartupLoginModal: React.FC<IrcStartupLoginModalProps> = ({
         {/* Modal Top Header */}
         <div className="flex items-start justify-between gap-4 border-b border-slate-800 pb-4 relative z-10">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-purple-950/80 border border-purple-500/40 text-purple-400 shadow-md">
-              <Terminal className="w-6 h-6" />
+            <div className="p-3 rounded-xl bg-gradient-to-br from-purple-950 via-slate-900 to-amber-950/80 border border-amber-500/40 text-amber-300 shadow-md shadow-purple-950/50">
+              <Terminal className="w-6 h-6 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 uppercase">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-gradient-to-r from-purple-950 to-amber-950 text-amber-300 border border-amber-500/40 uppercase">
                   UnrealIRCd 6.1.4 Client Login
                 </span>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
@@ -136,8 +145,10 @@ export const IrcStartupLoginModal: React.FC<IrcStartupLoginModalProps> = ({
                   TLS 1.3 &bull; 8,838 ONLINE
                 </span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-1">
-                <span>Connect to DrFun1 IRC Network</span>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-1 flex items-baseline gap-2 flex-wrap">
+                <span>Connect to</span>
+                <DrFun1MediaLogo size="lg" variant="purple-gold" />
+                <span>IRC Network</span>
               </h2>
               <p className="text-xs text-slate-400 font-sans mt-0.5">
                 Official real-time telecommunications &amp; satellite broadcasting network on <strong className="text-purple-300 font-mono">irc.drfun1.com:6697</strong>.
@@ -207,10 +218,38 @@ export const IrcStartupLoginModal: React.FC<IrcStartupLoginModalProps> = ({
                   Dual Hub 002 &bull; irc.drfun1media.com:6697 (TLS 1.3 SSL) &bull; Broadcast Teleport Hub
                 </option>
               </optgroup>
-              <optgroup label="352 Global Leaf Nodes (Switch 335 · DataPacket 12 · RisingNet 5)">
-                {SWITCH_DEDICATED_NODES.map((node) => (
+              <optgroup label="Hub 1 Switch.com Nodes (500 Dedicated Nodes on irc.drfun1.com via CGW Law Offices)">
+                {HUB1_500_SWITCH_NODES.slice(0, 40).map((node) => (
                   <option key={node.id} value={node.id}>
                     Node {node.sid} &bull; {node.host} &bull; {node.location} ({node.latencyMs}ms)
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Hub 1 DataPacket.com Leafs (12 Dedicated 100G Leafs on irc.drfun1.com)">
+                {HUB1_12_DATAPACKET_NODES.map((node) => (
+                  <option key={node.id} value={node.id}>
+                    Node {node.sid} &bull; {node.host} &bull; {node.location} ({node.latencyMs}ms)
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Hub 2 Switch.com Nodes (500 Dedicated Nodes on irc.drfun1media.com via CGW Law Offices)">
+                {HUB2_500_SWITCH_NODES.slice(0, 40).map((node) => (
+                  <option key={node.id} value={node.id}>
+                    Node {node.sid} &bull; {node.host} &bull; {node.location} ({node.latencyMs}ms)
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Hub 2 DataPacket.com Leafs (12 Dedicated 100G Leafs on irc.drfun1media.com)">
+                {HUB2_12_DATAPACKET_NODES.map((node) => (
+                  <option key={node.id} value={node.id}>
+                    Node {node.sid} &bull; {node.host} &bull; {node.location} ({node.latencyMs}ms)
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="RisingNet.com Dedicated Servers (10 Servers Synced &amp; Leafed to Both Hubs)">
+                {RISINGNET_10_DEDICATED_SERVERS.map((node) => (
+                  <option key={node.id} value={node.id}>
+                    Server {node.sid} &bull; {node.host} &bull; {node.location} ({node.latencyMs}ms)
                   </option>
                 ))}
               </optgroup>
@@ -332,11 +371,13 @@ export const IrcStartupLoginModal: React.FC<IrcStartupLoginModalProps> = ({
 
           {/* Network Licensing Telemetry Tag */}
           <div className="pt-2 text-[10px] text-slate-500 text-center flex flex-wrap items-center justify-center gap-2">
-            <span>Uplink: Switch SUPERNAP Las Vegas Core 001</span>
+            <span>Switch 500/Hub via CGW Law Offices</span>
             <span>&bull;</span>
-            <span>Transit: RisingNet AS53767 (www.risingnet.com)</span>
+            <span>12 DataPacket/Hub</span>
             <span>&bull;</span>
-            <span>Licensee: Richard Alan Witt (FRN 0034981290)</span>
+            <span>10 RisingNet Dedicated Servers (Dual-Hub)</span>
+            <span>&bull;</span>
+            <span>Licensed: www.wittlawfirm.com | Payment: Owens Company (Bill in Receiving)</span>
           </div>
 
         </form>

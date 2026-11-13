@@ -11,6 +11,7 @@ export interface TrackedSatellite {
   name: string;
   noradId: number;
   category: 'Space Stations' | 'LEO Broadband' | 'Direct Broadcast (DBS)' | 'Scientific & Weather' | 'Earth Observation' | 'Navigation';
+  constellation?: 'Starlink' | 'OneWeb' | 'O3b mPOWER' | 'Iridium' | 'AST SpaceMobile' | 'GEO DBS' | 'Space Stations' | 'GPS' | 'Scientific' | string;
   operator: string;
   orbitType: 'LEO' | 'MEO' | 'GEO';
   altitudeKm: number;
@@ -26,6 +27,8 @@ export interface TrackedSatellite {
   tleLine2: string;
   color: string;
   description: string;
+  beamType?: string;
+  spotBeamsCount?: number;
   passPredictionsEnabled: boolean;
 }
 

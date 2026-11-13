@@ -5,8 +5,10 @@
  * DrFun1 Media Inc. & DrFun1 ECOM Inc.
  * 
  * Official UnrealIRCd Network Search Engine Database
- * 335 UnrealIRCd.org Verified Global Nodes + 12 DataPacket.com 100G Nodes
- * All leafed directly to Master Core Hub irc.drfun1.com:6697 (SID 001)
+ * 1,034 Federated Leaf Nodes (500 www.switch.com Nodes/Hub via CGW Law Offices +
+ * 12 www.datapacket.com Leafs/Hub + 10 risingnet.com Dedicated Servers)
+ * All synced and leafed to Dual Core Hubs: irc.drfun1.com (SID 001) & irc.drfun1media.com (SID 002)
+ * License: www.wittlawfirm.com | Payment Office: www.owenscompany.com (Bill in Receiving)
  */
 
 import { UnrealServerRecord } from '../types/unrealSearch';
@@ -25,20 +27,27 @@ export const UNREAL_HUB_TARGET = {
   anopeSid: '00A',
   networkName: 'DrFun1 Media IRC Network',
   leafAuthSecret: 'drfun1-mesh-leaf-auth-2026',
-  datacenter: 'Switch SUPERNAP Las Vegas (www.switch.com)',
+  datacenter: 'Switch SUPERNAP Las Vegas (www.switch.com) via CGW Law Offices',
   transit: 'RisingNet BGP Tier-1 Transit (www.risingnet.com)',
-  license: 'Licensed to Richard Alan Witt (www.wittlawfirm.com / FRN 0034981290)',
+  license: 'Licensed to Richard Alan Witt (www.wittlawfirm.com / FCC FRN: 0034981290)',
+  legalCounsel: 'CGW Law Offices (Curtis, Gregory & Wilson Law Offices)',
+  paymentOffice: 'Owens Company (www.owenscompany.com)',
+  billingOffice: 'Bill in Receiving (Owens Company Accounts Payable)',
   officialPortal: 'https://stats.drfun1ircd.com',
-  totalSwitchNodes: 335,
-  totalDataPacketNodes: 12,
-  totalRisingNetNodes: 5,
-  totalLeafNodes: 352,
+  totalHub1LeafNodes: 517, // 500 Switch + 12 DataPacket + 5 RisingNet
+  totalHub2LeafNodes: 517, // 500 Switch + 12 DataPacket + 5 RisingNet
+  totalSwitchNodes: 1000,  // 500 per hub via CGW Law Offices
+  totalDataPacketNodes: 24, // 12 per hub
+  totalRisingNetNodes: 10, // 10 dedicated servers synced & leafed to both hubs
+  totalLeafNodes: 1034,
 };
 
 // =========================================================================
-// 1. EXACTLY 12 DEDICATED DATAPACKET.COM HIGH-CAPACITY LEAF NODES
+// 1. EXACTLY 12 DEDICATED DATAPACKET.COM LEAFS PER HUB (24 TOTAL FEDERATED LEAFS)
 // Hosted on DataPacket.com 100+ Tbps BGP Backbone & CDN77 Optical Mesh
-// Leafed to Dual Hubs: irc.drfun1.com (SID 001) & irc.drfun1media.com (SID 002)
+// 12 Leafed to irc.drfun1.com (SID 001) + 12 Leafed to irc.drfun1media.com (SID 002)
+// Dual-Homlink Spanning Tree Synced to Both IRCd Hubs
+// Legal Escrow: CGW Law Offices | Payment Office: Owens Company (Bill in Receiving)
 // =========================================================================
 
 interface DataPacketLeafDef {
@@ -54,26 +63,43 @@ interface DataPacketLeafDef {
   sid: string;
 }
 
-const DATAPACKET_RAW_DEFS: DataPacketLeafDef[] = [
-  { code: 'ashburn', metro: 'Ashburn, VA', region: 'North America (US East)', country: 'United States', facility: 'Equinix DC21 / DataPacket Ashburn SuperCore', speed: '100 Gbps Unmetered QSFP28', latencyMs: 14.2, users: 4820, channels: 210, sid: '021' },
-  { code: 'chicago', metro: 'Chicago, IL', region: 'North America (US Central)', country: 'United States', facility: '350 E Cermak / DataPacket Chicago Hub', speed: '100 Gbps Unmetered QSFP28', latencyMs: 21.4, users: 3940, channels: 185, sid: '022' },
-  { code: 'dallas', metro: 'Dallas, TX', region: 'North America (US South)', country: 'United States', facility: 'Infomart Dallas / DataPacket Texas Gate', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 18.2, users: 3210, channels: 140, sid: '023' },
-  { code: 'sanjose', metro: 'San Jose, CA', region: 'North America (US West)', country: 'United States', facility: 'Silicon Valley SV1 / DataPacket West Metro', speed: '100 Gbps Unmetered QSFP28', latencyMs: 7.9, users: 4680, channels: 230, sid: '024' },
-  { code: 'losangeles', metro: 'Los Angeles, CA', region: 'North America (US West)', country: 'United States', facility: 'One Wilshire Telecom Center / DataPacket LAX', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 5.1, users: 3890, channels: 175, sid: '025' },
-  { code: 'newyork', metro: 'New York, NY', region: 'North America (US East)', country: 'United States', facility: '111 8th Avenue / DataPacket Manhattan Tier-1', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 23.8, users: 3550, channels: 160, sid: '026' },
-  { code: 'london', metro: 'London, UK', region: 'Europe', country: 'United Kingdom', facility: 'Telehouse North Docklands / DataPacket London Core', speed: '100 Gbps Unmetered QSFP28', latencyMs: 71.9, users: 4120, channels: 195, sid: '027' },
-  { code: 'amsterdam', metro: 'Amsterdam, NL', region: 'Europe', country: 'Netherlands', facility: 'Nikhef / Equinix AM4 / DataPacket Amsterdam Ring', speed: '100 Gbps Unmetered QSFP28', latencyMs: 74.3, users: 4450, channels: 215, sid: '028' },
-  { code: 'frankfurt', metro: 'Frankfurt, DE', region: 'Europe', country: 'Germany', facility: 'Interxion FRA1 / DE-CIX / DataPacket Frankfurt Hub', speed: '100 Gbps Unmetered QSFP28', latencyMs: 78.5, users: 4320, channels: 205, sid: '029' },
-  { code: 'tokyo', metro: 'Tokyo, JP', region: 'Asia-Pacific', country: 'Japan', facility: 'Equinix TY8 / JPNAP DataPacket Tokyo Gateway', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 93.6, users: 2980, channels: 130, sid: '030' },
-  { code: 'singapore', metro: 'Singapore, SG', region: 'Asia-Pacific', country: 'Singapore', facility: 'Equinix SG1 / DataPacket Southeast Asia Teleport', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 117.2, users: 2840, channels: 125, sid: '031' },
-  { code: 'sydney', metro: 'Sydney, AU', region: 'Asia-Pacific', country: 'Australia', facility: 'Equinix SY3 / DataPacket Pacific Oceania Gateway', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 123.8, users: 2410, channels: 110, sid: '032' },
+// 12 DataPacket Dedicated Nodes for Hub 1 (irc.drfun1.com)
+const DATAPACKET_HUB1_DEFS: DataPacketLeafDef[] = [
+  { code: 'ashburn', metro: 'Ashburn, VA', region: 'North America (US East)', country: 'United States', facility: 'Equinix DC21 / DataPacket Ashburn SuperCore', speed: '100 Gbps Unmetered QSFP28', latencyMs: 14.2, users: 4820, channels: 210, sid: 'D01' },
+  { code: 'chicago', metro: 'Chicago, IL', region: 'North America (US Central)', country: 'United States', facility: '350 E Cermak / DataPacket Chicago Hub', speed: '100 Gbps Unmetered QSFP28', latencyMs: 21.4, users: 3940, channels: 185, sid: 'D02' },
+  { code: 'dallas', metro: 'Dallas, TX', region: 'North America (US South)', country: 'United States', facility: 'Infomart Dallas / DataPacket Texas Gate', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 18.2, users: 3210, channels: 140, sid: 'D03' },
+  { code: 'sanjose', metro: 'San Jose, CA', region: 'North America (US West)', country: 'United States', facility: 'Silicon Valley SV1 / DataPacket West Metro', speed: '100 Gbps Unmetered QSFP28', latencyMs: 7.9, users: 4680, channels: 230, sid: 'D04' },
+  { code: 'losangeles', metro: 'Los Angeles, CA', region: 'North America (US West)', country: 'United States', facility: 'One Wilshire Telecom Center / DataPacket LAX', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 5.1, users: 3890, channels: 175, sid: 'D05' },
+  { code: 'newyork', metro: 'New York, NY', region: 'North America (US East)', country: 'United States', facility: '111 8th Avenue / DataPacket Manhattan Tier-1', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 23.8, users: 3550, channels: 160, sid: 'D06' },
+  { code: 'london', metro: 'London, UK', region: 'Europe', country: 'United Kingdom', facility: 'Telehouse North Docklands / DataPacket London Core', speed: '100 Gbps Unmetered QSFP28', latencyMs: 71.9, users: 4120, channels: 195, sid: 'D07' },
+  { code: 'amsterdam', metro: 'Amsterdam, NL', region: 'Europe', country: 'Netherlands', facility: 'Nikhef / Equinix AM4 / DataPacket Amsterdam Ring', speed: '100 Gbps Unmetered QSFP28', latencyMs: 74.3, users: 4450, channels: 215, sid: 'D08' },
+  { code: 'frankfurt', metro: 'Frankfurt, DE', region: 'Europe', country: 'Germany', facility: 'Interxion FRA1 / DE-CIX / DataPacket Frankfurt Hub', speed: '100 Gbps Unmetered QSFP28', latencyMs: 78.5, users: 4320, channels: 205, sid: 'D09' },
+  { code: 'tokyo', metro: 'Tokyo, JP', region: 'Asia-Pacific', country: 'Japan', facility: 'Equinix TY8 / JPNAP DataPacket Tokyo Gateway', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 93.6, users: 2980, channels: 130, sid: 'D10' },
+  { code: 'singapore', metro: 'Singapore, SG', region: 'Asia-Pacific', country: 'Singapore', facility: 'Equinix SG1 / DataPacket Southeast Asia Teleport', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 117.2, users: 2840, channels: 125, sid: 'D11' },
+  { code: 'sydney', metro: 'Sydney, AU', region: 'Asia-Pacific', country: 'Australia', facility: 'Equinix SY3 / DataPacket Pacific Oceania Gateway', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 123.8, users: 2410, channels: 110, sid: 'D12' },
 ];
 
-export const DATAPACKET_LEAF_NODES: SwitchDedicatedNode[] = DATAPACKET_RAW_DEFS.map((def, idx) => {
-  const host = `dp${String(idx + 1).padStart(2, '0')}.${def.code}.datapacket.drfun1.com`;
+// 12 DataPacket Dedicated Nodes for Hub 2 (irc.drfun1media.com)
+const DATAPACKET_HUB2_DEFS: DataPacketLeafDef[] = [
+  { code: 'paris', metro: 'Paris, FR', region: 'Europe', country: 'France', facility: 'Equinix PA4 / DataPacket Paris Gateway', speed: '100 Gbps Unmetered QSFP28', latencyMs: 76.4, users: 3910, channels: 175, sid: 'D13' },
+  { code: 'madrid', metro: 'Madrid, ES', region: 'Europe', country: 'Spain', facility: 'Interxion MAD2 / DataPacket Iberia Edge', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 82.1, users: 3120, channels: 140, sid: 'D14' },
+  { code: 'stockholm', metro: 'Stockholm, SE', region: 'Europe', country: 'Sweden', facility: 'Equinix SK2 / DataPacket Nordic SuperCore', speed: '100 Gbps Unmetered QSFP28', latencyMs: 85.3, users: 3450, channels: 155, sid: 'D15' },
+  { code: 'warsaw', metro: 'Warsaw, PL', region: 'Europe', country: 'Poland', facility: 'Equinix WA3 / DataPacket Central Europe', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 88.7, users: 2980, channels: 130, sid: 'D16' },
+  { code: 'toronto', metro: 'Toronto, CA', region: 'North America (Canada)', country: 'Canada', facility: '151 Front St / DataPacket Great Lakes Metro', speed: '100 Gbps Unmetered QSFP28', latencyMs: 27.4, users: 3620, channels: 165, sid: 'D17' },
+  { code: 'saopaulo', metro: 'Sao Paulo, BR', region: 'South America', country: 'Brazil', facility: 'Equinix SP4 / DataPacket South America Hub', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 112.5, users: 2750, channels: 120, sid: 'D18' },
+  { code: 'mumbai', metro: 'Mumbai, IN', region: 'Asia-Pacific', country: 'India', facility: 'GPX Mumbai / DataPacket South Asia Core', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 138.4, users: 3190, channels: 145, sid: 'D19' },
+  { code: 'seoul', metro: 'Seoul, KR', region: 'Asia-Pacific', country: 'South Korea', facility: 'Equinix SL1 / DataPacket East Asia Gateway', speed: '100 Gbps Unmetered QSFP28', latencyMs: 98.2, users: 3840, channels: 170, sid: 'D20' },
+  { code: 'hongkong', metro: 'Hong Kong, HK', region: 'Asia-Pacific', country: 'Hong Kong', facility: 'Equinix HK1 / DataPacket HK Telecom Hub', speed: '100 Gbps Unmetered QSFP28', latencyMs: 104.6, users: 4020, channels: 180, sid: 'D21' },
+  { code: 'zurich', metro: 'Zurich, CH', region: 'Europe', country: 'Switzerland', facility: 'Equinix ZH4 / DataPacket Alpine Hub', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 79.8, users: 3310, channels: 150, sid: 'D22' },
+  { code: 'milan', metro: 'Milan, IT', region: 'Europe', country: 'Italy', facility: 'Caldera Park / DataPacket Milan SuperCore', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 81.2, users: 3260, channels: 145, sid: 'D23' },
+  { code: 'melbourne', metro: 'Melbourne, AU', region: 'Asia-Pacific', country: 'Australia', facility: 'NextDC M1 / DataPacket Australasia Node', speed: '40 Gbps QSFP+ Dedicated', latencyMs: 129.5, users: 2540, channels: 115, sid: 'D24' },
+];
+
+function createDataPacketNode(def: DataPacketLeafDef, idx: number, targetHub: 'irc.drfun1.com' | 'irc.drfun1media.com', hubTag: string): SwitchDedicatedNode {
+  const host = `dp${String(idx + 1).padStart(2, '0')}.${def.code}.${hubTag}.drfun1.com`;
   return {
-    id: `dp_leaf_${def.code}`,
-    name: `DataPacket ${def.metro} 100G No-Ads Leaf`,
+    id: `dp_${hubTag}_${def.code}`,
+    name: `DataPacket ${def.metro} 100G No-Ads Leaf (${def.sid})`,
     subdomain: host,
     host,
     port: 6697,
@@ -88,11 +114,14 @@ export const DATAPACKET_LEAF_NODES: SwitchDedicatedNode[] = DATAPACKET_RAW_DEFS.
     unrealVersion: 'UnrealIRCd-6.1.4',
     sslFingerprint: `DP:${(idx + 21).toString(16).toUpperCase()}:A7:E9:55:12:3C:99:FA:44:88:B1:00:26:DD:4A:EE`,
     transitProvider: 'DataPacket.com 100+ Tbps Optical BGP (Zero Ads / Ad-Free Stream Relay)',
-    leafHub: 'irc.drfun1.com',
+    leafHub: targetHub,
     hubPort: 6697,
     sid: def.sid,
     leafStatus: 'synced',
     adPolicy: 'datapacket.com no ads (Strict Zero Commercial Advertising Policy)',
+    legalCounsel: 'CGW Law Offices (Curtis, Gregory & Wilson Law Offices)',
+    paymentOffice: 'Owens Company (www.owenscompany.com)',
+    billingOffice: 'Bill in Receiving (Owens Company Accounts Payable)',
     leafBurstStats: {
       syncedChannels: 855000,
       syncedNicks: def.users,
@@ -103,7 +132,7 @@ export const DATAPACKET_LEAF_NODES: SwitchDedicatedNode[] = DATAPACKET_RAW_DEFS.
     },
     unrealLinkBlock: `/* DataPacket.com 100G No-Ads Leaf Node ${def.sid} (${def.metro}) */
 /* Dual-Hub Redundant Leaf to irc.drfun1.com & irc.drfun1media.com */
-/* Policy: datapacket.com no ads (Ad-Free High-Throughput Media Relay) */
+/* Policy: datapacket.com no ads | Legal: CGW Law Offices | Payment: Owens Company (Bill in Receiving) */
 
 link irc.drfun1.com {
     incoming { mask *; };
@@ -134,16 +163,15 @@ ulines {
     "services.drfun1media.com";
 };
 
-/* No-Ads & Anti-Spam Zero Commercial Interruption Directives */
 set {
     anti-spam {
         spamfilter {
             ban-action block;
-            ban-reason "datapacket.com no ads: Commercial advertising & spam strictly prohibited";
+            ban-reason "datapacket.com no ads: Commercial advertising strictly prohibited";
         };
     };
     modes-on-connect "+iwx";
-    modes-on-join "+Ntc"; /* No external messages, no colors, no unmoderated ads */
+    modes-on-join "+Ntc";
     restrict-channelmodes "c";
 };
 
@@ -158,12 +186,32 @@ class servers {
     country: def.country,
     uplinkSpeed: def.speed
   };
-});
+}
+
+// 12 DataPacket Dedicated Leafs for Hub 1 (irc.drfun1.com)
+export const HUB1_12_DATAPACKET_NODES: SwitchDedicatedNode[] = DATAPACKET_HUB1_DEFS.map((def, idx) =>
+  createDataPacketNode(def, idx, 'irc.drfun1.com', 'h1')
+);
+
+// 12 DataPacket Dedicated Leafs for Hub 2 (irc.drfun1media.com)
+export const HUB2_12_DATAPACKET_NODES: SwitchDedicatedNode[] = DATAPACKET_HUB2_DEFS.map((def, idx) =>
+  createDataPacketNode(def, idx + 12, 'irc.drfun1media.com', 'h2')
+);
+
+// Total 24 DataPacket Dedicated Leafs (12 per hub)
+export const ALL_24_DATAPACKET_NODES: SwitchDedicatedNode[] = [
+  ...HUB1_12_DATAPACKET_NODES,
+  ...HUB2_12_DATAPACKET_NODES,
+];
+
+// Backwards-compatible alias for existing imports
+export const DATAPACKET_LEAF_NODES: SwitchDedicatedNode[] = ALL_24_DATAPACKET_NODES;
 
 // =========================================================================
-// 2. EXACTLY 5 DEDICATED RISINGNET.COM (www.risingnet.com) TIER-1 LEAF NODES
+// 2. EXACTLY 10 DEDICATED SERVERS FROM RISINGNET.COM (www.risingnet.com)
 // Hosted on RisingNet Optical DWDM Protected Backbone & RF Transport
-// Leafed to Dual Hubs: irc.drfun1.com (SID 001) & irc.drfun1media.com (SID 002)
+// Synchronized and leafed to BOTH IRCd hubs: irc.drfun1.com & irc.drfun1media.com
+// Legal Escrow: CGW Law Offices | Payment Office: Owens Company (Bill in Receiving)
 // =========================================================================
 
 interface RisingNetLeafDef {
@@ -175,27 +223,33 @@ interface RisingNetLeafDef {
   users: number;
   channels: number;
   sid: string;
+  primaryHub: 'irc.drfun1.com' | 'irc.drfun1media.com';
 }
 
-const RISINGNET_RAW_DEFS: RisingNetLeafDef[] = [
-  { code: 'ashburn', metro: 'Ashburn, VA', facility: 'Equinix DC10 / RisingNet Tier-1 BGP POP', speed: '100 Gbps Optical DWDM', latencyMs: 12.1, users: 3820, channels: 165, sid: '041' },
-  { code: 'losangeles', metro: 'Los Angeles, CA', facility: 'One Wilshire Telecom Center / RisingNet Pacific Core', speed: '100 Gbps Optical DWDM', latencyMs: 4.8, users: 4410, channels: 190, sid: '042' },
-  { code: 'siliconvalley', metro: 'San Jose, CA', facility: 'SV1 Silicon Valley / RisingNet Optical Hub', speed: '100 Gbps Optical DWDM', latencyMs: 7.2, users: 4190, channels: 180, sid: '043' },
-  { code: 'miami', metro: 'Miami, FL', facility: 'NAP of the Americas / RisingNet Subsea Gateway', speed: '100 Gbps Optical DWDM', latencyMs: 24.6, users: 3150, channels: 145, sid: '044' },
-  { code: 'dallas', metro: 'Dallas, TX', facility: 'Infomart Dallas / RisingNet Central Aggregator', speed: '100 Gbps Optical DWDM', latencyMs: 16.9, users: 3670, channels: 155, sid: '045' },
+const RISINGNET_10_DEFS: RisingNetLeafDef[] = [
+  { code: 'ashburn', metro: 'Ashburn, VA', facility: 'Equinix DC10 / RisingNet Tier-1 BGP POP', speed: '100 Gbps Optical DWDM', latencyMs: 12.1, users: 3820, channels: 165, sid: 'R01', primaryHub: 'irc.drfun1.com' },
+  { code: 'losangeles', metro: 'Los Angeles, CA', facility: 'One Wilshire Telecom Center / RisingNet Pacific Core', speed: '100 Gbps Optical DWDM', latencyMs: 4.8, users: 4410, channels: 190, sid: 'R02', primaryHub: 'irc.drfun1.com' },
+  { code: 'siliconvalley', metro: 'San Jose, CA', facility: 'SV1 Silicon Valley / RisingNet Optical Hub', speed: '100 Gbps Optical DWDM', latencyMs: 7.2, users: 4190, channels: 180, sid: 'R03', primaryHub: 'irc.drfun1.com' },
+  { code: 'miami', metro: 'Miami, FL', facility: 'NAP of the Americas / RisingNet Subsea Gateway', speed: '100 Gbps Optical DWDM', latencyMs: 24.6, users: 3150, channels: 145, sid: 'R04', primaryHub: 'irc.drfun1.com' },
+  { code: 'dallas', metro: 'Dallas, TX', facility: 'Infomart Dallas / RisingNet Central Aggregator', speed: '100 Gbps Optical DWDM', latencyMs: 16.9, users: 3670, channels: 155, sid: 'R05', primaryHub: 'irc.drfun1.com' },
+  { code: 'chicago', metro: 'Chicago, IL', facility: '350 E Cermak / RisingNet Great Lakes Optical Ring', speed: '100 Gbps Optical DWDM', latencyMs: 20.8, users: 3950, channels: 175, sid: 'R06', primaryHub: 'irc.drfun1media.com' },
+  { code: 'seattle', metro: 'Seattle, WA', facility: 'Westin Building Exchange / RisingNet Pacific Northwest', speed: '100 Gbps Optical DWDM', latencyMs: 14.3, users: 3420, channels: 150, sid: 'R07', primaryHub: 'irc.drfun1media.com' },
+  { code: 'newyork', metro: 'New York, NY', facility: '60 Hudson St / 111 8th Ave / RisingNet Manhattan Core', speed: '100 Gbps Optical DWDM', latencyMs: 22.4, users: 4180, channels: 185, sid: 'R08', primaryHub: 'irc.drfun1media.com' },
+  { code: 'atlanta', metro: 'Atlanta, GA', facility: '56 Marietta St / RisingNet Southeast SuperCenter', speed: '100 Gbps Optical DWDM', latencyMs: 18.7, users: 3580, channels: 160, sid: 'R09', primaryHub: 'irc.drfun1media.com' },
+  { code: 'denver', metro: 'Denver, CO', facility: '1500 Champa St / RisingNet Rocky Mountain BGP Node', speed: '100 Gbps Optical DWDM', latencyMs: 15.2, users: 3290, channels: 140, sid: 'R10', primaryHub: 'irc.drfun1media.com' },
 ];
 
-export const RISINGNET_5_LEAF_NODES: SwitchDedicatedNode[] = RISINGNET_RAW_DEFS.map((def, idx) => {
-  const host = `rn0${idx + 1}.${def.code}.risingnet.drfun1.com`;
+export const RISINGNET_10_DEDICATED_SERVERS: SwitchDedicatedNode[] = RISINGNET_10_DEFS.map((def, idx) => {
+  const host = `rn${String(idx + 1).padStart(2, '0')}.${def.code}.risingnet.drfun1.com`;
   return {
-    id: `rn_leaf_${def.code}`,
-    name: `RisingNet ${def.metro} 100G Backbone Leaf`,
+    id: `rn_server_${def.code}`,
+    name: `RisingNet Dedicated Server ${idx + 1} · ${def.metro} (${def.sid})`,
     subdomain: host,
     host,
     port: 6697,
     location: def.metro,
-    campusName: def.facility,
-    tier: 'Tier 1 Optical DWDM Protected Backbone',
+    campusName: `${def.facility} (RisingNet Dedicated Bare-Metal Server)`,
+    tier: 'Tier 1 Optical DWDM Protected Backbone / 100G Clean Pipe',
     fiberCapacity: def.speed,
     status: 'active',
     latencyMs: def.latencyMs,
@@ -203,11 +257,14 @@ export const RISINGNET_5_LEAF_NODES: SwitchDedicatedNode[] = RISINGNET_RAW_DEFS.
     leafPeers: 16,
     unrealVersion: 'UnrealIRCd-6.1.4',
     sslFingerprint: `RN:${(idx + 41).toString(16).toUpperCase()}:B9:4C:12:88:DF:99:E1:33:AA:77:00:26:FA:11:05`,
-    transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)',
-    leafHub: 'irc.drfun1.com',
+    transitProvider: 'RisingNet Optical Backbone & Dedicated Bare-Metal Server (www.risingnet.com)',
+    leafHub: def.primaryHub,
     hubPort: 6697,
     sid: def.sid,
     leafStatus: 'synced',
+    legalCounsel: 'CGW Law Offices (Curtis, Gregory & Wilson Law Offices)',
+    paymentOffice: 'Owens Company (www.owenscompany.com)',
+    billingOffice: 'Bill in Receiving (Owens Company Accounts Payable)',
     leafBurstStats: {
       syncedChannels: 855000,
       syncedNicks: def.users,
@@ -216,7 +273,10 @@ export const RISINGNET_5_LEAF_NODES: SwitchDedicatedNode[] = RISINGNET_RAW_DEFS.
       linkProtocol: 'UnrealIRCd 6.1.4 SSL Spanning Tree',
       encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384'
     },
-    unrealLinkBlock: `/* RisingNet.com Leaf Node ${def.sid} Dual-Hub Link Block */
+    unrealLinkBlock: `/* RisingNet.com Dedicated Server ${def.sid} (${def.metro}) */
+/* Dual-Hub Redundant Synchronized Link Block to Both irc.drfun1.com & irc.drfun1media.com */
+/* Provider: RisingNet.com | Legal: CGW Law Offices | Payment: Owens Company (Bill in Receiving) */
+
 link irc.drfun1.com {
     incoming { mask *; };
     outgoing {
@@ -228,6 +288,7 @@ link irc.drfun1.com {
     password "${UNREAL_HUB_TARGET.leafAuthSecret}";
     class servers;
 };
+
 link irc.drfun1media.com {
     incoming { mask *; };
     outgoing {
@@ -239,14 +300,16 @@ link irc.drfun1media.com {
     password "${UNREAL_HUB_TARGET.leafAuthSecret}";
     class servers;
 };
+
 ulines {
     "services.drfun1.com";
     "services.drfun1media.com";
 };
+
 class servers {
     pingfreq 45;
-    maxclients 100;
-    sendq 20000000;
+    maxclients 150;
+    sendq 25000000;
     connfreq 10;
 };`,
     provider: 'risingnet',
@@ -255,6 +318,9 @@ class servers {
     uplinkSpeed: def.speed
   };
 });
+
+// Backwards-compatible alias for existing imports
+export const RISINGNET_5_LEAF_NODES: SwitchDedicatedNode[] = RISINGNET_10_DEDICATED_SERVERS;
 
 // =========================================================================
 // 2. EXACTLY 335 UNREALIRCD.ORG VERIFIED GLOBAL LEAF NODES
@@ -639,58 +705,82 @@ const ALL_335_GEO_SEEDS: GeoNodeSeed[] = [
   ...ORBITAL_CITIES,
 ];
 
-// Verify count during runtime: ALL_335_GEO_SEEDS.length === 335
-export const SWITCH_335_LEAF_NODES: SwitchDedicatedNode[] = ALL_335_GEO_SEEDS.map((seed, idx) => {
-  const nodeNum = idx + 1; // 1 to 335
-  const sidNum = 100 + nodeNum; // SIDs '101' through '435' (clean 3-character UnrealIRCd SID)
-  const sidStr = String(sidNum);
+// (Legacy 335 Geo Seeds used above by generate500SwitchNodesForHub to produce 500 Switch nodes/hub = 1,000 total)
 
-  // Clean slug for city name
-  const citySlug = seed.city
-    .split(',')[0]
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
-  const countryCode = seed.city.includes(',') ? seed.city.split(',')[1].trim().toLowerCase() : 'global';
-  const hostname = `node${String(nodeNum).padStart(3, '0')}.${citySlug}.switch.drfun1.com`;
+// =========================================================================
+// 3. 500 DEDICATED WWW.SWITCH.COM NODES PER HUB VIA CGW LAW OFFICES
+// Procured, Contracted & Represented via CGW Law Offices (Curtis, Gregory & Wilson)
+// Hub 1: irc.drfun1.com (SID 001) -> 500 Dedicated Switch Nodes (SIDs 101 to 600)
+// Hub 2: irc.drfun1media.com (SID 002) -> 500 Dedicated Switch Nodes (SIDs 601 to B00)
+// Synchronized and Dual-Leafed to BOTH IRCd Hubs
+// Licensed via: www.wittlawfirm.com | Payment Office: Owens Company (Bill in Receiving)
+// =========================================================================
 
-  // Deterministically hashed users & channels
-  const pseudoHash = ((idx + 1) * 997) % 3500;
-  const usersOnline = 200 + (pseudoHash % 2800);
-  const latencyMs = Number((seed.baseLat + (idx % 7) * 0.4).toFixed(1));
+function generate500SwitchNodesForHub(
+  targetHub: 'irc.drfun1.com' | 'irc.drfun1media.com',
+  startSidNum: number,
+  hubShortName: string,
+  hubPrefix: string
+): SwitchDedicatedNode[] {
+  const nodes: SwitchDedicatedNode[] = [];
+  const seedCount = ALL_335_GEO_SEEDS.length;
+  
+  for (let i = 0; i < 500; i++) {
+    const seed = ALL_335_GEO_SEEDS[i % seedCount];
+    const nodeIndex = i + 1;
+    const sidNum = startSidNum + i;
+    const sidStr = sidNum <= 999 
+      ? String(sidNum) 
+      : (sidNum).toString(16).toUpperCase().padStart(3, '0').slice(-3);
+    
+    const citySlug = seed.city
+      .split(',')[0]
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
+    
+    const host = `${hubPrefix}switch${String(nodeIndex).padStart(3, '0')}.${citySlug}.drfun1.com`;
+    const pseudoHash = ((i + 1) * 7919) % 3200;
+    const usersOnline = 180 + (pseudoHash % 2400);
+    const latencyMs = Number((seed.baseLat + (i % 9) * 0.35 + (targetHub === 'irc.drfun1media.com' ? 0.3 : 0)).toFixed(1));
+    const fiberCap = '100 Gbps Low-Latency Optical Cross-Connect (Switch SUPERNAP)';
 
-  return {
-    id: `switch_leaf_${sidStr}`,
-    name: `Switch.com UnrealIRCd ${seed.city} Leaf (${sidStr})`,
-    subdomain: hostname,
-    host: hostname,
-    port: 6697,
-    location: seed.city,
-    campusName: `Switch SUPERNAP Campus (www.switch.com 100% Green Energy) / ${seed.dc}`,
-    tier: 'Tier 5 Platinum Datacenter (www.switch.com 100% Green Energy) / unrealircd.org',
-    fiberCapacity: '100 Gbps Low-Latency Optical Cross-Connect',
-    status: 'active',
-    latencyMs,
-    usersOnline,
-    leafPeers: 14 + (idx % 12),
-    unrealVersion: 'UnrealIRCd-6.1.4 (unrealircd.org)',
-    sslFingerprint: `SW:${sidStr.slice(0, 2)}:${(idx % 99).toString(16).padStart(2, '0').toUpperCase()}:4B:1A:89:C2:5E:F0:77:1A:BC:88:01:DF`,
-    transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)',
-    leafHub: 'irc.drfun1.com',
-    hubPort: 6697,
-    sid: sidStr,
-    leafStatus: 'synced',
-    adPolicy: 'Zero Commercial Advertising / Pure Broadcast Stream Relay',
-    leafBurstStats: {
-      syncedChannels: 855000,
-      syncedNicks: usersOnline,
-      syncLatencyMs: latencyMs,
-      lastBurst: '2026-02-15T10:00:00Z',
-      linkProtocol: 'UnrealIRCd 6.1.4 SSL Spanning Tree (unrealircd.org)',
-      encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384'
-    },
-    unrealLinkBlock: `/* UnrealIRCd (unrealircd.org) Leaf Node on Switch.com (www.switch.com 100% Green Energy) */
-/* SID ${sidStr} (${seed.city}) Leafed to Dual Hubs: irc.drfun1.com & irc.drfun1media.com */
+    nodes.push({
+      id: `${hubPrefix}switch_${sidStr}`,
+      name: `Switch.com ${hubShortName} Node ${String(nodeIndex).padStart(3, '0')} · ${seed.city} via CGW Law Offices (${sidStr})`,
+      subdomain: host,
+      host,
+      port: 6697,
+      location: seed.city,
+      campusName: `Switch SUPERNAP (${seed.dc}) · CGW Law Offices Legal Representation`,
+      tier: 'Tier 5 Platinum Datacenter (www.switch.com 100% Green Energy) via CGW Law Offices',
+      fiberCapacity: fiberCap,
+      status: 'active',
+      latencyMs,
+      usersOnline,
+      leafPeers: 12 + (i % 16),
+      unrealVersion: 'UnrealIRCd-6.1.4 (unrealircd.org)',
+      sslFingerprint: `${hubPrefix.toUpperCase()}:${sidStr.slice(0, 2)}:${(i % 99).toString(16).padStart(2, '0').toUpperCase()}:4B:1A:89:C2:5E:F0:77:1A:BC:88:01:DF`,
+      transitProvider: 'RisingNet Optical Backbone (www.risingnet.com)',
+      leafHub: targetHub,
+      hubPort: 6697,
+      sid: sidStr,
+      leafStatus: 'synced',
+      adPolicy: 'Zero Commercial Advertising / CGW Law Offices Escrow Protected Infrastructure',
+      legalCounsel: 'CGW Law Offices (Curtis, Gregory & Wilson Law Offices)',
+      paymentOffice: 'Owens Company (www.owenscompany.com)',
+      billingOffice: 'Bill in Receiving (Owens Company Accounts Payable)',
+      leafBurstStats: {
+        syncedChannels: 855000,
+        syncedNicks: usersOnline,
+        syncLatencyMs: latencyMs,
+        lastBurst: '2026-02-15T12:00:00Z',
+        linkProtocol: 'UnrealIRCd 6.1.4 SSL Spanning Tree (unrealircd.org)',
+        encryption: 'TLSv1.3 TLS_AES_256_GCM_SHA384'
+      },
+      unrealLinkBlock: `/* Switch.com 100% Green Tier 5 Leaf Node ${sidStr} (${seed.city}) via CGW Law Offices */
+/* Dual-Hub Redundant Link to Both irc.drfun1.com & irc.drfun1media.com */
+/* License: www.wittlawfirm.com | Legal: CGW Law Offices | Payment: Owens Company (Bill in Receiving) */
 
 link irc.drfun1.com {
     incoming { mask *; };
@@ -723,36 +813,71 @@ ulines {
 
 class servers {
     pingfreq 60;
-    maxclients 80;
-    sendq 15000000;
-    connfreq 12;
+    maxclients 120;
+    sendq 20000000;
+    connfreq 10;
 };`,
-    provider: 'switch',
-    region: seed.region,
-    country: seed.country,
-    uplinkSpeed: '100 Gbps Optical DWDM'
-  };
-});
+      provider: 'switch',
+      region: seed.region,
+      country: seed.country,
+      uplinkSpeed: fiberCap
+    });
+  }
 
-// Alias for backwards compatibility
-export const UNREALIRCD_335_LEAF_NODES: SwitchDedicatedNode[] = SWITCH_335_LEAF_NODES;
+  return nodes;
+}
 
-// =========================================================================
-// 3. COMBINED MASTER LEAF DIRECTORY (352 LEAF NODES TOTAL)
-// 335 Switch.com + 12 DataPacket.com + 5 RisingNet.com
-// Leafed directly to Dual Hubs: irc.drfun1.com & irc.drfun1media.com
-// With Anope 2.1 Services on services.drfun1.com & services.drfun1media.com
-// =========================================================================
+// 500 Dedicated Switch.com Nodes for Hub 1 (irc.drfun1.com) via CGW Law Offices
+export const HUB1_500_SWITCH_NODES: SwitchDedicatedNode[] = generate500SwitchNodesForHub(
+  'irc.drfun1.com',
+  101, // SIDs 101 to 600
+  'Hub 1 (irc.drfun1.com)',
+  'h1_'
+);
 
-export const ALL_352_LEAF_NODES: SwitchDedicatedNode[] = [
-  ...SWITCH_335_LEAF_NODES, // 335 Switch.com nodes
-  ...DATAPACKET_LEAF_NODES, // 12 DataPacket.com nodes
-  ...RISINGNET_5_LEAF_NODES, // 5 RisingNet.com nodes
+// 500 Dedicated Switch.com Nodes for Hub 2 (irc.drfun1media.com) via CGW Law Offices
+export const HUB2_500_SWITCH_NODES: SwitchDedicatedNode[] = generate500SwitchNodesForHub(
+  'irc.drfun1media.com',
+  601, // SIDs 601 to B00
+  'Hub 2 (irc.drfun1media.com)',
+  'h2_'
+);
+
+// Exactly 1,000 Switch.com Nodes via CGW Law Offices (500 per hub)
+export const ALL_1000_SWITCH_NODES: SwitchDedicatedNode[] = [
+  ...HUB1_500_SWITCH_NODES,
+  ...HUB2_500_SWITCH_NODES,
 ];
 
-// Aliases for compatibility
-export const USER_REQUESTED_347_NODES: SwitchDedicatedNode[] = ALL_352_LEAF_NODES;
-export const ALL_NETWORK_LEAF_NODES: SwitchDedicatedNode[] = ALL_352_LEAF_NODES;
+// Hub 1 Total Leaf Nodes: 500 Switch (via CGW) + 12 DataPacket + 5 RisingNet = 517 Nodes
+export const HUB1_ALL_LEAF_NODES: SwitchDedicatedNode[] = [
+  ...HUB1_500_SWITCH_NODES,
+  ...HUB1_12_DATAPACKET_NODES,
+  ...RISINGNET_10_DEDICATED_SERVERS.slice(0, 5),
+];
+
+// Hub 2 Total Leaf Nodes: 500 Switch (via CGW) + 12 DataPacket + 5 RisingNet = 517 Nodes
+export const HUB2_ALL_LEAF_NODES: SwitchDedicatedNode[] = [
+  ...HUB2_500_SWITCH_NODES,
+  ...HUB2_12_DATAPACKET_NODES,
+  ...RISINGNET_10_DEDICATED_SERVERS.slice(5, 10),
+];
+
+// Exactly 1,034 Total Federated Leaf Nodes (500 Switch/hub, 12 DataPacket/hub, 10 RisingNet dedicated servers)
+export const ALL_1034_LEAF_NODES: SwitchDedicatedNode[] = [
+  ...HUB1_ALL_LEAF_NODES,
+  ...HUB2_ALL_LEAF_NODES,
+];
+
+// Backwards-compatible aliases mapping to full topology
+export const HUB1_500_LEAF_NODES: SwitchDedicatedNode[] = HUB1_ALL_LEAF_NODES;
+export const HUB2_500_LEAF_NODES: SwitchDedicatedNode[] = HUB2_ALL_LEAF_NODES;
+export const ALL_1000_LEAF_NODES: SwitchDedicatedNode[] = ALL_1034_LEAF_NODES;
+export const ALL_352_LEAF_NODES: SwitchDedicatedNode[] = ALL_1034_LEAF_NODES;
+export const USER_REQUESTED_347_NODES: SwitchDedicatedNode[] = ALL_1034_LEAF_NODES;
+export const ALL_NETWORK_LEAF_NODES: SwitchDedicatedNode[] = ALL_1034_LEAF_NODES;
+export const SWITCH_335_LEAF_NODES: SwitchDedicatedNode[] = ALL_1000_SWITCH_NODES;
+export const UNREALIRCD_335_LEAF_NODES: SwitchDedicatedNode[] = ALL_1000_SWITCH_NODES;
 
 export const INITIAL_UNREAL_SEARCH_INDEX: UnrealServerRecord[] = [
   {
@@ -776,7 +901,7 @@ export const INITIAL_UNREAL_SEARCH_INDEX: UnrealServerRecord[] = [
     onlineOpers: 14,
     latencyToHubMs: 0.8,
     cipherSuite: 'TLS_AES_256_GCM_SHA384 (ECDHE-X25519)',
-    description: 'Master Core Hub for the DrFun1 Satcom Broadcast & Space Telemetry Mesh. Redundantly peered to irc.drfun1media.com with 352 leaf nodes.',
+    description: 'Master Core Hub for the DrFun1 Satcom Broadcast & Space Telemetry Mesh. Redundantly peered to irc.drfun1media.com with 1,034 leaf nodes (500 Switch/hub via CGW Law Offices, 12 DataPacket/hub, 10 RisingNet dedicated servers).',
     adminContact: 'admin@drfun1.com',
     websiteUrl: 'https://stats.drfun1ircd.com',
     tags: ['Master Hub', 'Switch SUPERNAP', 'Anope 2.1', 'ZNC Bouncer', 'Broadcast'],
@@ -832,7 +957,7 @@ export const INITIAL_UNREAL_SEARCH_INDEX: UnrealServerRecord[] = [
     onlineOpers: 18,
     latencyToHubMs: 0.2,
     cipherSuite: 'TLS_AES_256_GCM_SHA384',
-    description: 'Anope 2.1 IRC Services powering NickServ, ChanServ, OperServ, BotServ (DrFun1Bot & OrbitGuard), HostServ, and MemoServ across all 352 leaf nodes.',
+    description: 'Anope 2.1 IRC Services powering NickServ, ChanServ, OperServ, BotServ (DrFun1Bot & OrbitGuard), HostServ, and MemoServ across all 1,034 leaf nodes (500 Switch/hub via CGW Law Offices, 12 DataPacket/hub, 10 RisingNet dedicated servers).',
     adminContact: 'admin@drfun1.com',
     websiteUrl: 'https://anope.org',
     tags: ['Anope Services', 'NickServ', 'ChanServ', 'OperServ', 'BotServ'],
@@ -860,10 +985,10 @@ export const INITIAL_UNREAL_SEARCH_INDEX: UnrealServerRecord[] = [
     onlineOpers: 6,
     latencyToHubMs: 14.2,
     cipherSuite: 'TLS_AES_256_GCM_SHA384 (TLS 1.3)',
-    description: 'DataPacket.com 100 Gbps dedicated unmetered no-ads leaf node (1 of 12) connected directly to dual hubs (irc.drfun1.com & irc.drfun1media.com) with strict zero commercial advertising policy.',
+    description: 'DataPacket.com 100 Gbps dedicated unmetered no-ads leaf node (1 of 12 per hub, 24 total) connected directly to dual hubs (irc.drfun1.com & irc.drfun1media.com) with strict zero commercial advertising policy. Legal: CGW Law Offices | Payment: Owens Company (Bill in Receiving).',
     adminContact: 'datapacket-noc@drfun1.com',
     websiteUrl: 'https://www.datapacket.com',
-    tags: ['DataPacket.com', '100 Gbps', 'No Ads', 'Zero Advertising', 'Verified Leaf', 'DDoS Immune'],
+    tags: ['DataPacket.com', '100 Gbps', 'No Ads', 'Zero Advertising', 'Verified Leaf', 'DDoS Immune', '12 Per Hub'],
     sampleChannels: ['#drfun1tv', '#space', '#all-855000-channels'],
     linkBlockSnippet: `link irc.drfun1.com {\n    incoming { mask *; };\n    outgoing {\n        bind-ip *;\n        hostname irc.drfun1.com;\n        port 6697;\n        options { ssl; };\n    };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n};`
   },
@@ -888,10 +1013,10 @@ export const INITIAL_UNREAL_SEARCH_INDEX: UnrealServerRecord[] = [
     onlineOpers: 5,
     latencyToHubMs: 12.1,
     cipherSuite: 'TLS_AES_256_GCM_SHA384 (TLS 1.3)',
-    description: 'RisingNet 100G Optical DWDM backbone transit leaf node (1 of 5) leafed to dual hubs.',
+    description: 'RisingNet 100G Optical DWDM backbone dedicated server (1 of 10) leafed and synchronized to dual hubs (irc.drfun1.com & irc.drfun1media.com).',
     adminContact: 'risingnet-noc@drfun1.com',
     websiteUrl: 'https://www.risingnet.com',
-    tags: ['RisingNet.com', '100G DWDM', 'Verified Leaf', 'BGP Tier-1'],
+    tags: ['RisingNet.com', '100G DWDM', 'Dedicated Server', 'BGP Tier-1', '10 Dedicated Servers'],
     sampleChannels: ['#risingnet-transit', '#all-bands', '#drfun1-media'],
     linkBlockSnippet: `link irc.drfun1.com {\n    incoming { mask *; };\n    outgoing {\n        bind-ip *;\n        hostname irc.drfun1.com;\n        port 6697;\n        options { ssl; };\n    };\n    password "drfun1-mesh-leaf-auth-2026";\n    class servers;\n};`
   }
@@ -907,8 +1032,10 @@ export function generateUnrealLeafConfigSnippet(serverHostname: string, networkN
  *   2. irc.drfun1media.com:6697 SSL (Broadcast Media Hub - Switch Teleport, SID 002)
  * IRC Services: Anope 2.1 (services.drfun1.com / services.drfun1media.com)
  * Network: DrFun1 Media & Witt Law Firm Mesh (www.wittlawfirm.com)
- * License / FRN: 0034981290 | Switch SUPERNAP Colocation (www.switch.com)
- * Federation: 335 Switch.com + 12 DataPacket.com + 5 RisingNet.com = 352 Leaf Nodes
+ * Master Licensee: Richard Alan Witt (www.wittlawfirm.com / FCC FRN: 0034981290)
+ * Payment Office: Owens Company (www.owenscompany.com) - Bill in Receiving
+ * Switch Infrastructure Representation: CGW Law Offices (Curtis, Gregory & Wilson)
+ * Topology: 1,034 Leaf Nodes (500 Switch/hub via CGW Law Offices, 12 DataPacket/hub, 10 RisingNet dedicated servers)
  * ==================================================================== */
 
 /* Primary Hub Link Block */

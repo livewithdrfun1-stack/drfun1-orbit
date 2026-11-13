@@ -8,7 +8,7 @@
  * Official implementation of https://github.com/obskyr/pycs.git
  * Compiles real-time UnrealIRCd 6.1.4 & Anope 2.1 chat logs from dual hubs:
  * irc.drfun1.com (SID 001) & irc.drfun1media.com (SID 002)
- * across 352 Leaf Nodes (335 Switch.com + 12 DataPacket.com + 5 RisingNet.com)
+ * across 1,000 Leaf Nodes (500 on irc.drfun1.com & 500 on irc.drfun1media.com)
  */
 
 export interface PycsSpeaker {
@@ -75,7 +75,7 @@ export const PYCS_GIT_INFO = {
   license: 'MIT License',
   upstreamDualHubs: ['irc.drfun1.com:6697', 'irc.drfun1media.com:6697'],
   anopeServices: ['services.drfun1.com', 'services.drfun1media.com'],
-  leafFederation: '352 Leaf Nodes (335 Switch.com, 12 DataPacket.com, 5 RisingNet.com)',
+  leafFederation: '1,000 Leaf Nodes (500 Per Hub · Switch, DataPacket, RisingNet)',
   logPathPattern: '/var/log/unrealircd/channels/{channel}.log',
   outputDirectory: '/var/www/stats.drfun1ircd.com/pycs/',
 };
@@ -355,7 +355,7 @@ export const PYCS_CHANNEL_DATA: Record<string, PycsChannelStats> = {
         timestamp: '20:15 UTC',
         speaker: 'DJ_OrbitNova',
         prefix: '@',
-        text: 'Volume normalization active across all 352 leaf nodes.',
+        text: 'Volume normalization active across all 1,000 leaf nodes (500 per hub).',
         score: 114
       }
     ]
@@ -450,7 +450,7 @@ format = unrealircd
 hub1 = irc.drfun1.com:6697 (SID 001)
 hub2 = irc.drfun1media.com:6697 (SID 002)
 services = services.drfun1.com / services.drfun1media.com (Anope 2.1)
-leaf_count = 352 (335 Switch, 12 DataPacket, 5 RisingNet)
+leaf_count = 1000 (500 on irc.drfun1.com, 500 on irc.drfun1media.com)
 
 [parser]
 log_path = /var/log/unrealircd/channels/${ch}.log

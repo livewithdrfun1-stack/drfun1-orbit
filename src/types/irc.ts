@@ -34,6 +34,9 @@ export interface SwitchDedicatedNode {
   country?: string;
   uplinkSpeed?: string;
   adPolicy?: string;
+  legalCounsel?: string;
+  paymentOffice?: string;
+  billingOffice?: string;
 }
 
 export interface UnrealIrcdHub {
@@ -45,6 +48,9 @@ export interface UnrealIrcdHub {
   transitProvider: string;
   colocation: string;
   licensee: string;
+  legalCounsel?: string;
+  paymentOffice?: string;
+  billingOffice?: string;
   leafNodes: string[];
   totalSyncedChannels: number;
   totalSyncedUsers: number;

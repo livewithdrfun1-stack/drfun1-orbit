@@ -45,13 +45,15 @@ export const SwitchIrcMeshModal: React.FC<SwitchIrcMeshModalProps> = ({
   };
 
   const masterHubConfig = `/* ====================================================================
- * Master Hub Configuration on irc.drfun1.com (UnrealIRCd 6.1.4+)
- * Core Teleport Colocation: Switch SUPERNAP (www.switch.com)
- * Tier-1 Carrier IP Transit: RisingNet BGP Transit (www.risingnet.com)
- * Licensed to: Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com)
- * All ${SWITCH_DEDICATED_NODES.length} Dedicated Switch Nodes Leafed to irc.drfun1.com:
+ * Master Dual-Hub Configuration on irc.drfun1.com & irc.drfun1media.com (UnrealIRCd 6.1.4+)
+ * Switch.com Nodes: 500 www.switch.com Nodes per Hub (1,000 Total) via CGW Law Offices
+ * DataPacket.com Leafs: 12 www.datapacket.com Leafs per Hub (24 Total)
+ * RisingNet Dedicated Servers: 10 Dedicated Servers from www.risingnet.com (Synced & Leafed to Both Hubs)
+ * App License: The Law Office of Richard A. Witt LLC (www.wittlawfirm.com / FCC FRN: 0034981290)
+ * Payment Office: Owens Company (www.owenscompany.com) — Bill in Receiving
+ * Core Switch Sample Nodes (${SWITCH_DEDICATED_NODES.length} Primary Gateways):
 ${SWITCH_DEDICATED_NODES.map((n, i) => ` *   ${i + 1 < 10 ? ' ' : ''}${i + 1}. ${n.host} (SID ${n.sid}) - ${n.location.split(',')[0]}`).join('\n')}
- * Total Connected Satcom Leaf Nodes: \${companies.length} Carriers
+ * Total Connected Satcom & Carrier Leaf Nodes: 1,034 Dual-Hub Synced Nodes + \${companies.length} Carriers
  * ==================================================================== */
 
 me {
@@ -331,7 +333,7 @@ ${companies.slice(0, 8).map((c) => {
         {/* Modal Footer */}
         <div className="p-4 border-t border-slate-800 bg-slate-950/70 flex items-center justify-between gap-3">
           <div className="text-xs text-slate-500 font-mono hidden sm:block">
-            Connected to Switch SUPERNAP · Protected by RisingNet · Powered by UnrealIRCd
+            500 Switch/Hub via CGW Law Offices · 12 DataPacket/Hub · 10 RisingNet Servers · License: www.wittlawfirm.com · Payment: Owens Company (Bill in Receiving)
           </div>
 
           <div className="flex items-center gap-2.5 ml-auto">

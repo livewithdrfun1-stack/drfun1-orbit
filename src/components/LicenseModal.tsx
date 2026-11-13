@@ -77,10 +77,13 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({
     lawFirmDomain: 'www.wittlawfirm.com',
     lawFirmUrl: 'https://www.wittlawfirm.com',
     lawFirmTitle: 'The Law Office of Richard A. Witt LLC',
+    legalCounsel: 'CGW Law Offices (Curtis, Gregory & Wilson Law Offices)',
     corporateDomain: 'www.owenscompany.com',
     corporateUrl: 'https://www.owenscompany.com',
     corporateTitle: 'Owens Company',
-    appTitle: 'DrFun1 Orbit - Global Satellite Operator Directory, DrFun1 Wireless & Turnkey Reseller Marketplace',
+    paymentOffice: 'Owens Company (www.owenscompany.com)',
+    billingOffice: 'Bill in Receiving (Owens Company Accounts Payable)',
+    appTitle: 'DrFun1 Orbit - Global Satellite Operator Directory, Dual 500-Node Switch.com Mesh via CGW Law Offices, 24 DataPacket Leafs, 10 RisingNet Dedicated Servers & Turnkey Reseller Marketplace',
   };
 
   const handleCopyText = (content: string, label: string) => {
@@ -109,6 +112,8 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({
       timestamp: new Date().toISOString(),
       accepted: true,
       jurisdiction: 'The Law Office of Richard A. Witt LLC (www.wittlawfirm.com)',
+      legalCounsel: 'CGW Law Offices',
+      paymentOffice: 'Owens Company - Bill in Receiving',
     };
     localStorage.setItem(STORAGE_KEY_LEGAL_ACCEPTED, 'true');
     localStorage.setItem('drfun1_legal_audit_record', JSON.stringify(record));
@@ -142,6 +147,20 @@ EXCLUSIVE LICENSEE & LEGAL ESCROW HOLDER:
   Richard Alan Witt
   Official Firm: The Law Office of Richard A. Witt LLC (https://${licenseData.lawFirmDomain})
   Official Corporate Entity: Owens Company (https://${licenseData.corporateDomain})
+  Switch Infrastructure Counsel: CGW Law Offices (Curtis, Gregory & Wilson Law Offices)
+
+PAYMENT OFFICE & BILLING INSTRUCTIONS:
+  Payment Office: Owens Company (https://${licenseData.corporateDomain})
+  Invoicing Directive: Bill in Receiving / Receiving & Accounts Payable Department
+  Address Remittance: Owens Company, Attn: Receiving & Accounts Payable
+
+FEDERATED IRCD MESH INFRASTRUCTURE:
+  Core Hub 1: irc.drfun1.com:6697 SSL (SID 001) - Switch SUPERNAP Las Vegas
+  Core Hub 2: irc.drfun1media.com:6697 SSL (SID 002) - Switch SUPERNAP Reno Teleport
+  Switch Nodes: 500 www.switch.com nodes per hub (1,000 Total) via CGW Law Offices
+  DataPacket Nodes: 12 www.datapacket.com leafs per hub (24 Total)
+  RisingNet Dedicated Servers: 10 dedicated bare-metal servers from RisingNet.com
+  Dual-Hub Synchronization: All 1,034 leaf nodes synchronized and leafed to both hubs
 
 CERTIFICATE CREDENTIALS:
   Certificate ID:  ${licenseData.certificateId}
@@ -155,23 +174,31 @@ OPERATIONAL GRANT & SCOPE OF EXCLUSIVE LICENSE:
    Richard Alan Witt is the exclusive perpetual licensee of the DrFun1 Orbit technology
    stack, encompassing all satellite constellation databases, direct RFQ transmission
    engines, DrFun1 Wireless hybrid mobile core architectures, factory-unlocked handset
-   resale integrations, and the 25-node Switch SUPERNAP UnrealIRCd telemetry mesh.
+   resale integrations, and the 1,034-node dual-hub UnrealIRCd telemetry mesh (including
+   500 Switch.com nodes per hub via CGW Law Offices, 12 DataPacket.com leafs per hub,
+   and 10 dedicated servers from RisingNet.com).
 
-2. Global Turnkey Reseller Authority: Licensee is granted full authority to authorize,
+2. Payment Office & Invoicing: All platform financial operations, remittances, and
+   licensing fees are remitted through Owens Company as payment office, billed in
+   receiving (Owens Company Accounts Payable / Receiving Department).
+
+3. Legal Counsel for Switch Infrastructure: CGW Law Offices serves as designated legal
+   counsel for the 1,000 Switch.com nodes (500 nodes per hub) leafed to irc.drfun1.com
+   and irc.drfun1media.com.
+
+4. Global Turnkey Reseller Authority: Licensee is granted full authority to authorize,
    supervise, co-brand, re-brand, and host turnkey third-party resellers globally across
    all products and services offered on this platform, provided all resellers execute
    and abide by the Witt Law Firm Master Reseller Agreement.
 
-3. Telecommunications & Spectrum Escrow: All regulatory submissions, ITU frequency
-   registrations, FCC Part 25/Part 27 filings, and carrier interconnect memoranda are
-   licensed through and overseen under the legal auspices of Richard Alan Witt.
-
-4. Intellectual Property & Brand Sanction: Any co-branded or white-label derivative
-   operating on this platform operates under license from Richard Alan Witt and The Law
-   Office of Richard A. Witt LLC.
+5. Telecommunications & Spectrum Escrow: All regulatory submissions, ITU frequency
+   registrations, FCC Part 25/Part 27 filings under FRN 0034981290, and carrier
+   interconnect memoranda are licensed through and overseen under the legal auspices
+   of Richard Alan Witt.
 
 AUTHENTICATION SEAL:
   Certified & Verified at www.wittlawfirm.com
+  Payment Office: Owens Company (Bill in Receiving)
   License Record Ref: #RAW-WITT-2026-SATCOM-0881
 ========================================================================`;
 

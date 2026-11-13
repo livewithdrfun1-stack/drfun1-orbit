@@ -60,7 +60,13 @@ import {
   SWITCH_335_LEAF_NODES,
   RISINGNET_5_LEAF_NODES,
   USER_REQUESTED_347_NODES,
-  ALL_NETWORK_LEAF_NODES
+  ALL_NETWORK_LEAF_NODES,
+  ALL_1034_LEAF_NODES,
+  ALL_1000_SWITCH_NODES,
+  ALL_24_DATAPACKET_NODES,
+  RISINGNET_10_DEDICATED_SERVERS,
+  HUB1_ALL_LEAF_NODES,
+  HUB2_ALL_LEAF_NODES
 } from '../data/unrealSearchData';
 import { SwitchDedicatedNode, IrcChannel } from '../types/irc';
 
@@ -386,7 +392,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
     });
   }, [searchQuery, selectedLeafProvider, selectedLeafRegion, leafSortBy]);
 
-  // Paginated Slice for responsive rendering across 347+ nodes
+  // Paginated Slice for responsive rendering across 1,000 nodes (500 per hub)
   const paginatedLeafNodes = useMemo(() => {
     if (showAllLeaves) return filteredLeafNodes;
     const startIndex = (leafPage - 1) * leafPageSize;
@@ -466,14 +472,14 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                   855,000 Channels
                 </span>
                 <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded-md hidden sm:inline">
-                  335 Switch.com UnrealIRCd
+                  517 Leafs Hub 1 (irc.drfun1.com)
                 </span>
                 <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 bg-sky-500/20 text-sky-300 border border-sky-500/40 rounded-md hidden md:inline">
-                  12 DataPacket No-Ads
+                  517 Leafs Hub 2 (irc.drfun1media.com)
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Dual Hubs: <span className="text-emerald-400 font-mono font-semibold">irc.drfun1.com &amp; irc.drfun1media.com:6697</span> (SID 001/002) &bull; Switch SUPERNAP Las Vegas Core &bull; 352 Verified Leaves (335 Switch, 12 DP No-Ads, 5 RN) &bull; Licensee: Richard Alan Witt (FRN 0034981290)
+                500 Switch/Hub via CGW Law Offices &bull; 12 DataPacket/Hub &bull; 10 RisingNet Dedicated Servers &bull; License: www.wittlawfirm.com &bull; Payment Office: Owens Company (Bill in Receiving)
               </p>
             </div>
           </div>
@@ -527,7 +533,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
             }`}
           >
             <Server className="w-4 h-4 text-emerald-300" />
-            <span>Leafed Network (352 Nodes)</span>
+            <span>Leafed Network (1,034 Nodes · Dual-Hub)</span>
           </button>
 
           <button
@@ -571,14 +577,14 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
         <div className="hidden xl:flex items-center gap-3 text-[11px] font-mono text-slate-400">
           <span className="flex items-center gap-1.5 text-emerald-400">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>Global Mesh: Synced</span>
+            <span>Dual-Hub Synced</span>
           </span>
           <span>&bull;</span>
-          <span className="text-purple-300">335 UnrealIRCd</span>
+          <span className="text-purple-300">1,000 Switch (CGW)</span>
           <span>&bull;</span>
-          <span className="text-sky-300">12 DataPacket 100G</span>
+          <span className="text-sky-300">24 DataPacket (12/Hub)</span>
           <span>&bull;</span>
-          <span className="text-emerald-300">855,000 Channels</span>
+          <span className="text-amber-300">10 RisingNet</span>
         </div>
       </div>
 
@@ -599,7 +605,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                 placeholder={
                   activeTab === 'channels'
                     ? "Search 855k channels by name (e.g. #music-deathrow, #artist-snoopdogg), genre, artist, topic..."
-                    : "Search 347 leaf nodes by provider (unrealircd, datapacket), hostname, city, SID, region..."
+                    : "Search 1,034 leaf nodes (500 Switch/hub via CGW, 12 DataPacket/hub, 10 RisingNet)..."
                 }
                 className="w-full bg-slate-950 text-white pl-10 pr-10 py-2.5 rounded-xl border border-slate-700/80 text-xs sm:text-sm font-mono placeholder:text-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
               />
@@ -684,10 +690,10 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
               <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
                 <span className="text-slate-500 text-[11px] uppercase mr-1">Provider:</span>
                 {[
-                  { id: 'all', label: `All Mesh Nodes (${ALL_NETWORK_LEAF_NODES.length})` },
-                  { id: 'switch', label: `Switch.com UnrealIRCd (${SWITCH_335_LEAF_NODES.length} Nodes)` },
-                  { id: 'datapacket', label: `DataPacket.com No-Ads (${DATAPACKET_LEAF_NODES.length} Nodes)` },
-                  { id: 'risingnet', label: `RisingNet Tier-1 (${RISINGNET_5_LEAF_NODES.length} Nodes)` },
+                  { id: 'all', label: `All Mesh Nodes (${ALL_1034_LEAF_NODES.length})` },
+                  { id: 'switch', label: `Switch.com via CGW (${ALL_1000_SWITCH_NODES.length} · 500/Hub)` },
+                  { id: 'datapacket', label: `DataPacket.com (${ALL_24_DATAPACKET_NODES.length} · 12/Hub)` },
+                  { id: 'risingnet', label: `RisingNet Dedicated (${RISINGNET_10_DEDICATED_SERVERS.length} Dual-Hub)` },
                 ].map((chip) => (
                   <button
                     key={chip.id}
@@ -911,33 +917,33 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                     SID: 001
                   </span>
                   <span className="text-xs font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/40">
-                    347 Leafed Nodes Verified
+                    1,034 Dual-Hub Leaves Verified
                   </span>
                 </div>
                 <h3 className="text-lg sm:text-xl font-black font-mono text-white tracking-wide">
-                  irc.drfun1.com:6697 (SSL)
+                  irc.drfun1.com &amp; irc.drfun1media.com:6697 (SSL)
                 </h3>
                 <p className="text-xs text-slate-300 max-w-2xl">
-                  Switch SUPERNAP Las Vegas 7, 8, 9 Core Teleport Campus &bull; 100% Green Renewable Energy &bull; RisingNet 100G DWDM Optical Ring &bull; 335 UnrealIRCd.org Nodes + 12 DataPacket.com 100G Nodes
+                  500 www.switch.com nodes/hub via CGW Law Offices (1,000) &bull; 12 www.datapacket.com leafs/hub (24) &bull; 10 risingnet.com dedicated servers &bull; License: www.wittlawfirm.com &bull; Payment: Owens Company (Bill in Receiving)
                 </p>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
                 <div className="bg-slate-950/90 px-3 py-2 rounded-lg border border-slate-800 text-center">
-                  <span className="text-slate-400 block text-[10px]">SYNCED CHANNELS</span>
-                  <span className="text-base font-black text-purple-300">855,000</span>
-                </div>
-                <div className="bg-slate-950/90 px-3 py-2 rounded-lg border border-slate-800 text-center">
-                  <span className="text-slate-400 block text-[10px]">UNREALIRCD.ORG</span>
-                  <span className="text-base font-black text-emerald-400">335 / 335</span>
+                  <span className="text-slate-400 block text-[10px]">SWITCH (CGW LAW)</span>
+                  <span className="text-base font-black text-emerald-400">1,000 (500/Hub)</span>
                 </div>
                 <div className="bg-slate-950/90 px-3 py-2 rounded-lg border border-slate-800 text-center">
                   <span className="text-slate-400 block text-[10px]">DATAPACKET 100G</span>
-                  <span className="text-base font-black text-sky-300">12 / 12</span>
+                  <span className="text-base font-black text-sky-300">24 (12/Hub)</span>
+                </div>
+                <div className="bg-slate-950/90 px-3 py-2 rounded-lg border border-slate-800 text-center">
+                  <span className="text-slate-400 block text-[10px]">RISINGNET DEDICATED</span>
+                  <span className="text-base font-black text-purple-300">10 Dual-Hub</span>
                 </div>
                 <div className="bg-slate-950/90 px-3 py-2 rounded-lg border border-slate-800 text-center">
                   <span className="text-slate-400 block text-[10px]">TOTAL MESH LEAVES</span>
-                  <span className="text-base font-black text-amber-300">373 Nodes</span>
+                  <span className="text-base font-black text-amber-300">1,034 Nodes</span>
                 </div>
               </div>
             </div>
@@ -1179,22 +1185,22 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                 <div>
                   <h3 className="text-base font-black font-mono text-white flex items-center gap-2">
                     <Network className="w-5 h-5 text-sky-400" />
-                    <span>UnrealIRCd 6.1.4 Global Star-Mesh Interconnect (347 Leafed Nodes)</span>
+                    <span>UnrealIRCd 6.1.4 Global Star-Mesh Interconnect (1,034 Synced &amp; Leafed Nodes)</span>
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Master Hub: <span className="text-emerald-400 font-mono font-bold">irc.drfun1.com:6697</span> (SID 001) &bull; 12 DataPacket.com 100G Bare-Metal Nodes + 335 UnrealIRCd.org Verified Leaves
+                    Dual Hubs: <span className="text-emerald-400 font-mono font-bold">irc.drfun1.com &amp; irc.drfun1media.com:6697</span> &bull; 500 Switch/Hub via CGW Law Offices (1,000) &bull; 12 DataPacket/Hub (24) &bull; 10 RisingNet Dedicated Servers
                   </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
                   <span className="px-2.5 py-1 bg-emerald-950/80 text-emerald-300 border border-emerald-800 rounded-lg">
-                    Hub Sync: 0.8 ms
+                    Hub Sync: 0.4 ms
                   </span>
                   <span className="px-2.5 py-1 bg-purple-950/80 text-purple-300 border border-purple-800 rounded-lg">
                     Packet Drop: 0.00%
                   </span>
                   <span className="px-2.5 py-1 bg-sky-950/80 text-sky-300 border border-sky-800 rounded-lg">
-                    Spanning Tree: Synced
+                    Payment: Owens Co. (Bill in Receiving)
                   </span>
                 </div>
               </div>
@@ -1207,43 +1213,43 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                   </div>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-base font-black font-mono text-white">irc.drfun1.com:6697 (SSL)</span>
+                      <span className="text-base font-black font-mono text-white">irc.drfun1.com &amp; irc.drfun1media.com:6697 (SSL)</span>
                       <span className="text-[10px] font-mono bg-purple-500/30 text-purple-200 px-2 py-0.5 rounded border border-purple-400/50 font-bold">
-                        CORE HUB &bull; SID 001
+                        DUAL HUBS &bull; SID 001 / 002
                       </span>
                       <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/40">
                         ONLINE &bull; 100G DWDM
                       </span>
                     </div>
                     <p className="text-xs text-slate-300 font-mono mt-0.5">
-                      Switch SUPERNAP Las Vegas 7, 8, 9 Core Teleport Campus &bull; 100% Renewable Green Power
+                      Licensed via www.wittlawfirm.com &bull; Switch Counsel: CGW Law Offices &bull; Payment Office: Owens Company (Bill in Receiving)
                     </p>
                   </div>
                 </div>
 
                 <div className="text-right text-xs font-mono sm:border-l sm:border-slate-800 sm:pl-4">
                   <span className="text-emerald-400 font-black text-sm block">855,000 Channels Synced</span>
-                  <span className="text-purple-300 font-semibold text-[11px] block">347 Verified Leaf Nodes Attached</span>
-                  <span className="text-slate-400 text-[10px]">RisingNet BGP Tier-1 Optical DWDM</span>
+                  <span className="text-purple-300 font-semibold text-[11px] block">1,034 Federated Leafs Synced to Both Hubs</span>
+                  <span className="text-slate-400 text-[10px]">500 Switch/Hub · 12 DP/Hub · 10 RisingNet</span>
                 </div>
               </div>
 
-              {/* SECTION A: 12 DATAPACKET.COM 100G BARE-METAL SUPERCORE LEAF NODES */}
+              {/* SECTION A: 12 DATAPACKET.COM LEAFS PER HUB (24 TOTAL) */}
               <div className="space-y-2.5 pt-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-800 pb-2">
                   <div className="flex items-center gap-2">
                     <Cpu className="w-4 h-4 text-purple-400" />
                     <h4 className="text-sm font-black font-mono text-purple-200">
-                      1. DATAPACKET.COM 100G HIGH-SPEED BARE-METAL LEAF RING (12 NODES)
+                      1. WWW.DATAPACKET.COM 100G NO-ADS LEAFS (12 PER HUB &bull; 24 TOTAL)
                     </h4>
                   </div>
                   <span className="text-xs font-mono text-slate-400">
-                    DataPacket 100+ Tbps Global BGP Backbone &bull; SIDs 021 to 032 &bull; Direct Leaf to irc.drfun1.com
+                    12 on irc.drfun1.com (D01–D12) + 12 on irc.drfun1media.com (D13–D24) &bull; Dual-Hub Synced
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                  {DATAPACKET_LEAF_NODES.map((dp) => (
+                  {ALL_24_DATAPACKET_NODES.map((dp) => (
                     <div
                       key={dp.id}
                       onClick={() => setInspectLeafNode(dp)}
@@ -1260,7 +1266,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                         {dp.location.split(',')[0]}
                       </span>
                       <div className="flex items-center justify-between text-[9px] font-mono pt-1 border-t border-slate-900">
-                        <span className="text-sky-300 truncate">{dp.fiberCapacity.split(' ')[0]}</span>
+                        <span className="text-sky-300 truncate">{dp.leafHub}</span>
                         <span className="text-emerald-400">Leafed</span>
                       </div>
                     </div>
@@ -1268,57 +1274,57 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                 </div>
               </div>
 
-              {/* SECTION B: 335 UNREALIRCD.ORG GLOBAL FEDERATION LEAF NODES */}
+              {/* SECTION B: 500 SWITCH.COM NODES PER HUB VIA CGW LAW OFFICES (1,000 TOTAL) */}
               <div className="space-y-2.5 pt-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-800 pb-2">
                   <div className="flex items-center gap-2">
                     <Globe className="w-4 h-4 text-emerald-400" />
                     <h4 className="text-sm font-black font-mono text-emerald-200">
-                      2. UNREALIRCD.ORG VERIFIED GLOBAL LEAF FEDERATION (335 NODES)
+                      2. WWW.SWITCH.COM GLOBAL LEAF NODES VIA CGW LAW OFFICES (500/HUB &bull; 1,000 TOTAL)
                     </h4>
                   </div>
                   <span className="text-xs font-mono text-slate-400">
-                    6 Continents &bull; SIDs 101 to 435 &bull; All Synced to irc.drfun1.com:6697
+                    500 on irc.drfun1.com (101–600) + 500 on irc.drfun1media.com (601–B00) &bull; CGW Law Offices Counsel
                   </span>
                 </div>
 
-                {/* Regional Clusters Bar */}
+                {/* Hub Breakdown Bar */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-xs font-mono">
                   <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
-                    <span className="text-slate-400 text-[10px] block">NORTH AMERICA</span>
-                    <span className="text-white font-black text-sm">100 Nodes</span>
-                    <span className="text-emerald-400 text-[10px] block">SIDs 101-200 &bull; 1-26ms</span>
+                    <span className="text-slate-400 text-[10px] block">HUB 1 (DRFUN1.COM)</span>
+                    <span className="text-white font-black text-sm">500 Switch Nodes</span>
+                    <span className="text-emerald-400 text-[10px] block">SIDs 101–600 &bull; CGW Law</span>
                   </div>
                   <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
-                    <span className="text-slate-400 text-[10px] block">EUROPE &amp; UK</span>
-                    <span className="text-white font-black text-sm">105 Nodes</span>
-                    <span className="text-emerald-400 text-[10px] block">SIDs 201-305 &bull; 72-85ms</span>
+                    <span className="text-slate-400 text-[10px] block">HUB 2 (DRFUN1MEDIA)</span>
+                    <span className="text-white font-black text-sm">500 Switch Nodes</span>
+                    <span className="text-emerald-400 text-[10px] block">SIDs 601–B00 &bull; CGW Law</span>
                   </div>
                   <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
-                    <span className="text-slate-400 text-[10px] block">ASIA-PACIFIC</span>
-                    <span className="text-white font-black text-sm">65 Nodes</span>
-                    <span className="text-emerald-400 text-[10px] block">SIDs 306-370 &bull; 94-135ms</span>
+                    <span className="text-slate-400 text-[10px] block">DATAPACKET LEAFS</span>
+                    <span className="text-white font-black text-sm">24 Nodes (12/Hub)</span>
+                    <span className="text-cyan-400 text-[10px] block">SIDs D01–D24 &bull; No-Ads</span>
                   </div>
                   <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
-                    <span className="text-slate-400 text-[10px] block">LATIN AMERICA</span>
-                    <span className="text-white font-black text-sm">30 Nodes</span>
-                    <span className="text-emerald-400 text-[10px] block">SIDs 371-400 &bull; 42-104ms</span>
+                    <span className="text-slate-400 text-[10px] block">RISINGNET SERVERS</span>
+                    <span className="text-white font-black text-sm">10 Dedicated</span>
+                    <span className="text-amber-400 text-[10px] block">SIDs R01–R10 &bull; Dual-Hub</span>
                   </div>
                   <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
-                    <span className="text-slate-400 text-[10px] block">MIDDLE EAST &amp; AFRICA</span>
-                    <span className="text-white font-black text-sm">20 Nodes</span>
-                    <span className="text-emerald-400 text-[10px] block">SIDs 401-420 &bull; 88-142ms</span>
+                    <span className="text-slate-400 text-[10px] block">LICENSE HOLDER</span>
+                    <span className="text-white font-black text-sm">Witt Law Firm</span>
+                    <span className="text-purple-400 text-[10px] block">www.wittlawfirm.com</span>
                   </div>
                   <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
-                    <span className="text-slate-400 text-[10px] block">ORBITAL &amp; DEEP SPACE</span>
-                    <span className="text-white font-black text-sm">15 Nodes</span>
-                    <span className="text-emerald-400 text-[10px] block">SIDs 421-435 &bull; Teleports</span>
+                    <span className="text-slate-400 text-[10px] block">PAYMENT OFFICE</span>
+                    <span className="text-white font-black text-sm">Owens Company</span>
+                    <span className="text-sky-400 text-[10px] block">Bill in Receiving</span>
                   </div>
                 </div>
 
-                {/* Sample Selection of UnrealIRCd Nodes from all regions */}
+                {/* Sample Selection of Switch Nodes via CGW Law Offices */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 pt-1">
-                  {UNREALIRCD_335_LEAF_NODES.slice(0, 18).map((leaf) => (
+                  {ALL_1000_SWITCH_NODES.slice(0, 18).map((leaf) => (
                     <div
                       key={leaf.id}
                       onClick={() => setInspectLeafNode(leaf)}
@@ -1336,7 +1342,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                       </span>
                       <div className="flex items-center gap-1 text-[9px] text-slate-500 font-mono">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        <span>Unreal 6.1.4 Leaf</span>
+                        <span>CGW Switch Leaf</span>
                       </div>
                     </div>
                   ))}
@@ -1345,32 +1351,32 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                 <div className="text-center pt-1">
                   <button
                     onClick={() => {
-                      setSelectedLeafProvider('unrealircd');
+                      setSelectedLeafProvider('switch');
                       setActiveTab('leaf_nodes');
                     }}
                     className="px-4 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-emerald-300 hover:text-white rounded-lg text-xs font-mono transition cursor-pointer inline-flex items-center gap-1.5"
                   >
-                    <span>Browse &amp; Search All 335 UnrealIRCd.org Nodes in Leaf Search Engine &rarr;</span>
+                    <span>Browse &amp; Search All 1,000 Switch.com Nodes (via CGW Law Offices) &rarr;</span>
                   </button>
                 </div>
               </div>
 
-              {/* SECTION C: 26 SWITCH SUPERNAP CORE TELEPORT LEAVES */}
+              {/* SECTION C: 10 RISINGNET.COM DEDICATED SERVERS (SYNCED & LEAFED TO BOTH HUBS) */}
               <div className="space-y-2.5 pt-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-800 pb-2">
                   <div className="flex items-center gap-2">
                     <Server className="w-4 h-4 text-sky-400" />
                     <h4 className="text-sm font-black font-mono text-sky-200">
-                      3. SWITCH SUPERNAP GREEN CORE &amp; TELEPORT CAMPUSES (26 NODES)
+                      3. RISINGNET.COM DEDICATED SERVERS (10 SERVERS &bull; SYNCED &amp; LEAFED TO BOTH HUBS)
                     </h4>
                   </div>
                   <span className="text-xs font-mono text-slate-400">
-                    Switch Las Vegas, Tahoe Reno, The Keep Atlanta, Grand Rapids &bull; RisingNet 100G DWDM Ring
+                    All 10 Dedicated Servers (SIDs R01–R10) Dual-Synced to irc.drfun1.com &amp; irc.drfun1media.com
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                  {SWITCH_DEDICATED_NODES.slice(0, 12).map((leaf) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                  {RISINGNET_10_DEDICATED_SERVERS.map((leaf) => (
                     <div
                       key={leaf.id}
                       onClick={() => setInspectLeafNode(leaf)}
@@ -1381,14 +1387,14 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                         <span className="text-emerald-400 font-semibold">{leaf.latencyMs}ms</span>
                       </div>
                       <span className="text-xs font-mono font-bold text-slate-200 group-hover:text-sky-300 block truncate">
-                        {leaf.subdomain.split('.')[0]}
+                        {leaf.subdomain.split('.')[0]}.{leaf.subdomain.split('.')[1]}
                       </span>
                       <span className="text-[10px] text-slate-400 block truncate font-mono">
                         {leaf.location.split(',')[0]}
                       </span>
                       <div className="flex items-center gap-1 text-[9px] text-slate-500 font-mono">
                         <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-                        <span>Switch Core</span>
+                        <span>Both Hubs Synced</span>
                       </div>
                     </div>
                   ))}
@@ -1410,7 +1416,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                   <span>855,000 Channels Network Prefix &amp; Fanout Space Explorer</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  Test and inspect how UnrealIRCd dynamically partitions the 855,000 channel space across the 335 UnrealIRCd nodes, 12 DataPacket 100G nodes, and 26 Switch SUPERNAP leaves and assigns donSchoe/shoutcast-irc announcer bots.
+                  Test and inspect how UnrealIRCd dynamically partitions the 855,000 channel space across all 1,034 federated nodes (500 Switch/hub via CGW Law Offices, 12 DataPacket/hub, and 10 RisingNet dedicated servers).
                 </p>
               </div>
 

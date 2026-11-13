@@ -1,6 +1,6 @@
 {
   "name": "Satcom Orbit - Satellite Operator & Carrier Directory",
-  "description": "Comprehensive dynamic directory of global satellite operators, constellations, and satcom carriers for connectivity and bandwidth leasing. Licensed to Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com).",
+  "description": "Comprehensive satellite operator directory and UnrealIRCd dual-hub mesh: 500 www.switch.com nodes per hub via CGW Law Offices, 12 www.datapacket.com leafs per hub, and 10 dedicated servers from risingnet.com synced & leafed to both hubs. Licensed via www.wittlawfirm.com with Owens Company as payment office (Bill in Receiving).",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

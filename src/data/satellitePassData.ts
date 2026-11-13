@@ -65,6 +65,7 @@ export const DEFAULT_TRACKED_SATELLITES: TrackedSatellite[] = [
     name: 'ISS (ZARYA)',
     noradId: 25544,
     category: 'Space Stations',
+    constellation: 'Space Stations',
     operator: 'NASA / Roscosmos / ESA / JAXA',
     orbitType: 'LEO',
     altitudeKm: 418.5,
@@ -80,6 +81,7 @@ export const DEFAULT_TRACKED_SATELLITES: TrackedSatellite[] = [
     tleLine2: '2 25544  51.6420 284.1802 0005412 112.4201 247.7812 15.49821420542104',
     color: '#06b6d4', // cyan-500
     description: 'International Space Station orbiting in Low Earth Orbit at ~418km with live HD camera downlinks and amateur radio packet digipeater.',
+    spotBeamsCount: 4,
     passPredictionsEnabled: true
   },
   {
@@ -87,6 +89,7 @@ export const DEFAULT_TRACKED_SATELLITES: TrackedSatellite[] = [
     name: 'STARLINK-5124 (Direct-to-Cell)',
     noradId: 54201,
     category: 'LEO Broadband',
+    constellation: 'Starlink',
     operator: 'SpaceX / Starlink',
     orbitType: 'LEO',
     altitudeKm: 550.2,
@@ -102,6 +105,108 @@ export const DEFAULT_TRACKED_SATELLITES: TrackedSatellite[] = [
     tleLine2: '2 54201  53.0540 142.1098 0001420  74.2012 285.9410 15.06201840182412',
     color: '#38bdf8', // sky-400
     description: 'SpaceX Starlink V2 Mini satellite equipped with optical inter-satellite space lasers and direct-to-cell phased array antenna.',
+    beamType: 'Dynamic Phased Array 3GPP Cellular Beams',
+    spotBeamsCount: 64,
+    passPredictionsEnabled: true
+  },
+  {
+    id: 'starlink_laser_gate',
+    name: 'STARLINK-5894 (Optical ISL Mesh)',
+    noradId: 58941,
+    category: 'LEO Broadband',
+    constellation: 'Starlink',
+    operator: 'SpaceX / Starlink',
+    orbitType: 'LEO',
+    altitudeKm: 552.0,
+    velocityKmS: 7.58,
+    inclinationDeg: 53.20,
+    periodMinutes: 95.7,
+    footprintRadiusKm: 1020,
+    downlinkFreqMHz: 12200.00,
+    uplinkBand: 'Ka-Band Teleport Gate + 200G Laser ISL',
+    currentLat: 44.50,
+    currentLon: -92.30,
+    tleLine1: '1 58941U 23018F   26046.38102941  .00002840  00000+0  16420-3 0  9991',
+    tleLine2: '2 58941  53.2010 168.4109 0001890  89.4102 270.8410 15.04891020142108',
+    color: '#0ea5e9', // sky-500
+    description: 'Starlink optical space laser crosslink router terminating 100G packets into Switch SUPERNAP Nevada teleport.',
+    beamType: 'High-Throughput Ka Gateway Beams',
+    spotBeamsCount: 32,
+    passPredictionsEnabled: true
+  },
+  {
+    id: 'oneweb_0348',
+    name: 'ONEWEB-0348 (Polar Enterprise LEO)',
+    noradId: 45131,
+    category: 'LEO Broadband',
+    constellation: 'OneWeb',
+    operator: 'Eutelsat OneWeb',
+    orbitType: 'LEO',
+    altitudeKm: 1200.0,
+    velocityKmS: 7.23,
+    inclinationDeg: 87.90,
+    periodMinutes: 109.4,
+    footprintRadiusKm: 2800,
+    downlinkFreqMHz: 10700.00,
+    uplinkBand: 'Ku/Ka-Band Enterprise Trunking',
+    currentLat: 58.20,
+    currentLon: -34.50,
+    tleLine1: '1 45131U 20008D   26046.29104812  .00000120  00000+0  41200-4 0  9995',
+    tleLine2: '2 45131  87.9014 212.4098 0002140 102.4109 257.9012 13.16201940321048',
+    color: '#a855f7', // purple-500
+    description: 'Polar orbit enterprise satellite delivering high-latitude low-latency BGP fiber extensions to remote teleports.',
+    beamType: '16 Steerable User Beams + Dual Gateways',
+    spotBeamsCount: 16,
+    passPredictionsEnabled: true
+  },
+  {
+    id: 'o3b_mpower_1',
+    name: 'O3B MPOWER-1 (Equatorial MEO Gigabit)',
+    noradId: 54754,
+    category: 'LEO Broadband',
+    constellation: 'O3b mPOWER',
+    operator: 'SES S.A.',
+    orbitType: 'MEO',
+    altitudeKm: 8062.0,
+    velocityKmS: 5.31,
+    inclinationDeg: 0.05,
+    periodMinutes: 287.9,
+    footprintRadiusKm: 6200,
+    downlinkFreqMHz: 19200.00,
+    uplinkBand: 'Ka-Band Electronically Steerable Spot Beams',
+    currentLat: 0.05,
+    currentLon: -28.40,
+    tleLine1: '1 54754U 22171A   26046.50129841 -.00000080  00000+0  00000+0 0  9993',
+    tleLine2: '2 54754   0.0510  42.1098 0001204 184.2109 175.9012  5.00194020 62104',
+    color: '#ec4899', // pink-500
+    description: 'Boeing 702X Software-Defined MEO constellation powering up to 5,000 electronically steerable gigabit spot beams.',
+    beamType: '5000-Beam Digital Channelizer',
+    spotBeamsCount: 128,
+    passPredictionsEnabled: true
+  },
+  {
+    id: 'ast_bluebird_1',
+    name: 'BLUEBIRD-1 (Direct Cellular 5G)',
+    noradId: 61005,
+    category: 'LEO Broadband',
+    constellation: 'AST SpaceMobile',
+    operator: 'AST SpaceMobile / AT&T & Verizon',
+    orbitType: 'LEO',
+    altitudeKm: 510.4,
+    velocityKmS: 7.61,
+    inclinationDeg: 53.00,
+    periodMinutes: 94.8,
+    footprintRadiusKm: 1250,
+    downlinkFreqMHz: 869.00,
+    uplinkBand: '850/700 MHz Low-Band Commercial Cellular',
+    currentLat: 34.10,
+    currentLon: -97.20,
+    tleLine1: '1 61005U 24162A   26046.48102914  .00004120  00000+0  21420-3 0  9992',
+    tleLine2: '2 61005  53.0012 114.2098 0001840  68.4109 291.6012 15.19041280 18421',
+    color: '#f59e0b', // amber-500
+    description: 'Largest commercial phased-array antenna in LEO (693 sq ft) communicating directly with standard smartphones across CONUS.',
+    beamType: 'Direct 5G Cellular Phased Array',
+    spotBeamsCount: 56,
     passPredictionsEnabled: true
   },
   {
@@ -109,6 +214,7 @@ export const DEFAULT_TRACKED_SATELLITES: TrackedSatellite[] = [
     name: 'ECHOSTAR-14 (DISH Network)',
     noradId: 36499,
     category: 'Direct Broadcast (DBS)',
+    constellation: 'GEO DBS',
     operator: 'DISH Network / EchoStar',
     orbitType: 'GEO',
     altitudeKm: 35786.0,
@@ -122,15 +228,17 @@ export const DEFAULT_TRACKED_SATELLITES: TrackedSatellite[] = [
     currentLon: -119.02,
     tleLine1: '1 36499U 10010A   26046.21049812 -.00000140  00000+0  00000+0 0  9992',
     tleLine2: '2 36499   0.0520  68.2014 0002140 248.1098 111.9024  1.00271420 54108',
-    color: '#f59e0b', // amber-500
+    color: '#f97316', // orange-500
     description: 'High-power geostationary direct broadcast satellite stationed at 119.0°W orbital slot powering DISH Anywhere and national HD feeds.',
-    passPredictionsEnabled: false // Geostationary (continuous visible position)
+    spotBeamsCount: 32,
+    passPredictionsEnabled: false
   },
   {
     id: 'tiangong_css',
     name: 'TIANGONG (CSS)',
     noradId: 48274,
     category: 'Space Stations',
+    constellation: 'Space Stations',
     operator: 'China Manned Space Agency (CMSA)',
     orbitType: 'LEO',
     altitudeKm: 389.2,
@@ -146,6 +254,7 @@ export const DEFAULT_TRACKED_SATELLITES: TrackedSatellite[] = [
     tleLine2: '2 48274  41.4720 198.4102 0004120  84.2109 275.9012 15.59841020264104',
     color: '#ef4444', // red-500
     description: 'Modular Chinese space station (Tianhe, Wentian, Mengtian) orbiting in low Earth orbit with regular astronaut crew operations.',
+    spotBeamsCount: 2,
     passPredictionsEnabled: true
   },
   {
@@ -153,6 +262,7 @@ export const DEFAULT_TRACKED_SATELLITES: TrackedSatellite[] = [
     name: 'HUBBLE SPACE TELESCOPE (HST)',
     noradId: 20580,
     category: 'Scientific & Weather',
+    constellation: 'Scientific',
     operator: 'NASA / STScI / ESA',
     orbitType: 'LEO',
     altitudeKm: 535.4,
@@ -175,6 +285,7 @@ export const DEFAULT_TRACKED_SATELLITES: TrackedSatellite[] = [
     name: 'NOAA-20 (JPSS-1)',
     noradId: 43013,
     category: 'Scientific & Weather',
+    constellation: 'Scientific',
     operator: 'NOAA / NASA NESDIS',
     orbitType: 'LEO',
     altitudeKm: 824.0,
@@ -197,6 +308,7 @@ export const DEFAULT_TRACKED_SATELLITES: TrackedSatellite[] = [
     name: 'IRIDIUM-NEXT-141 (GMDSS Safety)',
     noradId: 43075,
     category: 'LEO Broadband',
+    constellation: 'Iridium',
     operator: 'Iridium Communications',
     orbitType: 'LEO',
     altitudeKm: 780.0,
@@ -210,8 +322,9 @@ export const DEFAULT_TRACKED_SATELLITES: TrackedSatellite[] = [
     currentLon: 174.20,
     tleLine1: '1 43075U 17086A   26046.41209841  .00000210  00000+0  64100-4 0  9994',
     tleLine2: '2 43075  86.4010 241.1098 0001840  68.4102 291.7410 14.34109820421041',
-    color: '#0ea5e9', // sky-500
+    color: '#10b981', // emerald-500
     description: 'Cross-linked polar constellation node powering global maritime distress GMDSS safety and Project Stardust 3GPP messaging.',
+    spotBeamsCount: 48,
     passPredictionsEnabled: true
   },
   {
@@ -219,6 +332,7 @@ export const DEFAULT_TRACKED_SATELLITES: TrackedSatellite[] = [
     name: 'GPS BIIF-10 (PRN 08)',
     noradId: 40730,
     category: 'Navigation',
+    constellation: 'GPS',
     operator: 'US Space Force (USSF)',
     orbitType: 'MEO',
     altitudeKm: 20180.0,
@@ -232,8 +346,9 @@ export const DEFAULT_TRACKED_SATELLITES: TrackedSatellite[] = [
     currentLon: -78.10,
     tleLine1: '1 40730U 15033A   26046.48120941 -.00000040  00000+0  00000+0 0  9999',
     tleLine2: '2 40730  55.0010 198.4102 0004120 184.2109 175.8012  2.00561020 78421',
-    color: '#ec4899', // pink-500
+    color: '#14b8a6', // teal-500
     description: 'Medium Earth Orbit military and civil navigation satellite broadcasting L1/L2/L5 atomic timing signals.',
+    spotBeamsCount: 12,
     passPredictionsEnabled: true
   }
 ];

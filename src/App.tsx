@@ -42,6 +42,7 @@ import { IrcLoginCredentials, IrcLoginSession } from './types/irc';
 import { UserMembershipState } from './types/membership';
 import { AnopeRankLevel } from './types/ircdAdmin';
 import { STORE_PRODUCTS } from './data/storeProducts';
+import { DrFun1MediaLogo } from './components/DrFun1MediaLogo';
 import { 
   Satellite, 
   ShieldCheck, 
@@ -203,6 +204,7 @@ export default function App() {
   const [slaSelectedCompany, setSlaSelectedCompany] = useState<SatelliteCompany | null>(null);
   const [isDomainSearchModalOpen, setIsDomainSearchModalOpen] = useState(false);
   const [isOrbitMapModalOpen, setIsOrbitMapModalOpen] = useState(false);
+  const [orbitMapConstellations, setOrbitMapConstellations] = useState<string[]>(['Starlink']);
   const [isDevPlatformOpen, setIsDevPlatformOpen] = useState(false);
   const [isNewsFeedExpanded, setIsNewsFeedExpanded] = useState(false);
   const [userMembership, setUserMembership] = useState<UserMembershipState>(() => {
@@ -583,7 +585,7 @@ export default function App() {
           CORE UNIFIED PLATFORMS: 5 PRIMARY PAGES
           ======================================================== */}
 
-      {/* 1. Primary Index: UnrealIRCd WebIRC Client & 352-Leaf Mesh */}
+      {/* 1. Primary Index: UnrealIRCd WebIRC Client & 1,000-Leaf Mesh (500 Per Hub) */}
       {activeTab === 'irc' ? (
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
           <IrcClientView
@@ -607,7 +609,7 @@ export default function App() {
           />
         </main>
       ) : activeTab === 'master_control' ? (
-        /* 2. Master Control, NOC 352-Leaf Grid, Carrier Downlinks & Newsroom */
+        /* 2. Master Control, NOC 1,000-Leaf Grid (500 Per Hub), Carrier Downlinks & Newsroom */
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
           <MasterControlView
             companies={companies}
@@ -617,6 +619,12 @@ export default function App() {
             onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
             onOpenZncWebAdmin={() => setIsZncWebAdminOpen(true)}
             onOpenUnrealSearch={() => setIsUnrealSearchOpen(true)}
+            onOpenOrbitMap={(consts) => {
+              if (consts && consts.length > 0) {
+                setOrbitMapConstellations(consts);
+              }
+              setIsOrbitMapModalOpen(true);
+            }}
             activeRank={activeOperRank}
           />
         </main>
@@ -671,11 +679,12 @@ export default function App() {
       <footer className="border-t border-slate-800 bg-slate-950/90 py-8 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Satellite className="w-4 h-4 text-purple-400" />
-              <span className="text-white font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-sky-400 bg-clip-text text-transparent">
-                DrFun1 Media
-              </span>
+            <div className="flex items-center gap-2.5">
+              <Satellite className="w-4 h-4 text-amber-400" />
+              <DrFun1MediaLogo
+                size="sm"
+                variant="purple-gold"
+              />
               <span>—</span>
               <span>Global Broadcasting, TV &amp; Radio Streaming, Satcom Directory &amp; Resale Store</span>
             </div>
@@ -710,11 +719,16 @@ export default function App() {
                 href="https://www.owenscompany.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sky-400 hover:text-sky-300 hover:underline flex items-center gap-1 font-mono text-[11px]"
+                className="text-amber-400 hover:text-amber-300 hover:underline flex items-center gap-1 font-mono text-[11px]"
+                title="Payment Office - Bill in Receiving"
               >
-                <span>Owens Company</span>
+                <span>Owens Company (Payment Office · Bill in Receiving)</span>
                 <ExternalLink className="w-2.5 h-2.5" />
               </a>
+              <span className="text-slate-700 hidden sm:inline">·</span>
+              <span className="text-purple-300 font-mono text-[11px] bg-purple-950/60 px-1.5 py-0.5 rounded border border-purple-800/60">
+                Switch Nodes via CGW Law Offices
+              </span>
             </div>
 
             <div className="flex items-center gap-3 font-mono text-[11px]">
@@ -901,6 +915,8 @@ export default function App() {
         onClose={() => setIsOrbitMapModalOpen(false)}
         onOpenLicense={() => setIsLicenseModalOpen(true)}
         onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+        selectedConstellations={orbitMapConstellations}
+        onConstellationChange={setOrbitMapConstellations}
       />
 
       {/* IRC Network Client Startup Login Modal */}

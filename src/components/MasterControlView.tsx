@@ -40,7 +40,9 @@ import {
   Lock,
   Smartphone,
   Rss,
-  Tv
+  Tv,
+  TrendingUp,
+  Maximize2
 } from 'lucide-react';
 import { SatelliteCompany } from '../types/satellite';
 import { AnopeRankLevel } from '../types/ircdAdmin';
@@ -51,6 +53,8 @@ import { FuboTvCloneView } from './FuboTvCloneView';
 import { NocDashboardSection } from './NocDashboardSection';
 import { SatelliteFleetStatusNotifier } from './SatelliteFleetStatusNotifier';
 import { StatServDashboard } from './StatServDashboard';
+import { ConstellationFleetStabilityChart } from './ConstellationFleetStabilityChart';
+import { LeafletSatelliteTracker } from './LeafletSatelliteTracker';
 
 interface MasterControlViewProps {
   companies: SatelliteCompany[];
@@ -60,6 +64,7 @@ interface MasterControlViewProps {
   onOpenIrcdAdmin?: () => void;
   onOpenZncWebAdmin?: () => void;
   onOpenUnrealSearch?: () => void;
+  onOpenOrbitMap?: (constellations?: string[]) => void;
   activeRank?: AnopeRankLevel;
 }
 
@@ -71,10 +76,12 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
   onOpenIrcdAdmin,
   onOpenZncWebAdmin,
   onOpenUnrealSearch,
+  onOpenOrbitMap,
   activeRank = 'op'
 }) => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [activeSubTab, setActiveSubTab] = useState<'infrastructure' | 'downlinks' | 'leaf_nodes' | 'noc' | 'fleet_status' | 'statserv' | 'compliance' | 'rss_news' | 'fubotv'>('noc');
+  const [selectedConstellationsForCoverage, setSelectedConstellationsForCoverage] = useState<string[]>(['Starlink']);
+  const [activeSubTab, setActiveSubTab] = useState<'infrastructure' | 'downlinks' | 'leaf_nodes' | 'noc' | 'fleet_status' | 'fleet_stability' | 'orbit_coverage' | 'statserv' | 'compliance' | 'rss_news' | 'fubotv'>('noc');
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -103,11 +110,11 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
                   SWITCH 100G FIBER RING
                 </span>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
-                  352 Leaf Nodes
+                  1,034 Nodes (Dual-Hub)
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Switch SUPERNAP NV Teleport · DataPacket 100G CDN · UnrealIRCd 6.1.4 Leaf Mesh · Fubo.tv Live Sports · Satellite Downlinks · RSS Newsroom
+                500 Switch/Hub via CGW Law Offices · 12 DataPacket/Hub · 10 RisingNet Dedicated Servers · License: www.wittlawfirm.com · Payment: Owens Company (Bill in Receiving)
               </p>
             </div>
           </div>
@@ -133,6 +140,25 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
                 <span>ZNC Bouncer</span>
               </button>
             )}
+
+            <button
+              onClick={() => {
+                if (onOpenOrbitMap) {
+                  onOpenOrbitMap(selectedConstellationsForCoverage);
+                } else {
+                  setActiveSubTab('orbit_coverage');
+                }
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                activeSubTab === 'orbit_coverage'
+                  ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/60 shadow-cyan-950/30'
+                  : 'bg-cyan-950/60 hover:bg-cyan-900/60 text-cyan-200 border border-cyan-500/50'
+              }`}
+              title="Launch Orbit Tracking Map with real-time Constellation Coverage Layer"
+            >
+              <Globe className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+              <span>Coverage Map ({selectedConstellationsForCoverage.join(', ')})</span>
+            </button>
 
             <button
               onClick={() => setActiveSubTab('statserv')}
@@ -169,7 +195,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             <Activity className="w-3.5 h-3.5 text-purple-400" />
             <span>Network Operations Center (NOC)</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">
-              352 Nodes Grid
+              1,034 Nodes (Dual-Hub)
             </span>
           </button>
 
@@ -200,6 +226,36 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             <span>Satellite Fleet Status</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
               TLE Alerts
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('fleet_stability')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'fleet_stability'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800/50'
+            }`}
+          >
+            <TrendingUp className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Fleet Stability Trends</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
+              Recharts
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('orbit_coverage')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'orbit_coverage'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800/50'
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Orbit Coverage Map</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
+              Live Footprints
             </span>
           </button>
 
@@ -236,7 +292,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             }`}
           >
             <Terminal className="w-3.5 h-3.5 text-purple-400" />
-            <span>347 UnrealIRCd Leaf Nodes</span>
+            <span>1,034 Dual-Hub Leaf Nodes</span>
           </button>
 
           <button
@@ -286,7 +342,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
       {/* Real-Time Satellite Fleet Status & TLE Change Alert Ticker */}
       <SatelliteFleetStatusNotifier
         variant="ticker"
-        onOpenConstellationOverlay={() => setActiveSubTab('fleet_status')}
+        onOpenConstellationOverlay={() => setActiveSubTab('orbit_coverage')}
       />
 
       {/* Tab 1: Backbone Infrastructure */}
@@ -300,24 +356,24 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
                 <span className="font-bold text-white text-sm">Switch SUPERNAP NV</span>
               </div>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">
-                TIER 5 PLATINUM
+                500/HUB VIA CGW LAW OFFICES
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Primary master broadcast teleport and colocation facility at The Core Campus in Las Vegas, Nevada. Feeds DrFun1 TV linear playout, SMPTE video matrices, and UnrealIRCd hub.
+              1,000 dedicated Switch.com Tier 5 Platinum nodes (500 per hub) contracted and represented via <strong className="text-white">CGW Law Offices</strong>, synced &amp; leafed to both irc.drfun1.com &amp; irc.drfun1media.com.
             </p>
             <div className="space-y-1.5 font-mono text-xs">
               <div className="flex justify-between p-2 rounded bg-slate-950 border border-slate-800 text-slate-300">
-                <span className="text-slate-500">Fiber Interconnect:</span>
-                <span className="text-emerald-400 font-bold">100 Gbps Low-Latency</span>
+                <span className="text-slate-500">Deployment:</span>
+                <span className="text-emerald-400 font-bold">500/Hub (1,000 Total)</span>
               </div>
               <div className="flex justify-between p-2 rounded bg-slate-950 border border-slate-800 text-slate-300">
-                <span className="text-slate-500">Power SLA:</span>
-                <span className="text-cyan-400 font-bold">100% Renewable 2N+2</span>
+                <span className="text-slate-500">Legal Representation:</span>
+                <span className="text-cyan-400 font-bold">CGW Law Offices</span>
               </div>
               <div className="flex justify-between p-2 rounded bg-slate-950 border border-slate-800 text-slate-300">
-                <span className="text-slate-500">Primary Hub:</span>
-                <span className="text-purple-400 font-bold">irc.drfun1.com:6697</span>
+                <span className="text-slate-500">Synced Hubs:</span>
+                <span className="text-purple-400 font-bold">irc.drfun1.com &amp; irc.drfun1media.com</span>
               </div>
             </div>
           </div>
@@ -327,23 +383,23 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-cyan-400 animate-ping" />
-                <span className="font-bold text-white text-sm">DataPacket 100G PoPs</span>
+                <span className="font-bold text-white text-sm">DataPacket 100G Leafs</span>
               </div>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">
-                12 TRANS-ATLANTIC
+                12 LEAFS/HUB · 24 TOTAL
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Dedicated high-bandwidth edge nodes across Frankfurt, London, Amsterdam, Paris, and Ashburn providing sub-35ms video and IRC delivery across North America and Europe.
+              12 dedicated www.datapacket.com 100G no-ads leaf nodes per hub (24 total), dual-synced across North America, Europe &amp; APAC to both IRCd hubs.
             </p>
             <div className="space-y-1.5 font-mono text-xs">
               <div className="flex justify-between p-2 rounded bg-slate-950 border border-slate-800 text-slate-300">
                 <span className="text-slate-500">Active Leaf Nodes:</span>
-                <span className="text-cyan-400 font-bold">12 Ultra-Edge Nodes</span>
+                <span className="text-cyan-400 font-bold">12/Hub (24 Ultra-Edge)</span>
               </div>
               <div className="flex justify-between p-2 rounded bg-slate-950 border border-slate-800 text-slate-300">
-                <span className="text-slate-500">Video Ingest:</span>
-                <span className="text-emerald-400 font-bold">RTMP / RTMPS / SRT</span>
+                <span className="text-slate-500">Policy &amp; Sync:</span>
+                <span className="text-emerald-400 font-bold">No-Ads · Dual-Hub Synced</span>
               </div>
               <div className="flex justify-between p-2 rounded bg-slate-950 border border-slate-800 text-slate-300">
                 <span className="text-slate-500">Average Packet Loss:</span>
@@ -352,32 +408,32 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             </div>
           </div>
 
-          {/* TVU Networks Cloud CDN */}
+          {/* RisingNet 10 Dedicated Servers */}
           <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-4 shadow-xl">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-purple-400 animate-ping" />
-                <span className="font-bold text-white text-sm">TVU Cloud CDN &amp; ISSP</span>
+                <span className="font-bold text-white text-sm">RisingNet.com Servers</span>
               </div>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">
-                ISSP BONDING
+                10 DEDICATED SERVERS
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Inverse StatMux Protocol (ISSP) multi-network cellular and satellite bonding for mission-critical remote ENG field newscasting and live teleport contribution.
+              10 dedicated Tier-1 bare-metal servers from www.risingnet.com provisioned with 100G DWDM transit, all synchronized and leafed to BOTH irc.drfun1.com &amp; irc.drfun1media.com.
             </p>
             <div className="space-y-1.5 font-mono text-xs">
               <div className="flex justify-between p-2 rounded bg-slate-950 border border-slate-800 text-slate-300">
-                <span className="text-slate-500">Channel Grid:</span>
-                <span className="text-purple-400 font-bold">128 Concurrent Feeds</span>
+                <span className="text-slate-500">Dedicated Fleet:</span>
+                <span className="text-purple-400 font-bold">10 RisingNet Servers (R01–R10)</span>
               </div>
               <div className="flex justify-between p-2 rounded bg-slate-950 border border-slate-800 text-slate-300">
-                <span className="text-slate-500">Glass-to-Glass Latency:</span>
-                <span className="text-emerald-400 font-bold">0.380 seconds</span>
+                <span className="text-slate-500">Hub Federation:</span>
+                <span className="text-emerald-400 font-bold">Leafed to Both Hubs</span>
               </div>
               <div className="flex justify-between p-2 rounded bg-slate-950 border border-slate-800 text-slate-300">
-                <span className="text-slate-500">Multi-Camera Producer:</span>
-                <span className="text-cyan-400 font-bold">Active Synchronized</span>
+                <span className="text-slate-500">Payment Office:</span>
+                <span className="text-cyan-400 font-bold">Owens Co. (Bill in Receiving)</span>
               </div>
             </div>
           </div>
@@ -441,7 +497,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
         </div>
       )}
 
-      {/* Tab 3: Network Operations Center (NOC) Dashboard - 352-Leaf Mesh Visual Grid */}
+      {/* Tab 3: Network Operations Center (NOC) Dashboard - 1,000-Leaf Mesh Visual Grid (500 Per Hub) */}
       {(activeSubTab === 'noc' || activeSubTab === 'leaf_nodes') && (
         <NocDashboardSection
           onOpenLicense={onOpenLicense}
@@ -474,24 +530,34 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             </a>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
             <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
               <div className="font-bold text-white flex items-center gap-1.5">
                 <Scale className="w-4 h-4 text-emerald-400" />
-                FCC Regulatory Identification
+                Master App Licensing (www.wittlawfirm.com)
               </div>
               <p className="text-slate-300 leading-relaxed">
-                Operating under FCC Registration Number (FRN) <strong>0034981290</strong>, granted to Licensee <strong>Richard Alan Witt</strong>. All ground segment downlinks, broadcast transmitters, and video playouts comply with FCC Title 47 CFR Part 25 and Part 73 regulations.
+                Licensed by <strong>The Law Office of Richard A. Witt LLC</strong> (<a href="https://www.wittlawfirm.com" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline">www.wittlawfirm.com</a>) to Licensee <strong>Richard Alan Witt</strong> under FCC FRN <strong>0034981290</strong> (Certificate ID: <code>RAW-SATCOM-2026-LIC-0881</code>).
               </p>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
               <div className="font-bold text-white flex items-center gap-1.5">
                 <Lock className="w-4 h-4 text-purple-400" />
-                Copyright &amp; Spectrum Compliance
+                Payment Office: Owens Company (Bill in Receiving)
               </div>
               <p className="text-slate-300 leading-relaxed">
-                Licensed to Richard Alan Witt. In association with <strong>Owens Company</strong> (<a href="https://www.owenscompany.com" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline">www.owenscompany.com</a>) and DrFun1 Media Inc. Certificate ID: <code>RAW-SATCOM-2026-LIC-0881</code>.
+                Designated Payment Office: <strong>Owens Company</strong> (<a href="https://www.owenscompany.com" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline">www.owenscompany.com</a>). All settlement invoices, purchase orders, and hardware disbursements are directed to <strong>Bill in Receiving</strong> (Owens Company Accounts Payable &amp; Receiving Department).
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+              <div className="font-bold text-white flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                CGW Law Offices Switch.com Representation
+              </div>
+              <p className="text-slate-300 leading-relaxed">
+                All <strong>1,000 www.switch.com nodes</strong> (500 nodes per hub across <code>irc.drfun1.com</code> &amp; <code>irc.drfun1media.com</code>) are procured and represented via <strong>CGW Law Offices</strong>, federated alongside <strong>24 DataPacket leafs</strong> (12/hub) and <strong>10 RisingNet dedicated servers</strong>.
               </p>
             </div>
           </div>
@@ -513,11 +579,77 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
 
       {/* Tab 7: Satellite Fleet Status & Real-Time TLE Alert Center */}
       {activeSubTab === 'fleet_status' && (
-        <SatelliteFleetStatusNotifier
-          variant="full"
+        <div className="space-y-6">
+          <ConstellationFleetStabilityChart
+            onOpenLicense={onOpenLicense}
+            onOpenConstellationOverlay={(cName) => {
+              if (cName) setSelectedConstellationsForCoverage([cName]);
+              setActiveSubTab('orbit_coverage');
+            }}
+          />
+          <SatelliteFleetStatusNotifier
+            variant="full"
+            onOpenLicense={onOpenLicense}
+            onOpenConstellationOverlay={() => setActiveSubTab('orbit_coverage')}
+          />
+        </div>
+      )}
+
+      {/* Tab: Dedicated Fleet Stability & TLE Trends */}
+      {activeSubTab === 'fleet_stability' && (
+        <ConstellationFleetStabilityChart
           onOpenLicense={onOpenLicense}
-          onOpenConstellationOverlay={() => setActiveSubTab('noc')}
+          onOpenConstellationOverlay={(cName) => {
+            if (cName) setSelectedConstellationsForCoverage([cName]);
+            setActiveSubTab('orbit_coverage');
+          }}
         />
+      )}
+
+      {/* Tab: Real-Time Orbit Tracking Map with Live Constellation Coverage Layer */}
+      {activeSubTab === 'orbit_coverage' && (
+        <div className="space-y-4">
+          <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-inner">
+                <Globe className="w-5 h-5 animate-spin-slow" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-white text-sm">Real-Time Constellation Coverage Layer</h3>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    LIVE SGP4 / TLE
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Visualizing illuminated RF footprint circles, phased-array cellular spot beams, laser ISL crosslinks, and Switch SUPERNAP feeder locks.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {onOpenOrbitMap && (
+                <button
+                  onClick={() => onOpenOrbitMap(selectedConstellationsForCoverage)}
+                  className="px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  title="Open orbit tracker in fullscreen dialog"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                  <span>Fullscreen Map</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <LeafletSatelliteTracker
+            onOpenLicense={onOpenLicense}
+            onOpenSwitchMesh={onOpenSwitchMesh}
+            isModalView={false}
+            selectedConstellations={selectedConstellationsForCoverage}
+            onConstellationChange={setSelectedConstellationsForCoverage}
+          />
+        </div>
       )}
 
       {/* Tab 8: PaulJZ StatServ UnrealIRCd Sockets & SNOTICE Telemetry */}

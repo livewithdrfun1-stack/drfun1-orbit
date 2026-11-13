@@ -52,32 +52,99 @@ import {
   FastForward,
   Wifi,
   Crosshair,
-  Sliders
+  Sliders,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  TrendingUp,
+  Flame,
+  ExternalLink
 } from 'lucide-react';
 
 export type MapTileTheme = 'dark' | 'satellite' | 'streets';
+
+export const TRACKABLE_CONSTELLATIONS = [
+  { id: 'Starlink', name: 'SpaceX Starlink Gen2 & Direct-to-Cell', shortName: 'Starlink', color: '#38bdf8', activeSatCount: 6850, orbit: 'LEO' },
+  { id: 'OneWeb', name: 'Eutelsat OneWeb Polar Enterprise', shortName: 'OneWeb', color: '#a855f7', activeSatCount: 634, orbit: 'LEO' },
+  { id: 'O3b mPOWER', name: 'SES O3b mPOWER MEO Gigabit', shortName: 'O3b mPOWER', color: '#ec4899', activeSatCount: 8, orbit: 'MEO' },
+  { id: 'Iridium', name: 'Iridium NEXT & Certus Safety', shortName: 'Iridium', color: '#10b981', activeSatCount: 66, orbit: 'LEO' },
+  { id: 'AST SpaceMobile', name: 'AST SpaceMobile BlueBird Direct 5G', shortName: 'BlueBird 5G', color: '#f59e0b', activeSatCount: 5, orbit: 'LEO' },
+  { id: 'GEO DBS', name: 'EchoStar / DISH Direct Broadcast', shortName: 'EchoStar DBS', color: '#f97316', activeSatCount: 14, orbit: 'GEO' },
+  { id: 'GPS', name: 'GPS Block IIF / III Navstar', shortName: 'GPS Navstar', color: '#14b8a6', activeSatCount: 31, orbit: 'MEO' },
+  { id: 'Space Stations', name: 'International Space Station & Tiangong', shortName: 'Space Stations', color: '#06b6d4', activeSatCount: 2, orbit: 'LEO' }
+];
 
 interface LeafletSatelliteTrackerProps {
   onOpenLicense?: () => void;
   onOpenSwitchMesh?: () => void;
   onSelectConstellationCompany?: (companyName: string) => void;
   isModalView?: boolean;
+  selectedConstellations?: string[];
+  onConstellationChange?: (constellations: string[]) => void;
 }
 
 export const LeafletSatelliteTracker: React.FC<LeafletSatelliteTrackerProps> = ({
   onOpenLicense,
   onOpenSwitchMesh,
   onSelectConstellationCompany,
-  isModalView = false
+  isModalView = false,
+  selectedConstellations,
+  onConstellationChange
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const layersGroupRef = useRef<L.LayerGroup | null>(null);
 
+  // Active Constellations for Real-Time Coverage Layer
+  const [activeConstellations, setActiveConstellations] = useState<string[]>(
+    selectedConstellations && selectedConstellations.length > 0
+      ? selectedConstellations
+      : ['Starlink']
+  );
+  const [showCoverageLayer, setShowCoverageLayer] = useState<boolean>(true);
+  const [coverageBeamMode, setCoverageBeamMode] = useState<'spots' | 'cones' | 'laser_isl'>('spots');
+  const [elevationMask, setElevationMask] = useState<number>(10); // 10°, 25°, 45°
+  const [isCoverageHudExpanded, setIsCoverageHudExpanded] = useState<boolean>(true);
+
+  // Sync activeConstellations whenever selectedConstellations prop updates from MasterControlView
+  useEffect(() => {
+    if (selectedConstellations && selectedConstellations.length > 0) {
+      setActiveConstellations(selectedConstellations);
+    }
+  }, [selectedConstellations]);
+
+  const handleToggleConstellation = (constellationId: string) => {
+    setActiveConstellations(prev => {
+      const next = prev.includes(constellationId)
+        ? prev.filter(c => c !== constellationId)
+        : [...prev, constellationId];
+      if (onConstellationChange) onConstellationChange(next);
+      return next;
+    });
+  };
+
+  const handleSoloConstellation = (constellationId: string) => {
+    const next = [constellationId];
+    setActiveConstellations(next);
+    if (onConstellationChange) onConstellationChange(next);
+  };
+
+  const handleSelectTop5 = () => {
+    const next = ['Starlink', 'OneWeb', 'O3b mPOWER', 'Iridium', 'AST SpaceMobile'];
+    setActiveConstellations(next);
+    if (onConstellationChange) onConstellationChange(next);
+  };
+
+  const handleSelectAllConstellations = () => {
+    const next = TRACKABLE_CONSTELLATIONS.map(c => c.id);
+    setActiveConstellations(next);
+    if (onConstellationChange) onConstellationChange(next);
+  };
+
   // Active Satellite and Observer Selection
   const [satellites, setSatellites] = useState<TrackedSatellite[]>(DEFAULT_TRACKED_SATELLITES);
-  const [selectedSatelliteId, setSelectedSatelliteId] = useState<string>('iss_zarya');
+  const [selectedSatelliteId, setSelectedSatelliteId] = useState<string>('starlink_5124');
   const [selectedObserverId, setSelectedObserverId] = useState<string>('switch_lasvegas');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -116,6 +183,44 @@ export const LeafletSatelliteTracker: React.FC<LeafletSatelliteTrackerProps> = (
   const passPredictions = useMemo(() => {
     return calculateSatellitePasses(selectedSatellite, selectedObserver);
   }, [selectedSatellite, selectedObserver]);
+
+  // Real-time Geographic Coverage Area Statistics for Selected Constellations
+  const coverageStats = useMemo(() => {
+    const highlightedSats = satellites.filter(
+      s => s.constellation && activeConstellations.includes(s.constellation)
+    );
+    const elevationFactor = elevationMask === 45 ? 0.45 : elevationMask === 25 ? 0.72 : 1.0;
+
+    let spotBeamsSum = 0;
+    highlightedSats.forEach(s => {
+      spotBeamsSum += s.spotBeamsCount || 16;
+    });
+
+    const singleArea = (r: number) => Math.PI * Math.pow(r, 2);
+    const rawTotalKm2 = highlightedSats.reduce(
+      (acc, s) => acc + singleArea(s.footprintRadiusKm * elevationFactor),
+      0
+    );
+    // Discount overlapping footprints (~0.82)
+    const effectiveCoverageKm2 = Math.round(rawTotalKm2 * 0.82);
+    const earthSurfaceKm2 = 510072000;
+    const earthCoveragePct = Number(((effectiveCoverageKm2 / earthSurfaceKm2) * 100).toFixed(2));
+
+    const teleportsInCoverage = OBSERVER_STATIONS.filter(obs => {
+      return highlightedSats.some(sat => {
+        const link = calculateGroundStationLink(obs, sat);
+        return link.isInFootprint;
+      });
+    });
+
+    return {
+      highlightedSatsCount: highlightedSats.length,
+      effectiveCoverageKm2,
+      earthCoveragePct,
+      spotBeamsSum,
+      teleportsInCoverage
+    };
+  }, [satellites, activeConstellations, elevationMask]);
 
   // Set default active pass
   useEffect(() => {
@@ -355,70 +460,147 @@ export const LeafletSatelliteTracker: React.FC<LeafletSatelliteTrackerProps> = (
       }).addTo(layersGroup);
     }
 
-    // 5. Draw Footprints (Selected only OR All active constellations)
-    if (showAllFootprints) {
-      satellites.forEach(sat => {
-        const isSel = sat.id === selectedSatellite.id;
+    // 5. REAL-TIME CONSTELLATION COVERAGE LAYER
+    // Highlights the specific constellations selected in MasterControlView
+    const elevationFactor = elevationMask === 45 ? 0.45 : elevationMask === 25 ? 0.72 : 1.0;
+
+    satellites.forEach(sat => {
+      const isConstellationHighlighted = Boolean(
+        sat.constellation && activeConstellations.includes(sat.constellation)
+      );
+      const isSelected = sat.id === selectedSatellite.id;
+      const radiusM = sat.footprintRadiusKm * 1000 * elevationFactor;
+
+      if (showCoverageLayer && isConstellationHighlighted) {
+        // A. Primary High-Gain Footprint Coverage Area
         L.circle([sat.currentLat, sat.currentLon], {
-          radius: sat.footprintRadiusKm * 1000,
+          radius: radiusM,
           color: sat.color,
           fillColor: sat.color,
-          fillOpacity: isSel ? 0.16 : 0.05,
-          weight: isSel ? 1.8 : 0.8
+          fillOpacity: isSelected ? 0.22 : 0.14,
+          weight: isSelected ? 2.6 : 1.8,
+          dashArray: '5, 5'
         }).addTo(layersGroup);
+
+        // B. Inner Core High-Gain Illumination Cone (Max EIRP)
+        L.circle([sat.currentLat, sat.currentLon], {
+          radius: radiusM * 0.45,
+          color: sat.color,
+          fillColor: sat.color,
+          fillOpacity: isSelected ? 0.32 : 0.22,
+          weight: 1.5
+        }).addTo(layersGroup);
+
+        // C. Dynamic Phased-Array Cellular Spot Beams (when mode is 'spots')
+        if (coverageBeamMode === 'spots' && sat.orbitType !== 'GEO') {
+          for (let b = 0; b < 6; b++) {
+            const angle = (b * 60 * Math.PI) / 180;
+            const distKm = (sat.footprintRadiusKm * elevationFactor) * 0.52;
+            const dLat = (distKm / 111) * Math.sin(angle);
+            const dLon = (distKm / (111 * Math.cos((sat.currentLat * Math.PI) / 180) || 1)) * Math.cos(angle);
+            L.circle([sat.currentLat + dLat, sat.currentLon + dLon], {
+              radius: (sat.footprintRadiusKm * elevationFactor * 0.24) * 1000,
+              color: sat.color,
+              fillColor: sat.color,
+              fillOpacity: 0.12,
+              weight: 1.0
+            }).addTo(layersGroup);
+          }
+        }
+
+        // D. Ground Teleport Intercept Vectors:
+        // If an observer station is in footprint, draw an active downlink track
+        OBSERVER_STATIONS.forEach(obs => {
+          const link = calculateGroundStationLink(obs, sat);
+          if (link.isInFootprint) {
+            L.polyline([[obs.lat, obs.lon], [sat.currentLat, sat.currentLon]], {
+              color: '#10b981',
+              weight: 2.2,
+              opacity: 0.85,
+              dashArray: '4, 4'
+            }).addTo(layersGroup);
+          }
+        });
+      } else if (showAllFootprints || isSelected) {
+        // Dimmed representation for non-selected constellations
+        L.circle([sat.currentLat, sat.currentLon], {
+          radius: radiusM,
+          color: sat.color,
+          fillColor: sat.color,
+          fillOpacity: 0.04,
+          weight: 0.8
+        }).addTo(layersGroup);
+      }
+    });
+
+    // 6. Inter-Satellite Laser ISL Crosslinks
+    if (showCoverageLayer && (coverageBeamMode === 'laser_isl' || coverageBeamMode === 'spots')) {
+      activeConstellations.forEach(cName => {
+        const constellationSats = satellites.filter(s => s.constellation === cName);
+        if (constellationSats.length > 1) {
+          for (let i = 0; i < constellationSats.length - 1; i++) {
+            const s1 = constellationSats[i];
+            const s2 = constellationSats[i + 1];
+            L.polyline([[s1.currentLat, s1.currentLon], [s2.currentLat, s2.currentLon]], {
+              color: s1.color,
+              weight: 2.2,
+              opacity: 0.85,
+              dashArray: '6, 6'
+            }).addTo(layersGroup);
+          }
+        }
       });
-    } else {
-      L.circle([selectedSatellite.currentLat, selectedSatellite.currentLon], {
-        radius: selectedSatellite.footprintRadiusKm * 1000,
-        color: selectedSatellite.color,
-        fillColor: selectedSatellite.color,
-        fillOpacity: 0.15,
-        weight: 1.8
-      }).addTo(layersGroup);
     }
 
-    // 6. Render Satellite Markers with Interactive Pins
+    // 7. Render Satellite Markers with Interactive Pins
     satellites.forEach(sat => {
       const isSelected = sat.id === selectedSatellite.id;
+      const isHighlighted = Boolean(sat.constellation && activeConstellations.includes(sat.constellation));
+
       const satIcon = L.divIcon({
         className: 'custom-sat-marker',
         html: `
           <div style="position: relative; cursor: pointer; display: flex; flex-direction: column; align-items: center;">
             <div style="
-              width: ${isSelected ? '24px' : '18px'};
-              height: ${isSelected ? '24px' : '18px'};
+              width: ${isHighlighted ? (isSelected ? '28px' : '22px') : '16px'};
+              height: ${isHighlighted ? (isSelected ? '28px' : '22px') : '16px'};
               border-radius: 50%;
               background: ${sat.color};
               border: 2px solid #ffffff;
-              box-shadow: 0 0 ${isSelected ? '20px' : '9px'} ${sat.color};
+              box-shadow: 0 0 ${isHighlighted ? '22px' : '6px'} ${sat.color};
               display: flex;
               align-items: center;
               justify-content: center;
               transition: transform 0.2s ease;
+              ${isHighlighted ? 'animation: pulse 2s infinite;' : 'opacity: 0.75;'}
             ">
-              <span style="font-size: ${isSelected ? '12px' : '9px'};">🛰️</span>
+              <span style="font-size: ${isHighlighted ? '12px' : '9px'};">🛰️</span>
             </div>
-            ${isSelected ? `
+            ${isHighlighted || isSelected ? `
               <div style="
                 background: rgba(2, 6, 23, 0.95);
                 color: #ffffff;
                 font-family: ui-monospace, monospace;
-                font-size: 11px;
+                font-size: 10px;
                 font-weight: 700;
-                padding: 3px 8px;
-                border-radius: 6px;
+                padding: 2px 7px;
+                border-radius: 5px;
                 border: 1px solid ${sat.color};
-                margin-top: 4px;
+                margin-top: 3px;
                 white-space: nowrap;
                 box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+                display: flex;
+                align-items: center;
+                gap: 4px;
               ">
-                ${sat.name}
+                <span style="color: ${sat.color}; font-size: 9px;">[${sat.constellation || 'SAT'}]</span>
+                <span>${sat.name.split(' ')[0]}</span>
               </div>
             ` : ''}
           </div>
         `,
-        iconSize: [isSelected ? 30 : 22, isSelected ? 30 : 22],
-        iconAnchor: [isSelected ? 15 : 11, isSelected ? 15 : 11]
+        iconSize: [isSelected ? 34 : 24, isSelected ? 34 : 24],
+        iconAnchor: [isSelected ? 17 : 12, isSelected ? 17 : 12]
       });
 
       const marker = L.marker([sat.currentLat, sat.currentLon], { icon: satIcon })
@@ -446,7 +628,11 @@ export const LeafletSatelliteTracker: React.FC<LeafletSatelliteTrackerProps> = (
     showOrbitTracks,
     isLiveAutoTracking,
     groundLinkInfo,
-    tileTheme
+    tileTheme,
+    activeConstellations,
+    showCoverageLayer,
+    coverageBeamMode,
+    elevationMask
   ]);
 
   // Filtered Satellites for Catalog Picker
@@ -660,6 +846,19 @@ export const LeafletSatelliteTracker: React.FC<LeafletSatelliteTrackerProps> = (
                 <Eye className="w-3 h-3 text-indigo-400" />
                 <span className="hidden sm:inline">All Cones</span>
               </button>
+
+              <button
+                onClick={() => setShowCoverageLayer(!showCoverageLayer)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center space-x-1.5 transition cursor-pointer ${
+                  showCoverageLayer
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm'
+                    : 'bg-slate-800 text-slate-400 hover:text-white'
+                }`}
+                title="Toggle Master Control Real-Time Constellation Coverage Layer"
+              >
+                <Satellite className="w-3 h-3 text-cyan-400" />
+                <span>Coverage Layer ({activeConstellations.length})</span>
+              </button>
             </div>
 
             {/* Centering Quick Actions */}
@@ -744,16 +943,179 @@ export const LeafletSatelliteTracker: React.FC<LeafletSatelliteTrackerProps> = (
               </div>
             </div>
 
-            {/* In-Map Mission Simulation Status Badge (Top-Left) */}
-            <div className="absolute top-4 left-4 z-20 flex items-center space-x-2 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-800 text-[11px] font-mono shadow-lg">
+            {/* In-Map Mission Simulation Status Badge (Top-Right) */}
+            <div className="absolute top-4 right-4 z-20 hidden md:flex items-center space-x-2 bg-slate-950/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-800 text-[11px] font-mono shadow-lg">
               <span className="relative flex h-2 w-2">
                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isSimPaused ? 'bg-amber-400' : 'bg-emerald-400'} opacity-75`} />
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${isSimPaused ? 'bg-amber-500' : 'bg-emerald-500'}`} />
               </span>
-              <span className="text-white font-bold">{isSimPaused ? 'SIM PAUSED' : `SIMULATING (${simSpeed}x)`}</span>
+              <span className="text-white font-bold">{isSimPaused ? 'SIM PAUSED' : `ORBIT PROPAGATION (${simSpeed}x)`}</span>
               <span className="text-slate-500">·</span>
               <span className="text-cyan-400">{selectedObserver.name.split(' ')[0]} Teleport</span>
             </div>
+
+            {/* In-Map Constellation Coverage Layer HUD (Top-Left) */}
+            {showCoverageLayer && (
+              <div className="absolute top-3 left-3 z-30 bg-slate-950/94 backdrop-blur-md border border-slate-800/90 rounded-xl shadow-2xl p-3 max-w-[94%] sm:max-w-md font-mono text-xs space-y-2 border-l-4 border-l-cyan-500">
+                <div className="flex items-center justify-between pb-1.5 border-b border-slate-800/80">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                    <span className="font-bold text-white text-[11px]">
+                      Constellation Coverage Layer
+                    </span>
+                    <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 text-[9px] font-bold border border-cyan-500/30">
+                      Master Control Synced
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => setIsCoverageHudExpanded(!isCoverageHudExpanded)}
+                    className="p-1 text-slate-400 hover:text-white transition cursor-pointer"
+                    title={isCoverageHudExpanded ? 'Collapse HUD' : 'Expand HUD'}
+                  >
+                    {isCoverageHudExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+
+                {isCoverageHudExpanded && (
+                  <>
+                    {/* Live Constellation Selector Chips */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[10px] text-slate-400">
+                        <span>Highlighted Constellations:</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={handleSelectTop5}
+                            className="text-cyan-400 hover:underline cursor-pointer"
+                          >
+                            Top 5 Fleet
+                          </button>
+                          <span>·</span>
+                          <button
+                            onClick={handleSelectAllConstellations}
+                            className="text-cyan-400 hover:underline cursor-pointer"
+                          >
+                            All
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1">
+                        {TRACKABLE_CONSTELLATIONS.map(c => {
+                          const isActive = activeConstellations.includes(c.id);
+                          return (
+                            <button
+                              key={c.id}
+                              onClick={() => handleToggleConstellation(c.id)}
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold border transition flex items-center gap-1 cursor-pointer ${
+                                isActive
+                                  ? 'bg-slate-900 border-cyan-500/50 shadow-sm'
+                                  : 'bg-slate-950/60 text-slate-500 border-slate-800 hover:text-slate-300'
+                              }`}
+                              style={{ color: isActive ? c.color : undefined }}
+                              title={`Toggle ${c.name} coverage area`}
+                            >
+                              <span
+                                className="w-1.5 h-1.5 rounded-full"
+                                style={{ backgroundColor: c.color }}
+                              />
+                              <span>{c.shortName}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Live Geographic Area & Beam Stats Bar */}
+                    <div className="grid grid-cols-3 gap-2 p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-[10px]">
+                      <div>
+                        <span className="text-slate-500 block">ILLUMINATED AREA</span>
+                        <span className="font-bold text-white">
+                          {(coverageStats.effectiveCoverageKm2 / 1000000).toFixed(1)}M km²
+                        </span>
+                        <span className="text-emerald-400 text-[9px] block">
+                          {coverageStats.earthCoveragePct}% Earth
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-slate-500 block">SPOT BEAMS</span>
+                        <span className="font-bold text-cyan-300">
+                          {coverageStats.spotBeamsSum} Beams
+                        </span>
+                        <span className="text-slate-400 text-[9px] block">
+                          {coverageStats.highlightedSatsCount} In Orbit
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-slate-500 block">GROUND LOCKS</span>
+                        <span className="font-bold text-emerald-400">
+                          {coverageStats.teleportsInCoverage.length > 0 ? 'LOCKED' : 'NOMINAL'}
+                        </span>
+                        <span className="text-slate-400 text-[9px] block truncate">
+                          {coverageStats.teleportsInCoverage[0]?.name.split(' ')[0] || 'Switch LV'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Controls Strip: Beam Mode & Elevation Mask */}
+                    <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-800/80">
+                      <div className="flex items-center gap-1">
+                        <span className="text-slate-500">Mode:</span>
+                        <button
+                          onClick={() => setCoverageBeamMode('spots')}
+                          className={`px-1.5 py-0.5 rounded cursor-pointer ${
+                            coverageBeamMode === 'spots'
+                              ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
+                              : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          Spots
+                        </button>
+                        <button
+                          onClick={() => setCoverageBeamMode('cones')}
+                          className={`px-1.5 py-0.5 rounded cursor-pointer ${
+                            coverageBeamMode === 'cones'
+                              ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
+                              : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          Cones
+                        </button>
+                        <button
+                          onClick={() => setCoverageBeamMode('laser_isl')}
+                          className={`px-1.5 py-0.5 rounded cursor-pointer ${
+                            coverageBeamMode === 'laser_isl'
+                              ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
+                              : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          Laser ISL
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <span className="text-slate-500">Mask:</span>
+                        {[10, 25, 45].map(mask => (
+                          <button
+                            key={mask}
+                            onClick={() => setElevationMask(mask)}
+                            className={`px-1.5 py-0.5 rounded cursor-pointer ${
+                              elevationMask === mask
+                                ? 'bg-purple-500/20 text-purple-300 font-bold border border-purple-500/40'
+                                : 'text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            {mask}°
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Satellite Selection Strip */}

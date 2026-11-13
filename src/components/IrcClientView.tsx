@@ -19,10 +19,16 @@ import {
   INITIAL_IRC_MESSAGES 
 } from '../data/ircData';
 import {
-  ALL_352_LEAF_NODES,
-  SWITCH_335_LEAF_NODES,
-  DATAPACKET_LEAF_NODES,
-  RISINGNET_5_LEAF_NODES
+  ALL_1034_LEAF_NODES,
+  ALL_1000_SWITCH_NODES,
+  ALL_24_DATAPACKET_NODES,
+  HUB1_12_DATAPACKET_NODES,
+  HUB2_12_DATAPACKET_NODES,
+  HUB1_500_SWITCH_NODES,
+  HUB2_500_SWITCH_NODES,
+  RISINGNET_10_DEDICATED_SERVERS,
+  HUB1_ALL_LEAF_NODES,
+  HUB2_ALL_LEAF_NODES
 } from '../data/unrealSearchData';
 import { 
   Terminal, 
@@ -61,6 +67,7 @@ import {
 } from 'lucide-react';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { MultistreamIrcChatRoom } from './MultistreamIrcChatRoom';
+import { DrFun1MediaLogo } from './DrFun1MediaLogo';
 
 interface IrcClientViewProps {
   onOpenLicense: () => void;
@@ -174,9 +181,9 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const activeNode = ALL_352_LEAF_NODES.find(n => n.id === activeNodeId) || SWITCH_DEDICATED_NODES.find(n => n.id === activeNodeId) || ALL_352_LEAF_NODES[0];
+  const activeNode = ALL_1034_LEAF_NODES.find(n => n.id === activeNodeId) || SWITCH_DEDICATED_NODES.find(n => n.id === activeNodeId) || ALL_1034_LEAF_NODES[0];
   const [selectedHub, setSelectedHub] = useState<'irc.drfun1.com' | 'irc.drfun1media.com'>('irc.drfun1.com');
-  const [topologyFilter, setTopologyFilter] = useState<'all' | 'switch' | 'datapacket' | 'risingnet' | 'hubs'>('all');
+  const [topologyFilter, setTopologyFilter] = useState<'all' | 'hub1' | 'hub2' | 'switch' | 'datapacket' | 'risingnet' | 'hubs'>('all');
   const [topologySearch, setTopologySearch] = useState<string>('');
   const activeChannelData = ALL_DRFUN1_MEDIA_CHANNELS.find(c => c.name === currentChannel) || ALL_DRFUN1_MEDIA_CHANNELS[0];
   const currentMessages = channelMessages[currentChannel] || [];
@@ -195,7 +202,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
   const handleSwitchNode = (nodeId: string) => {
     if (nodeId === activeNodeId) return;
     setIsReconnecting(true);
-    const targetNode = ALL_352_LEAF_NODES.find(n => n.id === nodeId) || SWITCH_DEDICATED_NODES.find(n => n.id === nodeId);
+    const targetNode = ALL_1034_LEAF_NODES.find(n => n.id === nodeId) || SWITCH_DEDICATED_NODES.find(n => n.id === nodeId);
 
     // Append switching system notices
     const switchMsg: IrcMessage = {
@@ -291,7 +298,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
       timestamp: new Date().toLocaleTimeString(),
       sender: '***',
       channel: currentChannel,
-      content: `[UNREALIRCD DUAL-HUB BURST] Initializing leaf link synchronization for 352 Nodes: 335 UnrealIRCd (unrealircd.org) Switch.com nodes + 12 DataPacket.com no-ads leaves + 5 RisingNet.com Tier-1 leaves to Dual Hubs: irc.drfun1.com:6697 (SID 001) & irc.drfun1media.com:6697 (SID 002) with Anope 2.1 Services...`,
+      content: `[UNREALIRCD DUAL-HUB BURST] Initializing leaf link synchronization for 1,034 Nodes: 500 Switch.com nodes/hub via CGW Law Offices + 12 DataPacket.com leafs/hub + 10 RisingNet.com dedicated servers synced to BOTH irc.drfun1.com:6697 (SID 001) & irc.drfun1media.com:6697 (SID 002).`,
       type: 'system',
     };
 
@@ -300,7 +307,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
       timestamp: new Date().toLocaleTimeString(),
       sender: '***',
       channel: currentChannel,
-      content: `[DUAL CORE HUB ACTIVE] irc.drfun1.com:6697 [SID 001] <=== 100 Gbps Direct Optical Cross-Connect ===> irc.drfun1media.com:6697 [SID 002] | Latency: 0.4ms | Cipher: TLS_AES_256_GCM_SHA384 | Anope U-lines Linked`,
+      content: `[DUAL CORE HUB ACTIVE] irc.drfun1.com:6697 [SID 001] <=== 100 Gbps Direct Optical Cross-Connect ===> irc.drfun1media.com:6697 [SID 002] | License: www.wittlawfirm.com | Payment Office: Owens Company (Bill in Receiving)`,
       type: 'system',
     };
 
@@ -309,7 +316,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
       timestamp: new Date().toLocaleTimeString(),
       sender: '***',
       channel: currentChannel,
-      content: `[ANOPE SERVICES SYNCED] services.drfun1.com (SID 00A) & services.drfun1media.com U-lines online. ChanServ, NickServ, BotServ (DrFun1Bot & OrbitGuard), OperServ, HostServ, and MemoServ synchronized across all 352 leaf nodes.`,
+      content: `[ANOPE SERVICES SYNCED] services.drfun1.com (SID 00A) & services.drfun1media.com U-lines online. ChanServ, NickServ, BotServ, OperServ, HostServ, and MemoServ synchronized across all 1,034 federated leaf nodes.`,
       type: 'system',
     };
 
@@ -318,43 +325,45 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
       [currentChannel]: [...(prev[currentChannel] || []), startMsg, hubPeerMsg, anopeMsg],
     }));
 
-    // Representative sample of Switch 335, DataPacket 12, and RisingNet 5
+    // Representative sample across Switch (Hub 1 & 2 via CGW), DataPacket (12/hub), and RisingNet (10 dedicated servers)
     const sampleNodes = [
-      SWITCH_335_LEAF_NODES[0],
-      SWITCH_335_LEAF_NODES[1],
-      SWITCH_335_LEAF_NODES[5],
-      SWITCH_335_LEAF_NODES[10],
-      SWITCH_335_LEAF_NODES[24],
-      SWITCH_335_LEAF_NODES[50],
-      SWITCH_335_LEAF_NODES[100],
-      SWITCH_335_LEAF_NODES[200],
-      SWITCH_335_LEAF_NODES[334],
-      DATAPACKET_LEAF_NODES[0],
-      DATAPACKET_LEAF_NODES[6],
-      DATAPACKET_LEAF_NODES[11],
-      RISINGNET_5_LEAF_NODES[0],
-      RISINGNET_5_LEAF_NODES[1],
-      RISINGNET_5_LEAF_NODES[2],
-      RISINGNET_5_LEAF_NODES[3],
-      RISINGNET_5_LEAF_NODES[4],
+      HUB1_500_SWITCH_NODES[0],
+      HUB1_500_SWITCH_NODES[100],
+      HUB1_500_SWITCH_NODES[499],
+      HUB2_500_SWITCH_NODES[0],
+      HUB2_500_SWITCH_NODES[100],
+      HUB2_500_SWITCH_NODES[499],
+      HUB1_12_DATAPACKET_NODES[0],
+      HUB1_12_DATAPACKET_NODES[11],
+      HUB2_12_DATAPACKET_NODES[0],
+      HUB2_12_DATAPACKET_NODES[11],
+      RISINGNET_10_DEDICATED_SERVERS[0],
+      RISINGNET_10_DEDICATED_SERVERS[5],
+      RISINGNET_10_DEDICATED_SERVERS[9],
     ];
 
     sampleNodes.forEach((node, index) => {
       setTimeout(() => {
         const isDpNoAds = node.provider === 'datapacket';
+        const isRn = node.provider === 'risingnet';
+        const providerTag = isDpNoAds
+          ? '[DATAPACKET.COM 12/HUB NO-ADS]'
+          : isRn
+          ? '[RISINGNET.COM 10 DEDICATED DUAL-HUB]'
+          : '[SWITCH.COM 500/HUB VIA CGW LAW OFFICES]';
         const nodeBurstMsg: IrcMessage = {
           id: `burst_node_${node.id}_${Date.now()}`,
           timestamp: new Date().toLocaleTimeString(),
           sender: '***',
           channel: currentChannel,
-          content: `[LEAF LINK ESTABLISHED] ${node.host} (SID ${node.sid}) <--> irc.drfun1.com & irc.drfun1media.com:6697 [${node.leafBurstStats?.encryption || 'TLSv1.3'}] | Latency: ${node.latencyMs}ms | Synced: ${node.usersOnline} users | Provider: ${node.provider?.toUpperCase()} ${isDpNoAds ? '[NO ADS / AD-FREE LEAF]' : '[UNREALIRCD.ORG / SWITCH.COM]'} (${node.campusName.split('/')[0].trim()})`,
+          content: `[LEAF LINK ESTABLISHED] ${node.host} (SID ${node.sid}) <--> irc.drfun1.com & irc.drfun1media.com:6697 [${node.leafBurstStats?.encryption || 'TLSv1.3'}] | Latency: ${node.latencyMs}ms | Synced: ${node.usersOnline} users | ${providerTag}`,
           type: 'system',
         };
         setChannelMessages(prev => ({
           ...prev,
           [currentChannel]: [...(prev[currentChannel] || []), nodeBurstMsg],
         }));
-      }, (index + 1) * 110);
+      }, (index + 1) * 100);
     });
 
     // Final summary notification from Switch_NOC_Bot
@@ -365,14 +374,14 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
         timestamp: new Date().toLocaleTimeString(),
         sender: 'Switch_NOC_Bot',
         channel: currentChannel,
-        content: `[352 LEAF NODES SYNC COMPLETE] All 335 UnrealIRCd (unrealircd.org) nodes from switch.com (www.switch.com 100% green energy), 12 DataPacket.com no-ads leaves (datapacket.com no ads), and 5 RisingNet.com Tier-1 optical nodes are 100% leaf-synced to Dual Hubs (irc.drfun1.com & irc.drfun1media.com) with Anope 2.1 Services! Total synchronized: 14,290 peak users and 855,000 channels across 3.85 Tbps optical mesh!`,
+        content: `[1,034 LEAF NODES SYNC COMPLETE] All 1,000 Switch.com nodes (500/hub via CGW Law Offices), 24 DataPacket.com nodes (12/hub), and 10 RisingNet.com dedicated servers are 100% synced & leafed to BOTH irc.drfun1.com (SID 001) & irc.drfun1media.com (SID 002). Licensed via www.wittlawfirm.com · Payment Office: Owens Company (Bill in Receiving).`,
         type: 'notice',
       };
       setChannelMessages(prev => ({
         ...prev,
         [currentChannel]: [...(prev[currentChannel] || []), summaryMsg],
       }));
-    }, (sampleNodes.length + 1) * 110);
+    }, (sampleNodes.length + 1) * 100);
   };
 
   const handleSlashCommand = (cmdStr: string) => {
@@ -425,11 +434,11 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
 
       case 'map':
       case 'links':
-        addSysMsg('=== UnrealIRCd 6.1.4 Dual-Hub Server Topology ===');
-        addSysMsg('`-- irc.drfun1.com [CORE HUB - SID 001] (Switch SUPERNAP Las Vegas Core / RisingNet IP Transit)');
-        addSysMsg('`-- irc.drfun1media.com [TELEPORT HUB - SID 002] (Switch SUPERNAP Broadcast Teleport)');
+        addSysMsg('=== UnrealIRCd 6.1.4 Dual-Hub Server Topology (1,034 Synced Leaf Nodes) ===');
+        addSysMsg('`-- irc.drfun1.com [CORE HUB - SID 001] (500 Switch via CGW + 12 DataPacket + 10 RisingNet Dual-Synced)');
+        addSysMsg('`-- irc.drfun1media.com [TELEPORT HUB - SID 002] (500 Switch via CGW + 12 DataPacket + 10 RisingNet Dual-Synced)');
         addSysMsg('`-- services.drfun1.com [ANOPE SERVICES - SID 00A] (ChanServ, NickServ, BotServ)');
-        addSysMsg(`*** Total Network: Dual Core Hubs, 352 Dedicated Leafs (335 Switch · 12 DataPacket · 5 RisingNet), 14,290 Users Synced with Anope 2.1.`);
+        addSysMsg('*** Legal: www.wittlawfirm.com | Switch Counsel: CGW Law Offices | Payment: Owens Company (Bill in Receiving)');
         break;
 
       case 'leafsync':
@@ -439,10 +448,10 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
 
       case 'hub':
         addSysMsg(`=== UnrealIRCd Dual Core Hubs: irc.drfun1.com & irc.drfun1media.com:6697 (TLS 1.3) ===`);
-        addSysMsg(`Master Hub: irc.drfun1.com (SID 001) - Switch SUPERNAP Las Vegas Core`);
-        addSysMsg(`Media Hub: irc.drfun1media.com (SID 002) - Switch SUPERNAP Broadcast Teleport`);
+        addSysMsg(`Master Hub: irc.drfun1.com (SID 001) - 500 Switch Nodes (CGW Law Offices) + 12 DataPacket Leafs + 10 RisingNet Servers`);
+        addSysMsg(`Media Hub: irc.drfun1media.com (SID 002) - 500 Switch Nodes (CGW Law Offices) + 12 DataPacket Leafs + 10 RisingNet Servers`);
         addSysMsg(`Anope 2.1 Services: services.drfun1.com (SID 00A) & services.drfun1media.com (SID 00B)`);
-        addSysMsg(`Active Leafs: 352/352 Nodes (335 Switch, 12 DataPacket, 5 RisingNet) linked with TLSv1.3 AES-256 (3.85 Tbps mesh)`);
+        addSysMsg(`Active Leafs: 1,034/1,034 Nodes (1,000 Switch via CGW, 24 DataPacket, 10 RisingNet Dedicated) Dual-Hub Synced`);
         break;
 
       case 'ping':
@@ -499,7 +508,9 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
     return true;
   });
 
-  const topologyFilteredNodes = ALL_352_LEAF_NODES.filter(node => {
+  const topologyFilteredNodes = ALL_1034_LEAF_NODES.filter(node => {
+    if (topologyFilter === 'hub1' && node.leafHub !== 'irc.drfun1.com') return false;
+    if (topologyFilter === 'hub2' && node.leafHub !== 'irc.drfun1media.com') return false;
     if (topologyFilter === 'switch' && node.provider !== 'switch' && node.provider !== 'unrealircd') return false;
     if (topologyFilter === 'datapacket' && node.provider !== 'datapacket') return false;
     if (topologyFilter === 'risingnet' && node.provider !== 'risingnet') return false;
@@ -509,7 +520,8 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
       const matchName = node.name.toLowerCase().includes(q);
       const matchLoc = node.location.toLowerCase().includes(q);
       const matchSid = node.sid.toLowerCase().includes(q);
-      if (!matchHost && !matchName && !matchLoc && !matchSid) return false;
+      const matchHub = (node.leafHub || '').toLowerCase().includes(q);
+      if (!matchHost && !matchName && !matchLoc && !matchSid && !matchHub) return false;
     }
     return true;
   });
@@ -520,18 +532,19 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
       <div className="bg-gradient-to-r from-purple-950/80 via-slate-900 to-sky-950/80 border-b border-purple-500/30 px-4 py-2.5 sm:px-6">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-300">
+            <div className="w-6 h-6 rounded bg-gradient-to-br from-purple-500/20 to-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shadow-sm">
               <Terminal className="w-3.5 h-3.5" />
             </div>
-            <div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <DrFun1MediaLogo size="sm" variant="purple-gold" />
               <span className="font-bold text-white tracking-wide">
-                DrFun1 WebIRC Terminal <span className="text-purple-400 font-mono">v6.1.4</span>
+                WebIRC Terminal <span className="text-amber-300 font-mono">v6.1.4</span>
               </span>
               <span className="hidden md:inline text-slate-400 ml-2">
-                | Hosted by <a href="https://www.risingnet.com" target="_blank" rel="noreferrer" className="text-sky-300 hover:underline font-semibold">risingnet.com</a>
+                | 10 Dedicated Servers: <a href="https://www.risingnet.com" target="_blank" rel="noreferrer" className="text-sky-300 hover:underline font-semibold">risingnet.com</a>
               </span>
               <span className="hidden md:inline text-slate-400 ml-2">
-                | 25 Dedicated Nodes by <a href="https://www.switch.com" target="_blank" rel="noreferrer" className="text-emerald-300 hover:underline font-semibold">www.switch.com</a>
+                | 500/Hub <a href="https://www.switch.com" target="_blank" rel="noreferrer" className="text-emerald-300 hover:underline font-semibold">switch.com</a> via CGW Law Offices · 12/Hub <a href="https://www.datapacket.com" target="_blank" rel="noreferrer" className="text-purple-300 hover:underline font-semibold">datapacket.com</a>
               </span>
             </div>
           </div>
@@ -542,7 +555,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
               className="text-slate-400 hover:text-white transition-colors flex items-center gap-1 font-mono text-[11px]"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-sky-400" />
-              <span>Witt Law Firm License</span>
+              <span>www.wittlawfirm.com · Owens Company (Bill in Receiving)</span>
             </button>
 
             <button
@@ -728,8 +741,8 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
             {/* Sync Counter */}
             <div className="flex items-center gap-2 text-slate-300 font-mono text-[11px]">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-300 font-semibold">352/352 Dedicated Leafs Synced</span>
-              <span className="text-slate-500 hidden md:inline">(335 Switch · 12 DP · 5 RN)</span>
+              <span className="text-emerald-300 font-semibold">1,034/1,034 Nodes Synced to Both Hubs</span>
+              <span className="text-slate-500 hidden md:inline">(500 Switch/Hub via CGW · 12 DP/Hub · 10 RisingNet)</span>
             </div>
           </div>
 
@@ -744,7 +757,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
               }`}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isBurstingSync ? 'animate-spin' : ''}`} />
-              <span>{isBurstingSync ? 'Synchronizing 352 Nodes...' : 'Leaf All 352 Nodes to Dual Hubs'}</span>
+              <span>{isBurstingSync ? 'Synchronizing 1,034 Nodes...' : 'Leaf All 1,034 Nodes to Both Hubs'}</span>
             </button>
 
             <button
@@ -1261,13 +1274,13 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-                    <span>UnrealIRCd 6.1.4 Dual-Hub &amp; 352-Leaf Mesh Topology</span>
+                    <span>UnrealIRCd 6.1.4 Dual-Hub &amp; 1,034-Leaf Mesh Topology</span>
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] border border-emerald-500/30 font-semibold">
-                      352 / 352 Leafs Synced
+                      1,034 / 1,034 Leafs Synced to Both Hubs
                     </span>
                   </h3>
                   <p className="text-xs text-slate-400 font-mono mt-0.5">
-                    Dual Hubs: irc.drfun1.com:6697 (SID 001) &amp; irc.drfun1media.com:6697 (SID 002) · 335 Switch · 12 DataPacket · 5 RisingNet · Anope 2.1
+                    500 Switch/Hub via CGW Law Offices (1,000) &bull; 12 DataPacket/Hub (24) &bull; 10 RisingNet Dedicated Servers (Dual-Hub Synced)
                   </p>
                 </div>
               </div>
@@ -1364,7 +1377,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                 </div>
               </div>
 
-              {/* Connecting Tree Visualizer / 352 Leaf Nodes Explorer */}
+              {/* Connecting Tree Visualizer / 1,000 Leaf Nodes Explorer */}
               <div className="space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-1.5">
@@ -1376,27 +1389,47 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                           : 'bg-slate-800/70 text-slate-300 hover:bg-slate-800 hover:text-white'
                       }`}
                     >
-                      All ({ALL_352_LEAF_NODES.length})
+                      All ({ALL_1034_LEAF_NODES.length})
+                    </button>
+                    <button
+                      onClick={() => setTopologyFilter('hub1')}
+                      className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-colors ${
+                        topologyFilter === 'hub1'
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : 'bg-slate-800/70 text-slate-300 hover:bg-slate-800 hover:text-white'
+                      }`}
+                    >
+                      Hub 1: irc.drfun1.com ({HUB1_ALL_LEAF_NODES.length})
+                    </button>
+                    <button
+                      onClick={() => setTopologyFilter('hub2')}
+                      className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-colors ${
+                        topologyFilter === 'hub2'
+                          ? 'bg-sky-600 text-white shadow-sm'
+                          : 'bg-slate-800/70 text-slate-300 hover:bg-slate-800 hover:text-white'
+                      }`}
+                    >
+                      Hub 2: irc.drfun1media.com ({HUB2_ALL_LEAF_NODES.length})
                     </button>
                     <button
                       onClick={() => setTopologyFilter('switch')}
                       className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-colors ${
                         topologyFilter === 'switch'
-                          ? 'bg-emerald-600 text-white shadow-sm'
+                          ? 'bg-teal-600 text-white shadow-sm'
                           : 'bg-slate-800/70 text-slate-300 hover:bg-slate-800 hover:text-white'
                       }`}
                     >
-                      Switch.com UnrealIRCd ({SWITCH_335_LEAF_NODES.length})
+                      Switch via CGW ({ALL_1000_SWITCH_NODES.length})
                     </button>
                     <button
                       onClick={() => setTopologyFilter('datapacket')}
                       className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-colors ${
                         topologyFilter === 'datapacket'
-                          ? 'bg-sky-600 text-white shadow-sm'
+                          ? 'bg-indigo-600 text-white shadow-sm'
                           : 'bg-slate-800/70 text-slate-300 hover:bg-slate-800 hover:text-white'
                       }`}
                     >
-                      DataPacket No-Ads ({DATAPACKET_LEAF_NODES.length})
+                      DataPacket 12/Hub ({ALL_24_DATAPACKET_NODES.length})
                     </button>
                     <button
                       onClick={() => setTopologyFilter('risingnet')}
@@ -1406,7 +1439,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                           : 'bg-slate-800/70 text-slate-300 hover:bg-slate-800 hover:text-white'
                       }`}
                     >
-                      RisingNet DWDM ({RISINGNET_5_LEAF_NODES.length})
+                      RisingNet Dedicated ({RISINGNET_10_DEDICATED_SERVERS.length})
                     </button>
                   </div>
 
@@ -1414,7 +1447,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" />
                     <input
                       type="text"
-                      placeholder="Search 352 nodes by host, city, SID..."
+                      placeholder="Search 1,034 nodes by host, city, SID..."
                       value={topologySearch}
                       onChange={e => setTopologySearch(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-8 pr-3 py-1 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
@@ -1423,7 +1456,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                 </div>
 
                 <div className="text-[11px] font-mono text-slate-400 flex items-center justify-between">
-                  <span>Showing {topologyFilteredNodes.length} of {ALL_352_LEAF_NODES.length} Leaf Nodes leafed to Dual Hubs (irc.drfun1.com &amp; irc.drfun1media.com)</span>
+                  <span>Showing {topologyFilteredNodes.length} of {ALL_1034_LEAF_NODES.length} Leaf Nodes (Synced to Both Hubs: irc.drfun1.com &amp; irc.drfun1media.com)</span>
                   <span>Click any leaf to view its dual-hub UnrealIRCd link block</span>
                 </div>
 
@@ -1607,7 +1640,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
               <div className="text-slate-400 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-sky-400 shrink-0" />
                 <span>
-                  Licensed under The Law Office of Richard A. Witt LLC &amp; Owens Company (FRN 0034981290)
+                  Licensed via www.wittlawfirm.com · Payment Office: Owens Company (Bill in Receiving) · Switch Counsel: CGW Law Offices
                 </span>
               </div>
 
@@ -1620,7 +1653,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
                   className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-semibold flex items-center gap-1.5 transition-all shadow-md shadow-emerald-950/40"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isBurstingSync ? 'animate-spin' : ''}`} />
-                  <span>{isBurstingSync ? 'Bursting 352-Node Cluster Sync...' : 'Leaf All 352 Nodes to Dual Hubs'}</span>
+                  <span>{isBurstingSync ? 'Bursting 1,034-Node Cluster Sync...' : 'Leaf All 1,034 Nodes to Both Hubs'}</span>
                 </button>
 
                 <button

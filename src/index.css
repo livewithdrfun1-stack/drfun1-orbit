@@ -1,4 +1,14 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=MedievalSharp&display=swap');
+
+/* Old English Blackletter Typography for Logo Initial Capitals */
+.font-old-english {
+  font-family: 'UnifrakturMaguntia', 'Old English Text MT', 'Cloister Black', 'Engravers Old English', 'MedievalSharp', 'Fraktur', serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
 
 /* Sleek custom horizontal scrollbar for navigation bars */
 .custom-nav-scrollbar {

@@ -262,7 +262,7 @@ export const INITIAL_SRS_AI_SUBTITLES: SrsAiSubtitleSnippet[] = [
     timestamp: '00:01:40',
     speaker: 'Anchor Desk',
     language: 'English (US)',
-    text: 'All 352 UnrealIRCd nodes across Switch and DataPacket are synced to irc.drfun1.com and irc.drfun1media.com.',
+    text: 'All 1,000 UnrealIRCd nodes across Switch and DataPacket are synced to irc.drfun1.com and irc.drfun1media.com (500 per hub).',
     confidence: 0.97
   }
 ];
