@@ -55,6 +55,7 @@ import { SatelliteFleetStatusNotifier } from './SatelliteFleetStatusNotifier';
 import { StatServDashboard } from './StatServDashboard';
 import { ConstellationFleetStabilityChart } from './ConstellationFleetStabilityChart';
 import { LeafletSatelliteTracker } from './LeafletSatelliteTracker';
+import { HopmMonitorConsole } from './HopmMonitorConsole';
 
 interface MasterControlViewProps {
   companies: SatelliteCompany[];
@@ -81,7 +82,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
 }) => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [selectedConstellationsForCoverage, setSelectedConstellationsForCoverage] = useState<string[]>(['Starlink']);
-  const [activeSubTab, setActiveSubTab] = useState<'infrastructure' | 'downlinks' | 'leaf_nodes' | 'noc' | 'fleet_status' | 'fleet_stability' | 'orbit_coverage' | 'statserv' | 'compliance' | 'rss_news' | 'fubotv'>('noc');
+  const [activeSubTab, setActiveSubTab] = useState<'infrastructure' | 'downlinks' | 'leaf_nodes' | 'noc' | 'fleet_status' | 'fleet_stability' | 'orbit_coverage' | 'statserv' | 'hopm' | 'compliance' | 'rss_news' | 'fubotv'>('noc');
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -173,6 +174,18 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveSubTab('hopm')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                activeSubTab === 'hopm'
+                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50'
+                  : 'bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 border border-rose-600/40'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-rose-400" />
+              <span>HOPM Proxy Monitor</span>
+            </button>
+
+            <button
               onClick={onOpenLicense}
               className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition flex items-center gap-1.5 cursor-pointer"
             >
@@ -211,6 +224,21 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             <span>StatServ IRC Vitals</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
               pauljz/StatServ
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('hopm')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'hopm'
+                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-rose-300 hover:bg-slate-800/50'
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-rose-400" />
+            <span>HOPM Proxy Monitor</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">
+              v1.1.10 Installed
             </span>
           </button>
 
@@ -659,6 +687,9 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
           onOpenIrcClient={onOpenIrcdAdmin}
         />
       )}
+
+      {/* Tab 9: HOPM (Hybrid Open Proxy Monitor) 4-Hub Protection */}
+      {activeSubTab === 'hopm' && <HopmMonitorConsole />}
     </div>
   );
 };

@@ -60,6 +60,7 @@ import {
   Info,
   Scale
 } from 'lucide-react';
+import { HopmMonitorConsole } from './HopmMonitorConsole';
 
 interface IrcdAdminPanelModalProps {
   isOpen: boolean;
@@ -81,7 +82,7 @@ export const IrcdAdminPanelModal: React.FC<IrcdAdminPanelModalProps> = ({
   if (!isOpen) return null;
 
   // Active top-level tab
-  const [activeTab, setActiveTab] = useState<'ircd_options' | 'anope_services' | 'ops_control' | 'dj_matrix' | 'wittlaw_governance'>('ircd_options');
+  const [activeTab, setActiveTab] = useState<'ircd_options' | 'anope_services' | 'ops_control' | 'hopm_monitor' | 'dj_matrix' | 'wittlaw_governance'>('ircd_options');
 
   // Sub-tabs
   const [anopeSubTab, setAnopeSubTab] = useState<'ranks' | 'chanserv' | 'nickserv' | 'operserv' | 'botserv' | 'hostserv'>('ranks');
@@ -542,6 +543,21 @@ ${unrealConfig.linkBlocks.map(lk => `link ${lk.name} {
             <span>MPD Bot DJ Rank Matrix</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold">
               Ops Tier
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('hopm_monitor')}
+            className={`py-3 px-4 text-xs font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === 'hopm_monitor'
+                ? 'border-rose-500 text-rose-400 bg-rose-500/10 font-semibold'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+            }`}
+          >
+            <ShieldAlert className="w-4 h-4 text-rose-400" />
+            <span>HOPM Proxy Monitor</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 font-bold">
+              v1.1.10
             </span>
           </button>
 
@@ -2257,6 +2273,34 @@ oper RichardAlanWitt {
               </div>
             </div>
 
+          </div>
+        )}
+
+        {/* ========================================================
+            TAB: HOPM (HYBRID OPEN PROXY MONITOR)
+            ======================================================== */}
+        {activeTab === 'hopm_monitor' && (
+          <div className="flex-1 overflow-y-auto p-5 bg-slate-950">
+            <HopmMonitorConsole
+              onNotice={triggerNotice}
+              onIssueBanToUnreal={(banType, mask, reason, duration) => {
+                setUnrealConfig((prev) => ({
+                  ...prev,
+                  banRules: [
+                    {
+                      id: `hopm-ban-${Date.now()}`,
+                      type: banType,
+                      mask,
+                      reason,
+                      setBy: 'HOPM',
+                      expiresIn: duration,
+                      active: true,
+                    },
+                    ...prev.banRules,
+                  ],
+                }));
+              }}
+            />
           </div>
         )}
 
