@@ -56,6 +56,7 @@ import { StatServDashboard } from './StatServDashboard';
 import { ConstellationFleetStabilityChart } from './ConstellationFleetStabilityChart';
 import { LeafletSatelliteTracker } from './LeafletSatelliteTracker';
 import { HopmMonitorConsole } from './HopmMonitorConsole';
+import { NetworkStatusView } from './NetworkStatusView';
 
 interface MasterControlViewProps {
   companies: SatelliteCompany[];
@@ -82,7 +83,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
 }) => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [selectedConstellationsForCoverage, setSelectedConstellationsForCoverage] = useState<string[]>(['Starlink']);
-  const [activeSubTab, setActiveSubTab] = useState<'infrastructure' | 'downlinks' | 'leaf_nodes' | 'noc' | 'fleet_status' | 'fleet_stability' | 'orbit_coverage' | 'statserv' | 'hopm' | 'compliance' | 'rss_news' | 'fubotv'>('noc');
+  const [activeSubTab, setActiveSubTab] = useState<'network_status' | 'infrastructure' | 'downlinks' | 'leaf_nodes' | 'noc' | 'fleet_status' | 'fleet_stability' | 'orbit_coverage' | 'statserv' | 'hopm' | 'compliance' | 'rss_news' | 'fubotv'>('noc');
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -186,6 +187,18 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveSubTab('network_status')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                activeSubTab === 'network_status'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50'
+                  : 'bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-600/40'
+              }`}
+            >
+              <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Network Status</span>
+            </button>
+
+            <button
               onClick={onOpenLicense}
               className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition flex items-center gap-1.5 cursor-pointer"
             >
@@ -197,6 +210,21 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
 
         {/* Master Control Sub-Tabs */}
         <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-1 overflow-x-auto">
+          <button
+            onClick={() => setActiveSubTab('network_status')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'network_status'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-emerald-300 hover:bg-slate-800/50'
+            }`}
+          >
+            <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Network Status</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold">
+              1,034 Mesh Health
+            </span>
+          </button>
+
           <button
             onClick={() => setActiveSubTab('noc')}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
@@ -690,6 +718,15 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
 
       {/* Tab 9: HOPM (Hybrid Open Proxy Monitor) 4-Hub Protection */}
       {activeSubTab === 'hopm' && <HopmMonitorConsole />}
+
+      {/* Tab 10: Network Status (1,034-Leaf Mesh Health) */}
+      {activeSubTab === 'network_status' && (
+        <NetworkStatusView
+          onOpenLicense={onOpenLicense}
+          onOpenSwitchMesh={onOpenSwitchMesh}
+          onOpenIrcdAdmin={onOpenIrcdAdmin}
+        />
+      )}
     </div>
   );
 };
