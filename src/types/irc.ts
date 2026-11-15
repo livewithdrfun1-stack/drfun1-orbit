@@ -4,6 +4,8 @@ export type CoreHubDomain =
   | 'irc.drfun1media.net'
   | 'drfun1ircd.com';
 
+export type IrcdNodeAllocationMode = 'Dedicated Bare-Metal Node';
+
 export interface SwitchDedicatedNode {
   id: string;
   name: string;
@@ -45,6 +47,9 @@ export interface SwitchDedicatedNode {
   legalCounsel?: string;
   paymentOffice?: string;
   billingOffice?: string;
+  isDedicatedNode?: boolean;
+  allocationMode?: IrcdNodeAllocationMode;
+  hardwareProfile?: string;
 }
 
 export interface UnrealIrcdHub {
@@ -65,6 +70,9 @@ export interface UnrealIrcdHub {
   aggregateBandwidth: string;
   redundantPeerHub?: string;
   anopeServicesHost?: string;
+  isDedicatedNode?: boolean;
+  allocationMode?: IrcdNodeAllocationMode;
+  hardwareProfile?: string;
 }
 
 export interface AnopeServicesHub {
@@ -77,6 +85,9 @@ export interface AnopeServicesHub {
   botServBots: string[];
   operServAkills: number;
   status: 'active' | 'syncing';
+  isDedicatedNode?: boolean;
+  allocationMode?: IrcdNodeAllocationMode;
+  hardwareProfile?: string;
 }
 
 export interface IrcChannel {
@@ -165,6 +176,9 @@ export interface ZncBouncerConfig {
   loadedModules: ZncModule[];
   userSessions: ZncUserSession[];
   zncConfSnippet: string;
+  isDedicatedNode?: boolean;
+  allocationMode?: IrcdNodeAllocationMode;
+  hardwareProfile?: string;
 }
 
 export interface StatsPortalInfo {
@@ -221,6 +235,9 @@ export interface NeoStatsConfig {
   };
   confSnippet: string;
   unrealLinkSnippet: string;
+  isDedicatedNode?: boolean;
+  allocationMode?: IrcdNodeAllocationMode;
+  hardwareProfile?: string;
 }
 
 export interface DenoraTldStat {
@@ -284,6 +301,9 @@ export interface DenoraConfig {
   unrealLinkSnippet: string;
   sqlSchemaSnippet: string;
   gitBuildInstructions: string;
+  isDedicatedNode?: boolean;
+  allocationMode?: IrcdNodeAllocationMode;
+  hardwareProfile?: string;
 }
 
 export interface IrcLoginCredentials {
@@ -341,7 +361,7 @@ export interface DevPlatformApiEndpoint {
   method: 'GET' | 'POST' | 'WS' | 'RPC';
   endpoint: string;
   description: string;
-  category: 'unreal_ircd' | 'stats_denora' | 'broadcast_stream' | 'auth_wittlaw';
+  category: 'unreal_ircd' | 'stats_denora' | 'broadcast_stream' | 'auth_wittlaw' | 'twitch_dev' | 'kick_dev' | 'red5_broadcast';
   authType: 'Bearer Token' | 'TLS Client Cert' | 'WittLaw PGP Sign';
   samplePayload?: string;
   sampleResponse: string;

@@ -16,6 +16,7 @@ import {
   LayoutGrid,
   Mic,
   Radio,
+  Rss,
   Satellite,
   Server,
   Share2,
@@ -23,6 +24,7 @@ import {
   ShoppingBag,
   Terminal,
   Tv,
+  Video,
   X,
 } from 'lucide-react';
 import { AppTab } from './Header';
@@ -52,10 +54,14 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const rankDef = getRankDefinition(activeOperRank);
 
   const isMoreTab =
+    activeTab === 'satcom_rss' ||
     activeTab === 'duplicator_hosting' ||
     activeTab === 'store' ||
     activeTab === 'fubotv' ||
-    activeTab === 'podcast_uplink';
+    activeTab === 'drfun1_tv' ||
+    activeTab === 'social_control' ||
+    activeTab === 'podcast_uplink' ||
+    activeTab === 'tvu_red5_twitch';
 
   return (
     <>
@@ -146,6 +152,70 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               >
                 <Tv className="w-4 h-4 text-orange-400 shrink-0" />
                 <span>Fubo.tv Sports</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectTab('satcom_rss');
+                  setMoreOpen(false);
+                }}
+                className={`p-3 rounded-xl border text-left flex items-center gap-2.5 min-h-[52px] cursor-pointer ${
+                  activeTab === 'satcom_rss'
+                    ? 'bg-teal-500/20 border-teal-500 text-white font-bold'
+                    : 'bg-slate-950 border-slate-800 text-slate-200'
+                }`}
+              >
+                <Rss className="w-4 h-4 text-teal-400 shrink-0" />
+                <span>Satcom RSS Feed</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectTab('drfun1_tv');
+                  setMoreOpen(false);
+                }}
+                className={`p-3 rounded-xl border text-left flex items-center gap-2.5 min-h-[52px] cursor-pointer ${
+                  activeTab === 'drfun1_tv'
+                    ? 'bg-red-500/20 border-red-500 text-white font-bold'
+                    : 'bg-slate-950 border-slate-800 text-slate-200'
+                }`}
+              >
+                <Tv className="w-4 h-4 text-red-500 shrink-0" />
+                <span>DrFun1-TV 4K</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectTab('tvu_red5_twitch');
+                  setMoreOpen(false);
+                }}
+                className={`p-3 rounded-xl border text-left flex items-center gap-2.5 min-h-[52px] cursor-pointer ${
+                  activeTab === 'tvu_red5_twitch'
+                    ? 'bg-purple-500/20 border-purple-500 text-white font-bold'
+                    : 'bg-slate-950 border-slate-800 text-slate-200'
+                }`}
+              >
+                <Video className="w-4 h-4 text-purple-400 shrink-0" />
+                <span>TVU · Red5 · Twitch</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectTab('social_control');
+                  setMoreOpen(false);
+                }}
+                className={`p-3 rounded-xl border text-left flex items-center gap-2.5 min-h-[52px] cursor-pointer col-span-2 ${
+                  activeTab === 'social_control'
+                    ? 'bg-indigo-500/20 border-indigo-500 text-white font-bold'
+                    : 'bg-slate-950 border-slate-800 text-slate-200'
+                }`}
+              >
+                <Share2 className="w-4 h-4 text-indigo-400 shrink-0" />
+                <span>Socials &amp; www.drfun1media.com Live Feeds</span>
               </button>
 
               {onOpenRankAccess && (

@@ -44,7 +44,8 @@ import {
   TrendingUp,
   Maximize2,
   PhoneCall,
-  KeyRound
+  KeyRound,
+  Waypoints
 } from 'lucide-react';
 import { SatelliteCompany } from '../types/satellite';
 import { AnopeRankLevel } from '../types/ircdAdmin';
@@ -55,6 +56,7 @@ import { ALL_NETWORK_LEAF_NODES } from '../data/unrealSearchData';
 import { SatelliteRssNewsSection } from './SatelliteRssNewsSection';
 import { FuboTvCloneView } from './FuboTvCloneView';
 import { NocDashboardSection } from './NocDashboardSection';
+import { DashboardWidget } from './DashboardWidget';
 import { SatelliteFleetStatusNotifier } from './SatelliteFleetStatusNotifier';
 import { StatServDashboard } from './StatServDashboard';
 import { ConstellationFleetStabilityChart } from './ConstellationFleetStabilityChart';
@@ -62,6 +64,7 @@ import { LeafletSatelliteTracker } from './LeafletSatelliteTracker';
 import { HopmMonitorConsole } from './HopmMonitorConsole';
 import { NetworkStatusView } from './NetworkStatusView';
 import { ShoutcastVoipScotusView } from './ShoutcastVoipScotusView';
+import { GlobalSatelliteCarrierMesh } from './GlobalSatelliteCarrierMesh';
 import { executeFullMeshSync } from '../data/meshSync';
 
 interface MasterControlViewProps {
@@ -94,7 +97,7 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [syncGateWarning, setSyncGateWarning] = useState<boolean>(false);
   const [selectedConstellationsForCoverage, setSelectedConstellationsForCoverage] = useState<string[]>(['Starlink']);
-  const [activeSubTab, setActiveSubTab] = useState<'network_status' | 'voip_scotus' | 'infrastructure' | 'downlinks' | 'leaf_nodes' | 'noc' | 'fleet_status' | 'fleet_stability' | 'orbit_coverage' | 'statserv' | 'hopm' | 'compliance' | 'rss_news' | 'fubotv'>('noc');
+  const [activeSubTab, setActiveSubTab] = useState<'network_status' | 'carrier_mesh' | 'voip_scotus' | 'infrastructure' | 'downlinks' | 'leaf_nodes' | 'noc' | 'fleet_status' | 'fleet_stability' | 'orbit_coverage' | 'statserv' | 'hopm' | 'compliance' | 'rss_news' | 'fubotv'>('noc');
 
   const activeRankDef = getRankDefinition(activeRank);
   const canViewMeshTelemetry = hasMinIrcdRank(activeRank, 'locop');
@@ -213,6 +216,18 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveSubTab('carrier_mesh')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                activeSubTab === 'carrier_mesh'
+                  ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/60'
+                  : 'bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-300 border border-cyan-600/40'
+              }`}
+            >
+              <Waypoints className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Carrier Mesh (D3)</span>
+            </button>
+
+            <button
               onClick={() => setActiveSubTab('network_status')}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm ${
                 activeSubTab === 'network_status'
@@ -264,6 +279,21 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
           >
             <PhoneCall className="w-3.5 h-3.5 text-sky-400" />
             <span>VoIP (855k) &amp; SCOTUS Hiring</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('carrier_mesh')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'carrier_mesh'
+                ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/40 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800/50'
+            }`}
+          >
+            <Waypoints className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Global Satellite Carrier Mesh</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
+              D3.js Live
+            </span>
           </button>
 
           <button
@@ -467,6 +497,17 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             setSyncGateWarning(false);
           }}
           onOpenRankMatrix={onOpenRankAccess}
+        />
+      )}
+
+      {/* Real-Time 12 Primary DataPacket Leaf Connection Health Grid */}
+      {(activeSubTab === 'noc' ||
+        activeSubTab === 'leaf_nodes' ||
+        activeSubTab === 'infrastructure' ||
+        activeSubTab === 'network_status') && (
+        <DashboardWidget
+          onOpenSwitchMesh={onOpenSwitchMesh}
+          onOpenUnrealSearch={onOpenUnrealSearch}
         />
       )}
 
@@ -822,6 +863,21 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
       {/* Tab 11: VoIP for All 855,000 SHOUTcast Stations & Supreme Court DJ Hiring */}
       {activeSubTab === 'voip_scotus' && (
         <ShoutcastVoipScotusView onOpenLicense={onOpenLicense} />
+      )}
+
+      {/* Tab 12: Global Satellite Carrier Mesh (D3.js Live 500 Switch Hubs <-> 10 Dedicated RisingNet Servers) */}
+      {activeSubTab === 'carrier_mesh' && (
+        canViewMeshTelemetry ? (
+          <GlobalSatelliteCarrierMesh />
+        ) : (
+          <IrcdAccessGateBanner
+            currentRank={activeRank}
+            requiredRank="locop"
+            featureName="Global Satellite Carrier Mesh (D3 Live Optical Topology & Latency Paths)"
+            onElevateRank={onRankChange}
+            onOpenRankMatrix={onOpenRankAccess}
+          />
+        )
       )}
     </div>
   );

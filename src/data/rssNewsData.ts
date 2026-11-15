@@ -57,6 +57,48 @@ export const RSS_FEED_SOURCES: RssFeedSource[] = [
     description: 'Daily executive satellite telecommunications releases, commercial payload deliveries, earth observation, and ground networks.',
     pollFrequencySec: 30,
   },
+  {
+    id: 'nasa',
+    name: 'NASA SCaN Telemetry',
+    organization: 'NASA Space Communications & Navigation',
+    feedUrl: 'https://www.nasa.gov/rss/dyn/breaking_news.rss',
+    websiteUrl: 'https://www.nasa.gov/directorates/somd/space-communications-navigation-program/',
+    color: 'cyan',
+    borderColor: 'border-cyan-500/30',
+    badgeBg: 'bg-cyan-950/60',
+    badgeText: 'text-cyan-300',
+    category: 'Optical & Deep Space Satcom',
+    description: 'NASA optical LCRD laser relay demonstrations, TDRS ground migrations, and commercial near-Earth network partnerships.',
+    pollFrequencySec: 30,
+  },
+  {
+    id: 'esa',
+    name: 'ESA ARTES & IRIS²',
+    organization: 'European Space Agency Telecom',
+    feedUrl: 'https://www.esa.int/rssfeed/Our_Activities/Connectivity_and_Secure_Communications',
+    websiteUrl: 'https://connectivity.esa.int/',
+    color: 'indigo',
+    borderColor: 'border-indigo-500/30',
+    badgeBg: 'bg-indigo-950/60',
+    badgeText: 'text-indigo-300',
+    category: 'European Satcom & 5G/6G NTN',
+    description: 'ESA Connectivity & Secure Communications releases on IRIS² multi-orbit satcom, 5G/6G NTN labs, and quantum key distribution.',
+    pollFrequencySec: 30,
+  },
+  {
+    id: 'itu',
+    name: 'ITU Space Services (BR)',
+    organization: 'International Telecommunication Union',
+    feedUrl: 'https://www.itu.int/en/ITU-R/Pages/rss.aspx',
+    websiteUrl: 'https://www.itu.int/en/ITU-R/space/Pages/default.aspx',
+    color: 'rose',
+    borderColor: 'border-rose-500/30',
+    badgeBg: 'bg-rose-950/60',
+    badgeText: 'text-rose-300',
+    category: 'Global Orbital Coordination',
+    description: 'ITU Radiocommunication Bureau Space Network filings, WRC Ka/Q/V-band allocations, and NGSO/GSO EPFD protection limits.',
+    pollFrequencySec: 30,
+  },
 ];
 
 export const INITIAL_RSS_ARTICLES: RssArticleItem[] = [
@@ -116,6 +158,50 @@ export const INITIAL_RSS_ARTICLES: RssArticleItem[] = [
     category: 'Constellation Launches',
     tags: ['OneWeb', 'Eutelsat', 'Polar Orbit', 'Constellation Complete', 'ISRO / Arianespace'],
     author: 'SatNews Editorial Staff',
+  },
+  {
+    id: 'launch-nasa-lcrd-optical-01',
+    sourceId: 'nasa',
+    sourceName: 'NASA SCaN Telemetry',
+    title: 'NASA LCRD & ILLUMA-T Validate Bidirectional 1.2 Gbps Optical Laser Relay to Commercial Ground Teleports',
+    description: 'NASA Space Communications and Navigation (SCaN) confirmed continuous 1.2 Gbps optical inter-satellite downlinks between geostationary laser relays and adaptive ground optical stations, setting the blueprint for commercial Ka/Optical hybrid ground segments.',
+    link: 'https://www.nasa.gov/mission/lcrd/',
+    pubDate: 'Today, 08:55 UTC',
+    timestamp: Date.now() - 1000 * 60 * 28,
+    category: 'Constellation Launches',
+    tags: ['NASA SCaN', 'LCRD', 'Optical Laser', '1.2 Gbps', 'Ground Teleport'],
+    isNew: true,
+    author: 'NASA SCaN Operations Desk',
+  },
+  {
+    id: 'ntn-esa-iris2-artes-01',
+    sourceId: 'esa',
+    sourceName: 'ESA ARTES & IRIS²',
+    title: 'ESA Connectivity Directorate Advances IRIS² Sovereign Multi-Orbit Constellations & 5G NTN Hybrid Core',
+    description: 'European Space Agency ARTES teams demonstrated seamless handoff between LEO broadband beams, GEO broadcast transponders, and terrestrial 3GPP Release 19 5G core infrastructure across partner European teleports.',
+    link: 'https://connectivity.esa.int/',
+    pubDate: 'Today, 07:35 UTC',
+    timestamp: Date.now() - 1000 * 60 * 65,
+    category: 'Wireless & 5G NTN',
+    tags: ['ESA ARTES', 'IRIS²', '3GPP NTN', 'Multi-Orbit', 'Secure Satcom'],
+    isNew: true,
+    author: 'ESA Connectivity Wire',
+  },
+  {
+    id: 'reg-itu-br-wrc27-01',
+    sourceId: 'itu',
+    sourceName: 'ITU Space Services (BR)',
+    title: 'ITU Radiocommunication Bureau Updates Master International Frequency Register for Ka & Q/V-Band NGSO Feeders',
+    description: 'The ITU Space Services Department published revised EPFD (Equivalent Power Flux Density) coordination bulletins ahead of WRC-27, streamlining Ku/Ka/Q/V-band gateway coordination for multi-orbit satellite operators.',
+    link: 'https://www.itu.int/en/ITU-R/space/Pages/default.aspx',
+    pubDate: 'Today, 06:50 UTC',
+    timestamp: Date.now() - 1000 * 60 * 105,
+    category: 'Regulatory Updates',
+    tags: ['ITU-R', 'MIFR', 'WRC-27', 'EPFD Coordination', 'Q/V-Band'],
+    isBreaking: true,
+    fccDocketNumber: 'ITU BR IFIC 3032',
+    regulatoryPart: 'Radio Regulations Art. 9/11',
+    author: 'ITU Space Services Dept.',
   },
 
   // --- Fiber Expansion ---
@@ -566,13 +652,22 @@ export const BACKGROUND_SIMULATED_NEW_HEADLINES: RssArticleItem[] = [
 
 // Helper to continuously supply fresh realistic headline items
 export const getNextDynamicHeadline = (cycleIndex: number): RssArticleItem => {
-  const sources: Array<Exclude<import('../types/rssNews').RssSourceId, 'all'>> = ['fcc', 'spacenews', 'viasatellite', 'satnews'];
+  const sources = ['fcc', 'spacenews', 'viasatellite', 'satnews', 'nasa', 'esa', 'itu'] as const;
   const sourceId = sources[cycleIndex % sources.length];
 
-  const sourceMeta = {
+  const sourceMeta: Record<
+    (typeof sources)[number],
+    {
+      name: string;
+      category: string;
+      url: string;
+      topics: Array<{ title: string; docket?: string; part?: string }>;
+    }
+  > = {
     fcc: {
       name: 'FCC.gov Space Bureau',
       category: 'Regulatory Updates',
+      url: 'https://www.fcc.gov/space-bureau',
       topics: [
         { title: 'FCC Space Bureau Grants Spectrum Lease for Direct-to-Cell Telemetry Relay in Remote Corridors', docket: 'GN Docket No. 26-088', part: 'Part 25.137' },
         { title: 'Public Notice: Updated Part 25 Table of Frequency Allocations for V-Band Gateway Teleports', docket: 'IB Docket No. 26-092', part: '47 CFR § 2.106' },
@@ -583,37 +678,67 @@ export const getNextDynamicHeadline = (cycleIndex: number): RssArticleItem => {
     spacenews: {
       name: 'SpaceNews Satcom',
       category: 'Constellation Launches',
+      url: 'https://spacenews.com',
       topics: [
-        { title: 'SpaceX Launches 28 Enhanced Direct-to-Cell Starlink Spacecraft on Falcon 9 from Vandenberg', docket: undefined, part: undefined },
-        { title: 'LEO Direct-to-Cell Spacecraft Exceed 500 Operational Satellites in Polar and Equatorial Planes', docket: undefined, part: undefined },
-        { title: 'United Launch Alliance Confirms Commercial Manifest for Project Kuiper 3,236 Satellite Network', docket: undefined, part: undefined },
-        { title: 'Telesat Lightspeed Inks $150M Multi-Year Enterprise Gateway Capacity Agreement with MDA Space', docket: undefined, part: undefined },
+        { title: 'SpaceX Launches 28 Enhanced Direct-to-Cell Starlink Spacecraft on Falcon 9 from Vandenberg' },
+        { title: 'LEO Direct-to-Cell Spacecraft Exceed 500 Operational Satellites in Polar and Equatorial Planes' },
+        { title: 'United Launch Alliance Confirms Commercial Manifest for Project Kuiper 3,236 Satellite Network' },
+        { title: 'Telesat Lightspeed Inks $150M Multi-Year Enterprise Gateway Capacity Agreement with MDA Space' },
       ],
     },
     viasatellite: {
       name: 'Via Satellite',
       category: 'Wireless & 5G NTN',
+      url: 'https://www.satellitetoday.com',
       topics: [
-        { title: 'AST SpaceMobile Unfurls 5G Direct-to-Device BlueBird Array Delivering 120 Mbps to Unmodified Phones', docket: undefined, part: undefined },
-        { title: 'Software-Defined Satellites Dynamic Beam-Hopping Cuts Latency Spikes by 65% in Field Benchmarks', docket: undefined, part: undefined },
-        { title: 'Satellite-to-Cellular NTN Terminal Shipments Projected to Exceed 50 Million Units by Year-End', docket: undefined, part: undefined },
-        { title: 'Optical Inter-Satellite Links Benchmark Verified at 100 Gbps Across Multi-Orbit Testing', docket: undefined, part: undefined },
+        { title: 'AST SpaceMobile Unfurls 5G Direct-to-Device BlueBird Array Delivering 120 Mbps to Unmodified Phones' },
+        { title: 'Software-Defined Satellites Dynamic Beam-Hopping Cuts Latency Spikes by 65% in Field Benchmarks' },
+        { title: 'Satellite-to-Cellular NTN Terminal Shipments Projected to Exceed 50 Million Units by Year-End' },
+        { title: 'Optical Inter-Satellite Links Benchmark Verified at 100 Gbps Across Multi-Orbit Testing' },
       ],
     },
     satnews: {
       name: 'SatNews Publishers',
       category: 'Fiber Expansion',
+      url: 'https://news.satnews.com',
       topics: [
-        { title: 'Switch SUPERNAP & RisingNet Complete Optical Teleport Cross-Connect Upgrade to 400G DWDM', docket: undefined, part: undefined },
-        { title: 'Quantum Fiber Multi-Gigabit Symmetrical Ingest Expands to DrFun1 ECOM 4K Playout Facilities', docket: undefined, part: undefined },
-        { title: 'DataPacket Deploys 12 Dedicated Unmetered 100G Edge Nodes for Transatlantic Zero-Ad Streaming', docket: undefined, part: undefined },
-        { title: 'DrFun1 Media Inc. Teleport Network Records Zero Packet Loss in 30-Day Continuous Playout Audit', docket: undefined, part: undefined },
+        { title: 'Switch SUPERNAP & RisingNet Complete Optical Teleport Cross-Connect Upgrade to 400G DWDM' },
+        { title: 'Quantum Fiber Multi-Gigabit Symmetrical Ingest Expands to DrFun1 ECOM 4K Playout Facilities' },
+        { title: 'DataPacket Deploys 12 Dedicated Unmetered 100G Edge Nodes for Transatlantic Zero-Ad Streaming' },
+        { title: 'DrFun1 Media Inc. Teleport Network Records Zero Packet Loss in 30-Day Continuous Playout Audit' },
+      ],
+    },
+    nasa: {
+      name: 'NASA SCaN Telemetry',
+      category: 'Constellation Launches',
+      url: 'https://www.nasa.gov/directorates/somd/space-communications-navigation-program/',
+      topics: [
+        { title: 'NASA Near Space Network Expands Commercial Ka-Band & Optical Ground Terminal Onboarding' },
+        { title: 'TDRS Continuity Transition Leverages Commercial GEO/MEO Partner Relay Backhaul Links' },
+      ],
+    },
+    esa: {
+      name: 'ESA ARTES & IRIS²',
+      category: 'Wireless & 5G NTN',
+      url: 'https://connectivity.esa.int/',
+      topics: [
+        { title: 'ESA Quantum Key Distribution (QKD) Payload Completes High-Elevation Optical Teleport Sync' },
+        { title: 'ESA 5G/6G Hub Benchmarks Seamless Maritime & Aviation Satellite-to-Terrestrial Core Handover' },
+      ],
+    },
+    itu: {
+      name: 'ITU Space Services (BR)',
+      category: 'Regulatory Updates',
+      url: 'https://www.itu.int/en/ITU-R/space/Pages/default.aspx',
+      topics: [
+        { title: 'ITU Radiocommunication Bureau Publishes Weekly Special Section on Q/V-Band Feeder Filings', docket: 'ITU BR IFIC 3034', part: 'Article 9 Coordination' },
+        { title: 'ITU Study Group 4 Ratifies Updated Ka-Band ESIM Aeronautical & Maritime Power Masks', docket: 'ITU-R S.2223', part: 'Resolution 169' },
       ],
     },
   };
 
   const meta = sourceMeta[sourceId];
-  const topic = meta.topics[Math.floor(cycleIndex / 4) % meta.topics.length];
+  const topic = meta.topics[Math.floor(cycleIndex / sources.length) % meta.topics.length];
   const now = Date.now();
 
   return {
@@ -622,7 +747,7 @@ export const getNextDynamicHeadline = (cycleIndex: number): RssArticleItem => {
     sourceName: meta.name,
     title: topic.title,
     description: `Real-time headline update polled by automated background telemetry service from official ${meta.name} feeds. Live broadcast telemetry recorded with validated carrier timestamp.`,
-    link: sourceId === 'fcc' ? 'https://www.fcc.gov/space-bureau' : sourceId === 'spacenews' ? 'https://spacenews.com' : sourceId === 'viasatellite' ? 'https://www.satellitetoday.com' : 'https://news.satnews.com',
+    link: meta.url,
     pubDate: 'Just now',
     timestamp: now,
     category: meta.category,

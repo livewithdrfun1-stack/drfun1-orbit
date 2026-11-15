@@ -11,6 +11,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   RssSourceId, 
+  RssFeedSource,
   RssArticleItem,
   NewsCategory,
   CompanySector,
@@ -26,6 +27,8 @@ import {
 } from '../data/rssNewsData';
 import { ASSOCIATED_RSS_COMPANIES } from '../data/rssCompanyListData';
 import { ASSOCIATED_STORE_COMPANIES } from '../data/associatedStoreCompanyData';
+import { generateRss20Xml, generateOpmlXml } from '../utils/rssFeedGenerator';
+import { triggerBlobDownload } from '../utils/zipBuilder';
 import { 
   Radio, 
   Rss, 
@@ -66,8 +69,16 @@ import {
   Tag,
   DollarSign,
   PackageCheck,
-  Truck
+  Truck,
+  Bookmark,
+  Download,
+  FileCode,
+  Plus,
+  Trash2
 } from 'lucide-react';
+
+const CUSTOM_FEEDS_STORAGE_KEY = 'drfun1_custom_satcom_rss_feeds_v1';
+const SAVED_ARTICLES_STORAGE_KEY = 'drfun1_saved_satcom_rss_articles_v1';
 
 export interface SatelliteRssNewsSectionProps {
   mode?: 'full' | 'ticker-only' | 'feed-only';
@@ -128,6 +139,46 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
   const pollCycleCountRef = useRef<number>(0);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Custom Satcom RSS Feed Subscriptions & Bookmarks
+  const [customFeeds, setCustomFeeds] = useState<RssFeedSource[]>(() => {
+    try {
+      const raw = localStorage.getItem(CUSTOM_FEEDS_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [savedArticleIds, setSavedArticleIds] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(SAVED_ARTICLES_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [showSavedOnly, setShowSavedOnly] = useState<boolean>(false);
+  const [isAddFeedOpen, setIsAddFeedOpen] = useState<boolean>(false);
+  const [newFeedName, setNewFeedName] = useState<string>('');
+  const [newFeedOrg, setNewFeedOrg] = useState<string>('');
+  const [newFeedUrl, setNewFeedUrl] = useState<string>('');
+  const [newFeedCategory, setNewFeedCategory] = useState<NewsCategory>('Constellation Launches');
+  const [addFeedError, setAddFeedError] = useState<string | null>(null);
+  const [showRssXmlModal, setShowRssXmlModal] = useState<boolean>(false);
+  const [copiedXml, setCopiedXml] = useState<boolean>(false);
+
+  const allFeeds = useMemo(() => [...RSS_FEED_SOURCES, ...customFeeds], [customFeeds]);
+  const savedSet = useMemo(() => new Set(savedArticleIds), [savedArticleIds]);
+
+  const toggleSaveArticle = (id: string) => {
+    setSavedArticleIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((item) => item !== id) : [id, ...prev];
+      try {
+        localStorage.setItem(SAVED_ARTICLES_STORAGE_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
   // Play subtle web audio notification chime
   const playAlertChime = useCallback(() => {
     if (!soundEnabled) return;
@@ -152,7 +203,7 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
   }, [soundEnabled]);
 
   // Attempt to fetch from real RSS feed via public CORS / JSON bridge
-  const fetchFeedFromNetwork = async (feedUrl: string, sourceId: Exclude<RssSourceId, 'all'>): Promise<RssArticleItem[] | null> => {
+  const fetchFeedFromNetwork = useCallback(async (feedUrl: string, sourceId: string): Promise<RssArticleItem[] | null> => {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2400);
@@ -165,7 +216,7 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
       const data = await res.json();
 
       if (data.status === 'ok' && Array.isArray(data.items) && data.items.length > 0) {
-        const source = RSS_FEED_SOURCES.find((s) => s.id === sourceId);
+        const source = allFeeds.find((s) => s.id === sourceId);
         return data.items.slice(0, 3).map((raw: {
           title?: string;
           description?: string;
@@ -181,7 +232,7 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
           link: raw.link || source?.websiteUrl || '#',
           pubDate: raw.pubDate ? new Date(raw.pubDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Live',
           timestamp: Date.now(),
-          category: sourceId === 'fcc' ? 'Regulatory Updates' : 'Constellation Launches',
+          category: sourceId === 'fcc' || sourceId === 'itu' ? 'Regulatory Updates' : 'Constellation Launches',
           tags: [sourceId.toUpperCase(), 'Live RSS Feed', 'Real-Time Update'],
           isNew: true,
           author: raw.author || source?.name,
@@ -191,14 +242,14 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
     } catch (_) {
       return null;
     }
-  };
+  }, [allFeeds]);
 
   // Automated background polling execution
   const executePoll = useCallback(async () => {
     setIsPolling(true);
     pollCycleCountRef.current += 1;
-    const currentTargetSourceId = RSS_FEED_SOURCES[(pollCycleCountRef.current - 1) % RSS_FEED_SOURCES.length].id;
-    const targetSourceConfig = RSS_FEED_SOURCES.find((s) => s.id === currentTargetSourceId);
+    const targetSourceConfig = allFeeds[(pollCycleCountRef.current - 1) % allFeeds.length];
+    const currentTargetSourceId = targetSourceConfig.id;
     setLastPolledSource(targetSourceConfig?.name || 'FCC.gov Space Bureau');
 
     let freshArticles: RssArticleItem[] = [];
@@ -230,7 +281,7 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
         const existingIds = new Set(prev.map((a) => a.id));
         const newOnes = freshArticles.filter((a) => !existingIds.has(a.id));
         if (newOnes.length === 0) return prev;
-        return [...newOnes, ...prev.slice(0, 45)];
+        return [...newOnes, ...prev.slice(0, 55)];
       });
 
       const primaryAlert = freshArticles[0].title;
@@ -242,7 +293,7 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
     setLastPolledAt(new Date());
     setPollCount((prev) => prev + 1);
     setIsPolling(false);
-  }, [playAlertChime]);
+  }, [allFeeds, fetchFeedFromNetwork, playAlertChime]);
 
   // Interval timer for automated polling
   useEffect(() => {
@@ -354,6 +405,7 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
     return articles.filter((item) => {
       const matchesSource = selectedSource === 'all' || item.sourceId === selectedSource;
       const matchesCategory = selectedCategory === 'All Categories' || item.category === selectedCategory;
+      const matchesSaved = !showSavedOnly || savedSet.has(item.id);
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
@@ -363,26 +415,23 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
         (item.fccDocketNumber && item.fccDocketNumber.toLowerCase().includes(q)) ||
         item.tags.some((t) => t.toLowerCase().includes(q));
 
-      return matchesSource && matchesCategory && matchesSearch;
+      return matchesSource && matchesCategory && matchesSaved && matchesSearch;
     });
-  }, [articles, selectedSource, selectedCategory, searchQuery]);
+  }, [articles, selectedSource, selectedCategory, showSavedOnly, savedSet, searchQuery]);
 
   // Item counts per outlet
   const sourceCounts = useMemo(() => {
     const counts: Record<string, number> = {
       all: articles.length,
-      fcc: 0,
-      spacenews: 0,
-      viasatellite: 0,
-      satnews: 0,
     };
+    allFeeds.forEach((src) => {
+      counts[src.id] = 0;
+    });
     articles.forEach((a) => {
-      if (counts[a.sourceId] !== undefined) {
-        counts[a.sourceId]++;
-      }
+      counts[a.sourceId] = (counts[a.sourceId] || 0) + 1;
     });
     return counts;
-  }, [articles]);
+  }, [articles, allFeeds]);
 
   // Filtered Associated Companies
   const filteredCompanies = useMemo(() => {
@@ -492,6 +541,103 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
     setActiveViewMode('store');
   };
 
+  const handleAddCustomFeed = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedName = newFeedName.trim();
+    const trimmedUrl = newFeedUrl.trim();
+    if (!trimmedName || !trimmedUrl) {
+      setAddFeedError('Enter both a Satcom feed name and a valid RSS XML URL.');
+      return;
+    }
+    try {
+      const parsed = new URL(trimmedUrl);
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+        setAddFeedError('Feed URL must begin with https:// or http://');
+        return;
+      }
+      const slug = `custom-${trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 20)}-${Date.now().toString().slice(-4)}`;
+      const newSource: RssFeedSource = {
+        id: slug,
+        name: trimmedName,
+        organization: newFeedOrg.trim() || parsed.hostname,
+        feedUrl: trimmedUrl,
+        websiteUrl: `${parsed.protocol}//${parsed.host}`,
+        color: 'teal',
+        borderColor: 'border-teal-500/40',
+        badgeBg: 'bg-teal-950/60',
+        badgeText: 'text-teal-300',
+        category: newFeedCategory === 'All Categories' ? 'Custom Satcom RSS' : newFeedCategory,
+        description: `Custom subscribed Satcom RSS feed (${trimmedUrl})`,
+        pollFrequencySec: 30,
+        isCustom: true,
+      };
+      const updatedFeeds = [...customFeeds, newSource];
+      setCustomFeeds(updatedFeeds);
+      try {
+        localStorage.setItem(CUSTOM_FEEDS_STORAGE_KEY, JSON.stringify(updatedFeeds));
+      } catch {}
+
+      const fetched = await fetchFeedFromNetwork(trimmedUrl, slug);
+      if (fetched && fetched.length > 0) {
+        setArticles((prev) => [...fetched, ...prev]);
+      } else {
+        setArticles((prev) => [
+          {
+            id: `${slug}-subscribed-${Date.now()}`,
+            sourceId: slug,
+            sourceName: trimmedName,
+            title: `Subscribed to Custom Satcom RSS Feed: ${trimmedName}`,
+            description: `Custom RSS feed registered (${trimmedUrl}). Headlines will sync automatically on the next telemetry poll cycle.`,
+            link: trimmedUrl,
+            pubDate: 'Just now',
+            timestamp: Date.now(),
+            category: newFeedCategory === 'All Categories' ? 'Satellite Internet & Teleports' : newFeedCategory,
+            tags: ['Custom RSS', 'Satcom Feed', parsed.hostname],
+            isNew: true,
+            author: newSource.organization,
+          },
+          ...prev,
+        ]);
+      }
+
+      setSelectedSource(slug);
+      setNewFeedName('');
+      setNewFeedOrg('');
+      setNewFeedUrl('');
+      setAddFeedError(null);
+      setIsAddFeedOpen(false);
+    } catch {
+      setAddFeedError('Enter a valid URL (e.g. https://example.com/satcom/feed.xml).');
+    }
+  };
+
+  const handleRemoveCustomFeed = (feedId: string) => {
+    const next = customFeeds.filter((f) => f.id !== feedId);
+    setCustomFeeds(next);
+    try {
+      localStorage.setItem(CUSTOM_FEEDS_STORAGE_KEY, JSON.stringify(next));
+    } catch {}
+    if (selectedSource === feedId) {
+      setSelectedSource('all');
+    }
+  };
+
+  const liveRssXmlOutput = useMemo(() => {
+    const exportList = filteredArticles.length > 0 ? filteredArticles : articles;
+    return generateRss20Xml(exportList);
+  }, [filteredArticles, articles]);
+
+  const handleDownloadRssXml = () => {
+    const blob = new Blob([liveRssXmlOutput], { type: 'application/rss+xml;charset=utf-8' });
+    triggerBlobDownload(blob, 'drfun1-satcom-rss-2.0.xml');
+  };
+
+  const handleDownloadOpml = () => {
+    const opml = generateOpmlXml(allFeeds);
+    const blob = new Blob([opml], { type: 'text/x-opml+xml;charset=utf-8' });
+    triggerBlobDownload(blob, 'drfun1-satcom-feeds.opml');
+  };
+
   const getSourceBadgeStyle = (sourceId: string) => {
     switch (sourceId) {
       case 'fcc':
@@ -502,8 +648,14 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
         return 'bg-amber-950/80 text-amber-400 border-amber-500/30';
       case 'satnews':
         return 'bg-purple-950/80 text-purple-400 border-purple-500/30';
+      case 'nasa':
+        return 'bg-cyan-950/80 text-cyan-300 border-cyan-500/30';
+      case 'esa':
+        return 'bg-indigo-950/80 text-indigo-300 border-indigo-500/30';
+      case 'itu':
+        return 'bg-rose-950/80 text-rose-300 border-rose-500/30';
       default:
-        return 'bg-slate-800 text-slate-300 border-slate-700';
+        return 'bg-teal-950/80 text-teal-300 border-teal-500/30';
     }
   };
 
@@ -606,12 +758,24 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
             {/* Modal Inspector for 5 Headlines */}
             <button
               onClick={() => setShowLatest5Modal(true)}
-              className="px-2 py-0.5 rounded bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-600 transition-colors flex items-center gap-1 text-[10px] cursor-pointer"
+              className="px-2 py-0.5 rounded bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-600 transition-colors flex items-center gap-1 text-[10px] cursor-pointer whitespace-nowrap"
               title="Inspect latest 5 alerts in high-visibility view"
             >
               <Eye className="w-3 h-3 text-sky-400" />
               <span>Inspect 5</span>
             </button>
+
+            {mode === 'ticker-only' && onOpenFullNewsroom && (
+              <button
+                onClick={onOpenFullNewsroom}
+                className="px-2.5 py-0.5 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition-colors flex items-center gap-1 text-[10px] font-semibold cursor-pointer whitespace-nowrap"
+                title="Open full Satcom RSS Feed newsroom & XML/OPML tools"
+              >
+                <Rss className="w-3 h-3 text-sky-400" />
+                <span>Satcom RSS Feed</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -796,6 +960,39 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
                       </span>
                     </button>
 
+                    {/* Add Custom Feed Button */}
+                    <button
+                      onClick={() => setIsAddFeedOpen((prev) => !prev)}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                        isAddFeedOpen
+                          ? 'bg-teal-500/20 text-teal-200 border-teal-500/50'
+                          : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
+                      }`}
+                      title="Subscribe to a custom Satcom RSS 2.0 / Atom XML feed"
+                    >
+                      <Plus className="w-3.5 h-3.5 text-teal-400" />
+                      <span className="hidden sm:inline">Add Feed</span>
+                    </button>
+
+                    {/* RSS 2.0 XML & OPML Export Tools */}
+                    <button
+                      onClick={() => setShowRssXmlModal(true)}
+                      className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                      title="Inspect or copy live RSS 2.0 XML feed payload"
+                    >
+                      <FileCode className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="hidden md:inline font-mono">RSS XML</span>
+                    </button>
+
+                    <button
+                      onClick={handleDownloadOpml}
+                      className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                      title="Download OPML subscription bundle of all SATCOM RSS feeds"
+                    >
+                      <Download className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="hidden md:inline font-mono">OPML</span>
+                    </button>
+
                     {/* Layout Toggle */}
                     <div className="flex items-center border border-slate-800 rounded-lg p-0.5 bg-slate-950/60">
                       <button
@@ -915,7 +1112,74 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
                   })}
                 </div>
 
-                {/* Secondary Filters: Outlets and Keywords */}
+                {/* Inline Add Custom Satcom RSS Feed Panel */}
+                {isAddFeedOpen && (
+                  <form
+                    onSubmit={handleAddCustomFeed}
+                    className="p-3.5 rounded-xl bg-slate-900/90 border border-teal-500/40 space-y-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-teal-300">
+                        <Rss className="w-4 h-4" />
+                        <span>Subscribe to Custom Satcom RSS 2.0 / Atom Feed</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddFeedOpen(false)}
+                        className="text-slate-400 hover:text-white p-1 cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                      <input
+                        type="text"
+                        value={newFeedName}
+                        onChange={(e) => setNewFeedName(e.target.value)}
+                        placeholder="Feed Name (e.g. Spaceflight Now)"
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+                      />
+                      <input
+                        type="url"
+                        value={newFeedUrl}
+                        onChange={(e) => setNewFeedUrl(e.target.value)}
+                        placeholder="https://example.com/satcom/feed.xml"
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 font-mono"
+                      />
+                      <input
+                        type="text"
+                        value={newFeedOrg}
+                        onChange={(e) => setNewFeedOrg(e.target.value)}
+                        placeholder="Organization (optional)"
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+                      />
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={newFeedCategory}
+                          onChange={(e) => setNewFeedCategory(e.target.value as NewsCategory)}
+                          className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-teal-500"
+                        >
+                          <option value="Constellation Launches">Constellation Launches</option>
+                          <option value="Satellite Internet & Teleports">Satellite Internet &amp; Teleports</option>
+                          <option value="Wireless & 5G NTN">Wireless &amp; 5G NTN</option>
+                          <option value="Regulatory Updates">Regulatory Updates</option>
+                          <option value="Fiber Expansion">Fiber Expansion</option>
+                        </select>
+                        <button
+                          type="submit"
+                          className="px-3 py-1.5 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-semibold whitespace-nowrap cursor-pointer"
+                        >
+                          Subscribe
+                        </button>
+                      </div>
+                    </div>
+                    {addFeedError && (
+                      <p className="text-[11px] text-rose-400 font-mono">{addFeedError}</p>
+                    )}
+                  </form>
+                )}
+
+                {/* Secondary Filters: Outlets, Saved Toggle and Keywords */}
                 <div className="pt-2 border-t border-slate-800/80 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
                   
                   {/* Source Outlets */}
@@ -933,23 +1197,48 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
                     >
                       All Outlets ({sourceCounts.all})
                     </button>
-                    {RSS_FEED_SOURCES.map((src) => {
+                    {allFeeds.map((src) => {
                       const isSel = selectedSource === src.id;
                       return (
-                        <button
-                          key={src.id}
-                          onClick={() => setSelectedSource(src.id)}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors border cursor-pointer flex items-center gap-1 ${
-                            isSel
-                              ? `${src.badgeBg} ${src.badgeText} ${src.borderColor} ring-1 ring-sky-500/20`
-                              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
-                          }`}
-                        >
-                          <span>{src.name}</span>
-                          <span className="text-[10px] font-mono opacity-80">({sourceCounts[src.id] || 0})</span>
-                        </button>
+                        <div key={src.id} className="inline-flex items-center">
+                          <button
+                            onClick={() => setSelectedSource(src.id)}
+                            className={`px-2.5 py-1 text-xs font-medium transition-colors border cursor-pointer flex items-center gap-1 ${
+                              src.isCustom ? 'rounded-l-lg' : 'rounded-lg'
+                            } ${
+                              isSel
+                                ? `${src.badgeBg} ${src.badgeText} ${src.borderColor} ring-1 ring-sky-500/20`
+                                : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                            }`}
+                          >
+                            <span>{src.name}</span>
+                            <span className="text-[10px] font-mono opacity-80 tabular-nums">({sourceCounts[src.id] || 0})</span>
+                          </button>
+                          {src.isCustom && (
+                            <button
+                              onClick={() => handleRemoveCustomFeed(src.id)}
+                              className="px-1.5 py-1 rounded-r-lg bg-slate-900 hover:bg-rose-950/70 text-slate-500 hover:text-rose-300 border border-l-0 border-slate-800 cursor-pointer"
+                              title={`Remove custom feed ${src.name}`}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
                       );
                     })}
+
+                    <button
+                      onClick={() => setShowSavedOnly((prev) => !prev)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors border cursor-pointer flex items-center gap-1 ${
+                        showSavedOnly
+                          ? 'bg-amber-500/20 text-amber-200 border-amber-500/50'
+                          : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-amber-300'
+                      }`}
+                      title="Filter to bookmarked SATCOM RSS articles"
+                    >
+                      <Bookmark className={`w-3 h-3 ${showSavedOnly ? 'fill-amber-400 text-amber-400' : ''}`} />
+                      <span>Saved ({savedArticleIds.length})</span>
+                    </button>
                   </div>
 
                   {/* Search Input */}
@@ -959,7 +1248,7 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search Starlink, Switch, Part 25, 100G..."
+                      placeholder="Search Starlink, NASA, ITU, Part 25..."
                       className="w-full bg-slate-900/90 border border-slate-800 rounded-lg pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
                     />
                     {searchQuery && (
@@ -1085,7 +1374,15 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
                               {article.author || article.category}
                             </span>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => toggleSaveArticle(article.id)}
+                                className="p-1 text-slate-500 hover:text-amber-300 rounded hover:bg-slate-800 transition-colors cursor-pointer"
+                                title={savedSet.has(article.id) ? 'Remove bookmark' : 'Bookmark article'}
+                              >
+                                <Bookmark className={`w-3.5 h-3.5 ${savedSet.has(article.id) ? 'fill-amber-400 text-amber-400' : ''}`} />
+                              </button>
+
                               <button
                                 onClick={() => handleCopyLink(article)}
                                 className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition-colors cursor-pointer"
@@ -1151,6 +1448,13 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
                           <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 text-xs">
                             <span className="text-[11px] text-slate-500 font-mono">{article.pubDate}</span>
                             <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => toggleSaveArticle(article.id)}
+                                className="p-1 text-slate-500 hover:text-amber-300 rounded hover:bg-slate-800 transition-colors cursor-pointer"
+                                title={savedSet.has(article.id) ? 'Remove bookmark' : 'Bookmark article'}
+                              >
+                                <Bookmark className={`w-3.5 h-3.5 ${savedSet.has(article.id) ? 'fill-amber-400 text-amber-400' : ''}`} />
+                              </button>
                               <button
                                 onClick={() => handleCopyLink(article)}
                                 className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition-colors cursor-pointer"
@@ -1721,9 +2025,9 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
                   <span>DrFun1 Satellite &amp; Fiber Engine: Active</span>
                 </span>
                 <span>·</span>
-                <span>Feeds: 4 Registered News Feeds</span>
+                <span className="tabular-nums">Feeds: {allFeeds.length} Registered Satcom Feeds</span>
                 <span>·</span>
-                <span>Associated Companies: {ASSOCIATED_RSS_COMPANIES.length}</span>
+                <span className="tabular-nums">Associated Companies: {ASSOCIATED_RSS_COMPANIES.length}</span>
                 <span>·</span>
                 <span>Total Live Articles: {articles.length}</span>
                 <span>·</span>
@@ -1816,6 +2120,75 @@ export const SatelliteRssNewsSection: React.FC<SatelliteRssNewsSectionProps> = (
                 className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
               >
                 Close Inspector
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          5. LIVE RSS 2.0 XML PAYLOAD INSPECTOR MODAL
+          ======================================================== */}
+      {showRssXmlModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  <FileCode className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Live Satcom RSS 2.0 XML Feed Output</h3>
+                  <p className="text-xs text-slate-400">
+                    Standards-compliant RSS 2.0 XML containing {filteredArticles.length > 0 ? filteredArticles.length : articles.length} items across {allFeeds.length} Satcom sources
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowRssXmlModal(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <pre className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-[11px] font-mono text-emerald-300 max-h-[55vh] overflow-auto whitespace-pre-wrap break-all leading-relaxed">
+              {liveRssXmlOutput}
+            </pre>
+
+            <div className="pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(liveRssXmlOutput);
+                    setCopiedXml(true);
+                    setTimeout(() => setCopiedXml(false), 2000);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1.5 cursor-pointer"
+                >
+                  {copiedXml ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedXml ? 'Copied XML' : 'Copy RSS 2.0 XML'}</span>
+                </button>
+                <button
+                  onClick={handleDownloadRssXml}
+                  className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download .xml</span>
+                </button>
+                <button
+                  onClick={handleDownloadOpml}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download .opml</span>
+                </button>
+              </div>
+              <button
+                onClick={() => setShowRssXmlModal(false)}
+                className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+              >
+                Close
               </button>
             </div>
           </div>

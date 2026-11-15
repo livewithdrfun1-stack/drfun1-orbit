@@ -216,18 +216,18 @@ export const IrcStartupLoginModal: React.FC<IrcStartupLoginModalProps> = ({
               onChange={(e) => setSelectedNodeId(e.target.value)}
               className="w-full bg-slate-950 border border-slate-700 focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none transition-colors cursor-pointer"
             >
-              <optgroup label="Core IRCd Hubs (Switch SUPERNAP / Citadel / The Keep 100G Optical Core)">
+              <optgroup label="Core Dedicated IRCd Hubs (Switch SUPERNAP / Citadel / The Keep Bare-Metal Core)">
                 <option value="master_hub">
-                  Hub 001 &bull; irc.drfun1.com:6697 (TLS 1.3 SSL) &bull; Las Vegas SUPERNAP Core
+                  Hub 001 &bull; irc.drfun1.com:6697 (TLS 1.3 SSL) &bull; Dedicated Bare-Metal Core (Las Vegas)
                 </option>
                 <option value="media_hub">
-                  Hub 002 &bull; irc.drfun1media.com:6697 (TLS 1.3 SSL) &bull; Broadcast Teleport Hub
+                  Hub 002 &bull; irc.drfun1media.com:6697 (TLS 1.3 SSL) &bull; Dedicated Broadcast Hub
                 </option>
                 <option value="medianet_hub">
-                  Hub 003 &bull; irc.drfun1media.net:6697 (TLS 1.3 SSL) &bull; MediaNet Relay Hub (Reno)
+                  Hub 003 &bull; irc.drfun1media.net:6697 (TLS 1.3 SSL) &bull; Dedicated MediaNet Hub (Reno)
                 </option>
                 <option value="ircd_hub">
-                  Hub 004 &bull; drfun1ircd.com:6697 (TLS 1.3 SSL) &bull; Core Federation Hub (Atlanta)
+                  Hub 004 &bull; drfun1ircd.com:6697 (TLS 1.3 SSL) &bull; Dedicated Federation Hub (Atlanta)
                 </option>
               </optgroup>
               <optgroup label="Hub 1 Switch.com Nodes (500 Dedicated Nodes on irc.drfun1.com via CGW Law Offices)">

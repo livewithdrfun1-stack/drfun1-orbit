@@ -51,6 +51,7 @@ import {
   MeshSyncRecord,
 } from '../data/meshSync';
 import { SwitchRisingNetD3Chart } from './SwitchRisingNetD3Chart';
+import { GlobalSatelliteCarrierMesh } from './GlobalSatelliteCarrierMesh';
 
 interface NetworkStatusViewProps {
   onOpenLicense?: () => void;
@@ -315,12 +316,12 @@ export const NetworkStatusView: React.FC<NetworkStatusViewProps> = ({
                 Network Status &amp; 1,034-Leaf Mesh Health
               </h3>
               <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 tabular-nums">
-                {metrics.allSummary.active} / {metrics.allSummary.total} ACTIVE (
+                {metrics.allSummary.active} / {metrics.allSummary.total} DEDICATED NODES ACTIVE (
                 {((metrics.allSummary.active / Math.max(1, metrics.allSummary.total)) * 100).toFixed(1)}%)
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-1 font-mono">
-              500 Switch/Hub via CGW Law Offices (1,000) · 12 DataPacket Leafs/Hub (24) · 10 RisingNet Servers · Last Probe: {lastProbedAt}
+              100% Dedicated Bare-Metal IRCd Mesh: 4 Core Hubs + 1,000 Switch + 24 DataPacket + 10 RisingNet · Last Probe: {lastProbedAt}
             </p>
           </div>
         </div>
@@ -466,6 +467,9 @@ export const NetworkStatusView: React.FC<NetworkStatusViewProps> = ({
         </div>
       </div>
 
+      {/* D3 Global Satellite Carrier Mesh Topology (500 Switch Hubs <-> 10 Dedicated RisingNet Servers) */}
+      <GlobalSatelliteCarrierMesh />
+
       {/* D3 Real-Time Latency Ping Trends (Switch 500/Hub vs. 10 RisingNet Servers) */}
       <SwitchRisingNetD3Chart externalJitterMs={probeJitterMs} />
 
@@ -573,9 +577,12 @@ export const NetworkStatusView: React.FC<NetworkStatusViewProps> = ({
                         {hub.host} <span className="text-slate-500">(SID {hub.sid})</span>
                       </div>
                       <div className="text-[11px] text-slate-400">{hub.colocation}</div>
+                      <div className="text-[10px] font-mono text-cyan-300 mt-0.5">
+                        {hub.allocationMode || 'Dedicated Bare-Metal Node'} · {hub.hardwareProfile || 'Dual EPYC 100G'}
+                      </div>
                     </div>
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold">
-                      ONLINE
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold shrink-0">
+                      DEDICATED
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-1.5 text-[11px] font-mono">
@@ -722,8 +729,13 @@ export const NetworkStatusView: React.FC<NetworkStatusViewProps> = ({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px] font-mono">
               <div className="bg-slate-900 border border-slate-800 rounded p-2">
-                <span className="text-slate-400 block">Campus / Transit</span>
-                <span className="text-slate-200">{selectedNode.campusName}</span>
+                <span className="text-slate-400 block">Allocation &amp; Hardware</span>
+                <span className="text-cyan-300 font-semibold block">
+                  {selectedNode.allocationMode || 'Dedicated Bare-Metal Node'}
+                </span>
+                <span className="text-slate-300 text-[10px] block mt-0.5">
+                  {selectedNode.hardwareProfile || selectedNode.campusName}
+                </span>
               </div>
               <div className="bg-slate-900 border border-slate-800 rounded p-2">
                 <span className="text-slate-400 block">TLS Fingerprint</span>
@@ -796,7 +808,7 @@ export const NetworkStatusView: React.FC<NetworkStatusViewProps> = ({
                     </td>
                     <td className="py-2 text-right">
                       <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 text-[10px] font-bold uppercase">
-                        {node.status} · {node.leafStatus}
+                        DEDICATED · {node.leafStatus}
                       </span>
                     </td>
                   </tr>

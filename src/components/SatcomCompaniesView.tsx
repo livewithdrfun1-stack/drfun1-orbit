@@ -10,6 +10,7 @@ import {
   Mail,
   Plus,
   RotateCcw,
+  Rss,
   Satellite,
   Scale,
   Search,
@@ -22,6 +23,7 @@ import {
   SatelliteCompany,
   ServiceCategory,
 } from '../types/satellite';
+import { SatelliteRssNewsSection } from './SatelliteRssNewsSection';
 
 interface SatcomCompaniesViewProps {
   companies: SatelliteCompany[];
@@ -41,6 +43,7 @@ interface SatcomCompaniesViewProps {
   onOpenAddModal: () => void;
   onExportCsv: () => void;
   onOpenOrbitMap: () => void;
+  onOpenSatcomRss?: () => void;
 }
 
 const ORBIT_OPTIONS: (OrbitType | 'All')[] = [
@@ -110,6 +113,7 @@ export const SatcomCompaniesView: React.FC<SatcomCompaniesViewProps> = ({
   onOpenAddModal,
   onExportCsv,
   onOpenOrbitMap,
+  onOpenSatcomRss,
 }) => {
   const displayMode: 'table' | 'cards' = viewMode === 'cards' ? 'cards' : 'table';
 
@@ -166,6 +170,12 @@ export const SatcomCompaniesView: React.FC<SatcomCompaniesViewProps> = ({
 
   return (
     <div className="space-y-6 text-slate-100">
+      {/* Live Satcom RSS Headline Wire Strip */}
+      <SatelliteRssNewsSection
+        mode="ticker-only"
+        onOpenFullNewsroom={onOpenSatcomRss}
+      />
+
       {/* Directory Header & Summary Strip */}
       <section className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -215,6 +225,16 @@ export const SatcomCompaniesView: React.FC<SatcomCompaniesViewProps> = ({
               <Globe className="w-3.5 h-3.5 text-cyan-400" />
               <span>Orbit Map</span>
             </button>
+
+            {onOpenSatcomRss && (
+              <button
+                onClick={onOpenSatcomRss}
+                className="px-3.5 py-2 rounded-lg bg-teal-500/15 hover:bg-teal-500/25 border border-teal-500/40 text-teal-200 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+              >
+                <Rss className="w-3.5 h-3.5 text-teal-400" />
+                <span>Satcom RSS Feed</span>
+              </button>
+            )}
           </div>
         </div>
 

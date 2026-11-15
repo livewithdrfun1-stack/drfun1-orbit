@@ -1,4 +1,13 @@
-export type RssSourceId = 'all' | 'fcc' | 'spacenews' | 'viasatellite' | 'satnews';
+export type SatcomBuiltInSourceId =
+  | 'fcc'
+  | 'spacenews'
+  | 'viasatellite'
+  | 'satnews'
+  | 'nasa'
+  | 'esa'
+  | 'itu';
+
+export type RssSourceId = 'all' | SatcomBuiltInSourceId | (string & {});
 
 export type NewsCategory = 
   | 'All Categories'
@@ -9,7 +18,7 @@ export type NewsCategory =
   | 'Satellite Internet & Teleports';
 
 export interface RssFeedSource {
-  id: Exclude<RssSourceId, 'all'>;
+  id: string;
   name: string;
   organization: string;
   feedUrl: string;
@@ -21,11 +30,12 @@ export interface RssFeedSource {
   category: string;
   description: string;
   pollFrequencySec: number;
+  isCustom?: boolean;
 }
 
 export interface RssArticleItem {
   id: string;
-  sourceId: Exclude<RssSourceId, 'all'>;
+  sourceId: string;
   sourceName: string;
   title: string;
   description: string;

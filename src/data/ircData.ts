@@ -28,6 +28,9 @@ export const UNREAL_HUB_DETAILS: UnrealIrcdHub = {
   aggregateBandwidth: '10+ Tbps Global Terrestrial, Subsea & Space Interconnect (1,034 Total Nodes · 500 Switch/Hub via CGW · 12 DataPacket/Hub · 10 RisingNet)',
   redundantPeerHub: 'irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com',
   anopeServicesHost: 'services.drfun1.com',
+  isDedicatedNode: true,
+  allocationMode: 'Dedicated Bare-Metal Node',
+  hardwareProfile: 'Dual AMD EPYC 9654 Bare-Metal Core Hub · 512GB ECC · Dual 100G QSFP28',
 };
 
 export const UNREAL_MEDIA_HUB_DETAILS: UnrealIrcdHub = {
@@ -56,6 +59,9 @@ export const UNREAL_MEDIA_HUB_DETAILS: UnrealIrcdHub = {
   aggregateBandwidth: '10+ Tbps Global Terrestrial, Subsea & Space Interconnect (1,034 Total Nodes · 500 Switch/Hub via CGW · 12 DataPacket/Hub · 10 RisingNet)',
   redundantPeerHub: 'irc.drfun1.com, irc.drfun1media.net & drfun1ircd.com',
   anopeServicesHost: 'services.drfun1media.com',
+  isDedicatedNode: true,
+  allocationMode: 'Dedicated Bare-Metal Node',
+  hardwareProfile: 'Dual AMD EPYC 9654 Bare-Metal Broadcast Hub · 512GB ECC · Dual 100G QSFP28',
 };
 
 export const UNREAL_MEDIA_NET_HUB_DETAILS: UnrealIrcdHub = {
@@ -83,6 +89,9 @@ export const UNREAL_MEDIA_NET_HUB_DETAILS: UnrealIrcdHub = {
   aggregateBandwidth: '10+ Tbps Global Terrestrial, Subsea & Space Interconnect (All 1,034 Leaf Nodes Synced)',
   redundantPeerHub: 'irc.drfun1.com, irc.drfun1media.com & drfun1ircd.com',
   anopeServicesHost: 'services.drfun1.com',
+  isDedicatedNode: true,
+  allocationMode: 'Dedicated Bare-Metal Node',
+  hardwareProfile: 'Dual Intel Xeon Platinum Bare-Metal Relay Hub · 256GB ECC · 100G QSFP28',
 };
 
 export const UNREAL_IRCD_COM_HUB_DETAILS: UnrealIrcdHub = {
@@ -110,6 +119,9 @@ export const UNREAL_IRCD_COM_HUB_DETAILS: UnrealIrcdHub = {
   aggregateBandwidth: '10+ Tbps Global Terrestrial, Subsea & Space Interconnect (All 1,034 Leaf Nodes Synced)',
   redundantPeerHub: 'irc.drfun1.com, irc.drfun1media.com & irc.drfun1media.net',
   anopeServicesHost: 'services.drfun1.com',
+  isDedicatedNode: true,
+  allocationMode: 'Dedicated Bare-Metal Node',
+  hardwareProfile: 'Dual AMD EPYC 9354 Bare-Metal Federation Hub · 256GB ECC · 100G QSFP28',
 };
 
 export const DUAL_UNREAL_HUBS: UnrealIrcdHub[] = [
@@ -136,18 +148,21 @@ export const ANOPE_SERVICES_DETAILS: AnopeServicesHub = {
   botServBots: ['DrFun1Bot', 'OrbitGuard', 'StatServ', 'HostServ', 'OperServ', 'MemoServ'],
   operServAkills: 14,
   status: 'active',
+  isDedicatedNode: true,
+  allocationMode: 'Dedicated Bare-Metal Node',
+  hardwareProfile: 'Dedicated Single-Tenant Anope Services Bare-Metal Vault Node · Dual 100G',
 };
 
 const RAW_SWITCH_DEDICATED_NODES: SwitchDedicatedNode[] = [
   {
     id: 'dev_drfun1media_node',
-    name: 'DrFun1 Media Development Gateway & Broadcast Hub (dev.drfun1media.com)',
+    name: 'DrFun1 Media Dedicated Development & Broadcast Node (dev.drfun1media.com)',
     subdomain: 'dev.drfun1media.com',
     host: 'dev.drfun1media.com',
     port: 6697,
-    location: 'Las Vegas Switch SUPERNAP Core Teleport & Cloud Gateway',
-    campusName: 'Switch SUPERNAP Dev & Broadcast Array (100% Green Energy)',
-    tier: 'Tier 5 Platinum Development & Live Streaming Ingest',
+    location: 'Las Vegas Switch SUPERNAP Dedicated Core & Dev Node',
+    campusName: 'Switch SUPERNAP Dedicated Dev & Broadcast Array (100% Green Energy)',
+    tier: 'Tier 5 Platinum Dedicated Development & Live Streaming Node',
     fiberCapacity: '100 Gbps Low-Latency Optical Cross-Connect + WebSocket Bridge',
     status: 'active',
     latencyMs: 1.2,
@@ -1313,6 +1328,9 @@ export const SWITCH_DEDICATED_NODES: SwitchDedicatedNode[] = RAW_SWITCH_DEDICATE
     leafHub: 'irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net & drfun1ircd.com',
     leafHubs: ['irc.drfun1.com', 'irc.drfun1media.com', 'irc.drfun1media.net', 'drfun1ircd.com'],
     dualHubLinked: true,
+    isDedicatedNode: true,
+    allocationMode: 'Dedicated Bare-Metal Node',
+    hardwareProfile: node.hardwareProfile || 'Single-Tenant Switch Tier 5 Bare-Metal · 100G QSFP28 Dedicated Port',
     legalCounsel: node.legalCounsel || 'CGW Law Offices (Curtis, Gregory & Wilson Law Offices)',
     paymentOffice: node.paymentOffice || 'Owens Company (www.owenscompany.com)',
     billingOffice: node.billingOffice || 'Bill in Receiving (Owens Company Accounts Payable)',
@@ -3004,6 +3022,39 @@ export const DEV_PLATFORM_CONFIG: DevPlatformConfig = {
       samplePayload: '{\n  "nick": "RichardAlanWitt",\n  "frn": "0034981290",\n  "firm": "www.wittlawfirm.com",\n  "signed_nonce": "98fc47e2b10a"\n}',
       sampleResponse: '{\n  "status": "authorized",\n  "flags": "+oaqsh",\n  "role": "netadmin_root",\n  "counsel_verified": true\n}',
     },
+    {
+      id: 'api_twitch_dev_helix',
+      name: 'dev.twitch.tv Helix Broadcast & EventSub API',
+      method: 'POST',
+      endpoint: 'https://api.twitch.tv/helix/channels/commercial',
+      description: 'Official Twitch Developer Portal (https://dev.twitch.tv) Helix API endpoint for SCTE-35 commercial triggers, EventSub webhooks, and broadcaster metadata updates.',
+      category: 'twitch_dev',
+      authType: 'Bearer Token',
+      samplePayload: '{\n  "broadcaster_id": "98412034",\n  "length": 30,\n  "client_id": "drfun1_helix_client_99a8b7"\n}',
+      sampleResponse: '{\n  "data": [\n    {\n      "length": 30,\n      "message": "SCTE-35 Commercial Cue Accepted",\n      "retry_after": 480\n    }\n  ]\n}',
+    },
+    {
+      id: 'api_kick_dev_v2',
+      name: 'dev.kick.com API v2 & Pusher Chat Bridge',
+      method: 'POST',
+      endpoint: 'https://api.kick.com/public/v1/chat',
+      description: 'Official Kick Developer Portal (https://dev.kick.com) v2 endpoint with HMAC-SHA256 webhook signatures, Pusher chatrooms, and 95/5 split telemetry.',
+      category: 'kick_dev',
+      authType: 'Bearer Token',
+      samplePayload: '{\n  "broadcaster_user_id": 3819402,\n  "channel_slug": "drfun1tv",\n  "content": "[DrFun1TV] Red5.net simulcast live at 8,000 kbps!",\n  "type": "bot"\n}',
+      sampleResponse: '{\n  "data": {\n    "message_id": "kck_msg_9918274a",\n    "is_sent": true,\n    "pusher_cluster": "us2",\n    "split_percent": 95\n  }\n}',
+    },
+    {
+      id: 'api_red5_broadcast',
+      name: 'Red5.net Pro WebRTC WHIP/WHEP & Restream Relay',
+      method: 'POST',
+      endpoint: 'https://red5.drfun1.net:5443/live/api/v1/streammanager/restream',
+      description: 'Provisions real-time Red5.net WebRTC origin/edge nodes and pushes simultaneous RTMPS feeds to dev.twitch.tv and dev.kick.com ingest endpoints.',
+      category: 'red5_broadcast',
+      authType: 'TLS Client Cert',
+      samplePayload: '{\n  "origin_node": "red5-origin-las01.drfun1.net",\n  "protocol": "WHIP_WEBRTC",\n  "targets": ["rtmp://sfo.contribute.live-video.net/app/", "rtmps://fa723fc1b171.global-contribute.live-video.net:443/app/"],\n  "bitrate_kbps": 8000\n}',
+      sampleResponse: '{\n  "stream_id": "r5-drfun1-simulcast-2026",\n  "webrtc_rtt_ms": 182,\n  "twitch_ingest": "CONNECTED",\n  "kick_ingest": "CONNECTED",\n  "whep_url": "https://red5.drfun1.net:5443/live/whep/tvu-origin-lv"\n}',
+    },
   ],
   wittLawAdmins: WITTLAW_ADMINS_MODS,
   recentAuditActions: [
@@ -3478,6 +3529,9 @@ export const ZNC_BOUNCER_CONFIG: ZncBouncerConfig = {
   activeUsers: 84,
   totalBuffers: 70,
   status: 'active',
+  isDedicatedNode: true,
+  allocationMode: 'Dedicated Bare-Metal Node',
+  hardwareProfile: 'Dedicated ZNC 1.9.1 Bouncer Bare-Metal Node · 100G SUPERNAP Vault',
   loadedModules: [
     {
       name: 'playback',
@@ -3724,6 +3778,9 @@ export const NEOSTATS_CONFIG: NeoStatsConfig = {
   ssl: true,
   dbBackend: 'SQLite3 / MySQL 8.0 Cluster with TimescaleDB Time-Series Metric Engine',
   status: 'active',
+  isDedicatedNode: true,
+  allocationMode: 'Dedicated Bare-Metal Node',
+  hardwareProfile: 'Dedicated Single-Tenant NeoStats 3.0.2 Bare-Metal Telemetry Node',
   uptime: '148d 12h 19m 14s',
   peakUsers: 14290,
   peakChannels: 855420,
@@ -3944,6 +4001,9 @@ export const DENORA_CONFIG: DenoraConfig = {
   ssl: true,
   dbBackend: 'MariaDB 10.11 / MySQL 8.0 InnoDB + phpDenora Web Integration',
   status: 'active',
+  isDedicatedNode: true,
+  allocationMode: 'Dedicated Bare-Metal Node',
+  hardwareProfile: 'Dedicated Single-Tenant Denora 1.5 MariaDB Bare-Metal Statistics Node',
   uptime: '148d 12h 19m 14s',
   peakUsersAllTime: 14290,
   peakUsersAllTimeDate: '2026-11-04 18:42:10 UTC',

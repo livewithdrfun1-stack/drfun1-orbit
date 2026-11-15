@@ -105,6 +105,18 @@ export const IRCD_FEATURE_ACCESS_CONFIG: PlatformFeatureConfig[] = [
       'SCOTUS & Witt Law vetted +d host tier: publish live podcast episodes, accept SIP/SRTP caller bridges, and track SGP4 satellite orbits.',
   },
   {
+    id: 'feat-tvu-red5-twitch',
+    featureKey: 'TVU_RED5_TWITCH_STUDIO',
+    label: 'TVU Producer Live Cut, Red5 WHIP/WHEP & Twitch Simulcast',
+    shortLabel: '+d TVU · Red5 · Twitch',
+    category: 'Radio & VoIP',
+    minRank: 'dj_host',
+    requiredModes: '+d',
+    accessTier: 'Operate',
+    description:
+      'Cut live TVU bonded 5G camera scenes, push Red5 Pro WHIP streams, and moderate simulcast Twitch.tv live channels.',
+  },
+  {
     id: 'feat-dj-deck-golive',
     featureKey: 'SHOUTCAST_DJ_GOLIVE',
     label: 'MPD DJ Deck Go-Live, Mic Ducking & Channel Bans',

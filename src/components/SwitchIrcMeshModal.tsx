@@ -50,15 +50,15 @@ export const SwitchIrcMeshModal: React.FC<SwitchIrcMeshModalProps> = ({
  *   Hub 2: irc.drfun1media.com (SID 002)
  *   Hub 3: irc.drfun1media.net (SID 003)
  *   Hub 4: drfun1ircd.com (SID 004)
- * UnrealIRCd 6.1.4+ Multi-Hub Spanning Tree — ALL Nodes Linked & Leafed to ALL 4 Hubs
- * Switch.com Nodes: 500 www.switch.com Nodes per Hub (1,000 Total) via CGW Law Offices
- * DataPacket.com Leafs: 12 www.datapacket.com Leafs per Hub (24 Total)
- * RisingNet Dedicated Servers: 10 Dedicated Servers from www.risingnet.com (Synced & Leafed to All Hubs)
+ * UnrealIRCd 6.1.4+ Multi-Hub Spanning Tree — 100% Dedicated Bare-Metal Nodes (1,038/1,038) Linked & Leafed to ALL 4 Hubs
+ * Switch.com Nodes: 500 www.switch.com Dedicated Nodes per Hub (1,000 Total) via CGW Law Offices
+ * DataPacket.com Leafs: 12 www.datapacket.com Dedicated Leafs per Hub (24 Total)
+ * RisingNet Dedicated Servers: 10 Dedicated Bare-Metal Servers from www.risingnet.com (Synced & Leafed to All Hubs)
  * App License: The Law Office of Richard A. Witt LLC (www.wittlawfirm.com / FCC FRN: 0034981290)
  * Payment Office: Owens Company (www.owenscompany.com) — Bill in Receiving
- * Core Switch Sample Nodes (${SWITCH_DEDICATED_NODES.length} Primary Gateways):
-${SWITCH_DEDICATED_NODES.map((n, i) => ` *   ${i + 1 < 10 ? ' ' : ''}${i + 1}. ${n.host} (SID ${n.sid}) - ${n.location.split(',')[0]} [All 4 Hubs]`).join('\n')}
- * Total Connected Satcom & Carrier Leaf Nodes: 1,034 Multi-Hub Synced Nodes + ${companies.length} Carriers
+ * Core Switch Sample Nodes (${SWITCH_DEDICATED_NODES.length} Primary Dedicated Gateways):
+${SWITCH_DEDICATED_NODES.map((n, i) => ` *   ${i + 1 < 10 ? ' ' : ''}${i + 1}. ${n.host} (SID ${n.sid}) - ${n.location.split(',')[0]} [Dedicated Node · All 4 Hubs]`).join('\n')}
+ * Total Connected Satcom & Carrier Dedicated Leaf Nodes: 1,034 Multi-Hub Synced Nodes + ${companies.length} Carriers
  * ==================================================================== */
 
 /* Hub 1 Identity (SID 001) & Reciprocal Inter-Hub Links */
@@ -192,10 +192,10 @@ ${companies.slice(0, 8).map((c) => {
                 </a>
               </div>
               <h4 className="text-sm font-bold text-slate-100">
-                Switch SUPERNAP Campuses
+                Switch SUPERNAP Dedicated Nodes
               </h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Tier 4 Gold hyperscale infrastructure (Las Vegas, Tahoe Reno, Atlanta). Hosts ground station downlinks and sub-millisecond cloud cross-connects.
+                Tier 5 Platinum dedicated bare-metal infrastructure (Las Vegas, Tahoe Reno, Atlanta). Hosts ground station downlinks and sub-millisecond unshared optical cross-connects.
               </p>
             </div>
 

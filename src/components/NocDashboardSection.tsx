@@ -273,7 +273,7 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
                 </h3>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase tracking-wider flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  <span>1,034/1,034 LEAFS SYNCED TO ALL 4 HUBS</span>
+                  <span>1,038/1,038 DEDICATED NODES SYNCED</span>
                 </span>
                 <button
                   onClick={() => setViewMode(viewMode === 'heatmap' ? 'matrix' : 'heatmap')}
@@ -285,7 +285,7 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
                 </button>
               </div>
               <p className="text-xs text-slate-400 mt-1 max-w-4xl leading-relaxed">
-                Global Spanning-Tree mesh federating <strong className="text-white">1,034 Leaf Nodes</strong> (<strong className="text-emerald-300">500 Switch/Hub via CGW Law Offices</strong>, <strong className="text-cyan-300">12 DataPacket/Hub</strong>, <strong className="text-indigo-300">10 RisingNet Dedicated Servers</strong>) synced to ALL 4 HUBS: <strong className="text-purple-300">irc.drfun1.com</strong>, <strong className="text-sky-300">irc.drfun1media.com</strong>, <strong className="text-amber-300">irc.drfun1media.net</strong> &amp; <strong className="text-emerald-300">drfun1ircd.com</strong>.
+                100% Dedicated Bare-Metal IRCd Mesh: <strong className="text-white">4 Core Hubs + 1,034 Dedicated Leaf Nodes</strong> (<strong className="text-emerald-300">500 Switch/Hub via CGW Law Offices</strong>, <strong className="text-cyan-300">12 DataPacket/Hub</strong>, <strong className="text-indigo-300">10 RisingNet Dedicated Servers</strong>) synced to <strong className="text-purple-300">irc.drfun1.com</strong>, <strong className="text-sky-300">irc.drfun1media.com</strong>, <strong className="text-amber-300">irc.drfun1media.net</strong> &amp; <strong className="text-emerald-300">drfun1ircd.com</strong>.
               </p>
             </div>
           </div>
@@ -413,27 +413,27 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
         {/* Global Mesh KPI Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 pt-2 text-xs font-mono">
           <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800">
-            <span className="text-[10px] text-slate-500 block">Total Mesh Nodes</span>
+            <span className="text-[10px] text-slate-500 block">Dedicated Mesh Nodes</span>
             <span className="text-base font-bold text-white tabular-nums">{providerStats.total}</span>
-            <span className="text-[10px] text-emerald-400 block mt-0.5">100% Online</span>
+            <span className="text-[10px] text-emerald-400 block mt-0.5">100% Bare-Metal Dedicated</span>
           </div>
 
           <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800">
-            <span className="text-[10px] text-slate-500 block">Switch.com Nodes</span>
+            <span className="text-[10px] text-slate-500 block">Switch.com Dedicated</span>
             <span className="text-base font-bold text-emerald-400 tabular-nums">{providerStats.switchCount}</span>
             <span className="text-[10px] text-emerald-300 block mt-0.5">500/Hub via CGW Law Offices</span>
           </div>
 
           <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800">
-            <span className="text-[10px] text-slate-500 block">DataPacket.com Leafs</span>
+            <span className="text-[10px] text-slate-500 block">DataPacket Dedicated</span>
             <span className="text-base font-bold text-cyan-400 tabular-nums">{providerStats.dpCount}</span>
-            <span className="text-[10px] text-cyan-300 block mt-0.5">12 Leafs/Hub (No-Ads)</span>
+            <span className="text-[10px] text-cyan-300 block mt-0.5">12 Dedicated/Hub (No-Ads)</span>
           </div>
 
           <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800">
             <span className="text-[10px] text-slate-500 block">RisingNet Dedicated</span>
             <span className="text-base font-bold text-indigo-400 tabular-nums">{providerStats.rnCount}</span>
-            <span className="text-[10px] text-indigo-300 block mt-0.5">10 Servers Dual-Hub Synced</span>
+            <span className="text-[10px] text-indigo-300 block mt-0.5">10 Bare-Metal Synced</span>
           </div>
 
           <div className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800">
@@ -895,13 +895,15 @@ export const NocDashboardSection: React.FC<NocDashboardSectionProps> = ({
                 {selectedNode.sid}
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h4 className="text-base font-bold text-white">{selectedNode.name}</h4>
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    LINK SYNCED
+                    DEDICATED NODE &bull; SYNCED
                   </span>
                 </div>
-                <p className="text-xs text-purple-300 mt-0.5">{selectedNode.host}:{selectedNode.port} (SSL 6697)</p>
+                <p className="text-xs text-purple-300 mt-0.5">
+                  {selectedNode.host}:{selectedNode.port} (SSL 6697) &bull; {selectedNode.allocationMode || 'Dedicated Bare-Metal Node'}
+                </p>
               </div>
             </div>
 

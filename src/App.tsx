@@ -38,13 +38,19 @@ import { DevPlatformWittLawModal } from './components/DevPlatformWittLawModal';
 import { OnlineRadioDjStudio } from './components/OnlineRadioDjStudio';
 import { MasterControlView } from './components/MasterControlView';
 import { FuboTvCloneView } from './components/FuboTvCloneView';
+import { DrFun1TvView } from './components/DrFun1TvView';
+import { SocialMediaControlPanelView } from './components/SocialMediaControlPanelView';
 import { IrcDuplicatorHostingView } from './components/IrcDuplicatorHostingView';
 import { SatcomCompaniesView } from './components/SatcomCompaniesView';
+import { SatelliteRssNewsSection } from './components/SatelliteRssNewsSection';
 import { DrFun1PodcastUplinkView } from './components/DrFun1PodcastUplinkView';
+import { TvuRed5TwitchView } from './components/TvuRed5TwitchView';
 import { IrcdRankAccessModal } from './components/IrcdRankAccessModal';
 import { IrcLoginCredentials, IrcLoginSession } from './types/irc';
 import { UserMembershipState } from './types/membership';
 import { AnopeRankLevel } from './types/ircdAdmin';
+import { ShoutcastControlState } from './types/podcastUplink';
+import { INITIAL_SHOUTCAST_CONTROL_STATE } from './data/podcastUplinkData';
 import { STORE_PRODUCTS } from './data/storeProducts';
 import { DrFun1MediaLogo } from './components/DrFun1MediaLogo';
 import { MobileBottomNav } from './components/MobileBottomNav';
@@ -133,12 +139,22 @@ export default function App() {
       setActiveTab('duplicator_hosting');
     } else if (tab === 'satcom_companies' || tab === 'directory' || tab === 'carriers') {
       setActiveTab('satcom_companies');
+    } else if (tab === 'satcom_rss' || tab === 'rss' || tab === 'news') {
+      setActiveTab('satcom_rss');
     } else if (tab === 'master_control' || tab === 'orbits' || tab === 'compare' || tab === 'ircstats') {
       setActiveTab('master_control');
+    } else if (tab === 'tvu_red5_twitch' || tab === 'tvu' || tab === 'red5' || tab === 'twitch') {
+      setActiveTab('tvu_red5_twitch');
     } else if (tab === 'fubotv') {
       setActiveTab('fubotv');
+    } else if (tab === 'drfun1_tv' || tab === 'youtubetv' || tab === 'ytv') {
+      setActiveTab('drfun1_tv');
+    } else if (tab === 'social_control' || tab === 'socials' || tab === 'drfun1media_feeds') {
+      setActiveTab('social_control');
     } else if (tab === 'store' || tab === 'domains') {
       setActiveTab('store');
+    } else if (tab === 'community' || tab === 'irc') {
+      setActiveTab('irc');
     } else {
       setActiveTab('irc');
     }
@@ -246,6 +262,19 @@ export default function App() {
     return 'sra';
   });
   const [exportNotice, setExportNotice] = useState<string | null>(null);
+
+  // Synchronized SHOUTcast.com & Podserv.fm Podcast Uplink State
+  const [shoutcastControl, setShoutcastControl] = useState<ShoutcastControlState>(
+    INITIAL_SHOUTCAST_CONTROL_STATE
+  );
+
+  const handleUpdateShoutcastControl = (patch: Partial<ShoutcastControlState>) => {
+    setShoutcastControl((prev) => ({
+      ...prev,
+      ...patch,
+      lastSyncedAt: new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC',
+    }));
+  };
 
   // Store & Cart State
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -496,6 +525,7 @@ export default function App() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 
     setExportNotice(`Exported ${filteredCompanies.length} satellite operators to CSV`);
     setTimeout(() => setExportNotice(null), 3000);
@@ -654,6 +684,15 @@ export default function App() {
             onOpenAddModal={() => setIsAddModalOpen(true)}
             onExportCsv={handleExportCsv}
             onOpenOrbitMap={() => setIsOrbitMapModalOpen(true)}
+            onOpenSatcomRss={() => handleNavigateTab('satcom_rss')}
+          />
+        </main>
+      ) : activeTab === 'satcom_rss' ? (
+        /* 1D. Dedicated Live Satcom RSS News Feed & XML/OPML Aggregator */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
+          <SatelliteRssNewsSection
+            mode="full"
+            onNavigateToStore={() => handleNavigateTab('store')}
           />
         </main>
       ) : activeTab === 'master_control' ? (
@@ -687,6 +726,26 @@ export default function App() {
             onNavigateToIrc={() => handleNavigateTab('irc')}
           />
         </main>
+      ) : activeTab === 'drfun1_tv' ? (
+        /* 3B. DrFun1-TV (tv.youtube.com Clone & Rebrand) */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
+          <DrFun1TvView
+            onOpenLicense={() => setIsLicenseModalOpen(true)}
+            onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
+            onNavigateToIrc={() => handleNavigateTab('irc')}
+            onNavigateToRed5={() => handleNavigateTab('tvu_red5_twitch')}
+          />
+        </main>
+      ) : activeTab === 'social_control' ? (
+        /* 3C. Per-User Social Media Control Panel & www.drfun1media.com Live Feeds */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
+          <SocialMediaControlPanelView
+            onOpenLicense={() => setIsLicenseModalOpen(true)}
+            onNavigateToIrc={() => handleNavigateTab('irc')}
+            onNavigateToDrFun1Tv={() => handleNavigateTab('drfun1_tv')}
+            onNavigateToRed5={() => handleNavigateTab('tvu_red5_twitch')}
+          />
+        </main>
       ) : activeTab === 'store' ? (
         /* 4. Wholesale Satellite, Fiber, Wireless & Store Catalog */
         <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
@@ -704,6 +763,18 @@ export default function App() {
             initialSubTab={storeSubTab}
           />
         </main>
+      ) : activeTab === 'tvu_red5_twitch' ? (
+        /* 5C. All-in-One TVU Networks + Red5.net WebRTC + Twitch.tv Live Studio */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
+          <TvuRed5TwitchView
+            onOpenLicense={() => setIsLicenseModalOpen(true)}
+            onNavigateToIrc={() => setActiveTab('irc')}
+            activeRank={activeOperRank}
+            onElevateRank={setActiveOperRank}
+            onOpenRankMatrix={() => setIsRankAccessModalOpen(true)}
+            ircNick={ircSession.nick}
+          />
+        </main>
       ) : activeTab === 'podcast_uplink' ? (
         /* 5B. DrFun1 Podcasting Uplink (Podserv.fm Clone & Rebrand) */
         <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
@@ -714,6 +785,9 @@ export default function App() {
             activeRank={activeOperRank}
             onElevateRank={setActiveOperRank}
             onOpenRankMatrix={() => setIsRankAccessModalOpen(true)}
+            shoutcastState={shoutcastControl}
+            onUpdateShoutcastState={handleUpdateShoutcastControl}
+            activeNick={ircSession.nick}
           />
         </main>
       ) : (
@@ -735,6 +809,8 @@ export default function App() {
                 localStorage.setItem(STORAGE_KEY_IRC_SESSION, JSON.stringify(updated));
               } catch (_) {}
             }}
+            shoutcastState={shoutcastControl}
+            onUpdateShoutcastState={handleUpdateShoutcastControl}
           />
         </main>
       )}
@@ -931,7 +1007,7 @@ export default function App() {
         userMembership={userMembership}
         onUpdateMembership={handleUpdateMembership}
         onOpenLegalCenter={() => setIsLicenseModalOpen(true)}
-        onNavigateToTab={(tab) => setActiveTab(tab)}
+        onNavigateToTab={(tab) => handleNavigateTab(tab)}
       />
 
       {/* Official ZNC 1.9.1 Web Control Panel (webadmin Port 5000) Modal */}
@@ -948,6 +1024,9 @@ export default function App() {
         isOpen={isUnrealSearchOpen}
         onClose={() => setIsUnrealSearchOpen(false)}
         onNavigateToIrc={(chan) => {
+          if (chan) {
+            setIrcSession((prev) => ({ ...prev, channel: chan }));
+          }
           setActiveTab('irc');
         }}
         onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
@@ -995,10 +1074,13 @@ export default function App() {
       <DevPlatformWittLawModal
         isOpen={isDevPlatformOpen}
         onClose={() => setIsDevPlatformOpen(false)}
-        onDispatchIrcQuery={(nick) => {
+        onDispatchIrcQuery={() => {
           handleNavigateTab('irc');
         }}
         onJoinDevChannel={(chan) => {
+          if (chan) {
+            setIrcSession((prev) => ({ ...prev, channel: chan }));
+          }
           handleNavigateTab('irc');
         }}
       />

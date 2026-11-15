@@ -41,9 +41,14 @@ import {
   Server,
   Share2,
   ShieldCheck,
+  Sliders,
   Terminal,
   Trash2,
   Upload,
+  UserCheck,
+  UserMinus,
+  UserPlus,
+  Users,
   Volume2,
   VolumeX,
   X,
@@ -59,6 +64,8 @@ import {
   PodcastEpisodeStatus,
   PodcastShow,
   PrivateSubscriberFeed,
+  ShoutcastControlState,
+  ShowModeratorAdmin,
 } from '../types/podcastUplink';
 import {
   ANALYTICS_14D_SERIES,
@@ -67,6 +74,8 @@ import {
   INITIAL_PODCAST_EPISODES,
   INITIAL_PODCAST_SHOWS,
   INITIAL_PRIVATE_FEEDS,
+  INITIAL_SHOUTCAST_CONTROL_STATE,
+  WITT_LAW_SHOW_MODS_ADMINS,
   formatDuration,
   generatePodcastOpmlXml,
   generatePodcastRssXml,
@@ -79,6 +88,9 @@ interface DrFun1PodcastUplinkViewProps {
   activeRank?: AnopeRankLevel;
   onElevateRank?: (rank: AnopeRankLevel) => void;
   onOpenRankMatrix?: () => void;
+  shoutcastState?: ShoutcastControlState;
+  onUpdateShoutcastState?: (patch: Partial<ShoutcastControlState>) => void;
+  activeNick?: string;
 }
 
 type UplinkWorkspaceTab =
@@ -96,11 +108,30 @@ export const DrFun1PodcastUplinkView: React.FC<DrFun1PodcastUplinkViewProps> = (
   activeRank = 'op',
   onElevateRank,
   onOpenRankMatrix,
+  shoutcastState,
+  onUpdateShoutcastState,
+  activeNick = 'RichardAlanWitt',
 }) => {
   const activeRankDef = getRankDefinition(activeRank);
   const canPublishPodcasts = hasMinIrcdRank(activeRank, 'dj_host');
   const canManageDai = hasMinIrcdRank(activeRank, 'founder');
   const canManageUplinkBridge = hasMinIrcdRank(activeRank, 'techadmin');
+  const [localShoutcast, setLocalShoutcast] = useState<ShoutcastControlState>(
+    INITIAL_SHOUTCAST_CONTROL_STATE
+  );
+  const syncedShoutcast = shoutcastState ?? localShoutcast;
+  const dispatchShoutcastUpdate = (patch: Partial<ShoutcastControlState>) => {
+    if (onUpdateShoutcastState) {
+      onUpdateShoutcastState(patch);
+    } else {
+      setLocalShoutcast((prev) => ({
+        ...prev,
+        ...patch,
+        lastSyncedAt: new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC',
+      }));
+    }
+  };
+
   const [shows, setShows] = useState<PodcastShow[]>(INITIAL_PODCAST_SHOWS);
   const [episodes, setEpisodes] = useState<PodcastEpisode[]>(INITIAL_PODCAST_EPISODES);
   const [directories, setDirectories] = useState<PodcastDirectoryListing[]>(INITIAL_PODCAST_DIRECTORIES);
@@ -147,6 +178,12 @@ export const DrFun1PodcastUplinkView: React.FC<DrFun1PodcastUplinkViewProps> = (
   // Private Feed Form State
   const [newPrivEmail, setNewPrivEmail] = useState<string>('');
   const [newPrivLabel, setNewPrivLabel] = useState<string>('');
+
+  // Custom www.wittlawfirm.com Show Moderator/Admin Form State
+  const [newModNick, setNewModNick] = useState<string>('');
+  const [newModFullName, setNewModFullName] = useState<string>('');
+  const [newModTitle, setNewModTitle] = useState<string>('Associate Show Moderator (www.wittlawfirm.com)');
+  const [newModRole, setNewModRole] = useState<ShowModeratorAdmin['ircRole']>('@ ChanOp');
 
   // Web Audio subtle studio confirmation pulse on play
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -338,6 +375,12 @@ export const DrFun1PodcastUplinkView: React.FC<DrFun1PodcastUplinkViewProps> = (
       switchPopCount: 500,
       ircChannel: `#${slug.slice(0, 18)}`,
       shoutcastMount: `/${slug}.mp3`,
+      shoutcastStationId: `SC-855${String(shows.length + 1).padStart(3, '0')}`,
+      shoutcastBitrate: '320kbps MP3',
+      shoutcastPublicYpListed: true,
+      shoutcastAutoDjEnabled: true,
+      governingFirm: 'www.wittlawfirm.com',
+      moderatorsAndAdmins: WITT_LAW_SHOW_MODS_ADMINS,
       websubEnabled: true,
       lastPingedAt: new Date().toISOString(),
       subscribersCount: 1,
@@ -349,7 +392,7 @@ export const DrFun1PodcastUplinkView: React.FC<DrFun1PodcastUplinkViewProps> = (
     setNewShowTitle('');
     setNewShowDescription('');
     setNewShowModalOpen(false);
-    showToast(`Created podcast channel "${created.title}"`);
+    showToast(`Created podcast channel "${created.title}" with SHOUTcast & www.wittlawfirm.com admins`);
   };
 
   const handleToggleEpisodeStatus = (epId: string) => {
@@ -412,6 +455,152 @@ export const DrFun1PodcastUplinkView: React.FC<DrFun1PodcastUplinkViewProps> = (
     showToast(`Issued private token RSS feed for ${feed.subscriberEmail}`);
   };
 
+  const mapBitrateToStreamQuality = (
+    bitrate: PodcastShow['shoutcastBitrate']
+  ): ShoutcastControlState['streamQuality'] => {
+    if (bitrate === 'FLAC Lossless') return 'flac_lossless';
+    if (bitrate === '192kbps AAC') return '192k_aac';
+    return '320k_mp3';
+  };
+
+  const handleSyncEpisodeToShoutcast = (ep: PodcastEpisode, show: PodcastShow) => {
+    const leadMod = show.moderatorsAndAdmins[0]?.nick || 'RichardAlanWitt';
+    dispatchShoutcastUpdate({
+      isBroadcasting: true,
+      streamQuality: mapBitrateToStreamQuality(show.shoutcastBitrate),
+      currentArtist: `${show.title} · Mod: ${leadMod} (www.wittlawfirm.com)`,
+      currentTrack: `S${ep.season}E${ep.episodeNumber}: ${ep.title}`,
+      nextTrack: `${show.title} AutoDJ Feed (${show.shoutcastMount})`,
+      activeMount: show.shoutcastMount,
+      activeStationId: show.shoutcastStationId,
+      ypListed: show.shoutcastPublicYpListed,
+      autoDjEnabled: show.shoutcastAutoDjEnabled,
+      syncedShowTitle: show.title,
+    });
+    setEpisodes((prev) =>
+      prev.map((item) => (item.id === ep.id ? { ...item, syncedToShoutcast: true } : item))
+    );
+    showToast(
+      `Synced "${ep.title}" live to SHOUTcast.com (${show.shoutcastStationId} · ${show.shoutcastMount})`
+    );
+  };
+
+  const handleSyncAllShowsToShoutcast = () => {
+    const nowIso = new Date().toISOString();
+    setShows((prev) =>
+      prev.map((s) => ({
+        ...s,
+        shoutcastPublicYpListed: true,
+        lastPingedAt: nowIso,
+      }))
+    );
+    handleSyncEpisodeToShoutcast(activeEpisode, activeShow);
+    showToast(
+      `All ${shows.length} Podserv shows synced with SHOUTcast.com YP directory under www.wittlawfirm.com mods/admins.`
+    );
+  };
+
+  const handleToggleShowShoutcastFlag = (
+    field: 'shoutcastPublicYpListed' | 'shoutcastAutoDjEnabled'
+  ) => {
+    const nextValue = !activeShow[field];
+    setShows((prev) =>
+      prev.map((s) => (s.id === activeShow.id ? { ...s, [field]: nextValue } : s))
+    );
+    if (field === 'shoutcastPublicYpListed') {
+      dispatchShoutcastUpdate({ ypListed: nextValue, syncedShowTitle: activeShow.title });
+      showToast(
+        `SHOUTcast.com YP Directory listing ${nextValue ? 'enabled' : 'disabled'} for ${activeShow.title}`
+      );
+    } else {
+      dispatchShoutcastUpdate({ autoDjEnabled: nextValue, syncedShowTitle: activeShow.title });
+      showToast(
+        `SHOUTcast AutoDJ failover ${nextValue ? 'enabled' : 'paused'} for ${activeShow.title}`
+      );
+    }
+  };
+
+  const handleChangeShowBitrate = (bitrate: PodcastShow['shoutcastBitrate']) => {
+    setShows((prev) =>
+      prev.map((s) => (s.id === activeShow.id ? { ...s, shoutcastBitrate: bitrate } : s))
+    );
+    dispatchShoutcastUpdate({
+      streamQuality: mapBitrateToStreamQuality(bitrate),
+      activeMount: activeShow.shoutcastMount,
+      activeStationId: activeShow.shoutcastStationId,
+      syncedShowTitle: activeShow.title,
+    });
+    showToast(`SHOUTcast stream profile switched to ${bitrate} on ${activeShow.shoutcastMount}`);
+  };
+
+  const handleToggleWittModOnShow = (mod: ShowModeratorAdmin) => {
+    const exists = activeShow.moderatorsAndAdmins.some((m) => m.id === mod.id);
+    if (exists && activeShow.moderatorsAndAdmins.length <= 1) {
+      showToast('At least one www.wittlawfirm.com Show Admin must remain assigned.');
+      return;
+    }
+    setShows((prev) =>
+      prev.map((s) => {
+        if (s.id !== activeShow.id) return s;
+        return {
+          ...s,
+          moderatorsAndAdmins: exists
+            ? s.moderatorsAndAdmins.filter((m) => m.id !== mod.id)
+            : [...s.moderatorsAndAdmins, mod],
+        };
+      })
+    );
+    showToast(
+      exists
+        ? `Removed ${mod.nick} from ${activeShow.title} moderators`
+        : `Assigned ${mod.nick} (www.wittlawfirm.com) as ${mod.ircRole} on ${activeShow.title}`
+    );
+  };
+
+  const handleCycleWittModRole = (modId: string) => {
+    const roles: ShowModeratorAdmin['ircRole'][] = ['~ Owner (SRA)', '& SOP', '@ ChanOp'];
+    setShows((prev) =>
+      prev.map((s) => {
+        if (s.id !== activeShow.id) return s;
+        return {
+          ...s,
+          moderatorsAndAdmins: s.moderatorsAndAdmins.map((m) => {
+            if (m.id !== modId) return m;
+            const nextRole = roles[(roles.indexOf(m.ircRole) + 1) % roles.length];
+            return { ...m, ircRole: nextRole };
+          }),
+        };
+      })
+    );
+    showToast(`Updated www.wittlawfirm.com show moderator rank on ${activeShow.title}`);
+  };
+
+  const handleAddCustomWittMod = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newModNick.trim()) return;
+    const cleanNick = newModNick.trim().replace(/\s+/g, '_');
+    const createdMod: ShowModeratorAdmin = {
+      id: `witt-custom-${Date.now()}`,
+      nick: cleanNick,
+      fullName: newModFullName.trim() || `${cleanNick} (Witt Law Firm)`,
+      title: newModTitle.trim() || 'Show Moderator & Admin (www.wittlawfirm.com)',
+      organization: 'www.wittlawfirm.com',
+      ircRole: newModRole,
+      hostmask: `${cleanNick.toLowerCase()}@staff.wittlawfirm.com`,
+      permissions: ['Approve Episodes', 'SHOUTcast.com Mount Control', 'Kick/Ban Show Chat'],
+    };
+    setShows((prev) =>
+      prev.map((s) =>
+        s.id === activeShow.id
+          ? { ...s, moderatorsAndAdmins: [...s.moderatorsAndAdmins, createdMod] }
+          : s
+      )
+    );
+    setNewModNick('');
+    setNewModFullName('');
+    showToast(`Added ${createdMod.nick} (${createdMod.ircRole}) from www.wittlawfirm.com to ${activeShow.title}`);
+  };
+
   const totalNetworkDownloads = useMemo(
     () => shows.reduce((acc, s) => acc + s.totalDownloads, 0),
     [shows]
@@ -438,7 +627,7 @@ export const DrFun1PodcastUplinkView: React.FC<DrFun1PodcastUplinkViewProps> = (
     { id: 'distribution', label: 'RSS 2.0 & Directories', icon: Rss },
     { id: 'analytics', label: 'IAB v2.1 Analytics', icon: BarChart3 },
     { id: 'monetization', label: 'DAI & Private Feeds', icon: Lock },
-    { id: 'uplink_bridge', label: 'SATCOM / IRC Uplink', icon: Satellite },
+    { id: 'uplink_bridge', label: 'SHOUTcast.com Sync & Mods', icon: Radio },
   ];
 
   return (
@@ -526,6 +715,105 @@ export const DrFun1PodcastUplinkView: React.FC<DrFun1PodcastUplinkViewProps> = (
             </div>
           </div>
         </div>
+
+        {/* Synchronized SHOUTcast.com Master Controls & www.wittlawfirm.com Governance Bar */}
+        <div className="mt-4 pt-4 border-t border-slate-800 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span
+              className={`px-2.5 py-1 rounded-lg font-mono font-bold border flex items-center gap-1.5 ${
+                syncedShoutcast.isBroadcasting
+                  ? 'bg-pink-500/15 border-pink-500/40 text-pink-300'
+                  : 'bg-slate-950 border-slate-800 text-slate-400'
+              }`}
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  syncedShoutcast.isBroadcasting ? 'bg-pink-400 animate-pulse' : 'bg-slate-500'
+                }`}
+              />
+              <span>
+                SHOUTcast.com {syncedShoutcast.isBroadcasting ? 'LIVE' : 'PAUSED'} · {syncedShoutcast.activeStationId}
+              </span>
+            </span>
+
+            <span className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 font-mono text-slate-300">
+              Mount: <strong className="text-pink-300">{syncedShoutcast.activeMount}</strong>
+            </span>
+
+            <span className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 font-mono text-slate-300">
+              On-Air: <strong className="text-white truncate max-w-[220px] inline-block align-bottom">{syncedShoutcast.currentTrack}</strong>
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setWorkspaceTab('uplink_bridge')}
+              className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-200 font-mono flex items-center gap-1.5 cursor-pointer"
+              title="View and manage www.wittlawfirm.com show moderators & admins"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              <span>
+                Mods/Admins: www.wittlawfirm.com ({activeShow.moderatorsAndAdmins.length})
+              </span>
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {/* Quality Quick Switcher */}
+            <div className="bg-slate-950 p-1 rounded-lg border border-slate-800 flex items-center gap-1 text-[11px] font-mono">
+              {(
+                [
+                  { id: '320k_mp3', label: '320K' },
+                  { id: '192k_aac', label: '192K' },
+                  { id: 'flac_lossless', label: 'FLAC' },
+                ] as const
+              ).map((q) => (
+                <button
+                  key={q.id}
+                  type="button"
+                  onClick={() => {
+                    dispatchShoutcastUpdate({ streamQuality: q.id });
+                    showToast(`SHOUTcast.com stream bitrate synced to ${q.label}`);
+                  }}
+                  className={`px-2 py-1 rounded cursor-pointer transition-colors ${
+                    syncedShoutcast.streamQuality === q.id
+                      ? 'bg-pink-600 text-white font-bold'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {q.label}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                dispatchShoutcastUpdate({ isBroadcasting: !syncedShoutcast.isBroadcasting })
+              }
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 min-h-[36px] cursor-pointer ${
+                syncedShoutcast.isBroadcasting
+                  ? 'bg-pink-600 hover:bg-pink-500 text-white'
+                  : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
+              }`}
+            >
+              {syncedShoutcast.isBroadcasting ? (
+                <Pause className="w-3.5 h-3.5" />
+              ) : (
+                <Play className="w-3.5 h-3.5" />
+              )}
+              <span>{syncedShoutcast.isBroadcasting ? 'Pause SHOUTcast' : 'Go Live SHOUTcast'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSyncEpisodeToShoutcast(activeEpisode, activeShow)}
+              className="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold flex items-center gap-1.5 min-h-[36px] cursor-pointer"
+            >
+              <Radio className="w-3.5 h-3.5" />
+              <span>Push Active Ep to SHOUTcast</span>
+            </button>
+          </div>
+        </div>
       </section>
 
       {/* ========================================================
@@ -571,13 +859,13 @@ export const DrFun1PodcastUplinkView: React.FC<DrFun1PodcastUplinkViewProps> = (
 
               <div className="min-w-0 flex-1">
                 <div className="text-xs text-slate-400 truncate">
-                  {show.category} · {epCount} episodes
+                  {show.category} · {epCount} episodes · {show.shoutcastStationId}
                 </div>
                 <div className="text-sm font-bold text-white truncate mt-0.5">
                   {show.title}
                 </div>
                 <div className="text-xs font-mono tabular-nums text-slate-300 mt-1 truncate">
-                  {show.subscribersCount.toLocaleString()} subs · {(show.totalDownloads / 1000).toFixed(0)}k plays
+                  {show.subscribersCount.toLocaleString()} subs · {show.moderatorsAndAdmins.length} Witt Mods
                 </div>
               </div>
             </button>
@@ -819,7 +1107,7 @@ export const DrFun1PodcastUplinkView: React.FC<DrFun1PodcastUplinkViewProps> = (
             <div>
               <h2 className="text-lg font-bold text-white">{activeShow.title} — Episodes</h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                Custom URL: {activeShow.customDomain} · Band: {activeShow.satcomUplinkBand} · IRC: {activeShow.ircChannel}
+                URL: {activeShow.customDomain} · SHOUTcast: {activeShow.shoutcastStationId} ({activeShow.shoutcastMount}) · Mods/Admins: {activeShow.governingFirm} ({activeShow.moderatorsAndAdmins.length})
               </p>
             </div>
 
@@ -951,6 +1239,20 @@ export const DrFun1PodcastUplinkView: React.FC<DrFun1PodcastUplinkViewProps> = (
                           <Copy className="w-3.5 h-3.5" />
                         )}
                         <span>{copiedId === ep.id ? 'Copied' : 'Copy Audio URL'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSyncEpisodeToShoutcast(ep, activeShow)}
+                        className={`px-3 py-1.5 rounded-lg border text-xs font-mono flex items-center gap-1.5 min-h-[38px] cursor-pointer whitespace-nowrap ${
+                          ep.syncedToShoutcast
+                            ? 'bg-pink-500/15 border-pink-500/40 text-pink-300 hover:bg-pink-500/25'
+                            : 'bg-slate-950 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
+                        }`}
+                        title={`Push ${ep.title} directly to SHOUTcast.com (${activeShow.shoutcastStationId})`}
+                      >
+                        <Radio className="w-3.5 h-3.5" />
+                        <span>{ep.syncedToShoutcast ? 'On SHOUTcast' : 'Push SHOUTcast'}</span>
                       </button>
 
                       <button
@@ -1503,119 +1805,423 @@ export const DrFun1PodcastUplinkView: React.FC<DrFun1PodcastUplinkViewProps> = (
       )}
 
       {/* ========================================================
-          TAB 6: SATCOM / SHOUTCAST / UNREALIRCD UPLINK BRIDGE
+          TAB 6: SHOUTCAST.COM SYNC & WWW.WITTLAWFIRM.COM MODS/ADMINS
           ======================================================== */}
       {workspaceTab === 'uplink_bridge' && (
         !canManageUplinkBridge ? (
           <IrcdAccessGateBanner
             currentRank={activeRank}
             requiredRank="techadmin"
-            featureName="SATCOM / 855k SHOUTcast Pod-Relay & Quad-Hub IRC Bridge Controls"
+            featureName="SHOUTcast.com Station Controls, Podserv Sync & www.wittlawfirm.com Show Mods/Admins"
             onElevateRank={onElevateRank}
             onOpenRankMatrix={onOpenRankMatrix}
           />
         ) : (
-        <section className="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-6 space-y-5">
-          <div className="pb-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold text-white">
-                DrFun1 Infrastructure Bridge — SATCOM, SHOUTcast &amp; Quad-Hub IRC
-              </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Seamless cross-publishing between podcast episodes, 855,000 SHOUTcast stations, and 1,034 synchronized IRC leaf nodes.
-              </p>
+        <div className="space-y-5">
+          {/* Synchronized SHOUTcast.com Station Control Panel */}
+          <section className="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-6 space-y-5">
+            <div className="pb-4 border-b border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Radio className="w-5 h-5 text-pink-400" />
+                  <span>SHOUTcast.com Live Playout &amp; Podserv.fm Sync — {activeShow.title}</span>
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Bidirectionally synced with DrFun1 FM Radio Console · Station ID <span className="text-pink-300 font-mono">{activeShow.shoutcastStationId}</span> · Mount <span className="text-pink-300 font-mono">{activeShow.shoutcastMount}</span> · Operator: <span className="text-amber-300 font-mono">{activeNick}</span>
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleSyncAllShowsToShoutcast}
+                  className="px-3.5 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Sync All {shows.length} Shows to YP.shoutcast.com</span>
+                </button>
+                {onOpenLicense && (
+                  <button
+                    type="button"
+                    onClick={onOpenLicense}
+                    className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-emerald-400 hover:text-emerald-300 text-xs font-mono flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>FRN 0034981290 · www.wittlawfirm.com</span>
+                  </button>
+                )}
+              </div>
             </div>
-            {onOpenLicense && (
+
+            {/* SHOUTcast.com Station Settings & Transport */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              <div className="lg:col-span-7 bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm font-bold text-white flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-pink-400" />
+                    <span>SHOUTcast.com Mount &amp; Encoder Controls</span>
+                  </div>
+                  <span className="text-[11px] font-mono text-slate-400">
+                    Last Synced: {syncedShoutcast.lastSyncedAt}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div className="p-3 rounded-lg bg-slate-900 border border-slate-800">
+                    <div className="text-slate-400 text-[11px]">Station ID</div>
+                    <div className="font-mono font-bold text-pink-300 mt-0.5">{activeShow.shoutcastStationId}</div>
+                  </div>
+                  <div className="p-3 rounded-lg bg-slate-900 border border-slate-800">
+                    <div className="text-slate-400 text-[11px]">Live Stream Mount</div>
+                    <div className="font-mono font-bold text-white truncate mt-0.5">{activeShow.shoutcastMount}</div>
+                  </div>
+                  <div className="p-3 rounded-lg bg-slate-900 border border-slate-800">
+                    <div className="text-slate-400 text-[11px]">Concurrent Listeners</div>
+                    <div className="font-mono font-bold text-emerald-400 mt-0.5">
+                      {syncedShoutcast.listenerCount.toLocaleString()} tuned in
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-xs font-semibold text-slate-300">SHOUTcast.com Mount Bitrate Profile</div>
+                  <div className="flex flex-wrap gap-2">
+                    {(['320kbps MP3', '192kbps AAC', 'FLAC Lossless'] as const).map((br) => (
+                      <button
+                        key={br}
+                        type="button"
+                        onClick={() => handleChangeShowBitrate(br)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-mono border cursor-pointer transition ${
+                          activeShow.shoutcastBitrate === br
+                            ? 'bg-pink-600 border-pink-500 text-white font-bold'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        {br}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleShowShoutcastFlag('shoutcastPublicYpListed')}
+                    className={`p-3 rounded-lg border text-left cursor-pointer transition ${
+                      activeShow.shoutcastPublicYpListed
+                        ? 'bg-emerald-500/10 border-emerald-500/40'
+                        : 'bg-slate-900 border-slate-800'
+                    }`}
+                  >
+                    <div className="text-xs font-bold text-white flex items-center justify-between">
+                      <span>YP.shoutcast.com Public Directory</span>
+                      <span className={`font-mono text-[11px] ${activeShow.shoutcastPublicYpListed ? 'text-emerald-400' : 'text-slate-400'}`}>
+                        {activeShow.shoutcastPublicYpListed ? 'LISTED' : 'PRIVATE'}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-1">
+                      Broadcast show metadata &amp; station ID to SHOUTcast.com directory.
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToggleShowShoutcastFlag('shoutcastAutoDjEnabled')}
+                    className={`p-3 rounded-lg border text-left cursor-pointer transition ${
+                      activeShow.shoutcastAutoDjEnabled
+                        ? 'bg-sky-500/10 border-sky-500/40'
+                        : 'bg-slate-900 border-slate-800'
+                    }`}
+                  >
+                    <div className="text-xs font-bold text-white flex items-center justify-between">
+                      <span>SHOUTcast AutoDJ Failover</span>
+                      <span className={`font-mono text-[11px] ${activeShow.shoutcastAutoDjEnabled ? 'text-sky-400' : 'text-slate-400'}`}>
+                        {activeShow.shoutcastAutoDjEnabled ? 'ENABLED' : 'MANUAL'}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-1">
+                      Automatically rotate approved Podserv episodes between live DJ sets.
+                    </div>
+                  </button>
+                </div>
+
+                {/* Synchronized Volume Control */}
+                <div className="pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-xs font-mono text-slate-300">
+                    <button
+                      type="button"
+                      onClick={() => dispatchShoutcastUpdate({ isMuted: !syncedShoutcast.isMuted })}
+                      className="p-1.5 rounded bg-slate-900 border border-slate-800 cursor-pointer"
+                    >
+                      {syncedShoutcast.isMuted ? (
+                        <VolumeX className="w-4 h-4 text-rose-400" />
+                      ) : (
+                        <Volume2 className="w-4 h-4 text-pink-400" />
+                      )}
+                    </button>
+                    <span>Master Studio Output:</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={syncedShoutcast.isMuted ? 0 : syncedShoutcast.volume}
+                      onChange={(e) =>
+                        dispatchShoutcastUpdate({ volume: Number(e.target.value), isMuted: false })
+                      }
+                      className="w-28 accent-pink-500"
+                    />
+                    <span>{syncedShoutcast.isMuted ? '0%' : `${syncedShoutcast.volume}%`}</span>
+                  </div>
+
+                  {onNavigateToRadio && (
+                    <button
+                      type="button"
+                      onClick={onNavigateToRadio}
+                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 text-pink-400" />
+                      <span>Open SHOUTcast Radio Studio</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick Infrastructure Bridge Cards */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2.5">
+                  <div className="flex items-center gap-2 text-sm font-bold text-white">
+                    <Radio className="w-4 h-4 text-amber-400" />
+                    <span>855,000 SHOUTcast Pod-Relay</span>
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Current SHOUTcast Now Playing: <strong className="text-white">{syncedShoutcast.currentTrack}</strong> ({syncedShoutcast.currentArtist}).
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleSyncEpisodeToShoutcast(activeEpisode, activeShow)}
+                      className="px-3 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold cursor-pointer"
+                    >
+                      Push Active Episode to SHOUTcast
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2.5">
+                  <div className="flex items-center gap-2 text-sm font-bold text-white">
+                    <Terminal className="w-4 h-4 text-emerald-400" />
+                    <span>UnrealIRCd Quad-Hub Announcer</span>
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Broadcasts show updates into <strong className="text-slate-200">{activeShow.ircChannel}</strong> moderated by www.wittlawfirm.com admins.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        showToast(
+                          `Dispatched /NOTICE to ${activeShow.ircChannel} under www.wittlawfirm.com mod authority.`
+                        )
+                      }
+                      className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer"
+                    >
+                      Broadcast to IRC Hubs
+                    </button>
+                    {onNavigateToIrc && (
+                      <button
+                        type="button"
+                        onClick={onNavigateToIrc}
+                        className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold cursor-pointer"
+                      >
+                        Open WebIRC
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* www.wittlawfirm.com Show Moderators & Admins Governance Section */}
+          <section className="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-6 space-y-5">
+            <div className="pb-4 border-b border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Users className="w-5 h-5 text-amber-400" />
+                  <span>Show Moderators &amp; Admins — www.wittlawfirm.com</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  The Law Office of Richard A. Witt LLC (<span className="text-sky-400">www.wittlawfirm.com</span>) principals and technical counsel hold authoritative moderator &amp; administrator privileges over <strong className="text-white">{activeShow.title}</strong>, its SHOUTcast.com mount ({activeShow.shoutcastMount}), and show chat ({activeShow.ircChannel}).
+                </p>
+              </div>
               <button
                 type="button"
-                onClick={onOpenLicense}
-                className="px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-emerald-400 hover:text-emerald-300 text-xs font-mono flex items-center gap-1.5 cursor-pointer self-start"
+                onClick={() => {
+                  setShows((prev) =>
+                    prev.map((s) =>
+                      s.id === activeShow.id
+                        ? { ...s, moderatorsAndAdmins: WITT_LAW_SHOW_MODS_ADMINS }
+                        : s
+                    )
+                  );
+                  showToast(`Restored all ${WITT_LAW_SHOW_MODS_ADMINS.length} www.wittlawfirm.com mods/admins for ${activeShow.title}`);
+                }}
+                className="px-3 py-2 rounded-lg bg-slate-950 hover:bg-slate-800 border border-amber-500/40 text-amber-200 text-xs font-semibold cursor-pointer self-start"
               >
-                <ShieldCheck className="w-4 h-4" />
-                <span>FRN 0034981290 · www.wittlawfirm.com</span>
+                Assign All 6 Witt Law Mods &amp; Admins
               </button>
+            </div>
+
+            {/* Active Moderators & Admins Roster for Selected Show */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {activeShow.moderatorsAndAdmins.map((mod) => (
+                <div
+                  key={mod.id}
+                  className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-2.5 flex flex-col justify-between"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold text-white font-mono truncate">
+                          {mod.nick}
+                        </div>
+                        <div className="text-xs text-slate-300 truncate">{mod.fullName}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCycleWittModRole(mod.id)}
+                        className="px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300 font-mono text-[11px] font-bold shrink-0 cursor-pointer"
+                        title="Click to cycle moderator/admin IRC role"
+                      >
+                        {mod.ircRole}
+                      </button>
+                    </div>
+                    <div className="text-[11px] text-slate-400">{mod.title}</div>
+                    <div className="text-[11px] font-mono text-sky-400 truncate">
+                      {mod.hostmask}
+                    </div>
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {mod.permissions.map((perm) => (
+                        <span
+                          key={perm}
+                          className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] text-slate-300"
+                        >
+                          {perm}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+                    <span className="text-emerald-400 font-mono flex items-center gap-1">
+                      <UserCheck className="w-3.5 h-3.5" />
+                      <span>{mod.organization}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleWittModOnShow(mod)}
+                      className="text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
+                    >
+                      <UserMinus className="w-3.5 h-3.5" />
+                      <span>Remove</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Quick Toggle Unassigned Witt Law Firm Principals */}
+            {WITT_LAW_SHOW_MODS_ADMINS.some(
+              (preset) => !activeShow.moderatorsAndAdmins.some((m) => m.id === preset.id)
+            ) && (
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                <div className="text-xs font-semibold text-slate-300">
+                  Available www.wittlawfirm.com Staff to Assign to {activeShow.title}:
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {WITT_LAW_SHOW_MODS_ADMINS.filter(
+                    (preset) => !activeShow.moderatorsAndAdmins.some((m) => m.id === preset.id)
+                  ).map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => handleToggleWittModOnShow(preset)}
+                      className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-200 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="font-mono">{preset.nick}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2.5">
-              <div className="flex items-center gap-2 text-sm font-bold text-white">
-                <Terminal className="w-4 h-4 text-emerald-400" />
-                <span>UnrealIRCd Quad-Hub Announcer</span>
+            {/* Add Additional www.wittlawfirm.com Moderator/Admin */}
+            <form
+              onSubmit={handleAddCustomWittMod}
+              className="pt-3 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end"
+            >
+              <div className="sm:col-span-3">
+                <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                  Witt Law Nick
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newModNick}
+                  onChange={(e) => setNewModNick(e.target.value)}
+                  placeholder="e.g. Counsel_Witt"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+                />
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Broadcasts episode drops into <strong className="text-slate-200">{activeShow.ircChannel}</strong> across irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net, and drfun1ircd.com.
-              </p>
-              <div className="flex items-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() =>
-                    showToast(
-                      `Dispatched /NOTICE to ${activeShow.ircChannel} across all 4 UnrealIRCd hubs.`
-                    )
-                  }
-                  className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer"
+              <div className="sm:col-span-3">
+                <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={newModFullName}
+                  onChange={(e) => setNewModFullName(e.target.value)}
+                  placeholder="Attorney / Staff Name"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                  IRC / Show Role
+                </label>
+                <select
+                  value={newModRole}
+                  onChange={(e) => setNewModRole(e.target.value as ShowModeratorAdmin['ircRole'])}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
                 >
-                  Broadcast to IRC Hubs
-                </button>
-                {onNavigateToIrc && (
-                  <button
-                    type="button"
-                    onClick={onNavigateToIrc}
-                    className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold cursor-pointer"
-                  >
-                    Open WebIRC
-                  </button>
-                )}
+                  <option value="~ Owner (SRA)">~ Owner (SRA)</option>
+                  <option value="& SOP">&amp; SOP</option>
+                  <option value="@ ChanOp">@ ChanOp</option>
+                </select>
               </div>
-            </div>
-
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2.5">
-              <div className="flex items-center gap-2 text-sm font-bold text-white">
-                <Radio className="w-4 h-4 text-amber-400" />
-                <span>855,000 SHOUTcast Pod-Relay</span>
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  value={newModTitle}
+                  onChange={(e) => setNewModTitle(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+                />
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Mount <strong className="text-slate-200">{activeShow.shoutcastMount}</strong> feeds live podcast premieres straight into the SHOUTcast/Icecast2 cluster &amp; SIP VoIP switch.
-              </p>
-              <div className="flex items-center gap-2 pt-1">
+              <div className="sm:col-span-2">
                 <button
-                  type="button"
-                  onClick={() =>
-                    showToast(
-                      `Queued "${activeEpisode.title}" onto SHOUTcast mount ${activeShow.shoutcastMount}.`
-                    )
-                  }
-                  className="px-3 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold cursor-pointer"
+                  type="submit"
+                  className="w-full px-3 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold flex items-center justify-center gap-1.5 min-h-[36px] cursor-pointer"
                 >
-                  Push to SHOUTcast
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>Add Witt Mod</span>
                 </button>
-                {onNavigateToRadio && (
-                  <button
-                    type="button"
-                    onClick={onNavigateToRadio}
-                    className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold cursor-pointer"
-                  >
-                    Open Radio Studio
-                  </button>
-                )}
               </div>
-            </div>
-
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2.5">
-              <div className="flex items-center gap-2 text-sm font-bold text-white">
-                <Satellite className="w-4 h-4 text-sky-400" />
-                <span>SCOTUS &amp; Legal Clearance</span>
-              </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Podcast host clearance governed under supremecourt.gov standards through www.wittlawfirm.com with Owens Company billing in receiving.
-              </p>
-              <div className="pt-1 text-xs font-mono text-slate-300">
-                Uplink Band: {activeShow.satcomUplinkBand}
-              </div>
-            </div>
-          </div>
-        </section>
+            </form>
+          </section>
+        </div>
         )
       )}
 

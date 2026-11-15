@@ -61,6 +61,8 @@ import { YouTubeMusicTrack } from '../data/shoutcastMusicLibraryData';
 import { IrcLoginSession } from '../types/irc';
 import { INITIAL_MPD_BOT_INSTANCES } from '../data/mpdBotData';
 import { MpdBotInstance } from '../types/mpdBot';
+import { ShoutcastControlState } from '../types/podcastUplink';
+import { INITIAL_SHOUTCAST_CONTROL_STATE, WITT_LAW_SHOW_MODS_ADMINS } from '../data/podcastUplinkData';
 
 interface OnlineRadioDjStudioProps {
   onOpenLicense?: () => void;
@@ -72,6 +74,8 @@ interface OnlineRadioDjStudioProps {
   onOpenIrcdAdmin?: () => void;
   ircSession: IrcLoginSession;
   onUpdateSession?: (newSession: Partial<IrcLoginSession>) => void;
+  shoutcastState?: ShoutcastControlState;
+  onUpdateShoutcastState?: (patch: Partial<ShoutcastControlState>) => void;
 }
 
 export const OnlineRadioDjStudio: React.FC<OnlineRadioDjStudioProps> = ({
@@ -83,36 +87,66 @@ export const OnlineRadioDjStudio: React.FC<OnlineRadioDjStudioProps> = ({
   onOpenRankAccess,
   onOpenIrcdAdmin,
   ircSession,
-  onUpdateSession
+  onUpdateSession,
+  shoutcastState,
+  onUpdateShoutcastState,
 }) => {
   const activeRankDef = getRankDefinition(activeRank);
-  // Radio Player State
-  const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [volume, setVolume] = useState<number>(85);
-  const [activeStreamQuality, setActiveStreamQuality] = useState<'320k_mp3' | '192k_aac' | 'flac_lossless'>('320k_mp3');
-  const [listenerCount, setListenerCount] = useState<number>(1429);
+  const [localShoutcastState, setLocalShoutcastState] = useState<ShoutcastControlState>(
+    INITIAL_SHOUTCAST_CONTROL_STATE
+  );
+  const syncedShoutcast = shoutcastState ?? localShoutcastState;
+  const updateShoutcast = (patch: Partial<ShoutcastControlState>) => {
+    if (onUpdateShoutcastState) {
+      onUpdateShoutcastState(patch);
+    } else {
+      setLocalShoutcastState((prev) => ({
+        ...prev,
+        ...patch,
+        lastSyncedAt: new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC',
+      }));
+    }
+  };
+
+  // Synchronized Radio Player State driven by SHOUTcast.com control state
+  const isPlaying = syncedShoutcast.isBroadcasting;
+  const setIsPlaying = (next: boolean) => updateShoutcast({ isBroadcasting: next });
+  const isMuted = syncedShoutcast.isMuted;
+  const setIsMuted = (next: boolean) => updateShoutcast({ isMuted: next });
+  const volume = syncedShoutcast.volume;
+  const setVolume = (next: number) => updateShoutcast({ volume: next });
+  const activeStreamQuality = syncedShoutcast.streamQuality;
+  const setActiveStreamQuality = (next: ShoutcastControlState['streamQuality']) =>
+    updateShoutcast({ streamQuality: next });
+  const [listenerDrift, setListenerDrift] = useState<number>(0);
+  const listenerCount = Math.max(0, syncedShoutcast.listenerCount + listenerDrift);
+
   const [stationMode, setStationMode] = useState<'shoutcast_live' | 'youtube_ads' | 'mpd_dj_deck' | 'music_catalog' | 'radio_irc' | 'voip_scotus' | 'podcast_uplink'>('shoutcast_live');
   const [djBots, setDjBots] = useState<MpdBotInstance[]>(INITIAL_MPD_BOT_INSTANCES);
   const [selectedBotId, setSelectedBotId] = useState<string>(INITIAL_MPD_BOT_INSTANCES[0].id);
   const activeBot = djBots.find(b => b.id === selectedBotId) || djBots[0];
 
-  // Currently playing metadata
-  const [currentArtist, setCurrentArtist] = useState<string>('DrFun1 Media Live DJ');
-  const [currentTrack, setCurrentTrack] = useState<string>('Trans-Atlantic 100G Deep Bass Mix');
-  const [nextTrack, setNextTrack] = useState<string>('Switch SUPERNAP Cyber Synthesizer');
+  // Currently playing metadata synced with Podserv.fm / SHOUTcast.com
+  const currentArtist = syncedShoutcast.currentArtist;
+  const setCurrentArtist = (artist: string) => updateShoutcast({ currentArtist: artist });
+  const currentTrack = syncedShoutcast.currentTrack;
+  const setCurrentTrack = (track: string) => updateShoutcast({ currentTrack: track });
+  const nextTrack = syncedShoutcast.nextTrack;
+  const setNextTrack = (track: string) => updateShoutcast({ nextTrack: track });
   const [trackProgress, setTrackProgress] = useState<number>(45); // percent
 
   // Simulated VU & Track timer
   useEffect(() => {
-    let timer: any;
+    let timer: ReturnType<typeof setInterval> | undefined;
     if (isPlaying) {
       timer = setInterval(() => {
         setTrackProgress(prev => (prev >= 100 ? 0 : prev + 1));
-        setListenerCount(prev => prev + (Math.random() > 0.5 ? 1 : -1));
+        setListenerDrift(prev => prev + (Math.random() > 0.5 ? 1 : -1));
       }, 1000);
     }
-    return () => clearInterval(timer);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
   }, [isPlaying]);
 
   return (
@@ -127,20 +161,23 @@ export const OnlineRadioDjStudio: React.FC<OnlineRadioDjStudioProps> = ({
               </div>
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center flex-wrap gap-2">
                 <h2 className="text-lg font-bold text-white tracking-tight">
                   DrFun1 FM &amp; MPD DJ Station Console
                 </h2>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-pink-500/20 text-pink-300 border border-pink-500/40 uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-pink-400 animate-pulse" />
-                  SHOUTCAST 320 KBPS
+                  <span className={`w-1.5 h-1.5 rounded-full ${isPlaying ? 'bg-pink-400 animate-pulse' : 'bg-slate-500'}`} />
+                  SHOUTCAST.COM {syncedShoutcast.activeStationId} · {activeStreamQuality === '320k_mp3' ? '320K MP3' : activeStreamQuality === '192k_aac' ? '192K AAC' : 'FLAC'}
                 </span>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                  Icecast2 Cluster
+                  Podserv.fm Synced · {syncedShoutcast.activeMount}
+                </span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  Mods/Admins: www.wittlawfirm.com ({WITT_LAW_SHOW_MODS_ADMINS.length})
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Online Radio Broadcasting · 855k YouTube Music Catalog · Dual DJ Decks · Synchronized #music-deathrow IRC
+                Online Radio Broadcasting · Synced Show: <strong className="text-slate-200">{syncedShoutcast.syncedShowTitle || 'Orbital Uplink Weekly'}</strong> · YP.shoutcast.com {syncedShoutcast.ypListed ? 'Listed' : 'Unlisted'} · AutoDJ {syncedShoutcast.autoDjEnabled ? 'Active' : 'Manual'}
               </p>
             </div>
           </div>
@@ -392,23 +429,58 @@ export const OnlineRadioDjStudio: React.FC<OnlineRadioDjStudioProps> = ({
           {/* Right Column: Audio Endpoints & Station Details (4 cols) */}
           <div className="lg:col-span-4 space-y-4">
             <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3 shadow-lg">
-              <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Radio className="w-3.5 h-3.5 text-pink-400" />
-                Live Broadcast Ingest &amp; Stream URLs
-              </span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <Radio className="w-3.5 h-3.5 text-pink-400" />
+                  SHOUTcast.com Sync &amp; Podserv.fm Mount
+                </span>
+                <span className="text-[10px] font-mono text-emerald-400">
+                  {syncedShoutcast.activeStationId}
+                </span>
+              </div>
               <div className="space-y-2 text-xs font-mono">
                 <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
-                  <div className="text-slate-400 text-[10px]">SHOUTcast v2 Server:</div>
-                  <div className="text-pink-300 truncate">http://stream.drfun1.com:8000/live.mp3</div>
+                  <div className="text-slate-400 text-[10px]">Active SHOUTcast.com Podserv Mount:</div>
+                  <div className="text-pink-300 truncate">http://stream.drfun1.com:8000{syncedShoutcast.activeMount}</div>
                 </div>
                 <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
-                  <div className="text-slate-400 text-[10px]">Icecast2 Lossless FLAC Mount:</div>
-                  <div className="text-purple-300 truncate">http://stream.drfun1.com:8000/lossless.ogg</div>
+                  <div className="text-slate-400 text-[10px]">Show Moderators &amp; Admins (www.wittlawfirm.com):</div>
+                  <div className="text-amber-300 text-[11px] leading-snug">
+                    {WITT_LAW_SHOW_MODS_ADMINS.slice(0, 4).map((m) => m.nick).join(', ')} +{WITT_LAW_SHOW_MODS_ADMINS.length - 4} more
+                  </div>
                 </div>
-                <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
-                  <div className="text-slate-400 text-[10px]">MPD Daemon Host &amp; Port:</div>
-                  <div className="text-cyan-300 truncate">mpd.drfun1.com:6600 (Password Protected)</div>
+                <div className="grid grid-cols-2 gap-2 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => updateShoutcast({ ypListed: !syncedShoutcast.ypListed })}
+                    className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-mono cursor-pointer transition ${
+                      syncedShoutcast.ypListed
+                        ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                        : 'bg-slate-950 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    YP.shoutcast: {syncedShoutcast.ypListed ? 'ON' : 'OFF'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateShoutcast({ autoDjEnabled: !syncedShoutcast.autoDjEnabled })}
+                    className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-mono cursor-pointer transition ${
+                      syncedShoutcast.autoDjEnabled
+                        ? 'bg-sky-500/15 border-sky-500/40 text-sky-300'
+                        : 'bg-slate-950 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    AutoDJ: {syncedShoutcast.autoDjEnabled ? 'ON' : 'OFF'}
+                  </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setStationMode('podcast_uplink')}
+                  className="w-full py-1.5 px-3 rounded-lg bg-amber-400/15 hover:bg-amber-400/25 border border-amber-400/40 text-amber-200 text-xs font-sans font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Mic className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Manage Shows &amp; Witt Law Mods in Podcast Uplink</span>
+                </button>
               </div>
             </div>
 
@@ -558,6 +630,9 @@ export const OnlineRadioDjStudio: React.FC<OnlineRadioDjStudioProps> = ({
           activeRank={activeRank}
           onElevateRank={onRankChange}
           onOpenRankMatrix={onOpenRankAccess}
+          shoutcastState={syncedShoutcast}
+          onUpdateShoutcastState={updateShoutcast}
+          activeNick={ircSession.nick}
         />
       )}
     </div>

@@ -917,14 +917,14 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                     SID: 001–004
                   </span>
                   <span className="text-xs font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/40">
-                    1,034 Multi-Hub Leaves Verified
+                    1,038 Dedicated Nodes Verified
                   </span>
                 </div>
                 <h3 className="text-base sm:text-lg font-black font-mono text-white tracking-wide">
                   irc.drfun1.com &bull; irc.drfun1media.com &bull; irc.drfun1media.net &bull; drfun1ircd.com :6697 (SSL)
                 </h3>
                 <p className="text-xs text-slate-300 max-w-2xl">
-                  500 www.switch.com nodes/hub via CGW Law Offices (1,000) &bull; 12 www.datapacket.com leafs/hub (24) &bull; 10 risingnet.com dedicated servers &bull; License: www.wittlawfirm.com &bull; Payment: Owens Company (Bill in Receiving)
+                  All IRCd servers are Dedicated Bare-Metal Nodes: 4 Core Hubs + 1,000 Switch/Hub via CGW Law Offices + 24 DataPacket 100G + 10 RisingNet Dedicated Servers &bull; License: www.wittlawfirm.com &bull; Payment: Owens Company (Bill in Receiving)
                 </p>
               </div>
 
@@ -1022,7 +1022,7 @@ export const IrcChannelAndLeafSearchEngine: React.FC<IrcChannelAndLeafSearchEngi
                                 </span>
                               )}
                               <span className="text-[10px] font-mono px-1.5 py-0.5 bg-slate-800 text-emerald-300 rounded border border-slate-700">
-                                {node.leafStatus.toUpperCase()}
+                                DEDICATED &bull; {node.leafStatus.toUpperCase()}
                               </span>
                             </div>
                             <h4 className="text-sm font-black font-mono text-white mt-1.5 truncate">

@@ -50,6 +50,34 @@ export interface PodcastEpisode {
   syncedToShoutcast: boolean;
 }
 
+export interface ShowModeratorAdmin {
+  id: string;
+  nick: string;
+  fullName: string;
+  title: string;
+  organization: 'www.wittlawfirm.com';
+  ircRole: '~ Owner (SRA)' | '@ ChanOp' | '& SOP';
+  hostmask: string;
+  permissions: string[];
+}
+
+export interface ShoutcastControlState {
+  isBroadcasting: boolean;
+  streamQuality: '320k_mp3' | '192k_aac' | 'flac_lossless';
+  volume: number;
+  isMuted: boolean;
+  listenerCount: number;
+  currentArtist: string;
+  currentTrack: string;
+  nextTrack: string;
+  activeMount: string;
+  activeStationId: string;
+  ypListed: boolean;
+  autoDjEnabled: boolean;
+  syncedShowTitle?: string;
+  lastSyncedAt: string;
+}
+
 export interface PodcastShow {
   id: string;
   title: string;
@@ -71,6 +99,12 @@ export interface PodcastShow {
   switchPopCount: number;
   ircChannel: string;
   shoutcastMount: string;
+  shoutcastStationId: string;
+  shoutcastBitrate: '320kbps MP3' | '192kbps AAC' | 'FLAC Lossless';
+  shoutcastPublicYpListed: boolean;
+  shoutcastAutoDjEnabled: boolean;
+  governingFirm: 'www.wittlawfirm.com';
+  moderatorsAndAdmins: ShowModeratorAdmin[];
   websubEnabled: boolean;
   lastPingedAt: string;
   subscribersCount: number;

@@ -24,10 +24,12 @@ import {
   Globe,
   Sliders,
   CheckCircle,
-  HelpCircle
+  HelpCircle,
+  Tv
 } from 'lucide-react';
 import { DEV_PLATFORM_CONFIG, WITTLAW_ADMINS_MODS } from '../data/ircData';
 import { WittLawAdminMod, DevPlatformApiEndpoint, DevSandboxEnvironment, ModerationAuditAction } from '../types/irc';
+import { Red5TwitchKickDevStudio, DevPortalSectionMode } from './Red5TwitchKickDevStudio';
 
 interface DevPlatformWittLawModalProps {
   isOpen: boolean;
@@ -42,7 +44,7 @@ export const DevPlatformWittLawModal: React.FC<DevPlatformWittLawModalProps> = (
   onDispatchIrcQuery,
   onJoinDevChannel,
 }) => {
-  const [activeTab, setActiveTab] = useState<'roster' | 'sandboxes' | 'apis' | 'audits' | 'terminal'>('roster');
+  const [activeTab, setActiveTab] = useState<'roster' | 'sandboxes' | 'apis' | 'audits' | 'terminal' | DevPortalSectionMode>('roster');
   const [selectedAdmin, setSelectedAdmin] = useState<WittLawAdminMod | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [selectedApi, setSelectedApi] = useState<DevPlatformApiEndpoint>(DEV_PLATFORM_CONFIG.apiEndpoints[0]);
@@ -90,6 +92,9 @@ export const DevPlatformWittLawModal: React.FC<DevPlatformWittLawModalProps> = (
         '  status        - Show dev.drfun1media.com leaf node telemetry & fiber sync',
         '  wittlaw       - Print active WittLaw admins and moderators roster',
         '  sandboxes     - List active development branch environments and ports',
+        '  twitch        - Show https://dev.twitch.tv Helix & EventSub status',
+        '  kick          - Show https://dev.kick.com API v2 & 95/5 split status',
+        '  red5          - Show Red5.net WebRTC WHIP/WHEP broadcast status',
         '  git status    - Show git branch, commit hash, and sync state',
         '  audit-log     - View recent FCC/ITU legal audits and moderation events',
         '  api-test      - Dispatch test JSON-RPC payload to https://dev.drfun1media.com:8443',
@@ -141,6 +146,25 @@ export const DevPlatformWittLawModal: React.FC<DevPlatformWittLawModalProps> = (
       newHistory.push(
         'POST https://dev.drfun1media.com:8443/api/v1/rpc HTTP/1.1 200 OK',
         '{"jsonrpc":"2.0","result":{"server":"dev.drfun1media.com","status":"healthy","licensee":"www.wittlawfirm.com"}}'
+      );
+    } else if (lower === 'twitch') {
+      newHistory.push(
+        '[https://dev.twitch.tv HELIX APP]',
+        '  Client ID: drfun1_helix_client_99a8b7 | Broadcaster: drfun1tv (98412034)',
+        '  Ingest: rtmp://sfo.contribute.live-video.net/app/ | EventSub: ACTIVE'
+      );
+    } else if (lower === 'kick') {
+      newHistory.push(
+        '[https://dev.kick.com API V2]',
+        '  Channel Slug: drfun1tv | Chatroom ID: 3819402 | Pusher Cluster: us2',
+        '  Ingest: rtmps://fa723fc1b171.global-contribute.live-video.net:443/app/ | Split: 95/5'
+      );
+    } else if (lower === 'red5') {
+      newHistory.push(
+        '[RED5.NET PRO BROADCAST CLUSTER]',
+        '  Origin: red5-origin-las01.drfun1.net (WebRTC WHIP/WHEP RTT 185ms)',
+        '  WHIP: https://red5.drfun1.net:5443/live/whip/tvu-origin-lv',
+        '  Simulcast Targets: dev.twitch.tv + dev.kick.com'
       );
     } else {
       newHistory.push(`bash: ${cmd}: command not found. Type "help" for available developer commands.`);
@@ -287,6 +311,42 @@ export const DevPlatformWittLawModal: React.FC<DevPlatformWittLawModalProps> = (
           >
             <Terminal className="w-4 h-4 text-yellow-400" />
             <span>Dev Shell (SSH :2202)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('twitch_dev')}
+            className={`py-3 px-3.5 border-b-2 flex items-center gap-2 transition cursor-pointer shrink-0 ${
+              activeTab === 'twitch_dev'
+                ? 'border-purple-500 text-purple-300 font-bold'
+                : 'border-transparent text-slate-400 hover:text-white'
+            }`}
+          >
+            <Tv className="w-4 h-4 text-purple-400" />
+            <span>dev.twitch.tv</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('kick_dev')}
+            className={`py-3 px-3.5 border-b-2 flex items-center gap-2 transition cursor-pointer shrink-0 ${
+              activeTab === 'kick_dev'
+                ? 'border-emerald-500 text-emerald-300 font-bold'
+                : 'border-transparent text-slate-400 hover:text-white'
+            }`}
+          >
+            <Zap className="w-4 h-4 text-emerald-400" />
+            <span>dev.kick.com</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('red5_broadcast')}
+            className={`py-3 px-3.5 border-b-2 flex items-center gap-2 transition cursor-pointer shrink-0 ${
+              activeTab === 'red5_broadcast'
+                ? 'border-rose-500 text-rose-300 font-bold'
+                : 'border-transparent text-slate-400 hover:text-white'
+            }`}
+          >
+            <Radio className="w-4 h-4 text-rose-400" />
+            <span>Red5.net Broadcast</span>
           </button>
         </div>
 
@@ -741,6 +801,22 @@ export const DevPlatformWittLawModal: React.FC<DevPlatformWittLawModalProps> = (
                 />
               </form>
             </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* TABS 6-8: dev.twitch.tv, dev.kick.com & Red5.net Broadcast */}
+          {/* ========================================================= */}
+          {(activeTab === 'twitch_dev' || activeTab === 'kick_dev' || activeTab === 'red5_broadcast') && (
+            <Red5TwitchKickDevStudio
+              section={activeTab}
+              onSwitchSection={(next) => setActiveTab(next)}
+              onJoinDevChannel={(chan) => {
+                if (onJoinDevChannel) {
+                  onJoinDevChannel(chan);
+                  onClose();
+                }
+              }}
+            />
           )}
         </div>
       </div>

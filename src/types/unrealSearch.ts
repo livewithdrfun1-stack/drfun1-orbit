@@ -33,6 +33,9 @@ export interface UnrealServerRecord {
   tags: string[];
   sampleChannels: string[];
   linkBlockSnippet: string;
+  isDedicatedNode?: boolean;
+  allocationMode?: 'Dedicated Bare-Metal Node';
+  hardwareProfile?: string;
 }
 
 export interface UnrealSearchFilters {

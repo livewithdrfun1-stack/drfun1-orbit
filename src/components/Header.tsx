@@ -28,14 +28,15 @@ import {
   Video,
   Headphones,
   Mic,
-  KeyRound
+  KeyRound,
+  Rss
 } from 'lucide-react';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { getRankDefinition } from '../utils/ircdAccess';
 import { UserMembershipState } from '../types/membership';
 import { DrFun1MediaLogo } from './DrFun1MediaLogo';
 
-export type AppTab = 'irc' | 'duplicator_hosting' | 'satcom_companies' | 'master_control' | 'fubotv' | 'store' | 'radio_dj' | 'podcast_uplink';
+export type AppTab = 'irc' | 'duplicator_hosting' | 'satcom_companies' | 'satcom_rss' | 'master_control' | 'fubotv' | 'drfun1_tv' | 'social_control' | 'store' | 'radio_dj' | 'podcast_uplink' | 'tvu_red5_twitch';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -283,12 +284,12 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={onOpenDevPlatform}
                 className="hidden lg:flex px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-purple-950/70 via-indigo-950/70 to-sky-950/70 text-sky-300 hover:text-white hover:border-sky-400 border-sky-500/40 transition-colors items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-purple-950/30"
-                title="dev.drfun1media.com Developer Platform - Supervised by The Law Office of Richard A. Witt LLC (www.wittlawfirm.com)"
+                title="dev.drfun1media.com Developer Platform (dev.twitch.tv, dev.kick.com & Red5.net Broadcast) - Supervised by www.wittlawfirm.com"
               >
                 <Cpu className="w-3.5 h-3.5 text-sky-400" />
                 <span className="hidden sm:inline font-bold">Dev Platform</span>
                 <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-purple-400/20 text-purple-300 font-bold">
-                  WittLaw
+                  Twitch · Kick · Red5
                 </span>
               </button>
             )}
@@ -476,6 +477,23 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
+          {/* 1D. Satcom RSS News Feed */}
+          <button
+            onClick={() => setActiveTab('satcom_rss')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'satcom_rss'
+                ? 'bg-teal-500/20 text-teal-200 border-teal-500/60 font-bold shadow-md shadow-teal-950/30 ring-1 ring-teal-500/40'
+                : 'text-slate-400 border-transparent hover:text-teal-300 hover:bg-slate-900/60'
+            }`}
+            title="Live Satcom RSS News Feed — FCC Space Bureau, SpaceNews, Via Satellite, SatNews, NASA SCaN, ESA & ITU BR XML/OPML Feeds"
+          >
+            <Rss className="w-3.5 h-3.5 text-teal-400" />
+            <span>Satcom RSS Feed</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-teal-500/20 text-teal-300 font-bold">
+              7+ Feeds
+            </span>
+          </button>
+
           {/* 2. Online Radio & MPD DJ Station */}
           <button
             onClick={() => setActiveTab('radio_dj')}
@@ -558,6 +576,57 @@ export const Header: React.FC<HeaderProps> = ({
             <span>Fubo.tv Sports</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-orange-500/20 text-orange-300 font-bold">
               4K Live
+            </span>
+          </button>
+
+          {/* 5B. DrFun1-TV (YouTube TV Clone & Rebrand) */}
+          <button
+            onClick={() => setActiveTab('drfun1_tv')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'drfun1_tv'
+                ? 'bg-red-600/25 text-red-200 border-red-500/60 font-bold shadow-md shadow-red-950/30 ring-1 ring-red-500/40'
+                : 'text-slate-400 border-transparent hover:text-red-300 hover:bg-slate-900/60'
+            }`}
+            title="DrFun1-TV (YouTube TV Clone & Rebrand) — Live EPG, 4-Box Multiview, Key Plays & Unlimited Cloud DVR"
+          >
+            <Tv className="w-3.5 h-3.5 text-red-500" />
+            <span>DrFun1-TV</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-red-500/20 text-red-300 font-bold">
+              YouTube TV 4K
+            </span>
+          </button>
+
+          {/* 6. All-in-One TVU Networks + Red5.net + Twitch.tv Live Studio */}
+          <button
+            onClick={() => setActiveTab('tvu_red5_twitch')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'tvu_red5_twitch'
+                ? 'bg-purple-600/25 text-purple-200 border-purple-500/60 font-bold shadow-md shadow-purple-950/30 ring-1 ring-purple-500/40'
+                : 'text-slate-400 border-transparent hover:text-purple-300 hover:bg-slate-900/60'
+            }`}
+            title="All-in-One TVU Networks Cellular Bonding + Red5.net WebRTC Cluster + Twitch.tv Live Studio"
+          >
+            <Video className="w-3.5 h-3.5 text-purple-400" />
+            <span>TVU · Red5 · Twitch</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">
+              WebRTC Live
+            </span>
+          </button>
+
+          {/* 7. Per-User Social Media Control Panel & www.drfun1media.com Live Feeds */}
+          <button
+            onClick={() => setActiveTab('social_control')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'social_control'
+                ? 'bg-indigo-600/25 text-indigo-200 border-indigo-500/60 font-bold shadow-md shadow-indigo-950/30 ring-1 ring-indigo-500/40'
+                : 'text-slate-400 border-transparent hover:text-indigo-300 hover:bg-slate-900/60'
+            }`}
+            title="Per-User Social Media Control Panel & Live Broadcast Feeds from www.drfun1media.com"
+          >
+            <Share2 className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Socials &amp; Live Feeds</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-bold">
+              drfun1media.com
             </span>
           </button>
 
@@ -764,6 +833,14 @@ export const Header: React.FC<HeaderProps> = ({
                   icon: Satellite 
                 },
                 { 
+                  id: 'satcom_rss', 
+                  label: 'Satcom RSS News Feed', 
+                  desc: 'Live Satcom Wire (FCC, SpaceNews, NASA, ESA, ITU), Custom Feeds & RSS 2.0 XML/OPML',
+                  badge: '7+ Feeds XML', 
+                  color: 'teal', 
+                  icon: Rss 
+                },
+                { 
                   id: 'radio_dj', 
                   label: 'Online Radio & MPD DJ', 
                   desc: 'SHOUTcast FM Player, Dual DJ Decks, 855k YouTube Catalog',
@@ -802,6 +879,30 @@ export const Header: React.FC<HeaderProps> = ({
                   badge: '4K Live', 
                   color: 'orange', 
                   icon: Tv 
+                },
+                { 
+                  id: 'drfun1_tv', 
+                  label: 'DrFun1-TV (YouTube TV Clone)', 
+                  desc: '100+ Live Channels, Custom EPG Guide, 4-Screen Multiview, Key Plays & Unlimited Cloud DVR',
+                  badge: '4K Plus DVR', 
+                  color: 'red', 
+                  icon: Tv 
+                },
+                { 
+                  id: 'tvu_red5_twitch', 
+                  label: 'TVU · Red5 · Twitch Studio', 
+                  desc: 'TVU 5G Bonding, Red5 Pro WebRTC WHIP/WHEP Cluster & Twitch Live Chat',
+                  badge: 'WebRTC Live', 
+                  color: 'purple', 
+                  icon: Video 
+                },
+                { 
+                  id: 'social_control', 
+                  label: 'Socials & drfun1media.com Feeds', 
+                  desc: 'Per-User Social Media Control Panel, Multi-Platform Dispatch & Live Broadcast Feeds',
+                  badge: 'Live Feeds', 
+                  color: 'indigo', 
+                  icon: Share2 
                 },
               ].map((item) => {
                 const Icon = item.icon;
