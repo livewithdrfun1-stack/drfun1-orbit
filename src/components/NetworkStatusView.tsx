@@ -12,7 +12,7 @@
  * - 4 UnrealIRCd 6.1.4 Core Hubs (irc.drfun1.com, irc.drfun1media.com, irc.drfun1media.net, drfun1ircd.com)
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
   CheckCircle2,
@@ -26,6 +26,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  Layers,
+  Terminal,
 } from 'lucide-react';
 import { ALL_UNREAL_HUBS } from '../data/ircData';
 import {
@@ -41,6 +43,14 @@ import {
 } from '../data/unrealSearchData';
 import { SwitchDedicatedNode } from '../types/irc';
 import { triggerBlobDownload } from '../utils/zipBuilder';
+import {
+  executeFullMeshSync,
+  generateUnifiedMeshSyncConf,
+  loadMeshSyncState,
+  MESH_SYNC_EVENT,
+  MeshSyncRecord,
+} from '../data/meshSync';
+import { SwitchRisingNetD3Chart } from './SwitchRisingNetD3Chart';
 
 interface NetworkStatusViewProps {
   onOpenLicense?: () => void;
@@ -120,6 +130,23 @@ export const NetworkStatusView: React.FC<NetworkStatusViewProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedNode, setSelectedNode] = useState<SwitchDedicatedNode | null>(null);
+  const [meshSync, setMeshSync] = useState<MeshSyncRecord>(() => loadMeshSyncState());
+
+  useEffect(() => {
+    const handler = (ev: Event) => {
+      const custom = ev as CustomEvent<MeshSyncRecord>;
+      if (custom.detail) setMeshSync(custom.detail);
+      else setMeshSync(loadMeshSyncState());
+    };
+    window.addEventListener(MESH_SYNC_EVENT, handler);
+    return () => window.removeEventListener(MESH_SYNC_EVENT, handler);
+  }, []);
+
+  const handleSyncAllHubsAndLeafs = () => {
+    const updated = executeFullMeshSync();
+    setMeshSync(updated);
+    setLastProbedAt(updated.lastSyncedAt);
+  };
 
   const pageSize = 20;
 
@@ -301,11 +328,34 @@ export const NetworkStatusView: React.FC<NetworkStatusViewProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
+            onClick={handleSyncAllHubsAndLeafs}
+            className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Sync All Hubs &amp; Leafs (Seq #{meshSync.syncSequence})</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleRunHealthProbe}
             className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Run Health Probe</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              triggerBlobDownload(
+                new Blob([generateUnifiedMeshSyncConf()], { type: 'text/plain' }),
+                'unrealircd-mesh-sync.conf'
+              )
+            }
+            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Mesh Sync .conf</span>
           </button>
 
           <button
@@ -327,6 +377,29 @@ export const NetworkStatusView: React.FC<NetworkStatusViewProps> = ({
               <span>Mesh Topology</span>
             </button>
           )}
+        </div>
+      </div>
+
+      {/* Unified Hub & Leaf Spanning-Tree Sync Ledger */}
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-xs font-mono">
+            <Terminal className="w-4 h-4 text-purple-400" />
+            <span className="font-bold text-white">
+              Spanning-Tree Full-Mesh Sync Ledger (Seq #{meshSync.syncSequence})
+            </span>
+            <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold tabular-nums">
+              {meshSync.syncedHubs}/4 Core Hubs · {meshSync.syncedLeafs.toLocaleString()}/1,034 Leafs · Services &amp; HOPM Synced
+            </span>
+          </div>
+          <span className="text-[11px] font-mono text-slate-400 tabular-nums">
+            Last Full Sync: {meshSync.lastSyncedAt}
+          </span>
+        </div>
+        <div className="bg-slate-950 border border-slate-800 rounded-lg p-3 font-mono text-[11px] text-emerald-300 space-y-1 max-h-32 overflow-y-auto">
+          {meshSync.stepLog.map((line, i) => (
+            <div key={i}>{line}</div>
+          ))}
         </div>
       </div>
 
@@ -392,6 +465,9 @@ export const NetworkStatusView: React.FC<NetworkStatusViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* D3 Real-Time Latency Ping Trends (Switch 500/Hub vs. 10 RisingNet Servers) */}
+      <SwitchRisingNetD3Chart externalJitterMs={probeJitterMs} />
 
       {/* 3 Provider Health Breakdown Cards (Switch 1,000 | DataPacket 24 | RisingNet 10) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

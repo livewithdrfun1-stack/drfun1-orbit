@@ -57,6 +57,7 @@ import { ConstellationFleetStabilityChart } from './ConstellationFleetStabilityC
 import { LeafletSatelliteTracker } from './LeafletSatelliteTracker';
 import { HopmMonitorConsole } from './HopmMonitorConsole';
 import { NetworkStatusView } from './NetworkStatusView';
+import { executeFullMeshSync } from '../data/meshSync';
 
 interface MasterControlViewProps {
   companies: SatelliteCompany[];
@@ -196,6 +197,19 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
             >
               <Wifi className="w-3.5 h-3.5 text-emerald-400" />
               <span>Network Status</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const res = executeFullMeshSync();
+                handleCopy(`Synced ${res.syncedHubs}/4 hubs & ${res.syncedLeafs} leafs (Seq #${res.syncSequence})`, 'sync_all');
+                setActiveSubTab('network_status');
+              }}
+              className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+              title="Synchronize all 4 UnrealIRCd Hubs, Anope Services, HOPM, and 1,034 Leaf Nodes"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>{copiedKey === 'sync_all' ? 'All Hubs & Leafs Synced' : 'Sync All Hubs & Leafs'}</span>
             </button>
 
             <button

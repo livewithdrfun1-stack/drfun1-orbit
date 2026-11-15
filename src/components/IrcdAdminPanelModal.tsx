@@ -61,6 +61,7 @@ import {
   Scale
 } from 'lucide-react';
 import { HopmMonitorConsole } from './HopmMonitorConsole';
+import { executeFullMeshSync } from '../data/meshSync';
 
 interface IrcdAdminPanelModalProps {
   isOpen: boolean;
@@ -188,10 +189,22 @@ export const IrcdAdminPanelModal: React.FC<IrcdAdminPanelModalProps> = ({
       setChannels(prev => prev.map((ch, idx) => idx === selectedChanIndex ? { ...ch, mlock: newModes } : ch));
       responseMsg = `*** ChanServ: Mode lock for ${activeChan.channel} updated to ${newModes}.`;
       triggerNotice(`MLOCK updated for ${activeChan.channel}`);
+    } else if (upper.startsWith('/SYNCALL')) {
+      const synced = executeFullMeshSync();
+      setUnrealConfig(prev => ({
+        ...prev,
+        linkBlocks: prev.linkBlocks.map(l => ({
+          ...l,
+          status: 'connected',
+          lastSync: `Synced (Seq #${synced.syncSequence}) · ${synced.syncedHubs}/4 Hubs + ${synced.syncedLeafs.toLocaleString()} Leafs`,
+        })),
+      }));
+      responseMsg = `*** SYNCALL COMPLETE (Seq #${synced.syncSequence}): All 4 Core Hubs, Anope Services, HOPM 1.1.10, and ${synced.syncedLeafs.toLocaleString()} Leaf Nodes synchronized.`;
+      triggerNotice(`All ${synced.syncedHubs} hubs & ${synced.syncedLeafs.toLocaleString()} leafs synchronized!`);
     } else if (upper.startsWith('/STATS')) {
       responseMsg = `*** Stats for irc.drfun1.com: Up 42d 18h | 1,842 clients online | 482 channels | Memory 142MB | Switch Colocation SUPERNAP Las Vegas`;
     } else if (upper.startsWith('/HELP')) {
-      responseMsg = `*** Available Oper Commands: /REHASH, /REHASH -TLS, /WALLOPS <msg>, /KLINE <mask> <reason>, /ZLINE <ip>, /GLINE <mask>, /SHUN <mask>, /CHANSERV MLOCK <#chan> <modes>, /KILL <nick> <reason>, /STATS`;
+      responseMsg = `*** Available Oper Commands: /REHASH, /REHASH -TLS, /SYNCALL, /WALLOPS <msg>, /KLINE <mask> <reason>, /ZLINE <ip>, /GLINE <mask>, /SHUN <mask>, /CHANSERV MLOCK <#chan> <modes>, /KILL <nick> <reason>, /STATS`;
     } else {
       responseMsg = `*** Command acknowledged: ${rawCmd} [Executed under rank: ${currentRankDef.name}]`;
     }
@@ -973,10 +986,20 @@ ${unrealConfig.linkBlocks.map(lk => `link ${lk.name} {
               {/* 5. Mesh Links */}
               {ircdSubTab === 'links' && (
                 <div className="space-y-4">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-sky-400" />
-                    Hub-and-Leaf Peering Link Blocks
-                  </h3>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-sky-400" />
+                      Hub-and-Leaf Peering Link Blocks (4 Core Hubs · 1,034 Leafs)
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => handleExecuteCommand('/SYNCALL')}
+                      className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Sync All Hubs &amp; Leafs (/SYNCALL)</span>
+                    </button>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
                     {unrealConfig.linkBlocks.map(link => (
                       <div key={link.id} className="bg-slate-950/70 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
