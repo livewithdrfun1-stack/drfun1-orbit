@@ -29,14 +29,15 @@ import {
   Headphones,
   Mic,
   KeyRound,
-  Rss
+  Rss,
+  Newspaper
 } from 'lucide-react';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { getRankDefinition } from '../utils/ircdAccess';
 import { UserMembershipState } from '../types/membership';
 import { DrFun1MediaLogo } from './DrFun1MediaLogo';
 
-export type AppTab = 'irc' | 'duplicator_hosting' | 'satcom_companies' | 'satcom_rss' | 'master_control' | 'fubotv' | 'drfun1_tv' | 'social_control' | 'store' | 'radio_dj' | 'podcast_uplink' | 'tvu_red5_twitch';
+export type AppTab = 'irc' | 'duplicator_hosting' | 'satcom_companies' | 'satcom_rss' | 'master_control' | 'fubotv' | 'drfun1_tv' | 'drfun1_news' | 'social_control' | 'store' | 'radio_dj' | 'podcast_uplink' | 'tvu_red5_twitch';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -596,6 +597,23 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
+          {/* 5C. DrFun1 News (Global News Outlets Directory & Live TV News Service) */}
+          <button
+            onClick={() => setActiveTab('drfun1_news')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'drfun1_news'
+                ? 'bg-sky-600/25 text-sky-200 border-sky-500/60 font-bold shadow-md shadow-sky-950/30 ring-1 ring-sky-500/40'
+                : 'text-slate-400 border-transparent hover:text-sky-300 hover:bg-slate-900/60'
+            }`}
+            title="DrFun1 News — Global News Outlets Dynamic Directory & Live TV News Desk"
+          >
+            <Newspaper className="w-3.5 h-3.5 text-sky-400" />
+            <span>DrFun1 News</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold">
+              33+ Global TV
+            </span>
+          </button>
+
           {/* 6. All-in-One TVU Networks + Red5.net + Twitch.tv Live Studio */}
           <button
             onClick={() => setActiveTab('tvu_red5_twitch')}
@@ -887,6 +905,14 @@ export const Header: React.FC<HeaderProps> = ({
                   badge: '4K Plus DVR', 
                   color: 'red', 
                   icon: Tv 
+                },
+                { 
+                  id: 'drfun1_news', 
+                  label: 'DrFun1 News (Global TV Service)', 
+                  desc: 'Dynamic Directory of 33+ Global News Outlets, Live TV Anchor Desk & 4-Outlet Quad',
+                  badge: 'Global TV', 
+                  color: 'sky', 
+                  icon: Newspaper 
                 },
                 { 
                   id: 'tvu_red5_twitch', 

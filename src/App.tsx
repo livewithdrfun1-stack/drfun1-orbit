@@ -39,6 +39,7 @@ import { OnlineRadioDjStudio } from './components/OnlineRadioDjStudio';
 import { MasterControlView } from './components/MasterControlView';
 import { FuboTvCloneView } from './components/FuboTvCloneView';
 import { DrFun1TvView } from './components/DrFun1TvView';
+import { DrFun1NewsView } from './components/DrFun1NewsView';
 import { SocialMediaControlPanelView } from './components/SocialMediaControlPanelView';
 import { IrcDuplicatorHostingView } from './components/IrcDuplicatorHostingView';
 import { SatcomCompaniesView } from './components/SatcomCompaniesView';
@@ -149,6 +150,8 @@ export default function App() {
       setActiveTab('fubotv');
     } else if (tab === 'drfun1_tv' || tab === 'youtubetv' || tab === 'ytv') {
       setActiveTab('drfun1_tv');
+    } else if (tab === 'drfun1_news' || tab === 'news_tv') {
+      setActiveTab('drfun1_news');
     } else if (tab === 'social_control' || tab === 'socials' || tab === 'drfun1media_feeds') {
       setActiveTab('social_control');
     } else if (tab === 'store' || tab === 'domains') {
@@ -734,6 +737,16 @@ export default function App() {
             onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
             onNavigateToIrc={() => handleNavigateTab('irc')}
             onNavigateToRed5={() => handleNavigateTab('tvu_red5_twitch')}
+          />
+        </main>
+      ) : activeTab === 'drfun1_news' ? (
+        /* 3B-2. DrFun1 News (Global News Outlets Dynamic Directory & Live TV News Service) */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
+          <DrFun1NewsView
+            onOpenLicense={() => setIsLicenseModalOpen(true)}
+            onNavigateToIrc={() => handleNavigateTab('irc')}
+            onNavigateToRss={() => handleNavigateTab('satcom_rss')}
+            onNavigateToDrFun1Tv={() => handleNavigateTab('drfun1_tv')}
           />
         </main>
       ) : activeTab === 'social_control' ? (

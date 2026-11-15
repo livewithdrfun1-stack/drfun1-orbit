@@ -15,6 +15,7 @@ import {
   KeyRound,
   LayoutGrid,
   Mic,
+  Newspaper,
   Radio,
   Rss,
   Satellite,
@@ -59,6 +60,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     activeTab === 'store' ||
     activeTab === 'fubotv' ||
     activeTab === 'drfun1_tv' ||
+    activeTab === 'drfun1_news' ||
     activeTab === 'social_control' ||
     activeTab === 'podcast_uplink' ||
     activeTab === 'tvu_red5_twitch';
@@ -184,6 +186,22 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               >
                 <Tv className="w-4 h-4 text-red-500 shrink-0" />
                 <span>DrFun1-TV 4K</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectTab('drfun1_news');
+                  setMoreOpen(false);
+                }}
+                className={`p-3 rounded-xl border text-left flex items-center gap-2.5 min-h-[52px] cursor-pointer ${
+                  activeTab === 'drfun1_news'
+                    ? 'bg-sky-500/20 border-sky-500 text-white font-bold'
+                    : 'bg-slate-950 border-slate-800 text-slate-200'
+                }`}
+              >
+                <Newspaper className="w-4 h-4 text-sky-400 shrink-0" />
+                <span>DrFun1 News</span>
               </button>
 
               <button
