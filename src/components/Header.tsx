@@ -26,13 +26,16 @@ import {
   Search,
   Cpu,
   Video,
-  Headphones
+  Headphones,
+  Mic,
+  KeyRound
 } from 'lucide-react';
 import { AnopeRankLevel } from '../types/ircdAdmin';
+import { getRankDefinition } from '../utils/ircdAccess';
 import { UserMembershipState } from '../types/membership';
 import { DrFun1MediaLogo } from './DrFun1MediaLogo';
 
-export type AppTab = 'irc' | 'duplicator_hosting' | 'satcom_companies' | 'master_control' | 'fubotv' | 'store' | 'radio_dj';
+export type AppTab = 'irc' | 'duplicator_hosting' | 'satcom_companies' | 'master_control' | 'fubotv' | 'store' | 'radio_dj' | 'podcast_uplink';
 
 interface HeaderProps {
   activeTab: AppTab;
@@ -47,6 +50,7 @@ interface HeaderProps {
   onOpenSwitchWittServices?: () => void;
   onOpenResellerProgram?: () => void;
   onOpenIrcdAdmin?: () => void;
+  onOpenRankAccess?: () => void;
   onOpenZncWebAdmin?: () => void;
   activeOperRank?: AnopeRankLevel;
   cartCount?: number;
@@ -75,6 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSwitchWittServices,
   onOpenResellerProgram,
   onOpenIrcdAdmin,
+  onOpenRankAccess,
   onOpenZncWebAdmin,
   onOpenUnrealSearch,
   onOpenDomainSearch,
@@ -90,6 +95,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenMembershipModal,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const activeRankDef = getRankDefinition(activeOperRank || 'op');
 
   const handleSelectMobileTab = (tab: AppTab) => {
     setActiveTab(tab);
@@ -102,18 +108,18 @@ export const Header: React.FC<HeaderProps> = ({
       {/* ========================================================
           ROW 1: Brand Wordmark, Status Utilities & Global Actions
           ======================================================== */}
-      <div className="border-b border-slate-800/80 overflow-x-auto custom-nav-scrollbar">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4 min-w-max">
+      <div className="border-b border-slate-800/80 lg:overflow-x-auto custom-nav-scrollbar">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2 sm:gap-4 min-w-0 lg:min-w-max">
           
           {/* Brand Wordmark & Logo: DrFun1Media in Purple and Gold */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
             <button 
               onClick={() => setActiveTab('irc')}
-              className="flex items-center gap-2.5 group cursor-pointer text-left"
+              className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer text-left min-w-0"
               title="DrFun1Media - UnrealIRCd WebIRC Client & Satcom Network (Index Page)"
             >
               {/* Purple & Gold Logo Mark */}
-              <div className="relative w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 via-amber-400 to-yellow-500 p-0.5 shadow-md shadow-purple-900/50 group-hover:scale-105 transition-transform">
+              <div className="relative w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-xl bg-gradient-to-tr from-purple-600 via-amber-400 to-yellow-500 p-0.5 shadow-md shadow-purple-900/50 group-hover:scale-105 transition-transform">
                 <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center relative overflow-hidden border border-amber-500/30">
                   <div className="absolute inset-0 bg-gradient-to-br from-purple-600/35 via-amber-500/20 to-transparent" />
                   <Terminal className="w-4 h-4 text-amber-300 group-hover:text-purple-300 transition-colors relative z-10 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
@@ -132,11 +138,11 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Row 1 Actions & Utilities */}
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 font-mono">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 font-mono">
             {/* Compare Tool */}
             <button
               onClick={onOpenCompare}
-              className={`px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer ${
+              className={`hidden lg:flex px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-colors items-center gap-1.5 cursor-pointer ${
                 compareCount > 0
                   ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
                   : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border-slate-800 hover:border-slate-700'
@@ -166,7 +172,7 @@ export const Header: React.FC<HeaderProps> = ({
             {onOpenSwitchWittServices && (
               <button
                 onClick={onOpenSwitchWittServices}
-                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-emerald-950/70 to-teal-950/70 text-emerald-300 hover:text-white hover:bg-emerald-900/80 border-emerald-500/50 hover:border-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-emerald-950/30"
+                className="hidden lg:flex px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-emerald-950/70 to-teal-950/70 text-emerald-300 hover:text-white hover:bg-emerald-900/80 border-emerald-500/50 hover:border-emerald-400 transition-colors items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-emerald-950/30"
                 title="Switch.com Owned Infrastructure & Witt Law Firm Satellite Fiber Services (Cert: RAW-SATCOM-2026-LIC-0881 | FCC FRN: 0034981290)"
               >
                 <Network className="w-3.5 h-3.5 text-emerald-400" />
@@ -178,18 +184,35 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
+            {/* IRCD 14-Tier Rank Access Matrix */}
+            {onOpenRankAccess && (
+              <button
+                onClick={onOpenRankAccess}
+                className="flex px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-amber-950/40 text-amber-200 hover:text-white hover:bg-amber-900/50 border-amber-500/40 hover:border-amber-400 transition-colors items-center gap-1.5 cursor-pointer font-sans"
+                title={`Active IRCD Rank: ${activeRankDef.name} (Level ${activeRankDef.accessLevel}) — Click to switch rank or inspect site permissions`}
+              >
+                <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                <span className="font-mono font-bold text-white">
+                  {activeRankDef.prefix}{activeRankDef.shortLabel}
+                </span>
+                <span className="hidden sm:inline text-[10px] font-mono tabular-nums px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 font-bold">
+                  Lvl {activeRankDef.accessLevel}
+                </span>
+              </button>
+            )}
+
             {/* IRCD & Anope Ops Panel */}
             {onOpenIrcdAdmin && (
               <button
                 onClick={onOpenIrcdAdmin}
-                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-purple-950/40 text-purple-300 hover:text-white hover:bg-purple-900/60 border-purple-500/40 hover:border-purple-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-purple-950/30"
+                className="hidden lg:flex px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-purple-950/40 text-purple-300 hover:text-white hover:bg-purple-900/60 border-purple-500/40 hover:border-purple-400 transition-colors items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-purple-950/30"
                 title="UnrealIRCd & Anope Services Ops & NetAdmin Web Control Center (set by www.wittlawfirm.com)"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
                 <span className="hidden sm:inline">IRCD NetAdmin &amp; Ops</span>
                 <span className="sm:hidden">NetAdmin</span>
                 <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-purple-400/20 text-purple-300 font-bold">
-                  {activeOperRank === 'sra' ? '~ Owner' : activeOperRank && ['op', 'sop', 'founder', 'so', 'admin'].includes(activeOperRank) ? 'Ops+' : 'Anope'}
+                  {activeRankDef.shortLabel}
                 </span>
               </button>
             )}
@@ -198,7 +221,7 @@ export const Header: React.FC<HeaderProps> = ({
             {onOpenZncWebAdmin && (
               <button
                 onClick={onOpenZncWebAdmin}
-                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-emerald-950/40 text-emerald-300 hover:text-white hover:bg-emerald-900/60 border-emerald-500/40 hover:border-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-emerald-950/30"
+                className="hidden lg:flex px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-emerald-950/40 text-emerald-300 hover:text-white hover:bg-emerald-900/60 border-emerald-500/40 hover:border-emerald-400 transition-colors items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-emerald-950/30"
                 title="ZNC 1.9.1 Web Control Panel (Port 5000) - Bouncer Accounts, Channels, Buffers & Upstream Leaf (znc.git)"
               >
                 <Server className="w-3.5 h-3.5 text-emerald-400" />
@@ -214,7 +237,7 @@ export const Header: React.FC<HeaderProps> = ({
             {onOpenUnrealSearch && (
               <button
                 onClick={onOpenUnrealSearch}
-                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-purple-950/60 to-indigo-950/60 text-indigo-300 hover:text-white hover:bg-indigo-900/70 border-indigo-500/40 hover:border-indigo-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-indigo-950/30"
+                className="hidden lg:flex px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-purple-950/60 to-indigo-950/60 text-indigo-300 hover:text-white hover:bg-indigo-900/70 border-indigo-500/40 hover:border-indigo-400 transition-colors items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-indigo-950/30"
                 title="IRC Channel & Leafed IRCD Network Search Engine - 855,000 Channels & 26 Switch SUPERNAP Leaves (irc.drfun1.com:6697)"
               >
                 <Search className="w-3.5 h-3.5 text-indigo-400" />
@@ -230,7 +253,7 @@ export const Header: React.FC<HeaderProps> = ({
             {onOpenResellerProgram && (
               <button
                 onClick={onOpenResellerProgram}
-                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-amber-950/40 text-amber-300 hover:text-white hover:bg-amber-900/60 border-amber-500/40 hover:border-amber-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-amber-950/30"
+                className="hidden lg:flex px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-amber-950/40 text-amber-300 hover:text-white hover:bg-amber-900/60 border-amber-500/40 hover:border-amber-400 transition-colors items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-amber-950/30"
               >
                 <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
                 <span className="hidden sm:inline">Turnkey Reseller</span>
@@ -244,7 +267,7 @@ export const Header: React.FC<HeaderProps> = ({
             {onOpenDomainSearch && (
               <button
                 onClick={onOpenDomainSearch}
-                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-sky-950/60 to-teal-950/60 text-sky-300 hover:text-white hover:bg-sky-900/70 border-sky-500/40 hover:border-sky-400 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-sky-950/30"
+                className="hidden lg:flex px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-sky-950/60 to-teal-950/60 text-sky-300 hover:text-white hover:bg-sky-900/70 border-sky-500/40 hover:border-sky-400 transition-colors items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-sky-950/30"
                 title="Search & Register Custom Domains with Anycast DNS"
               >
                 <Globe className="w-3.5 h-3.5 text-sky-400" />
@@ -259,7 +282,7 @@ export const Header: React.FC<HeaderProps> = ({
             {onOpenDevPlatform && (
               <button
                 onClick={onOpenDevPlatform}
-                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-purple-950/70 via-indigo-950/70 to-sky-950/70 text-sky-300 hover:text-white hover:border-sky-400 border-sky-500/40 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-purple-950/30"
+                className="hidden lg:flex px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-purple-950/70 via-indigo-950/70 to-sky-950/70 text-sky-300 hover:text-white hover:border-sky-400 border-sky-500/40 transition-colors items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-purple-950/30"
                 title="dev.drfun1media.com Developer Platform - Supervised by The Law Office of Richard A. Witt LLC (www.wittlawfirm.com)"
               >
                 <Cpu className="w-3.5 h-3.5 text-sky-400" />
@@ -279,12 +302,12 @@ export const Header: React.FC<HeaderProps> = ({
                   setActiveTab('irc');
                 }
               }}
-              className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 text-purple-300 hover:text-white hover:bg-purple-900/80 border-purple-500/50 hover:border-purple-400 transition-colors flex items-center gap-1.5 cursor-pointer font-mono shadow-sm shadow-purple-950/30"
+              className="hidden sm:flex px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 text-purple-300 hover:text-white hover:bg-purple-900/80 border-purple-500/50 hover:border-purple-400 transition-colors items-center gap-1.5 cursor-pointer font-mono shadow-sm shadow-purple-950/30"
               title="UnrealIRCd 6.1.4 Client - irc.drfun1.com:6697 (SSL) - Click to Login or Open Chat"
             >
               <Terminal className="w-3.5 h-3.5 text-purple-400" />
-              <span className="hidden sm:inline font-bold">IRC Client:</span>
-              <span className="text-emerald-300 font-bold max-w-[100px] truncate">{ircNick || 'RichardAlanWitt'}</span>
+              <span className="hidden xl:inline font-bold">IRC Client:</span>
+              <span className="text-emerald-300 font-bold max-w-[90px] truncate">{ircNick || 'RichardAlanWitt'}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
             </button>
 
@@ -297,7 +320,7 @@ export const Header: React.FC<HeaderProps> = ({
                   setActiveTab('master_control');
                 }
               }}
-              className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-blue-950/70 via-indigo-950/70 to-cyan-950/70 text-cyan-300 hover:text-white hover:border-cyan-400 border-cyan-500/40 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-cyan-950/40"
+              className="hidden lg:flex px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-blue-950/70 via-indigo-950/70 to-cyan-950/70 text-cyan-300 hover:text-white hover:border-cyan-400 border-cyan-500/40 transition-colors items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-cyan-950/40"
               title="Real-Time Orbit Tracking Map, Ground Station Radar & Day/Night Terminator"
             >
               <span className="flex h-2 w-2 relative">
@@ -316,7 +339,7 @@ export const Header: React.FC<HeaderProps> = ({
             {onOpenMembershipModal && (
               <button
                 onClick={onOpenMembershipModal}
-                className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-purple-950/60 to-cyan-950/60 text-cyan-300 hover:text-white hover:border-cyan-400 border-cyan-500/40 transition-colors flex items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-cyan-950/30"
+                className="hidden lg:flex px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-gradient-to-r from-purple-950/60 to-cyan-950/60 text-cyan-300 hover:text-white hover:border-cyan-400 border-cyan-500/40 transition-colors items-center gap-1.5 cursor-pointer font-sans shadow-sm shadow-cyan-950/30"
                 title="DRFUN1 Broadcaster Membership Status & Subscription Management"
               >
                 <Crown className="w-3.5 h-3.5 text-cyan-400" />
@@ -336,7 +359,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Global Legal & License Certificate (wittlawfirm.com) */}
             <button
               onClick={onOpenLicense}
-              className="px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-slate-900/80 text-slate-300 hover:text-white hover:border-emerald-500/50 transition-colors flex items-center gap-1.5 cursor-pointer hidden sm:flex font-sans"
+              className="hidden lg:flex px-2.5 py-1.5 text-xs font-medium rounded-lg border bg-slate-900/80 text-slate-300 hover:text-white hover:border-emerald-500/50 transition-colors items-center gap-1.5 cursor-pointer font-sans"
               title="Global Legal Compliance & License via www.wittlawfirm.com"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
@@ -349,7 +372,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={onOpenCart}
                 title="Procurement Cart"
-                className="px-2.5 py-1.5 text-slate-200 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-800 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-medium cursor-pointer"
+                className="px-2.5 py-1.5 text-slate-200 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-800 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-medium cursor-pointer min-h-[36px]"
               >
                 <ShoppingBag className="w-3.5 h-3.5 text-sky-400" />
                 <span className="hidden sm:inline font-sans">Cart</span>
@@ -365,7 +388,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onExport}
               title="Export Directory (CSV)"
-              className="p-1.5 sm:px-2.5 sm:py-1.5 text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-800 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-medium cursor-pointer"
+              className="hidden lg:flex p-1.5 sm:px-2.5 sm:py-1.5 text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-800 rounded-lg transition-colors items-center gap-1.5 text-xs font-medium cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-slate-400" />
               <span className="hidden sm:inline font-sans">Export</span>
@@ -384,7 +407,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Mobile Menu Hamburger Toggle */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-1.5 sm:p-2 text-slate-300 hover:text-white bg-slate-900 border border-slate-800 rounded-lg lg:hidden transition-colors flex items-center justify-center cursor-pointer min-h-[36px] min-w-[36px]"
+              className="p-1.5 sm:p-2 text-slate-300 hover:text-white bg-slate-900 border border-slate-800 rounded-lg lg:hidden transition-colors flex items-center justify-center cursor-pointer min-h-[38px] min-w-[38px]"
               aria-label="Toggle Mobile Menu"
               title="Open Navigation Menu"
             >
@@ -396,10 +419,10 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* ========================================================
-          ROW 2: Main Nav Links & Category Tabs (Full-Width Strip)
-          6 Core Unified Hubs
+          ROW 2: Main Nav Links & Category Tabs (Desktop Strip)
+          On < lg screens, MobileBottomNav + Mobile Drawer handle navigation cleanly
           ======================================================== */}
-      <div className="bg-slate-950 overflow-x-auto custom-nav-scrollbar border-b border-slate-800/50">
+      <div className="hidden lg:block bg-slate-950 overflow-x-auto custom-nav-scrollbar border-b border-slate-800/50">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-11 flex items-center justify-between gap-1 sm:gap-2 text-xs font-medium text-slate-400 min-w-max">
           
           {/* 1. Primary Index: Unified UnrealIRCd WebIRC Client & 1,000-Leaf Mesh (500 Per Hub) */}
@@ -470,6 +493,23 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
+          {/* 2B. DrFun1 Podcasting Uplink (Podserv.fm Rebrand) */}
+          <button
+            onClick={() => setActiveTab('podcast_uplink')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'podcast_uplink'
+                ? 'bg-amber-500/20 text-amber-200 border-amber-500/60 font-bold shadow-md shadow-amber-950/30 ring-1 ring-amber-500/40'
+                : 'text-slate-400 border-transparent hover:text-amber-300 hover:bg-slate-900/60'
+            }`}
+            title="DrFun1 Podcasting Uplink — Podserv RSS 2.0 Hosting, Episode Publishing, IAB v2.1 Analytics & SATCOM Audio Sync"
+          >
+            <Mic className="w-3.5 h-3.5 text-amber-400" />
+            <span>Podcasting Uplink</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold">
+              Podserv RSS
+            </span>
+          </button>
+
           {/* 3. Master Control & Transmission Infrastructure */}
           <button
             onClick={() => setActiveTab('master_control')}
@@ -532,6 +572,24 @@ export const Header: React.FC<HeaderProps> = ({
           
           {/* Quick Actions Grid for Mobile */}
           <div className="grid grid-cols-2 gap-2 text-xs font-mono pb-3 border-b border-slate-800/80">
+            {onOpenRankAccess && (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onOpenRankAccess();
+                }}
+                className="p-2.5 rounded-xl bg-amber-950/50 hover:bg-amber-900/50 text-amber-200 border border-amber-500/40 flex items-center justify-between gap-2 cursor-pointer col-span-2"
+              >
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-amber-400" />
+                  <span className="font-bold">IRCD Rank Access: {activeRankDef.prefix}{activeRankDef.shortLabel}</span>
+                </div>
+                <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">
+                  Lvl {activeRankDef.accessLevel}
+                </span>
+              </button>
+            )}
+
             {onOpenIrcdAdmin && (
               <button
                 onClick={() => {
@@ -599,6 +657,79 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="font-bold">Switch &amp; Witt Satellite Fiber</span>
               </button>
             )}
+
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                if (onOpenOrbitMapModal) onOpenOrbitMapModal();
+                else setActiveTab('master_control');
+              }}
+              className="p-2.5 rounded-xl bg-cyan-950/50 hover:bg-cyan-900/50 text-cyan-200 border border-cyan-500/40 flex items-center gap-2 cursor-pointer"
+            >
+              <Satellite className="w-4 h-4 text-cyan-400" />
+              <span className="font-bold">Orbit Map</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                onOpenCompare();
+              }}
+              className="p-2.5 rounded-xl bg-sky-950/50 hover:bg-sky-900/50 text-sky-200 border border-sky-500/40 flex items-center gap-2 cursor-pointer"
+            >
+              <Scale className="w-4 h-4 text-sky-400" />
+              <span className="font-bold">Compare ({compareCount})</span>
+            </button>
+
+            {onOpenIrcLogin && (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onOpenIrcLogin();
+                }}
+                className="p-2.5 rounded-xl bg-purple-950/50 hover:bg-purple-900/50 text-purple-200 border border-purple-500/40 flex items-center gap-2 cursor-pointer"
+              >
+                <Terminal className="w-4 h-4 text-purple-400" />
+                <span className="font-bold truncate">IRC: {ircNick || 'Login'}</span>
+              </button>
+            )}
+
+            {onOpenMembershipModal && (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onOpenMembershipModal();
+                }}
+                className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-cyan-200 border border-slate-700 flex items-center gap-2 cursor-pointer"
+              >
+                <Crown className="w-4 h-4 text-cyan-400" />
+                <span className="font-bold">Membership</span>
+              </button>
+            )}
+
+            {onOpenDomainSearch && (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onOpenDomainSearch();
+                }}
+                className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-sky-200 border border-slate-700 flex items-center gap-2 cursor-pointer"
+              >
+                <Globe className="w-4 h-4 text-sky-400" />
+                <span className="font-bold">Domains</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                onExport();
+              }}
+              className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 flex items-center gap-2 cursor-pointer"
+            >
+              <Download className="w-4 h-4 text-slate-400" />
+              <span className="font-bold">Export CSV</span>
+            </button>
           </div>
 
           {/* The 6 Core Unified Hubs for Mobile */}
@@ -639,6 +770,14 @@ export const Header: React.FC<HeaderProps> = ({
                   badge: 'SHOUTcast FM', 
                   color: 'pink', 
                   icon: Headphones 
+                },
+                { 
+                  id: 'podcast_uplink', 
+                  label: 'DrFun1 Podcasting Uplink', 
+                  desc: 'Podserv RSS 2.0 Hosting, Episode Publishing, IAB Analytics & DAI',
+                  badge: 'Podserv RSS', 
+                  color: 'amber', 
+                  icon: Mic 
                 },
                 { 
                   id: 'master_control', 

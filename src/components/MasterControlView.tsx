@@ -42,10 +42,14 @@ import {
   Rss,
   Tv,
   TrendingUp,
-  Maximize2
+  Maximize2,
+  PhoneCall,
+  KeyRound
 } from 'lucide-react';
 import { SatelliteCompany } from '../types/satellite';
 import { AnopeRankLevel } from '../types/ircdAdmin';
+import { getRankDefinition, hasMinIrcdRank } from '../utils/ircdAccess';
+import { IrcdAccessGateBanner } from './IrcdAccessGateBanner';
 import { SWITCH_DEDICATED_NODES, UNREAL_HUB_DETAILS } from '../data/ircData';
 import { ALL_NETWORK_LEAF_NODES } from '../data/unrealSearchData';
 import { SatelliteRssNewsSection } from './SatelliteRssNewsSection';
@@ -57,6 +61,7 @@ import { ConstellationFleetStabilityChart } from './ConstellationFleetStabilityC
 import { LeafletSatelliteTracker } from './LeafletSatelliteTracker';
 import { HopmMonitorConsole } from './HopmMonitorConsole';
 import { NetworkStatusView } from './NetworkStatusView';
+import { ShoutcastVoipScotusView } from './ShoutcastVoipScotusView';
 import { executeFullMeshSync } from '../data/meshSync';
 
 interface MasterControlViewProps {
@@ -69,6 +74,8 @@ interface MasterControlViewProps {
   onOpenUnrealSearch?: () => void;
   onOpenOrbitMap?: (constellations?: string[]) => void;
   activeRank?: AnopeRankLevel;
+  onRankChange?: (rank: AnopeRankLevel) => void;
+  onOpenRankAccess?: () => void;
 }
 
 export const MasterControlView: React.FC<MasterControlViewProps> = ({
@@ -80,11 +87,18 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
   onOpenZncWebAdmin,
   onOpenUnrealSearch,
   onOpenOrbitMap,
-  activeRank = 'op'
+  activeRank = 'op',
+  onRankChange,
+  onOpenRankAccess
 }) => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [syncGateWarning, setSyncGateWarning] = useState<boolean>(false);
   const [selectedConstellationsForCoverage, setSelectedConstellationsForCoverage] = useState<string[]>(['Starlink']);
-  const [activeSubTab, setActiveSubTab] = useState<'network_status' | 'infrastructure' | 'downlinks' | 'leaf_nodes' | 'noc' | 'fleet_status' | 'fleet_stability' | 'orbit_coverage' | 'statserv' | 'hopm' | 'compliance' | 'rss_news' | 'fubotv'>('noc');
+  const [activeSubTab, setActiveSubTab] = useState<'network_status' | 'voip_scotus' | 'infrastructure' | 'downlinks' | 'leaf_nodes' | 'noc' | 'fleet_status' | 'fleet_stability' | 'orbit_coverage' | 'statserv' | 'hopm' | 'compliance' | 'rss_news' | 'fubotv'>('noc');
+
+  const activeRankDef = getRankDefinition(activeRank);
+  const canViewMeshTelemetry = hasMinIrcdRank(activeRank, 'locop');
+  const canSyncAndOperateHopm = hasMinIrcdRank(activeRank, 'so');
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -124,6 +138,17 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
 
           {/* Quick Management Triggers */}
           <div className="flex items-center flex-wrap gap-2">
+            {onOpenRankAccess && (
+              <button
+                onClick={onOpenRankAccess}
+                className="px-3 py-1.5 bg-amber-950/50 hover:bg-amber-900/60 text-amber-200 border border-amber-500/40 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                title="View or elevate your IRCD rank permissions across Master Control"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                <span>{activeRankDef.prefix}{activeRankDef.shortLabel} · Lvl {activeRankDef.accessLevel}</span>
+              </button>
+            )}
+
             {onOpenIrcdAdmin && (
               <button
                 onClick={onOpenIrcdAdmin}
@@ -201,12 +226,17 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
 
             <button
               onClick={() => {
+                if (!canSyncAndOperateHopm) {
+                  setSyncGateWarning(true);
+                  return;
+                }
+                setSyncGateWarning(false);
                 const res = executeFullMeshSync();
                 handleCopy(`Synced ${res.syncedHubs}/4 hubs & ${res.syncedLeafs} leafs (Seq #${res.syncSequence})`, 'sync_all');
                 setActiveSubTab('network_status');
               }}
               className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
-              title="Synchronize all 4 UnrealIRCd Hubs, Anope Services, HOPM, and 1,034 Leaf Nodes"
+              title="Synchronize all 4 UnrealIRCd Hubs, Anope Services, HOPM, and 1,034 Leaf Nodes (Requires Services Oper Lvl 2000+)"
             >
               <Layers className="w-3.5 h-3.5" />
               <span>{copiedKey === 'sync_all' ? 'All Hubs & Leafs Synced' : 'Sync All Hubs & Leafs'}</span>
@@ -223,7 +253,19 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
         </div>
 
         {/* Master Control Sub-Tabs */}
-        <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-1 overflow-x-auto">
+        <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-1 overflow-x-auto no-scrollbar">
+          <button
+            onClick={() => setActiveSubTab('voip_scotus')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'voip_scotus'
+                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-sky-300 hover:bg-slate-800/50'
+            }`}
+          >
+            <PhoneCall className="w-3.5 h-3.5 text-sky-400" />
+            <span>VoIP (855k) &amp; SCOTUS Hiring</span>
+          </button>
+
           <button
             onClick={() => setActiveSubTab('network_status')}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
@@ -414,6 +456,19 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
         variant="ticker"
         onOpenConstellationOverlay={() => setActiveSubTab('orbit_coverage')}
       />
+
+      {syncGateWarning && !canSyncAndOperateHopm && (
+        <IrcdAccessGateBanner
+          currentRank={activeRank}
+          requiredRank="so"
+          featureName="Quad-Hub & 1,034-Leaf Full Mesh Synchronization"
+          onElevateRank={(rank) => {
+            onRankChange?.(rank);
+            setSyncGateWarning(false);
+          }}
+          onOpenRankMatrix={onOpenRankAccess}
+        />
+      )}
 
       {/* Tab 1: Backbone Infrastructure */}
       {activeSubTab === 'infrastructure' && (
@@ -731,15 +786,42 @@ export const MasterControlView: React.FC<MasterControlViewProps> = ({
       )}
 
       {/* Tab 9: HOPM (Hybrid Open Proxy Monitor) 4-Hub Protection */}
-      {activeSubTab === 'hopm' && <HopmMonitorConsole />}
+      {activeSubTab === 'hopm' && (
+        canSyncAndOperateHopm ? (
+          <HopmMonitorConsole />
+        ) : (
+          <IrcdAccessGateBanner
+            currentRank={activeRank}
+            requiredRank="so"
+            featureName="HOPM v1.1.10 Hybrid Open Proxy Monitor & DNSBL Console"
+            onElevateRank={onRankChange}
+            onOpenRankMatrix={onOpenRankAccess}
+          />
+        )
+      )}
 
       {/* Tab 10: Network Status (1,034-Leaf Mesh Health) */}
       {activeSubTab === 'network_status' && (
-        <NetworkStatusView
-          onOpenLicense={onOpenLicense}
-          onOpenSwitchMesh={onOpenSwitchMesh}
-          onOpenIrcdAdmin={onOpenIrcdAdmin}
-        />
+        canViewMeshTelemetry ? (
+          <NetworkStatusView
+            onOpenLicense={onOpenLicense}
+            onOpenSwitchMesh={onOpenSwitchMesh}
+            onOpenIrcdAdmin={onOpenIrcdAdmin}
+          />
+        ) : (
+          <IrcdAccessGateBanner
+            currentRank={activeRank}
+            requiredRank="locop"
+            featureName="1,034-Leaf Mesh Health & D3 Real-Time Ping Telemetry"
+            onElevateRank={onRankChange}
+            onOpenRankMatrix={onOpenRankAccess}
+          />
+        )
+      )}
+
+      {/* Tab 11: VoIP for All 855,000 SHOUTcast Stations & Supreme Court DJ Hiring */}
+      {activeSubTab === 'voip_scotus' && (
+        <ShoutcastVoipScotusView onOpenLicense={onOpenLicense} />
       )}
     </div>
   );

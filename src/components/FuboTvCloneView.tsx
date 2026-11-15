@@ -927,21 +927,23 @@ export const FuboTvCloneView: React.FC<FuboTvCloneViewProps> = ({
 
           {/* Time Header Grid */}
           <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-            <div className="grid grid-cols-12 bg-slate-900/90 border-b border-slate-800 p-3 text-xs font-mono font-bold text-slate-400">
-              <div className="col-span-3 sm:col-span-2">Channel</div>
-              <div className="col-span-9 sm:col-span-10 grid grid-cols-5 text-center">
-                <span>Now (Live)</span>
-                <span>+30 Min</span>
-                <span>+60 Min</span>
-                <span>+90 Min</span>
-                <span>+120 Min</span>
-              </div>
-            </div>
+            <div className="overflow-x-auto">
+              <div className="min-w-[680px]">
+                <div className="grid grid-cols-12 bg-slate-900/90 border-b border-slate-800 p-3 text-xs font-mono font-bold text-slate-400">
+                  <div className="col-span-3 sm:col-span-2">Channel</div>
+                  <div className="col-span-9 sm:col-span-10 grid grid-cols-5 text-center">
+                    <span>Now (Live)</span>
+                    <span>+30 Min</span>
+                    <span>+60 Min</span>
+                    <span>+90 Min</span>
+                    <span>+120 Min</span>
+                  </div>
+                </div>
 
-            {/* Channel Schedule Rows */}
-            <div className="divide-y divide-slate-800/80">
-              {filteredGuideChannels.map((channel) => (
-                <div key={channel.id} className="grid grid-cols-12 p-3 items-center hover:bg-slate-900/40 transition-colors">
+                {/* Channel Schedule Rows */}
+                <div className="divide-y divide-slate-800/80">
+                  {filteredGuideChannels.map((channel) => (
+                    <div key={channel.id} className="grid grid-cols-12 p-3 items-center hover:bg-slate-900/40 transition-colors">
                   {/* Channel Header Cell */}
                   <div 
                     onClick={() => handleSelectChannel(channel)}
@@ -995,6 +997,8 @@ export const FuboTvCloneView: React.FC<FuboTvCloneViewProps> = ({
                   </div>
                 </div>
               ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

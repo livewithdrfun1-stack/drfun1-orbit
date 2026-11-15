@@ -5,19 +5,25 @@
  */
 
 export type AnopeRankLevel = 
-  | 'listener' // Level 1-99, regular chatter / listener
-  | 'voice'    // Level 100, +v (VOP)
-  | 'halfop'   // Level 300, %h (HOP)
-  | 'op'       // Level 500, @o (AOP / Channel Operator) -> OPS AND ABOVE
-  | 'sop'      // Level 800, &a (SOP / Super Operator)
-  | 'founder'  // Level 1000, ~q (Channel Founder)
-  | 'so'       // Level 2000, Services Operator
-  | 'admin'    // Level 5000, Services Admin (SA)
-  | 'sra';     // Level 9999, Services Root Admin (SRA) / NetAdmin
+  | 'guest'     // Level 0, Unregistered +x Cloak Visitor (Public Index)
+  | 'listener'  // Level 10, Registered +r Listener / Chatter
+  | 'voice'     // Level 100, +v (VOP)
+  | 'halfop'    // Level 300, %h (HOP)
+  | 'dj_host'   // Level 400, +d Cleared On-Air DJ / Podcast Uplink Host (SCOTUS/Witt Cleared)
+  | 'op'        // Level 500, @o (AOP / Channel Operator) -> OPS AND ABOVE
+  | 'sop'       // Level 800, &a (SOP / Super Operator)
+  | 'founder'   // Level 1000, ~q (Channel Founder)
+  | 'locop'     // Level 1500, Local IRC Operator (+O Local Node Telemetry)
+  | 'so'        // Level 2000, Services Operator / Global Oper (+o)
+  | 'techadmin' // Level 3500, Technical Co-Administrator (+A Cluster/HOPM/ZNC)
+  | 'admin'     // Level 5000, Services Admin (SA / +a Server Rehash & K:Line)
+  | 'netadmin'  // Level 7500, Network Administrator (+N Quad-Hub Full Control)
+  | 'sra';      // Level 10000, Services Root Admin (SRA) / Chief Owner (~)
 
 export interface AnopeRankDefinition {
   id: AnopeRankLevel;
   name: string;
+  shortLabel: string;
   prefix: string;
   modes: string;
   accessLevel: number;
@@ -32,6 +38,13 @@ export interface AnopeRankDefinition {
   canKlineZline: boolean;
   canChanServAdmin: boolean;
   canOperServAdmin: boolean;
+  canPublishPodcasts: boolean;
+  canManageDaiFeeds: boolean;
+  canManageVoipStations: boolean;
+  canManageDuplicatorHosting: boolean;
+  canViewMeshTelemetry: boolean;
+  canSyncQuadHubs: boolean;
+  siteAccessZones: string[];
   badgeColor: string;
   roleIcon: string;
 }
@@ -203,4 +216,21 @@ export interface DjPermissionMatrix {
   canTriggerIrcWallops: boolean;
   canManageQueuePriority: boolean;
   canAcceptListenerRequests: boolean;
+}
+
+export interface OwnerCommissionMember {
+  id: string;
+  nick: string;
+  fullName: string;
+  title: string;
+  organization: 'www.wittlawfirm.com' | 'https://www.supremecourt.gov';
+  organizationLabel: string;
+  rank: AnopeRankLevel;
+  rankLabel: string;
+  prefix: '~';
+  accessLevel: number;
+  hostmask: string;
+  modes: string;
+  confirmationInfo: string;
+  isCurrentUser?: boolean;
 }

@@ -1,6 +1,40 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=MedievalSharp&display=swap');
 
+/* Global Mobile Viewport & Touch Ergonomics */
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+@media (max-width: 639px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Old English Blackletter Typography for Logo Initial Capitals */
 .font-old-english {
   font-family: 'UnifrakturMaguntia', 'Old English Text MT', 'Cloister Black', 'Engravers Old English', 'MedievalSharp', 'Fraktur', serif;

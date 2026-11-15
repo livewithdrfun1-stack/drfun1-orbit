@@ -45,13 +45,18 @@ import {
   Zap,
   Mic,
   MicOff,
-  Radio as AntennaIcon
+  Radio as AntennaIcon,
+  PhoneCall,
+  KeyRound
 } from 'lucide-react';
 import { AnopeRankLevel } from '../types/ircdAdmin';
+import { getRankDefinition } from '../utils/ircdAccess';
 import { MultistreamIrcChatRoom } from './MultistreamIrcChatRoom';
 import { UnifiedMusicIrcHub } from './UnifiedMusicIrcHub';
 import { MpdDjControlPanel } from './MpdDjControlPanel';
 import { YouTubeMusicAdsConsole } from './YouTubeMusicAdsConsole';
+import { ShoutcastVoipScotusView } from './ShoutcastVoipScotusView';
+import { DrFun1PodcastUplinkView } from './DrFun1PodcastUplinkView';
 import { YouTubeMusicTrack } from '../data/shoutcastMusicLibraryData';
 import { IrcLoginSession } from '../types/irc';
 import { INITIAL_MPD_BOT_INSTANCES } from '../data/mpdBotData';
@@ -62,6 +67,8 @@ interface OnlineRadioDjStudioProps {
   onOpenSwitchMesh?: () => void;
   onNavigateToIrc?: () => void;
   activeRank?: AnopeRankLevel;
+  onRankChange?: (rank: AnopeRankLevel) => void;
+  onOpenRankAccess?: () => void;
   onOpenIrcdAdmin?: () => void;
   ircSession: IrcLoginSession;
   onUpdateSession?: (newSession: Partial<IrcLoginSession>) => void;
@@ -72,17 +79,20 @@ export const OnlineRadioDjStudio: React.FC<OnlineRadioDjStudioProps> = ({
   onOpenSwitchMesh,
   onNavigateToIrc,
   activeRank = 'op',
+  onRankChange,
+  onOpenRankAccess,
   onOpenIrcdAdmin,
   ircSession,
   onUpdateSession
 }) => {
+  const activeRankDef = getRankDefinition(activeRank);
   // Radio Player State
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [volume, setVolume] = useState<number>(85);
   const [activeStreamQuality, setActiveStreamQuality] = useState<'320k_mp3' | '192k_aac' | 'flac_lossless'>('320k_mp3');
   const [listenerCount, setListenerCount] = useState<number>(1429);
-  const [stationMode, setStationMode] = useState<'shoutcast_live' | 'youtube_ads' | 'mpd_dj_deck' | 'music_catalog' | 'radio_irc'>('shoutcast_live');
+  const [stationMode, setStationMode] = useState<'shoutcast_live' | 'youtube_ads' | 'mpd_dj_deck' | 'music_catalog' | 'radio_irc' | 'voip_scotus' | 'podcast_uplink'>('shoutcast_live');
   const [djBots, setDjBots] = useState<MpdBotInstance[]>(INITIAL_MPD_BOT_INSTANCES);
   const [selectedBotId, setSelectedBotId] = useState<string>(INITIAL_MPD_BOT_INSTANCES[0].id);
   const activeBot = djBots.find(b => b.id === selectedBotId) || djBots[0];
@@ -137,6 +147,18 @@ export const OnlineRadioDjStudio: React.FC<OnlineRadioDjStudioProps> = ({
 
           {/* Quick Metrics & Player Controls */}
           <div className="flex items-center flex-wrap gap-2.5">
+            {onOpenRankAccess && (
+              <button
+                type="button"
+                onClick={onOpenRankAccess}
+                className="bg-amber-950/40 hover:bg-amber-900/50 px-3 py-1.5 rounded-lg border border-amber-500/40 font-mono text-xs text-amber-200 flex items-center gap-1.5 cursor-pointer"
+                title="Active IRCD Rank Access Level"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                <span>{activeRankDef.prefix}{activeRankDef.shortLabel} · Lvl {activeRankDef.accessLevel}</span>
+              </button>
+            )}
+
             {/* Listeners Badge */}
             <div className="bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 font-mono text-xs flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5 text-sky-400" />
@@ -244,6 +266,30 @@ export const OnlineRadioDjStudio: React.FC<OnlineRadioDjStudioProps> = ({
           >
             <Terminal className="w-3.5 h-3.5 text-emerald-400" />
             <span>Radio IRC Chat (#music-deathrow)</span>
+          </button>
+
+          <button
+            onClick={() => setStationMode('voip_scotus')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              stationMode === 'voip_scotus'
+                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-sky-300 hover:bg-slate-800/50'
+            }`}
+          >
+            <PhoneCall className="w-3.5 h-3.5 text-sky-400" />
+            <span>VoIP (855k Stations) &amp; SCOTUS Hiring</span>
+          </button>
+
+          <button
+            onClick={() => setStationMode('podcast_uplink')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              stationMode === 'podcast_uplink'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-amber-300 hover:bg-slate-800/50'
+            }`}
+          >
+            <Mic className="w-3.5 h-3.5 text-amber-400" />
+            <span>DrFun1 Podcasting Uplink</span>
           </button>
         </div>
       </div>
@@ -496,6 +542,23 @@ export const OnlineRadioDjStudio: React.FC<OnlineRadioDjStudioProps> = ({
             defaultChannel="#music-deathrow"
           />
         </div>
+      )}
+
+      {/* Mode 5: VoIP for All 855,000 SHOUTcast Stations & Supreme Court DJ Hiring */}
+      {stationMode === 'voip_scotus' && (
+        <ShoutcastVoipScotusView onOpenLicense={onOpenLicense} />
+      )}
+
+      {/* Mode 6: DrFun1 Podcasting Uplink (Podserv.fm Rebrand) */}
+      {stationMode === 'podcast_uplink' && (
+        <DrFun1PodcastUplinkView
+          onOpenLicense={onOpenLicense}
+          onNavigateToIrc={onNavigateToIrc}
+          onNavigateToRadio={() => setStationMode('shoutcast_live')}
+          activeRank={activeRank}
+          onElevateRank={onRankChange}
+          onOpenRankMatrix={onOpenRankAccess}
+        />
       )}
     </div>
   );

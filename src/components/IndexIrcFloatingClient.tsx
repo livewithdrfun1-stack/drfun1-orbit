@@ -257,11 +257,11 @@ export const IndexIrcFloatingClient: React.FC<IndexIrcFloatingClientProps> = ({
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 font-mono text-xs select-none">
+    <div className="fixed bottom-20 lg:bottom-4 right-3 sm:right-4 z-40 font-mono text-xs select-none max-w-[calc(100vw-1.5rem)]">
       
       {/* 1. COLLAPSED DOCK BAR */}
       {!isExpanded ? (
-        <div className="bg-slate-900/95 border border-purple-500/50 hover:border-purple-400 rounded-2xl p-2 sm:px-3.5 sm:py-2.5 shadow-2xl backdrop-blur-md flex items-center gap-3 transition-all">
+        <div className="bg-slate-900/95 border border-purple-500/50 hover:border-purple-400 rounded-2xl p-2 sm:px-3.5 sm:py-2.5 shadow-2xl backdrop-blur-md flex items-center gap-2 sm:gap-3 transition-all max-w-full">
           
           {/* Pulsing Status Dot & Host Info */}
           <div 
@@ -274,22 +274,22 @@ export const IndexIrcFloatingClient: React.FC<IndexIrcFloatingClientProps> = ({
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 relative" />
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5">
-                <Terminal className="w-3.5 h-3.5 text-purple-400 group-hover:text-purple-300 transition-colors" />
-                <span className="font-bold text-white text-xs group-hover:text-purple-200 transition-colors">
+                <Terminal className="w-3.5 h-3.5 text-purple-400 group-hover:text-purple-300 transition-colors shrink-0" />
+                <span className="font-bold text-white text-xs group-hover:text-purple-200 transition-colors truncate max-w-[125px] sm:max-w-none">
                   irc.drfun1.com:6697
                 </span>
-                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                <span className="hidden sm:inline px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 shrink-0">
                   TLS 1.3
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                <span className="text-emerald-400 font-semibold">{currentChannel}</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] text-slate-400 truncate">
+                <span className="text-emerald-400 font-semibold truncate">{currentChannel}</span>
+                <span className="hidden sm:inline">&bull;</span>
+                <span className="text-purple-300 hidden sm:inline">Nick: {userNick}</span>
                 <span>&bull;</span>
-                <span className="text-purple-300">Nick: {userNick}</span>
-                <span>&bull;</span>
-                <span className="text-slate-500">{simulatedPing}ms</span>
+                <span className="text-slate-500 shrink-0">{simulatedPing}ms</span>
               </div>
             </div>
           </div>
@@ -326,7 +326,7 @@ export const IndexIrcFloatingClient: React.FC<IndexIrcFloatingClientProps> = ({
         </div>
       ) : (
         /* 2. EXPANDED FLOATING IRC CLIENT WINDOW */
-        <div className="bg-slate-950 border border-purple-500/50 rounded-2xl w-[92vw] sm:w-[460px] h-[520px] shadow-2xl flex flex-col overflow-hidden backdrop-blur-md animate-in slide-in-from-bottom-5 duration-200">
+        <div className="bg-slate-950 border border-purple-500/50 rounded-2xl w-[calc(100vw-1.5rem)] sm:w-[460px] h-[64dvh] sm:h-[520px] shadow-2xl flex flex-col overflow-hidden backdrop-blur-md animate-in slide-in-from-bottom-5 duration-200">
           
           {/* Top Title Bar */}
           <div className="bg-slate-900/90 px-3.5 py-2.5 border-b border-purple-500/30 flex items-center justify-between gap-2 shrink-0">

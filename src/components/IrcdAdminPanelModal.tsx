@@ -24,7 +24,8 @@ import {
   INITIAL_BOTSERV_BOTS, 
   INITIAL_HOSTSERV_VHOSTS, 
   INITIAL_OPERSERV_DATA, 
-  INITIAL_OPER_LOGS 
+  INITIAL_OPER_LOGS,
+  OWNER_COMMISSION_ROSTER
 } from '../data/ircdAdminData';
 import { 
   X, 
@@ -2057,128 +2058,72 @@ ${unrealConfig.linkBlocks.map(lk => `link ${lk.name} {
 
             {/* Quick Sanctioned Oper Roster Switcher */}
             <div>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
                 <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
                   <Crown className="w-4 h-4 text-red-400" />
-                  <span>Sanctioned Oper Roster Established by www.wittlawfirm.com</span>
+                  <span>~ Owner Commissioned Roster (www.wittlawfirm.com &amp; supremecourt.gov · John Roberts Rank)</span>
                 </h4>
-                <span className="text-[11px] font-mono text-slate-500">Click to assume administrative identity</span>
+                <span className="text-[11px] font-mono text-slate-400">
+                  {OWNER_COMMISSION_ROSTER.length} Commissioned ~ Owners (Lvl 10000)
+                </span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {/* 1. Richard Alan Witt */}
-                <div className={`p-4 rounded-xl border transition-all ${
-                  activeRank === 'sra'
-                    ? 'bg-red-950/40 border-red-500/60 shadow-lg shadow-red-950/30'
-                    : 'bg-slate-950/70 border-slate-800 hover:border-slate-700'
-                }`}>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                      <span className="text-[10px] font-mono font-bold uppercase text-red-400 block">
-                        Network Owner &bull; Level 10000
-                      </span>
-                      <h5 className="text-sm font-bold text-white flex items-center gap-1.5">
-                        <Crown className="w-4 h-4 text-amber-400" />
-                        <span>~ RichardAlanWitt</span>
-                      </h5>
+                {OWNER_COMMISSION_ROSTER.slice(0, 9).map((member) => {
+                  const isActive = activeRank === 'sra';
+                  const isScotus = member.organization === 'https://www.supremecourt.gov';
+                  return (
+                    <div
+                      key={member.id}
+                      className={`p-3.5 rounded-xl border transition-all ${
+                        isActive
+                          ? 'bg-red-950/35 border-red-500/50 shadow-lg shadow-red-950/20'
+                          : 'bg-slate-950/70 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <div className="min-w-0">
+                          <span className={`text-[10px] font-mono font-bold uppercase block ${isScotus ? 'text-amber-300' : 'text-red-400'}`}>
+                            {member.rankLabel} &bull; Level {member.accessLevel}
+                          </span>
+                          <h5 className="text-sm font-bold text-white flex items-center gap-1.5 truncate">
+                            <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span className="truncate">~ {member.fullName}</span>
+                          </h5>
+                        </div>
+                        {isActive && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold shrink-0">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-snug mb-1 truncate">
+                        {member.title}
+                      </p>
+                      <p className="text-[10px] font-mono text-slate-400 mb-2.5 truncate">
+                        ~{member.nick} · {member.hostmask}
+                      </p>
+                      <button
+                        onClick={() => {
+                          onRankChange('sra');
+                          handleExecuteCommand(`/WALLOPS ~ Owner session authenticated: ${member.nick} (${member.organization})`);
+                          triggerNotice(`Authenticated as ${member.rankLabel}: ~ ${member.fullName}`);
+                        }}
+                        className="w-full py-1.5 px-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-mono text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-red-950/30"
+                      >
+                        <Key className="w-3.5 h-3.5" />
+                        <span>Assume ~ {member.nick}</span>
+                      </button>
                     </div>
-                    {activeRank === 'sra' && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">
-                        Active
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-slate-400 leading-snug mb-3">
-                    Managing Counsel at Witt Law Firm. Supreme network root, Switch SUPERNAP datacenter teleport vault link authority, and ultimate Anope OperServ key.
-                  </p>
-                  <button
-                    onClick={() => {
-                      onRankChange('sra');
-                      handleExecuteCommand('/WALLOPS Administrative session authenticated: RichardAlanWitt (Network Owner via www.wittlawfirm.com)');
-                      triggerNotice('Authenticated as Network Owner & Chief NetAdmin (~ Richard Alan Witt)');
-                    }}
-                    className="w-full py-1.5 px-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-mono text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-red-950/30"
-                  >
-                    <Key className="w-3.5 h-3.5" />
-                    <span>Assume Richard Alan Witt (NetAdmin)</span>
-                  </button>
-                </div>
+                  );
+                })}
+              </div>
 
-                {/* 2. DrFun1_Admin */}
-                <div className={`p-4 rounded-xl border transition-all ${
-                  activeRank === 'admin'
-                    ? 'bg-amber-950/40 border-amber-500/60 shadow-lg shadow-amber-950/30'
-                    : 'bg-slate-950/70 border-slate-800 hover:border-slate-700'
-                }`}>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                      <span className="text-[10px] font-mono font-bold uppercase text-amber-400 block">
-                        Services Root &bull; Level 5000
-                      </span>
-                      <h5 className="text-sm font-bold text-white flex items-center gap-1.5">
-                        <ShieldAlert className="w-4 h-4 text-amber-400" />
-                        <span>* DrFun1_Admin</span>
-                      </h5>
-                    </div>
-                    {activeRank === 'admin' && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">
-                        Active
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-slate-400 leading-snug mb-3">
-                    Technical NetAdmin. Holds global GLINE, ZLINE, server DIE/RESTART override, BotServ provisioning, and BGP clean-pipe routing control.
-                  </p>
-                  <button
-                    onClick={() => {
-                      onRankChange('admin');
-                      handleExecuteCommand('/WALLOPS Administrative session authenticated: DrFun1_Admin (Services Admin)');
-                      triggerNotice('Authenticated as Services Admin (* DrFun1_Admin)');
-                    }}
-                    className="w-full py-1.5 px-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-slate-950 font-mono text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-amber-950/30"
-                  >
-                    <Key className="w-3.5 h-3.5" />
-                    <span>Assume DrFun1_Admin (Services Root)</span>
-                  </button>
-                </div>
-
-                {/* 3. Global IRCOp */}
-                <div className={`p-4 rounded-xl border transition-all ${
-                  activeRank === 'so'
-                    ? 'bg-purple-950/40 border-purple-500/60 shadow-lg shadow-purple-950/30'
-                    : 'bg-slate-950/70 border-slate-800 hover:border-slate-700'
-                }`}>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                      <span className="text-[10px] font-mono font-bold uppercase text-purple-400 block">
-                        Global IRCOp &bull; Level 2000
-                      </span>
-                      <h5 className="text-sm font-bold text-white flex items-center gap-1.5">
-                        <ShieldCheck className="w-4 h-4 text-purple-400" />
-                        <span>@ DrFun1_Tech</span>
-                      </h5>
-                    </div>
-                    {activeRank === 'so' && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">
-                        Active
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-slate-400 leading-snug mb-3">
-                    Core infrastructure operator. Network-wide moderation, channel takeover mitigation, satellite telemetry link maintenance, and station DJ overrides.
-                  </p>
-                  <button
-                    onClick={() => {
-                      onRankChange('so');
-                      handleExecuteCommand('/WALLOPS Oper session authenticated: DrFun1_Tech (Global IRCOp)');
-                      triggerNotice('Authenticated as Global IRCOp (@ DrFun1_Tech)');
-                    }}
-                    className="w-full py-1.5 px-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-purple-950/30"
-                  >
-                    <Key className="w-3.5 h-3.5" />
-                    <span>Assume Global IRCOp (@ DrFun1_Tech)</span>
-                  </button>
-                </div>
+              <div className="mt-3 p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300">
+                <strong className="text-amber-300">All Confirmed Justices &amp; Court Officers (supremecourt.gov · John Roberts Rank ~ Owner):</strong>{' '}
+                {OWNER_COMMISSION_ROSTER.filter((m) => m.organization === 'https://www.supremecourt.gov')
+                  .map((m) => `~${m.nick}`)
+                  .join(' · ')}
               </div>
             </div>
 

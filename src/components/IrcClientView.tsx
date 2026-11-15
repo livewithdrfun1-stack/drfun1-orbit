@@ -120,6 +120,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
   const [isBurstingSync, setIsBurstingSync] = useState<boolean>(false);
   const [showLeafTopologyModal, setShowLeafTopologyModal] = useState<boolean>(false);
   const [selectedLeafInspection, setSelectedLeafInspection] = useState<SwitchDedicatedNode | null>(SWITCH_DEDICATED_NODES[0]);
+  const [mobilePane, setMobilePane] = useState<'chat' | 'channels' | 'users'>('chat');
 
   // Synchronize state when external session updates
   useEffect(() => {
@@ -773,44 +774,44 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleLeafAllNodesToDualHubs}
               disabled={isBurstingSync}
-              className={`px-3.5 py-1.5 rounded-lg font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-md ${
+              className={`px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-md min-h-[38px] ${
                 isBurstingSync
                   ? 'bg-purple-600/50 border border-purple-400 text-purple-200 cursor-wait'
                   : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-950/50 ring-1 ring-emerald-400/40'
               }`}
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isBurstingSync ? 'animate-spin' : ''}`} />
-              <span>{isBurstingSync ? 'Synchronizing 1,034 Nodes...' : 'Leaf All 1,034 Nodes to All Hubs'}</span>
+              <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${isBurstingSync ? 'animate-spin' : ''}`} />
+              <span>{isBurstingSync ? 'Syncing 1,034 Nodes...' : 'Leaf All 1,034 Nodes'}</span>
             </button>
 
             <button
               onClick={() => setShowLeafTopologyModal(true)}
-              className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-mono text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm"
+              className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-mono text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm min-h-[38px]"
             >
               <GitBranch className="w-3.5 h-3.5 text-sky-400" />
-              <span>Leaf Topology (/map)</span>
+              <span>Topology (/map)</span>
             </button>
 
             <button
               onClick={() => setIsMultistreamCombinedMode(!isMultistreamCombinedMode)}
-              className={`px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-md ${
+              className={`px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-md min-h-[38px] ${
                 isMultistreamCombinedMode
                   ? 'bg-purple-600 border border-purple-400 text-white shadow-purple-950/50 ring-2 ring-purple-400/40'
                   : 'bg-slate-900 hover:bg-slate-800 border border-purple-500/40 text-purple-300 hover:text-purple-100'
               }`}
             >
               <Radio className={`w-3.5 h-3.5 ${isMultistreamCombinedMode ? 'text-white animate-pulse' : 'text-purple-400'}`} />
-              <span>{isMultistreamCombinedMode ? 'Exit Combined Mode' : 'Multistream Combined Mode'}</span>
+              <span>{isMultistreamCombinedMode ? 'Exit Combined' : 'Multistream'}</span>
             </button>
 
             {onOpenIrcdAdmin && (
               <button
                 onClick={onOpenIrcdAdmin}
-                className="px-3 py-1.5 rounded-lg bg-red-950/70 hover:bg-red-900/80 border border-red-700/60 text-red-200 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-1.5 rounded-lg bg-red-950/70 hover:bg-red-900/80 border border-red-700/60 text-red-200 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm min-h-[38px]"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-red-400" />
                 <span>IRCD Admin</span>
@@ -820,11 +821,11 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
             {onOpenZncWebAdmin && (
               <button
                 onClick={onOpenZncWebAdmin}
-                className="px-3 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-700/60 text-emerald-200 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-700/60 text-emerald-200 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm min-h-[38px]"
                 title="Open ZNC 1.9.1 Web Control Panel (Port 5000)"
               >
                 <Server className="w-3.5 h-3.5 text-emerald-400" />
-                <span>ZNC WebAdmin (:5000)</span>
+                <span>ZNC (:5000)</span>
               </button>
             )}
           </div>
@@ -906,9 +907,49 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
           </div>
         </div>
       ) : (
-        <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 space-y-3 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-4">
+        {/* Mobile & Tablet IRC Pane Switcher (< lg screens) */}
+        <div className="lg:hidden grid grid-cols-3 gap-1.5 p-1 bg-slate-900 border border-slate-800 rounded-xl">
+          <button
+            type="button"
+            onClick={() => setMobilePane('chat')}
+            className={`py-2 px-2 rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-1.5 min-h-[40px] cursor-pointer transition-colors ${
+              mobilePane === 'chat'
+                ? 'bg-purple-600 text-white shadow'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Chat ({currentChannel})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobilePane('channels')}
+            className={`py-2 px-2 rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-1.5 min-h-[40px] cursor-pointer transition-colors ${
+              mobilePane === 'channels'
+                ? 'bg-emerald-600 text-white shadow'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Hash className="w-3.5 h-3.5 shrink-0" />
+            <span>Channels ({ALL_DRFUN1_MEDIA_CHANNELS.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobilePane('users')}
+            className={`py-2 px-2 rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-1.5 min-h-[40px] cursor-pointer transition-colors ${
+              mobilePane === 'users'
+                ? 'bg-sky-600 text-white shadow'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5 shrink-0" />
+            <span>Users ({INITIAL_IRC_USERS.length})</span>
+          </button>
+        </div>
+
         {/* Left Column: Channels & All Bands Selector (3 cols on lg) */}
-        <div className="lg:col-span-3 flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg h-[650px]">
+        <div className={`lg:col-span-3 ${mobilePane === 'channels' ? 'flex' : 'hidden'} lg:flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg h-[calc(100dvh-16rem)] min-h-[430px] lg:h-[650px]`}>
           {/* Channel Header & Filter */}
           <div className="p-3 border-b border-slate-800 bg-slate-950/70 space-y-2">
             <div className="flex items-center justify-between">
@@ -1089,7 +1130,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
         </div>
 
         {/* Center Column: IRC Terminal Screen & Input (6 cols on lg) */}
-        <div className="lg:col-span-6 flex flex-col bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-2xl h-[650px]">
+        <div className={`lg:col-span-6 ${mobilePane === 'chat' ? 'flex' : 'hidden'} lg:flex flex-col bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-2xl h-[calc(100dvh-16rem)] min-h-[430px] lg:h-[650px]`}>
           {/* Channel Banner / Topic Bar */}
           <div className="bg-slate-900 border-b border-slate-800 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="min-w-0 flex-1">
@@ -1178,20 +1219,20 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
 
           {/* IRC Command Line / Input Form */}
           <form onSubmit={handleSendMessage} className="p-2.5 bg-slate-900 border-t border-slate-800 flex gap-2">
-            <div className="flex items-center px-2 bg-slate-950 rounded-lg border border-slate-800 text-xs font-mono text-slate-400">
+            <div className="hidden sm:flex items-center px-2 bg-slate-950 rounded-lg border border-slate-800 text-xs font-mono text-slate-400">
               <span>{currentNick}</span>
             </div>
             <input
               type="text"
               value={inputCommand}
               onChange={e => setInputCommand(e.target.value)}
-              placeholder={`Message ${currentChannel} or type /join, /node 1-5, /nick, /ping...`}
-              className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+              placeholder={`Message ${currentChannel} or /help...`}
+              className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 min-h-[40px]"
             />
             <button
               type="submit"
               disabled={!inputCommand.trim()}
-              className="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white rounded-lg text-xs font-mono font-bold transition-colors flex items-center gap-1 shadow-md shadow-purple-900/30"
+              className="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white rounded-lg text-xs font-mono font-bold transition-colors flex items-center gap-1 shadow-md shadow-purple-900/30 min-h-[40px]"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Send</span>
@@ -1200,7 +1241,7 @@ export const IrcClientView: React.FC<IrcClientViewProps> = ({
         </div>
 
         {/* Right Column: User Nicklist & WHOIS Inspector (3 cols on lg) */}
-        <div className="lg:col-span-3 flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg h-[650px]">
+        <div className={`lg:col-span-3 ${mobilePane === 'users' ? 'flex' : 'hidden'} lg:flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg h-[calc(100dvh-16rem)] min-h-[430px] lg:h-[650px]`}>
           {/* Header */}
           <div className="p-3 border-b border-slate-800 bg-slate-950/70 flex items-center justify-between">
             <span className="text-xs font-bold text-white flex items-center gap-1.5">

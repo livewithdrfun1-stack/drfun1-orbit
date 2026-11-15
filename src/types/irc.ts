@@ -143,6 +143,11 @@ export interface ZncUserSession {
   lastActive: string;
   networks: string[];
   bufferedChannels: string[];
+  organization?: 'www.wittlawfirm.com' | 'https://www.supremecourt.gov/' | 'DrFun1 Mesh';
+  staffTitle?: string;
+  rankPrefix?: string;
+  isAdmin?: boolean;
+  confirmationInfo?: string;
 }
 
 export interface ZncBouncerConfig {

@@ -40,11 +40,14 @@ import { MasterControlView } from './components/MasterControlView';
 import { FuboTvCloneView } from './components/FuboTvCloneView';
 import { IrcDuplicatorHostingView } from './components/IrcDuplicatorHostingView';
 import { SatcomCompaniesView } from './components/SatcomCompaniesView';
+import { DrFun1PodcastUplinkView } from './components/DrFun1PodcastUplinkView';
+import { IrcdRankAccessModal } from './components/IrcdRankAccessModal';
 import { IrcLoginCredentials, IrcLoginSession } from './types/irc';
 import { UserMembershipState } from './types/membership';
 import { AnopeRankLevel } from './types/ircdAdmin';
 import { STORE_PRODUCTS } from './data/storeProducts';
 import { DrFun1MediaLogo } from './components/DrFun1MediaLogo';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { 
   Satellite, 
   ShieldCheck, 
@@ -122,7 +125,9 @@ export default function App() {
   };
 
   const handleNavigateTab = (tab: string) => {
-    if (tab === 'radio_dj' || tab === 'mpd' || tab === 'studio' || tab === 'media') {
+    if (tab === 'podcast_uplink' || tab === 'podcast' || tab === 'podserv') {
+      setActiveTab('podcast_uplink');
+    } else if (tab === 'radio_dj' || tab === 'mpd' || tab === 'studio' || tab === 'media') {
       setActiveTab('radio_dj');
     } else if (tab === 'duplicator_hosting' || tab === 'duplicator') {
       setActiveTab('duplicator_hosting');
@@ -203,6 +208,7 @@ export default function App() {
   const [isSwitchWittModalOpen, setIsSwitchWittModalOpen] = useState(false);
   const [isHostingResellerModalOpen, setIsHostingResellerModalOpen] = useState(false);
   const [isIrcdAdminOpen, setIsIrcdAdminOpen] = useState(false);
+  const [isRankAccessModalOpen, setIsRankAccessModalOpen] = useState(false);
   const [isZncWebAdminOpen, setIsZncWebAdminOpen] = useState(false);
   const [isMembershipModalOpen, setIsMembershipModalOpen] = useState(false);
   const [isUnrealSearchOpen, setIsUnrealSearchOpen] = useState(false);
@@ -234,10 +240,10 @@ export default function App() {
 
   const [activeOperRank, setActiveOperRank] = useState<AnopeRankLevel>(() => {
     try {
-      const saved = localStorage.getItem('drfun1_active_anope_rank');
+      const saved = localStorage.getItem('drfun1_active_anope_rank_v2');
       if (saved) return saved as AnopeRankLevel;
     } catch (_) {}
-    return 'op';
+    return 'sra';
   });
   const [exportNotice, setExportNotice] = useState<string | null>(null);
 
@@ -276,7 +282,7 @@ export default function App() {
   // Sync active Anope rank
   useEffect(() => {
     try {
-      localStorage.setItem('drfun1_active_anope_rank', activeOperRank);
+      localStorage.setItem('drfun1_active_anope_rank_v2', activeOperRank);
     } catch (_) {}
   }, [activeOperRank]);
 
@@ -561,6 +567,7 @@ export default function App() {
         onOpenSwitchWittServices={() => setIsSwitchWittModalOpen(true)}
         onOpenResellerProgram={() => setIsHostingResellerModalOpen(true)}
         onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
+        onOpenRankAccess={() => setIsRankAccessModalOpen(true)}
         onOpenZncWebAdmin={() => setIsZncWebAdminOpen(true)}
         activeOperRank={activeOperRank}
         cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
@@ -581,8 +588,8 @@ export default function App() {
 
       {/* Export Toast Notification */}
       {exportNotice && (
-        <div className="fixed bottom-6 right-6 z-50 bg-emerald-950/90 border border-emerald-500/50 text-emerald-200 px-4 py-2.5 rounded-lg shadow-xl text-xs flex items-center gap-2">
-          <Check className="w-4 h-4 text-emerald-400" />
+        <div className="fixed bottom-20 lg:bottom-6 right-3 sm:right-6 z-50 bg-emerald-950/90 border border-emerald-500/50 text-emerald-200 px-4 py-2.5 rounded-lg shadow-xl text-xs flex items-center gap-2 max-w-[calc(100vw-1.5rem)]">
+          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{exportNotice}</span>
         </div>
       )}
@@ -593,7 +600,7 @@ export default function App() {
 
       {/* 1. Primary Index: UnrealIRCd WebIRC Client & 1,000-Leaf Mesh (500 Per Hub) */}
       {activeTab === 'irc' ? (
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
           <IrcClientView
             onOpenLicense={() => setIsLicenseModalOpen(true)}
             onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
@@ -616,7 +623,7 @@ export default function App() {
         </main>
       ) : activeTab === 'duplicator_hosting' ? (
         /* 1B. Managed IRC Chat Room Duplicator Hosting */
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
           <IrcDuplicatorHostingView
             onQuickAddToCart={handleQuickAddToCart}
             onOpenProductConfig={handleOpenProductConfig}
@@ -628,7 +635,7 @@ export default function App() {
         </main>
       ) : activeTab === 'satcom_companies' ? (
         /* 1C. Full Interactive List of SATCOM Companies */
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
           <SatcomCompaniesView
             companies={companies}
             filteredCompanies={filteredCompanies}
@@ -651,7 +658,7 @@ export default function App() {
         </main>
       ) : activeTab === 'master_control' ? (
         /* 2. Master Control, NOC 1,000-Leaf Grid (500 Per Hub), Carrier Downlinks & Newsroom */
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
           <MasterControlView
             companies={companies}
             onOpenLicense={() => setIsLicenseModalOpen(true)}
@@ -667,11 +674,13 @@ export default function App() {
               setIsOrbitMapModalOpen(true);
             }}
             activeRank={activeOperRank}
+            onRankChange={setActiveOperRank}
+            onOpenRankAccess={() => setIsRankAccessModalOpen(true)}
           />
         </main>
       ) : activeTab === 'fubotv' ? (
         /* 3. Fubo.tv Live Sports, 4K Player, Multi-View & EPG Guide */
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
           <FuboTvCloneView
             onOpenLicense={() => setIsLicenseModalOpen(true)}
             onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
@@ -680,7 +689,7 @@ export default function App() {
         </main>
       ) : activeTab === 'store' ? (
         /* 4. Wholesale Satellite, Fiber, Wireless & Store Catalog */
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
           <StoreView
             onOpenProductConfig={handleOpenProductConfig}
             onQuickAddToCart={handleQuickAddToCart}
@@ -695,14 +704,28 @@ export default function App() {
             initialSubTab={storeSubTab}
           />
         </main>
+      ) : activeTab === 'podcast_uplink' ? (
+        /* 5B. DrFun1 Podcasting Uplink (Podserv.fm Clone & Rebrand) */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
+          <DrFun1PodcastUplinkView
+            onOpenLicense={() => setIsLicenseModalOpen(true)}
+            onNavigateToIrc={() => setActiveTab('irc')}
+            onNavigateToRadio={() => setActiveTab('radio_dj')}
+            activeRank={activeOperRank}
+            onElevateRank={setActiveOperRank}
+            onOpenRankMatrix={() => setIsRankAccessModalOpen(true)}
+          />
+        </main>
       ) : (
         /* 5. Online Radio & MPD DJ Station */
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
           <OnlineRadioDjStudio
             onOpenLicense={() => setIsLicenseModalOpen(true)}
             onOpenSwitchMesh={() => setIsSwitchMeshModalOpen(true)}
             onNavigateToIrc={() => setActiveTab('irc')}
             activeRank={activeOperRank}
+            onRankChange={setActiveOperRank}
+            onOpenRankAccess={() => setIsRankAccessModalOpen(true)}
             onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
             ircSession={ircSession}
             onUpdateSession={(newSession) => {
@@ -717,7 +740,7 @@ export default function App() {
       )}
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 bg-slate-950/90 py-8 text-xs text-slate-500">
+      <footer className="border-t border-slate-800 bg-slate-950/90 pt-8 pb-24 lg:pb-8 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
@@ -991,6 +1014,26 @@ export default function App() {
           }}
         />
       )}
+
+      {/* 14-Tier IRCD Rank Access Control Matrix & Live Switcher */}
+      <IrcdRankAccessModal
+        isOpen={isRankAccessModalOpen}
+        onClose={() => setIsRankAccessModalOpen(false)}
+        activeRank={activeOperRank}
+        onRankChange={setActiveOperRank}
+        onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
+      />
+
+      {/* Persistent Mobile Bottom Navigation Dock (< lg screens) */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        onSelectTab={handleNavigateTab}
+        activeOperRank={activeOperRank}
+        onOpenRankAccess={() => setIsRankAccessModalOpen(true)}
+        onOpenIrcdAdmin={() => setIsIrcdAdminOpen(true)}
+        onOpenZncWebAdmin={() => setIsZncWebAdminOpen(true)}
+        onOpenLicense={() => setIsLicenseModalOpen(true)}
+      />
     </div>
   );
 }
