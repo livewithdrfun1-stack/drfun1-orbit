@@ -50,12 +50,20 @@ import {
   NewsOutletCategory,
   NewsOutletRegion,
 } from '../types/drfun1News';
+import { IrcLoginSession } from '../types/irc';
+import { AnopeRankLevel } from '../types/ircdAdmin';
+import { DrFun1NewsWorldMap } from './DrFun1NewsWorldMap';
+import { NewsVideoIrcOverlay } from './NewsVideoIrcOverlay';
 
 interface DrFun1NewsViewProps {
   onOpenLicense?: () => void;
   onNavigateToIrc?: () => void;
   onNavigateToRss?: () => void;
   onNavigateToDrFun1Tv?: () => void;
+  ircSession?: IrcLoginSession;
+  activeRank?: AnopeRankLevel;
+  onUpdateIrcSession?: (partial: Partial<IrcLoginSession>) => void;
+  onOpenIrcLogin?: () => void;
 }
 
 type NewsViewMode = 'theater' | 'quad';
@@ -90,6 +98,10 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
   onNavigateToIrc,
   onNavigateToRss,
   onNavigateToDrFun1Tv,
+  ircSession,
+  activeRank = 'sra',
+  onUpdateIrcSession,
+  onOpenIrcLogin,
 }) => {
   const [customOutlets, setCustomOutlets] = useState<GlobalNewsOutlet[]>(() => {
     try {
@@ -132,6 +144,26 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
   const [showCaptions, setShowCaptions] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<NewsViewMode>('theater');
 
+  // Integrated IRC Client Overlay on the Video Player
+  const [showIrcOverlay, setShowIrcOverlay] = useState<boolean>(true);
+  const [isIrcOverlayMinimized, setIsIrcOverlayMinimized] = useState<boolean>(false);
+  const [ircOverlayPosition, setIrcOverlayPosition] = useState<'right' | 'left'>('right');
+  const [ircOverlayOpacity, setIrcOverlayOpacity] = useState<'translucent' | 'solid'>('translucent');
+
+  const effectiveIrcSession: IrcLoginSession = ircSession || {
+    nick: 'RichardAlanWitt',
+    ident: 'satcom_web',
+    realname: 'DrFun1 News Broadcast Client',
+    serverHost: 'irc.drfun1.com',
+    serverPort: 6697,
+    useSsl: true,
+    channel: '#drfun1-news',
+    autoConnectOnStartup: true,
+    activeNodeId: 'dev_drfun1media_node',
+    connectedAt: Date.now(),
+    isConnected: true,
+  };
+
   // Tuned Outlet & 4-Outlet News Quad
   const [tunedOutletId, setTunedOutletId] = useState<string>('news-drfun1-hq');
   const [quadOutletIds, setQuadOutletIds] = useState<string[]>([
@@ -144,12 +176,14 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
 
   // Filters & Sorting
   const [regionFilter, setRegionFilter] = useState<'All' | NewsOutletRegion>('All');
+  const [mapFilterSynced, setMapFilterSynced] = useState<boolean>(false);
   const [categoryFilter, setCategoryFilter] = useState<'All' | NewsOutletCategory>('All');
   const [sortMode, setSortMode] = useState<OutletSortMode>('viewers');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [breakingOnly, setBreakingOnly] = useState<boolean>(false);
   const [bookmarkedOnly, setBookmarkedOnly] = useState<boolean>(false);
   const [statusOverrides, setStatusOverrides] = useState<Record<string, { breaking?: boolean; status?: 'ON AIR' | 'STANDBY' }>>({});
+  const directorySectionRef = useRef<HTMLDivElement | null>(null);
 
   // Add Outlet Modal / Form
   const [showAddOutlet, setShowAddOutlet] = useState<boolean>(false);
@@ -301,6 +335,59 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
   const handleToggleBookmark = (id: string) => {
     setBookmarkedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleTuneByCallSign = (query: string): GlobalNewsOutlet | null => {
+    const q = query.trim().toLowerCase();
+    if (!q) return null;
+    const match =
+      allOutlets.find((o) => o.callSign.toLowerCase() === q) ||
+      allOutlets.find(
+        (o) =>
+          o.callSign.toLowerCase().includes(q) ||
+          o.name.toLowerCase().includes(q) ||
+          o.country.toLowerCase().includes(q)
+      );
+    if (!match) return null;
+    setTunedOutletId(match.id);
+    setViewMode('theater');
+    setIsPlayerPlaying(true);
+    showNotice(`Tuned DrFun1 News Video Player via IRC to ${match.name} (${match.callSign})`);
+    return match;
+  };
+
+  // Automatic directory filter handler triggered when selecting a region on the D3 World Map
+  const handleSelectRegionFromMap = (nextRegion: 'All' | NewsOutletRegion) => {
+    setRegionFilter(nextRegion);
+    setMapFilterSynced(nextRegion !== 'All');
+
+    if (nextRegion === 'All') {
+      showNotice(`D3 Map filter cleared — showing all ${allOutlets.length} global news outlets.`);
+      return;
+    }
+
+    const regionMatches = allOutlets.filter((o) => o.region === nextRegion);
+    const matchesWithCurrentSubFilters = regionMatches.filter((o) => {
+      if (categoryFilter !== 'All' && o.category !== categoryFilter) return false;
+      if (breakingOnly && !o.isBreaking) return false;
+      if (bookmarkedOnly && !bookmarkedIds.includes(o.id)) return false;
+      return true;
+    });
+
+    // Prevent an accidental 0-result list when switching regions on the map while narrow toggles are active
+    let effectiveCount = matchesWithCurrentSubFilters.length;
+    if (regionMatches.length > 0 && matchesWithCurrentSubFilters.length === 0) {
+      setCategoryFilter('All');
+      setBreakingOnly(false);
+      setBookmarkedOnly(false);
+      effectiveCount = regionMatches.length;
+    }
+
+    showNotice(
+      `D3 Map filtered directory to ${nextRegion} (${effectiveCount} active ${
+        effectiveCount === 1 ? 'outlet' : 'outlets'
+      })`
     );
   };
 
@@ -510,8 +597,8 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
           {/* Broadcast Stage */}
           <div className="xl:col-span-8 bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-            <div className="relative aspect-video bg-gradient-to-br from-[#1b080c] via-slate-950 to-[#091529] p-5 sm:p-7 flex flex-col justify-between">
-              <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="relative min-h-[390px] sm:min-h-[430px] md:aspect-video bg-gradient-to-br from-[#1b080c] via-slate-950 to-[#091529] p-4 sm:p-6 flex flex-col justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2 z-10">
                 <div className="flex items-center gap-2">
                   <span
                     className="px-2.5 py-1 rounded-md font-black text-xs text-slate-950 shadow"
@@ -553,12 +640,20 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
                 </div>
               </div>
 
-              {/* Main Program Headline & Anchor Info */}
-              <div className="my-auto py-4 space-y-2.5 text-center max-w-2xl mx-auto">
+              {/* Main Program Headline & Anchor Info (shifts cleanly so open IRC overlay never blocks headline text) */}
+              <div
+                className={`my-auto py-3 space-y-2.5 text-center max-w-2xl mx-auto transition-all ${
+                  showIrcOverlay && !isIrcOverlayMinimized
+                    ? ircOverlayPosition === 'right'
+                      ? 'md:pr-[350px]'
+                      : 'md:pl-[350px]'
+                    : ''
+                }`}
+              >
                 <div className="text-[11px] font-mono uppercase tracking-widest text-red-400 font-bold">
                   DRFUN1 NEWS WORLD RELAY · {tunedOutlet.country} ({tunedOutlet.region}) · {tunedOutlet.language}
                 </div>
-                <h2 className="text-xl sm:text-3xl font-black text-white leading-tight">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white leading-tight">
                   {tunedOutlet.currentProgram}
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
@@ -573,16 +668,48 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
                 </div>
               </div>
 
+              {/* Live IRC Client Overlay Rendered Directly On Video Player */}
+              <NewsVideoIrcOverlay
+                session={effectiveIrcSession}
+                tunedOutlet={tunedOutlet}
+                activeRank={activeRank}
+                isOpen={showIrcOverlay}
+                isMinimized={isIrcOverlayMinimized}
+                position={ircOverlayPosition}
+                opacityMode={ircOverlayOpacity}
+                onToggleOpen={(open) => {
+                  setShowIrcOverlay(open);
+                  if (open) setIsIrcOverlayMinimized(false);
+                }}
+                onToggleMinimized={() => setIsIrcOverlayMinimized((v) => !v)}
+                onTogglePosition={() => setIrcOverlayPosition((p) => (p === 'right' ? 'left' : 'right'))}
+                onToggleOpacity={() =>
+                  setIrcOverlayOpacity((o) => (o === 'translucent' ? 'solid' : 'translucent'))
+                }
+                onUpdateSession={onUpdateIrcSession}
+                onOpenLoginModal={onOpenIrcLogin}
+                onNavigateToFullIrc={onNavigateToIrc}
+                onTuneByCallSign={handleTuneByCallSign}
+              />
+
               {/* Captions & Player Transport */}
-              <div className="space-y-2.5">
+              <div className="space-y-2.5 pt-2 z-10">
                 {showCaptions && (
-                  <div className="bg-black/80 border border-slate-800 rounded-lg px-3.5 py-1.5 text-xs font-mono text-white text-center truncate">
+                  <div
+                    className={`bg-black/80 border border-slate-800 rounded-lg px-3.5 py-1.5 text-xs font-mono text-white text-center truncate ${
+                      showIrcOverlay && !isIrcOverlayMinimized
+                        ? ircOverlayPosition === 'right'
+                          ? 'md:mr-[350px]'
+                          : 'md:ml-[350px]'
+                        : ''
+                    }`}
+                  >
                     [CC · {tunedOutlet.callSign}] {tunedOutlet.headline}
                   </div>
                 )}
 
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setIsPlayerPlaying((p) => !p)}
@@ -610,6 +737,22 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
                     >
                       <Captions className="w-3.5 h-3.5" />
                       <span>CC</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowIrcOverlay((v) => !v);
+                        setIsIrcOverlayMinimized(false);
+                      }}
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-bold border flex items-center gap-1.5 cursor-pointer ${
+                        showIrcOverlay
+                          ? 'bg-purple-600 text-white border-purple-400'
+                          : 'bg-slate-900 text-slate-300 border-slate-700 hover:text-white'
+                      }`}
+                      title="Toggle Live IRC Client Overlay on Video Player"
+                    >
+                      <Terminal className="w-3.5 h-3.5" />
+                      <span>{showIrcOverlay ? 'IRC Overlay: ON' : 'Show IRC Overlay'}</span>
                     </button>
                   </div>
 
@@ -759,17 +902,61 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
       )}
 
       {/* ================================================================
+          2B. D3 INTERACTIVE GLOBAL NEWS COVERAGE WORLD MAP
+          ================================================================ */}
+      <DrFun1NewsWorldMap
+        allOutlets={allOutlets}
+        filteredOutlets={filteredOutlets}
+        activeRegion={regionFilter}
+        onSelectRegion={handleSelectRegionFromMap}
+        tunedOutlet={tunedOutlet}
+        onTuneOutlet={(outlet) => {
+          setTunedOutletId(outlet.id);
+          setViewMode('theater');
+          setIsPlayerPlaying(true);
+          showNotice(`Tuned DrFun1 News Live Desk to ${outlet.name} (${outlet.country})`);
+        }}
+        onJumpToDirectory={() =>
+          directorySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      />
+
+      {/* ================================================================
           3. DYNAMIC GLOBAL NEWS OUTLETS DIRECTORY ({allOutlets.length} OUTLETS)
           ================================================================ */}
-      <div className="bg-slate-900/95 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4 shadow-xl">
+      <div
+        ref={directorySectionRef}
+        className={`bg-slate-900/95 border rounded-2xl p-4 sm:p-5 space-y-4 shadow-xl transition-colors ${
+          mapFilterSynced && regionFilter !== 'All'
+            ? 'border-red-500/60 ring-1 ring-red-500/30'
+            : 'border-slate-800'
+        }`}
+      >
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-800">
           <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Globe className="w-4 h-4 text-cyan-400" />
-              <span>Dynamic Global News Outlets Directory ({filteredOutlets.length} / {allOutlets.length})</span>
-            </h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <Globe className="w-4 h-4 text-cyan-400" />
+                <span>Dynamic Global News Outlets Directory ({filteredOutlets.length} / {allOutlets.length})</span>
+              </h2>
+              {regionFilter !== 'All' && (
+                <span className="px-2 py-0.5 rounded-md bg-red-600/20 border border-red-500/50 text-red-300 text-[10px] font-mono font-bold flex items-center gap-1.5">
+                  <span>{mapFilterSynced ? `D3 Map Filtered: ${regionFilter}` : `Region: ${regionFilter}`}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRegionFilter('All');
+                      setMapFilterSynced(false);
+                    }}
+                    className="underline hover:text-white cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                </span>
+              )}
+            </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Click any outlet to tune DrFun1 News live TV desk, toggle Breaking / On-Air flags, or register additional worldwide broadcasters.
+              Automatically synchronized with the D3 World Map — click any outlet to tune DrFun1 News live TV desk or register additional worldwide broadcasters.
             </p>
           </div>
 
@@ -944,7 +1131,10 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
                 <button
                   key={reg}
                   type="button"
-                  onClick={() => setRegionFilter(reg)}
+                  onClick={() => {
+                    setRegionFilter(reg);
+                    setMapFilterSynced(false);
+                  }}
                   className={`px-3 py-1 rounded-full text-xs font-mono font-bold transition cursor-pointer ${
                     regionFilter === reg
                       ? 'bg-white text-slate-950'
@@ -959,6 +1149,27 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
         </div>
 
         {/* Dynamic Outlets Cards List */}
+        {filteredOutlets.length === 0 ? (
+          <div className="py-10 px-4 rounded-xl bg-slate-950 border border-slate-800 text-center space-y-3">
+            <div className="text-sm font-semibold text-white">
+              No news outlets match the current filters ({regionFilter}).
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setRegionFilter('All');
+                setCategoryFilter('All');
+                setSearchQuery('');
+                setBreakingOnly(false);
+                setBookmarkedOnly(false);
+                setMapFilterSynced(false);
+              }}
+              className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold cursor-pointer"
+            >
+              Reset All Directory Filters
+            </button>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredOutlets.map((outlet) => {
             const isTuned = tunedOutlet.id === outlet.id;
@@ -1097,6 +1308,7 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
             );
           })}
         </div>
+        )}
       </div>
     </div>
   );

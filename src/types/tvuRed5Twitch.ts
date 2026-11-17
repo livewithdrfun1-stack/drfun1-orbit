@@ -115,3 +115,58 @@ export interface ChannelPointReward {
   description: string;
   actionType: 'highlight' | 'cut_camera' | 'lower_third' | 'webrtc_stats';
 }
+
+export type KickCategory =
+  | 'All'
+  | 'Just Chatting'
+  | 'SATCOM & NOC'
+  | 'Field Broadcast'
+  | 'Legal & FCC'
+  | 'Music & DJ';
+
+export interface KickLiveChannel {
+  id: string;
+  slug: string;
+  displayName: string;
+  category: Exclude<KickCategory, 'All'>;
+  streamTitle: string;
+  viewerCount: number;
+  followerCount: number;
+  isLive: boolean;
+  isVerified: boolean;
+  tags: string[];
+  thumbnailUrl: string;
+  tvuPackId: string;
+  red5NodeId: string;
+  ircChannel: string;
+  chatroomId: string;
+  pusherCluster: string;
+  rtmpIngestUrl: string;
+  uptimeMinutes: number;
+  subPriceUsd: number;
+  creatorSplitPct: number;
+  kicksTotal: number;
+  moderators: string[];
+}
+
+export interface KickChatMessage {
+  id: string;
+  channelId: string;
+  author: string;
+  badge: 'Broadcaster' | 'Verified Mod' | 'Founder' | 'OG Sub' | 'Kick VIP' | 'Viewer';
+  badgeColor: string;
+  text: string;
+  kicksGifted?: number;
+  timestamp: string;
+}
+
+export interface KickGiftAction {
+  id: string;
+  label: string;
+  kicksCost: number;
+  description: string;
+  actionType: 'kicks_cheer' | 'gift_sub' | 'cut_camera' | 'lower_third';
+}
+
+export type UnifiedPlatformFilter = 'all' | 'twitch' | 'kick';
+

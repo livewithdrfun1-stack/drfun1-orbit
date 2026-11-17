@@ -116,9 +116,9 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Brand Wordmark & Logo: DrFun1Media in Purple and Gold */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
             <button 
-              onClick={() => setActiveTab('irc')}
+              onClick={() => setActiveTab('drfun1_news')}
               className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer text-left min-w-0"
-              title="DrFun1Media - UnrealIRCd WebIRC Client & Satcom Network (Index Page)"
+              title="DrFun1Media - DrFun1 News Global TV Service & D3 World Map (Index Page)"
             >
               {/* Purple & Gold Logo Mark */}
               <div className="relative w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-xl bg-gradient-to-tr from-purple-600 via-amber-400 to-yellow-500 p-0.5 shadow-md shadow-purple-900/50 group-hover:scale-105 transition-transform">
@@ -427,7 +427,24 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="hidden lg:block bg-slate-950 overflow-x-auto custom-nav-scrollbar border-b border-slate-800/50">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-11 flex items-center justify-between gap-1 sm:gap-2 text-xs font-medium text-slate-400 min-w-max">
           
-          {/* 1. Primary Index: Unified UnrealIRCd WebIRC Client & 1,000-Leaf Mesh (500 Per Hub) */}
+          {/* 1. Primary Index: DrFun1 News (Global TV Service, D3 Map & Video IRC Overlay) */}
+          <button
+            onClick={() => setActiveTab('drfun1_news')}
+            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'drfun1_news'
+                ? 'bg-sky-600/25 text-sky-200 border-sky-500/60 font-bold shadow-md shadow-sky-950/30 ring-1 ring-sky-500/40'
+                : 'text-slate-400 border-transparent hover:text-sky-300 hover:bg-slate-900/60'
+            }`}
+            title="Index Main Page: DrFun1 News — Global News Outlets Dynamic Directory, D3 World Map & Live Video IRC Overlay"
+          >
+            <Newspaper className="w-3.5 h-3.5 text-sky-400" />
+            <span>DrFun1 News (Index)</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold">
+              33+ Global TV
+            </span>
+          </button>
+
+          {/* 1A. Unified UnrealIRCd WebIRC Client & 1,000-Leaf Mesh (500 Per Hub) */}
           <button
             onClick={() => setActiveTab('irc')}
             className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
@@ -435,12 +452,12 @@ export const Header: React.FC<HeaderProps> = ({
                 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 font-bold shadow-md shadow-emerald-950/30 ring-1 ring-emerald-500/40'
                 : 'text-slate-400 border-transparent hover:text-emerald-300 hover:bg-slate-900/60'
             }`}
-            title="Index Main Page: UnrealIRCd 6.1.4 WebIRC Client, 1,034 Global Leaf Nodes (500 Switch/Hub via CGW Law Offices, 12 DataPacket/Hub, 10 RisingNet Dedicated Servers) & Anope Services"
+            title="UnrealIRCd 6.1.4 WebIRC Client, 1,034 Global Leaf Nodes (500 Switch/Hub via CGW Law Offices, 12 DataPacket/Hub, 10 RisingNet Dedicated Servers) & Anope Services"
           >
             <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-            <span>WebIRC &amp; Leaf Mesh (Index)</span>
+            <span>WebIRC &amp; Leaf Mesh</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold">
-              1,034 Nodes (500 Switch/Hub · 12 DP · 10 RN)
+              1,034 Nodes
             </span>
           </button>
 
@@ -597,24 +614,9 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
           </button>
 
-          {/* 5C. DrFun1 News (Global News Outlets Directory & Live TV News Service) */}
-          <button
-            onClick={() => setActiveTab('drfun1_news')}
-            className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'drfun1_news'
-                ? 'bg-sky-600/25 text-sky-200 border-sky-500/60 font-bold shadow-md shadow-sky-950/30 ring-1 ring-sky-500/40'
-                : 'text-slate-400 border-transparent hover:text-sky-300 hover:bg-slate-900/60'
-            }`}
-            title="DrFun1 News — Global News Outlets Dynamic Directory & Live TV News Desk"
-          >
-            <Newspaper className="w-3.5 h-3.5 text-sky-400" />
-            <span>DrFun1 News</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold">
-              33+ Global TV
-            </span>
-          </button>
+          {/* 5B-2 Reserved: DrFun1 News placed at primary index slot */}
 
-          {/* 6. All-in-One TVU Networks + Red5.net + Twitch.tv Live Studio */}
+          {/* 6. All-in-One TVU Networks + Red5.net + Twitch.tv + Kick.com Live Studio */}
           <button
             onClick={() => setActiveTab('tvu_red5_twitch')}
             className={`whitespace-nowrap shrink-0 transition-all py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer ${
@@ -622,10 +624,10 @@ export const Header: React.FC<HeaderProps> = ({
                 ? 'bg-purple-600/25 text-purple-200 border-purple-500/60 font-bold shadow-md shadow-purple-950/30 ring-1 ring-purple-500/40'
                 : 'text-slate-400 border-transparent hover:text-purple-300 hover:bg-slate-900/60'
             }`}
-            title="All-in-One TVU Networks Cellular Bonding + Red5.net WebRTC Cluster + Twitch.tv Live Studio"
+            title="All-in-One TVU Networks Cellular Bonding + Red5.net WebRTC Cluster + Twitch.tv & Kick.com Live Studio"
           >
             <Video className="w-3.5 h-3.5 text-purple-400" />
-            <span>TVU · Red5 · Twitch</span>
+            <span>TVU · Red5 · Twitch · Kick</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold">
               WebRTC Live
             </span>
@@ -827,10 +829,18 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="grid grid-cols-1 gap-2">
               {[
                 { 
+                  id: 'drfun1_news', 
+                  label: 'DrFun1 News (Index)', 
+                  desc: 'Primary Index: 33+ Global TV News Outlets, Interactive D3 World Map & Live Video IRC Overlay',
+                  badge: 'Index Live TV', 
+                  color: 'sky', 
+                  icon: Newspaper 
+                },
+                { 
                   id: 'irc', 
-                  label: 'WebIRC & Leaf Mesh (Index)', 
+                  label: 'WebIRC & Leaf Mesh', 
                   desc: 'UnrealIRCd 6.1.4 Client, 1,034 Leaf Nodes (500 Switch/Hub via CGW, 12 DataPacket/Hub, 10 RisingNet Servers) & Anope 2.1 Services',
-                  badge: '1,034 Nodes (500 Switch/Hub · 12 DP · 10 RN)', 
+                  badge: '1,034 Nodes', 
                   color: 'emerald', 
                   icon: Terminal 
                 },
@@ -906,18 +916,11 @@ export const Header: React.FC<HeaderProps> = ({
                   color: 'red', 
                   icon: Tv 
                 },
-                { 
-                  id: 'drfun1_news', 
-                  label: 'DrFun1 News (Global TV Service)', 
-                  desc: 'Dynamic Directory of 33+ Global News Outlets, Live TV Anchor Desk & 4-Outlet Quad',
-                  badge: 'Global TV', 
-                  color: 'sky', 
-                  icon: Newspaper 
-                },
+
                 { 
                   id: 'tvu_red5_twitch', 
-                  label: 'TVU · Red5 · Twitch Studio', 
-                  desc: 'TVU 5G Bonding, Red5 Pro WebRTC WHIP/WHEP Cluster & Twitch Live Chat',
+                  label: 'TVU · Red5 · Twitch · Kick Studio', 
+                  desc: 'TVU 5G Bonding, Red5 Pro WebRTC WHIP/WHEP Cluster, Twitch.tv & Kick.com (95/5) Live Chat',
                   badge: 'WebRTC Live', 
                   color: 'purple', 
                   icon: Video 

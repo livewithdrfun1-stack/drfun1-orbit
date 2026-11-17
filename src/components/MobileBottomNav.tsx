@@ -55,12 +55,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const rankDef = getRankDefinition(activeOperRank);
 
   const isMoreTab =
+    activeTab === 'satcom_companies' ||
     activeTab === 'satcom_rss' ||
     activeTab === 'duplicator_hosting' ||
     activeTab === 'store' ||
     activeTab === 'fubotv' ||
     activeTab === 'drfun1_tv' ||
-    activeTab === 'drfun1_news' ||
     activeTab === 'social_control' ||
     activeTab === 'podcast_uplink' ||
     activeTab === 'tvu_red5_twitch';
@@ -191,17 +191,17 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  onSelectTab('drfun1_news');
+                  onSelectTab('satcom_companies');
                   setMoreOpen(false);
                 }}
                 className={`p-3 rounded-xl border text-left flex items-center gap-2.5 min-h-[52px] cursor-pointer ${
-                  activeTab === 'drfun1_news'
+                  activeTab === 'satcom_companies'
                     ? 'bg-sky-500/20 border-sky-500 text-white font-bold'
                     : 'bg-slate-950 border-slate-800 text-slate-200'
                 }`}
               >
-                <Newspaper className="w-4 h-4 text-sky-400 shrink-0" />
-                <span>DrFun1 News</span>
+                <Satellite className="w-4 h-4 text-sky-400 shrink-0" />
+                <span>SATCOM Companies</span>
               </button>
 
               <button
@@ -217,7 +217,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 }`}
               >
                 <Video className="w-4 h-4 text-purple-400 shrink-0" />
-                <span>TVU · Red5 · Twitch</span>
+                <span>TVU · Red5 · Twitch · Kick</span>
               </button>
 
               <button
@@ -313,6 +313,20 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             type="button"
             onClick={() => {
               setMoreOpen(false);
+              onSelectTab('drfun1_news');
+            }}
+            className={`flex flex-col items-center justify-center gap-1 text-[10px] font-mono cursor-pointer transition-colors ${
+              activeTab === 'drfun1_news' && !moreOpen ? 'text-sky-400 font-bold' : 'text-slate-400'
+            }`}
+          >
+            <Newspaper className="w-4 h-4" />
+            <span>News</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMoreOpen(false);
               onSelectTab('irc');
             }}
             className={`flex flex-col items-center justify-center gap-1 text-[10px] font-mono cursor-pointer transition-colors ${
@@ -351,22 +365,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           >
             <Server className="w-4 h-4" />
             <span>Master</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setMoreOpen(false);
-              onSelectTab('satcom_companies');
-            }}
-            className={`flex flex-col items-center justify-center gap-1 text-[10px] font-mono cursor-pointer transition-colors ${
-              activeTab === 'satcom_companies' && !moreOpen
-                ? 'text-sky-400 font-bold'
-                : 'text-slate-400'
-            }`}
-          >
-            <Satellite className="w-4 h-4" />
-            <span>SATCOM</span>
           </button>
 
           <button

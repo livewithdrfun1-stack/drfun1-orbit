@@ -4,20 +4,18 @@
  * Licensed to Richard Alan Witt (www.wittlawfirm.com / www.owenscompany.com)
  * DrFun1 Media Inc. & DrFun1 ECOM Inc.
  *
- * All-in-One TVU Networks + Red5.net WebRTC + Twitch.tv Live Broadcast Studio
- * Pipeline: TVU Cellular Bonding & Cloud Producer -> Red5 Pro WHIP/WHEP Cluster -> Twitch Interactive Stream & Chat
+ * All-in-One TVU Networks + Red5.net WebRTC + Twitch.tv + Kick.com Live Broadcast Studio
+ * Pipeline: TVU Cellular Bonding & Cloud Producer -> Red5 Pro WHIP/WHEP Cluster -> Twitch & Kick Interactive Streams
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Activity,
   Camera,
   Check,
   CheckCircle2,
   Copy,
   Crown,
   ExternalLink,
-  Film,
   Gift,
   Heart,
   KeyRound,
@@ -28,22 +26,18 @@ import {
   Play,
   Plus,
   Radio,
-  RefreshCw,
   Scissors,
   Search,
   Send,
   Server,
   ShieldCheck,
   Signal,
-  Sliders,
   Terminal,
-  Trash2,
   Tv,
   Users,
   Video,
   Volume2,
   VolumeX,
-  Wifi,
   Zap,
 } from 'lucide-react';
 import { AnopeRankLevel } from '../types/ircdAdmin';
@@ -51,20 +45,27 @@ import { getRankDefinition, hasMinIrcdRank } from '../utils/ircdAccess';
 import { IrcdAccessGateBanner } from './IrcdAccessGateBanner';
 import { Red5TwitchKickDevStudio, DevPortalSectionMode } from './Red5TwitchKickDevStudio';
 import {
+  KickCategory,
+  KickChatMessage,
+  KickLiveChannel,
   Red5EdgeNode,
   TvuPackUnit,
   TvuProducerScene,
   TwitchCategory,
   TwitchChatMessage,
   TwitchLiveChannel,
+  UnifiedPlatformFilter,
 } from '../types/tvuRed5Twitch';
 import {
   CHANNEL_POINT_REWARDS,
+  INITIAL_KICK_CHANNELS,
+  INITIAL_KICK_CHAT,
   INITIAL_RED5_NODES,
   INITIAL_TVU_PACKS,
   INITIAL_TVU_SCENES,
   INITIAL_TWITCH_CHANNELS,
   INITIAL_TWITCH_CHAT,
+  KICK_GIFT_ACTIONS,
 } from '../data/tvuRed5TwitchData';
 
 interface TvuRed5TwitchViewProps {
@@ -76,7 +77,7 @@ interface TvuRed5TwitchViewProps {
   ircNick?: string;
 }
 
-type StudioSubView = 'unified' | 'tvu' | 'red5' | 'twitch';
+type StudioSubView = 'unified' | 'tvu' | 'red5' | 'twitch' | 'kick';
 
 export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
   onOpenLicense,
@@ -118,10 +119,10 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
   const [twitchCategory, setTwitchCategory] = useState<TwitchCategory>('All');
   const [channelSearch, setChannelSearch] = useState<string>('');
   const [followedChannelIds, setFollowedChannelIds] = useState<Set<string>>(
-    () => new Set(['tw-drfun1live', 'tw-supernap-noc'])
+    () => new Set(['tw-drfun1live', 'tw-supernap-noc', 'kick-drfun1tv', 'kick-supernap'])
   );
   const [subscribedChannelIds, setSubscribedChannelIds] = useState<Set<string>>(
-    () => new Set(['tw-drfun1live'])
+    () => new Set(['tw-drfun1live', 'kick-drfun1tv'])
   );
   const [channelPoints, setChannelPoints] = useState<number>(2450);
   const [userBitsBalance, setUserBitsBalance] = useState<number>(5000);
@@ -130,6 +131,24 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
   const [slowModeSec, setSlowModeSec] = useState<number>(0);
   const [followersOnlyChat, setFollowersOnlyChat] = useState<boolean>(false);
   const [highlightedChatId, setHighlightedChatId] = useState<string | null>(null);
+
+  // Kick.com Interactive Channels, Pusher WS Chat & Kicks Balance State
+  const [activePlatform, setActivePlatform] = useState<'twitch' | 'kick'>('twitch');
+  const [unifiedFilter, setUnifiedFilter] = useState<UnifiedPlatformFilter>('all');
+  const [isDualSimulcast, setIsDualSimulcast] = useState<boolean>(true);
+  const [kickChannels, setKickChannels] = useState<KickLiveChannel[]>(INITIAL_KICK_CHANNELS);
+  const [selectedKickChannelId, setSelectedKickChannelId] = useState<string>(INITIAL_KICK_CHANNELS[0].id);
+  const [kickCategory, setKickCategory] = useState<KickCategory>('All');
+  const [kickSearch, setKickSearch] = useState<string>('');
+  const [kickChatMessages, setKickChatMessages] = useState<KickChatMessage[]>(INITIAL_KICK_CHAT);
+  const [kickChatInput, setKickChatInput] = useState<string>('');
+  const [userKicksBalance, setUserKicksBalance] = useState<number>(8500);
+  const [kickSubsOnlyChat, setKickSubsOnlyChat] = useState<boolean>(false);
+  const [kickEmoteOnlyChat, setKickEmoteOnlyChat] = useState<boolean>(false);
+  const [draftKickTitle, setDraftKickTitle] = useState<string>('');
+  const [newKickSlug, setNewKickSlug] = useState<string>('');
+  const [newKickTitle, setNewKickTitle] = useState<string>('');
+  const [newKickCategory, setNewKickCategory] = useState<Exclude<KickCategory, 'All'>>('Field Broadcast');
 
   // Player Transport State
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
@@ -141,10 +160,16 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
 
   // Editable Stream Title in Creator Deck
   const [draftStreamTitle, setDraftStreamTitle] = useState<string>('');
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activeChannel = useMemo(
     () => channels.find((c) => c.id === selectedChannelId) || channels[0],
     [channels, selectedChannelId]
+  );
+  const activeKickChannel = useMemo(
+    () => kickChannels.find((c) => c.id === selectedKickChannelId) || kickChannels[0],
+    [kickChannels, selectedKickChannelId]
   );
   const activeTvuPack = useMemo(
     () => tvuPacks.find((p) => p.id === selectedPackId) || tvuPacks[0],
@@ -167,10 +192,14 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
     [tvuPacks, activeScene.primaryPackId, activeTvuPack]
   );
 
-  // Sync draft title when channel changes
+  // Sync draft titles when channels change
   useEffect(() => {
     setDraftStreamTitle(activeChannel.streamTitle);
   }, [activeChannel.id, activeChannel.streamTitle]);
+
+  useEffect(() => {
+    setDraftKickTitle(activeKickChannel.streamTitle);
+  }, [activeKickChannel.id, activeKickChannel.streamTitle]);
 
   // Live uptime & subtle viewer count tick when streaming
   useEffect(() => {
@@ -181,15 +210,24 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
     return () => clearInterval(id);
   }, [isPlaying]);
 
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
+
   const notify = (msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 3200);
+    toastTimerRef.current = setTimeout(() => setToastMsg(null), 3200);
   };
 
   const handleCopyText = (val: string, key: string, label: string) => {
     navigator.clipboard.writeText(val);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
     setCopiedKey(key);
-    setTimeout(() => setCopiedKey(null), 2000);
+    copyTimerRef.current = setTimeout(() => setCopiedKey(null), 2000);
     notify(`Copied ${label} to clipboard`);
   };
 
@@ -210,6 +248,10 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
     () => channels.reduce((acc, c) => acc + (c.isLive ? c.viewerCount : 0), 0),
     [channels]
   );
+  const totalKickViewers = useMemo(
+    () => kickChannels.reduce((acc, c) => acc + (c.isLive ? c.viewerCount : 0), 0),
+    [kickChannels]
+  );
 
   const filteredChannels = useMemo(() => {
     return channels.filter((ch) => {
@@ -227,14 +269,45 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
     });
   }, [channels, twitchCategory, channelSearch]);
 
+  const filteredKickChannels = useMemo(() => {
+    return kickChannels.filter((ch) => {
+      if (kickCategory !== 'All' && ch.category !== kickCategory) return false;
+      if (kickSearch.trim()) {
+        const q = kickSearch.toLowerCase();
+        return (
+          ch.displayName.toLowerCase().includes(q) ||
+          ch.slug.toLowerCase().includes(q) ||
+          ch.streamTitle.toLowerCase().includes(q) ||
+          ch.category.toLowerCase().includes(q) ||
+          ch.tags.some((t) => t.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [kickChannels, kickCategory, kickSearch]);
+
   const visibleChatMessages = useMemo(
     () => chatMessages.filter((m) => m.channelId === activeChannel.id),
     [chatMessages, activeChannel.id]
   );
+  const visibleKickChatMessages = useMemo(
+    () => kickChatMessages.filter((m) => m.channelId === activeKickChannel.id),
+    [kickChatMessages, activeKickChannel.id]
+  );
 
   // Handlers: Select Channel (links TVU Pack & Red5 Node automatically)
   const handleSelectChannel = (ch: TwitchLiveChannel) => {
+    setActivePlatform('twitch');
     setSelectedChannelId(ch.id);
+    setSelectedPackId(ch.tvuPackId);
+    setSelectedRed5NodeId(ch.red5NodeId);
+    const matchingScene = tvuScenes.find((s) => s.primaryPackId === ch.tvuPackId);
+    if (matchingScene) setActiveSceneId(matchingScene.id);
+  };
+
+  const handleSelectKickChannel = (ch: KickLiveChannel) => {
+    setActivePlatform('kick');
+    setSelectedKickChannelId(ch.id);
     setSelectedPackId(ch.tvuPackId);
     setSelectedRed5NodeId(ch.red5NodeId);
     const matchingScene = tvuScenes.find((s) => s.primaryPackId === ch.tvuPackId);
@@ -441,8 +514,10 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
     }
   };
 
-  // Handler: Follow / Subscribe
-  const handleToggleFollow = (chId: string) => {
+  // Handler: Follow / Subscribe (Platform-aware for Twitch + Kick 95/5 Split)
+  const currentStreamEntity = activePlatform === 'kick' ? activeKickChannel : activeChannel;
+
+  const handleToggleFollow = (chId: string, labelName: string) => {
     const isFollowing = followedChannelIds.has(chId);
     setFollowedChannelIds((prev) => {
       const next = new Set(prev);
@@ -450,24 +525,130 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
       else next.add(chId);
       return next;
     });
-    setChannels((prev) =>
-      prev.map((c) =>
-        c.id === chId
-          ? { ...c, followerCount: c.followerCount + (isFollowing ? -1 : 1) }
-          : c
-      )
-    );
-    notify(isFollowing ? `Unfollowed ${activeChannel.displayName}` : `Following ${activeChannel.displayName}`);
+    if (chId.startsWith('kick-')) {
+      setKickChannels((prev) =>
+        prev.map((c) =>
+          c.id === chId
+            ? { ...c, followerCount: c.followerCount + (isFollowing ? -1 : 1) }
+            : c
+        )
+      );
+    } else {
+      setChannels((prev) =>
+        prev.map((c) =>
+          c.id === chId
+            ? { ...c, followerCount: c.followerCount + (isFollowing ? -1 : 1) }
+            : c
+        )
+      );
+    }
+    notify(isFollowing ? `Unfollowed ${labelName}` : `Following ${labelName}`);
   };
 
-  const handleSubscribe = (chId: string) => {
+  const handleSubscribe = (chId: string, labelName: string) => {
     if (subscribedChannelIds.has(chId)) {
-      notify(`Already subscribed to ${activeChannel.displayName} (Tier 1).`);
+      notify(`Already subscribed to ${labelName} (Tier 1).`);
       return;
     }
     setSubscribedChannelIds((prev) => new Set(prev).add(chId));
-    setChannelPoints((p) => p + 500);
-    notify(`Subscribed to ${activeChannel.displayName} (+500 bonus Channel Points)!`);
+    if (chId.startsWith('kick-')) {
+      setUserKicksBalance((k) => k + 500);
+      notify(`Subscribed to kick.com/${labelName} (95/5 Split · $4.74 to creator, +500 Kicks)!`);
+    } else {
+      setChannelPoints((p) => p + 500);
+      notify(`Subscribed to ${labelName} (+500 bonus Channel Points)!`);
+    }
+  };
+
+  // Handler: Send Kick.com Pusher WS Chat or Kicks Gift
+  const handleSendKickChat = (e: React.FormEvent, kicksAmount?: number) => {
+    e.preventDefault();
+    const content = kickChatInput.trim();
+    if (!content && !kicksAmount) return;
+    if (kicksAmount && userKicksBalance < kicksAmount) {
+      notify('Insufficient Kicks balance.');
+      return;
+    }
+    if (kicksAmount) {
+      setUserKicksBalance((k) => k - kicksAmount);
+      setKickChannels((prev) =>
+        prev.map((c) =>
+          c.id === activeKickChannel.id ? { ...c, kicksTotal: c.kicksTotal + kicksAmount } : c
+        )
+      );
+    }
+
+    const newMsg: KickChatMessage = {
+      id: `kchat-${Date.now()}`,
+      channelId: activeKickChannel.id,
+      author: ircNick,
+      badge: hasMinIrcdRank(activeRank, 'sra')
+        ? 'Broadcaster'
+        : hasMinIrcdRank(activeRank, 'op')
+        ? 'Verified Mod'
+        : 'Founder',
+      badgeColor: hasMinIrcdRank(activeRank, 'sra')
+        ? 'text-emerald-300'
+        : hasMinIrcdRank(activeRank, 'op')
+        ? 'text-sky-300'
+        : 'text-amber-300',
+      text: kicksAmount
+        ? `Gifted ${kicksAmount} Kicks! ${content || 'Supporting the live Kick.com + Red5 WebRTC stream!'}`
+        : content,
+      kicksGifted: kicksAmount,
+      timestamp: new Date().toTimeString().slice(0, 5),
+    };
+    setKickChatMessages((prev) => [...prev, newMsg]);
+    setKickChatInput('');
+  };
+
+  // Handler: Execute Kick Gift Action (Kicks / Gift Sub / Camera Cut)
+  const handleKickGiftAction = (actionId: string) => {
+    const action = KICK_GIFT_ACTIONS.find((a) => a.id === actionId);
+    if (!action) return;
+    if (userKicksBalance < action.kicksCost) {
+      notify(`Need ${action.kicksCost} Kicks (balance: ${userKicksBalance}).`);
+      return;
+    }
+    setUserKicksBalance((k) => k - action.kicksCost);
+    setKickChannels((prev) =>
+      prev.map((c) =>
+        c.id === activeKickChannel.id ? { ...c, kicksTotal: c.kicksTotal + action.kicksCost } : c
+      )
+    );
+
+    if (action.actionType === 'cut_camera') {
+      const nextScene = tvuScenes[(tvuScenes.findIndex((s) => s.id === activeSceneId) + 1) % tvuScenes.length];
+      setActiveSceneId(nextScene.id);
+      setSelectedPackId(nextScene.primaryPackId);
+      notify(`Kick Webhook v2: Cut live camera to ${nextScene.name}!`);
+    } else if (action.actionType === 'gift_sub') {
+      const giftMsg: KickChatMessage = {
+        id: `kchat-sub-${Date.now()}`,
+        channelId: activeKickChannel.id,
+        author: ircNick,
+        badge: 'Founder',
+        badgeColor: 'text-emerald-300',
+        text: `Gifted 1 Kick Subscription to community ($4.74 / 95% creator payout)!`,
+        kicksGifted: action.kicksCost,
+        timestamp: new Date().toTimeString().slice(0, 5),
+      };
+      setKickChatMessages((prev) => [...prev, giftMsg]);
+      notify(`Gifted 1 Kick Sub on kick.com/${activeKickChannel.slug} (95/5 Split)!`);
+    } else {
+      const giftMsg: KickChatMessage = {
+        id: `kchat-kicks-${Date.now()}`,
+        channelId: activeKickChannel.id,
+        author: ircNick,
+        badge: 'Kick VIP',
+        badgeColor: 'text-amber-300',
+        text: `Dropped ${action.kicksCost} Kicks into chatrooms.${activeKickChannel.chatroomId}.v2!`,
+        kicksGifted: action.kicksCost,
+        timestamp: new Date().toTimeString().slice(0, 5),
+      };
+      setKickChatMessages((prev) => [...prev, giftMsg]);
+      notify(`Sent ${action.kicksCost} Kicks to kick.com/${activeKickChannel.slug}!`);
+    }
   };
 
   // Handler: Save Stream Title in Creator Deck
@@ -482,6 +663,55 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
     notify(`Updated Twitch stream title & synced to Red5 metadata.`);
   };
 
+  const handleSaveKickTitle = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!draftKickTitle.trim()) return;
+    setKickChannels((prev) =>
+      prev.map((c) =>
+        c.id === activeKickChannel.id ? { ...c, streamTitle: draftKickTitle.trim() } : c
+      )
+    );
+    notify(`Synced stream title to kick.com/${activeKickChannel.slug} via Kick API v2!`);
+  };
+
+  const handleAddCustomKickChannel = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanSlug = newKickSlug.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    if (!cleanSlug) return;
+    const created: KickLiveChannel = {
+      id: `kick-${cleanSlug}-${Date.now()}`,
+      slug: cleanSlug,
+      displayName: cleanSlug,
+      category: newKickCategory,
+      streamTitle:
+        newKickTitle.trim() ||
+        `LIVE ${cleanSlug} on Kick.com — Red5 Pro WebRTC + TVU Bonded Contribution`,
+      viewerCount: 420,
+      followerCount: 1850,
+      isLive: true,
+      isVerified: true,
+      tags: ['Kick-WebRTC', '95/5-Split', 'Custom-Uplink'],
+      thumbnailUrl: primaryProgramPack.previewImage,
+      tvuPackId: activeTvuPack.id,
+      red5NodeId: activeRed5Node.id,
+      ircChannel: `#${cleanSlug}`,
+      chatroomId: String(Math.floor(3900000 + Math.random() * 99000)),
+      pusherCluster: 'us2',
+      rtmpIngestUrl: 'rtmps://fa723fc1b171.global-contribute.live-video.net:443/app/',
+      uptimeMinutes: 1,
+      subPriceUsd: 4.99,
+      creatorSplitPct: 95,
+      kicksTotal: 500,
+      moderators: [ircNick, 'DrFun1KickBot'],
+    };
+    setKickChannels((prev) => [created, ...prev]);
+    setSelectedKickChannelId(created.id);
+    setActivePlatform('kick');
+    setNewKickSlug('');
+    setNewKickTitle('');
+    notify(`Added kick.com/${created.slug} to WebRTC Live Studio!`);
+  };
+
   const formatUptime = (sec: number) => {
     const h = Math.floor(sec / 3600);
     const m = Math.floor((sec % 3600) / 60);
@@ -489,8 +719,8 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  const isFollowed = followedChannelIds.has(activeChannel.id);
-  const isSubscribed = subscribedChannelIds.has(activeChannel.id);
+  const isFollowed = followedChannelIds.has(currentStreamEntity.id);
+  const isSubscribed = subscribedChannelIds.has(currentStreamEntity.id);
 
   return (
     <div className="space-y-5">
@@ -503,19 +733,19 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
       )}
 
       {/* ========================================================
-          UNIFIED WORKSPACE HEADER: TVU + Red5.net + Twitch.tv
+          UNIFIED WORKSPACE HEADER: TVU + Red5.net + Twitch.tv + Kick.com
           ======================================================== */}
       <section className="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-6 space-y-5">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1.5 min-w-0">
             <div className="text-xs font-mono text-purple-300">
-              TVU Networks Contribution · Red5.net WebRTC Edge · Twitch.tv Interactive Stream
+              TVU Networks Contribution · Red5.net WebRTC Edge · Twitch.tv &amp; Kick.com Live Streams
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight text-balance">
-              Live Video Broadcast, WebRTC Cluster &amp; Interactive Creator Studio
+              Live Video Broadcast, WebRTC Cluster, Twitch &amp; Kick Studio
             </h1>
             <p className="text-sm text-slate-300 max-w-3xl">
-              End-to-end live contribution from bonded 5G/Starlink TVU field units into Red5 Pro WHIP/WHEP autoscaling nodes, delivered to Twitch interactive channels and UnrealIRCd chat.
+              End-to-end live contribution from bonded 5G/Starlink TVU field units into Red5 Pro WHIP/WHEP autoscaling nodes, simulcast to Twitch.tv and Kick.com (95/5 split) with UnrealIRCd chat bridging.
             </p>
           </div>
 
@@ -537,7 +767,7 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
                 className="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 min-h-[40px] cursor-pointer whitespace-nowrap"
               >
                 <Terminal className="w-4 h-4 text-emerald-400" />
-                <span>Open {activeChannel.ircChannel}</span>
+                <span>Open {currentStreamEntity.ircChannel}</span>
               </button>
             )}
             <button
@@ -566,15 +796,15 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
             </div>
           </div>
           <div>
-            <div className="text-xs text-slate-400">Red5 Cluster Subscribers</div>
-            <div className="text-xl font-bold text-emerald-400 font-mono tabular-nums mt-0.5">
-              {totalRed5Subscribers.toLocaleString()} Streams
-            </div>
-          </div>
-          <div>
             <div className="text-xs text-slate-400">Twitch Live Audience</div>
             <div className="text-xl font-bold text-purple-300 font-mono tabular-nums mt-0.5">
               {totalTwitchViewers.toLocaleString()} Viewers
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-slate-400">Kick.com Audience (95/5 Split)</div>
+            <div className="text-xl font-bold text-emerald-400 font-mono tabular-nums mt-0.5">
+              {totalKickViewers.toLocaleString()} Viewers · {totalRed5Subscribers.toLocaleString()} Edge
             </div>
           </div>
         </div>
@@ -583,10 +813,11 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
         <div className="pt-4 border-t border-slate-800 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {(
             [
-              { id: 'unified', label: 'All-in-One Live Studio', icon: Layers },
-              { id: 'tvu', label: 'TVU Networks Grid & Producer', icon: Camera },
-              { id: 'red5', label: 'Red5.net WebRTC Cluster', icon: Server },
-              { id: 'twitch', label: 'Twitch.tv Channels & Creator Deck', icon: Tv },
+              { id: 'unified', label: 'All-in-One Live Studio', icon: Layers, activeCls: 'bg-purple-600 text-white font-bold' },
+              { id: 'tvu', label: 'TVU Networks Grid & Producer', icon: Camera, activeCls: 'bg-sky-600 text-white font-bold' },
+              { id: 'red5', label: 'Red5.net WebRTC Cluster', icon: Server, activeCls: 'bg-rose-600 text-white font-bold' },
+              { id: 'twitch', label: 'Twitch.tv Channels & Creator Deck', icon: Tv, activeCls: 'bg-purple-600 text-white font-bold' },
+              { id: 'kick', label: 'Kick.com Channels & Creator Deck', icon: Zap, activeCls: 'bg-emerald-500 text-slate-950 font-bold' },
             ] as const
           ).map((tab) => {
             const Icon = tab.icon;
@@ -598,7 +829,7 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
                 onClick={() => setSubView(tab.id)}
                 className={`px-3.5 py-2 rounded-lg text-xs font-medium flex items-center gap-1.5 whitespace-nowrap shrink-0 min-h-[40px] cursor-pointer transition-colors ${
                   isActive
-                    ? 'bg-purple-600 text-white font-bold'
+                    ? tab.activeCls
                     : 'bg-slate-950 text-slate-300 hover:text-white border border-slate-800'
                 }`}
               >
@@ -611,14 +842,77 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
       </section>
 
       {/* ========================================================
-          SUB-VIEW 1: ALL-IN-ONE UNIFIED LIVE STUDIO
+          SUB-VIEW 1: ALL-IN-ONE UNIFIED LIVE STUDIO (TVU + RED5 + TWITCH + KICK)
           ======================================================== */}
       {subView === 'unified' && (
         <div className="space-y-5">
-          {/* Channel & Feed Quick Selector Bar */}
+          {/* Platform Switcher & Dual Simulcast Strip */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(
+                [
+                  { id: 'all', label: `All Feeds (${channels.length + kickChannels.length})` },
+                  { id: 'twitch', label: `Twitch.tv (${channels.length})` },
+                  { id: 'kick', label: `Kick.com (${kickChannels.length})` },
+                ] as const
+              ).map((flt) => (
+                <button
+                  key={flt.id}
+                  type="button"
+                  onClick={() => {
+                    setUnifiedFilter(flt.id);
+                    if (flt.id === 'kick') setActivePlatform('kick');
+                    if (flt.id === 'twitch') setActivePlatform('twitch');
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono cursor-pointer transition-colors ${
+                    unifiedFilter === flt.id
+                      ? flt.id === 'kick'
+                        ? 'bg-emerald-500 text-slate-950 font-bold'
+                        : 'bg-purple-600 text-white font-bold'
+                      : 'bg-slate-950 text-slate-300 border border-slate-800 hover:text-white'
+                  }`}
+                >
+                  {flt.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDualSimulcast((v) => !v);
+                  notify(
+                    isDualSimulcast
+                      ? 'Dual Simulcast paused (single destination egress)'
+                      : 'Dual Simulcast enabled: Red5 WHIP pushing to Twitch.tv + Kick.com!'
+                  );
+                }}
+                className={`px-3 py-1.5 rounded-lg font-mono text-xs border cursor-pointer flex items-center gap-1.5 ${
+                  isDualSimulcast
+                    ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-bold'
+                    : 'bg-slate-950 border-slate-800 text-slate-400'
+                }`}
+              >
+                <Radio className="w-3.5 h-3.5" />
+                <span>{isDualSimulcast ? 'Twitch + Kick Simulcast ON' : 'Simulcast OFF'}</span>
+              </button>
+              <a
+                href={`https://kick.com/${activeKickChannel.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 font-mono flex items-center gap-1"
+              >
+                <span>kick.com/{activeKickChannel.slug}</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
+
+          {/* Channel & Feed Quick Selector Bar (Twitch.tv & Kick.com) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-            {channels.slice(0, 6).map((ch) => {
-              const selected = ch.id === activeChannel.id;
+            {(unifiedFilter !== 'kick' ? channels.slice(0, unifiedFilter === 'twitch' ? 6 : 3) : []).map((ch) => {
+              const selected = activePlatform === 'twitch' && ch.id === activeChannel.id;
               return (
                 <button
                   key={ch.id}
@@ -630,7 +924,7 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
                       : 'bg-slate-900/70 border-slate-800 hover:border-slate-700'
                   }`}
                 >
-                  <div className="w-20 h-12 rounded-lg overflow-hidden shrink-0 bg-slate-950 border border-slate-800 flex items-center justify-center">
+                  <div className="w-20 h-12 rounded-lg overflow-hidden shrink-0 bg-slate-950 border border-slate-800 flex items-center justify-center relative">
                     {!imgFailed[ch.id] ? (
                       <img
                         src={ch.thumbnailUrl}
@@ -642,6 +936,9 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
                     ) : (
                       <Video className="w-5 h-5 text-purple-400" />
                     )}
+                    <span className="absolute top-1 left-1 px-1 rounded bg-purple-600/90 text-[9px] font-mono font-bold text-white">
+                      TWITCH
+                    </span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2 text-xs">
@@ -653,6 +950,51 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
                     <div className="text-xs text-slate-400 truncate mt-0.5">{ch.streamTitle}</div>
                     <div className="text-[11px] font-mono text-slate-500 truncate mt-0.5">
                       {ch.category} · {ch.ircChannel}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+
+            {(unifiedFilter !== 'twitch' ? kickChannels.slice(0, unifiedFilter === 'kick' ? 6 : 3) : []).map((kch) => {
+              const selected = activePlatform === 'kick' && kch.id === activeKickChannel.id;
+              return (
+                <button
+                  key={kch.id}
+                  type="button"
+                  onClick={() => handleSelectKickChannel(kch)}
+                  className={`text-left p-3 rounded-xl border transition-colors flex items-center gap-3 cursor-pointer ${
+                    selected
+                      ? 'bg-slate-900 border-emerald-500 ring-1 ring-emerald-500/40'
+                      : 'bg-slate-900/70 border-slate-800 hover:border-emerald-500/50'
+                  }`}
+                >
+                  <div className="w-20 h-12 rounded-lg overflow-hidden shrink-0 bg-slate-950 border border-slate-800 flex items-center justify-center relative">
+                    {!imgFailed[kch.id] ? (
+                      <img
+                        src={kch.thumbnailUrl}
+                        alt={kch.displayName}
+                        referrerPolicy="no-referrer"
+                        onError={() => setImgFailed((prev) => ({ ...prev, [kch.id]: true }))}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Zap className="w-5 h-5 text-emerald-400" />
+                    )}
+                    <span className="absolute top-1 left-1 px-1 rounded bg-emerald-500 text-[9px] font-mono font-bold text-slate-950">
+                      KICK
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <span className="font-bold text-white truncate">kick.com/{kch.slug}</span>
+                      <span className="font-mono tabular-nums text-emerald-400 shrink-0">
+                        {kch.viewerCount.toLocaleString()} live
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-400 truncate mt-0.5">{kch.streamTitle}</div>
+                    <div className="text-[11px] font-mono text-slate-500 truncate mt-0.5">
+                      {kch.category} · 95/5 Split · {kch.ircChannel}
                     </div>
                   </div>
                 </button>
@@ -733,13 +1075,13 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
                   {/* Top-Left Broadcast Live Status & Red5 WebRTC HUD */}
                   <div className="absolute top-3 left-3 right-3 flex flex-wrap items-start justify-between gap-2">
                     <div className="flex items-center gap-2 bg-slate-950/85 border border-slate-700/80 px-2.5 py-1 rounded-md text-xs font-mono">
-                      <span className="inline-flex items-center gap-1.5 text-rose-400 font-bold">
-                        <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                        {isPlaying ? 'LIVE' : 'PAUSED'}
+                      <span className={`inline-flex items-center gap-1.5 font-bold ${activePlatform === 'kick' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <span className={`w-2 h-2 rounded-full animate-pulse ${activePlatform === 'kick' ? 'bg-emerald-400' : 'bg-rose-500'}`} />
+                        {isPlaying ? (activePlatform === 'kick' ? 'KICK LIVE' : 'LIVE') : 'PAUSED'}
                       </span>
                       <span className="text-slate-600">·</span>
                       <span className="text-slate-200 tabular-nums">
-                        {activeChannel.viewerCount.toLocaleString()} watching
+                        {currentStreamEntity.viewerCount.toLocaleString()} watching
                       </span>
                       <span className="text-slate-600 hidden sm:inline">·</span>
                       <span className="text-slate-300 font-mono tabular-nums hidden sm:inline">
@@ -749,7 +1091,7 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
 
                     {showWebRtcOverlay && (
                       <div className="bg-slate-950/85 border border-slate-700/80 px-2.5 py-1 rounded-md text-[11px] font-mono text-slate-200 tabular-nums">
-                        TVU: {primaryProgramPack.unitName} ({getPackTotalMbps(primaryProgramPack).toFixed(1)} Mbps) · Red5 WHEP: {activeRed5Node.webrtcRttMs}ms
+                        TVU: {primaryProgramPack.unitName} ({getPackTotalMbps(primaryProgramPack).toFixed(1)} Mbps) · Red5 WHEP: {activeRed5Node.webrtcRttMs}ms{isDualSimulcast ? ' · Simulcast: Twitch + Kick' : ''}
                       </div>
                     )}
                   </div>
@@ -846,28 +1188,49 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
                   </div>
                 </div>
 
-                {/* Channel Header & Actions Strip Below Player */}
+                {/* Channel Header & Actions Strip Below Player (Platform-aware: Twitch.tv or Kick.com) */}
                 <div className="p-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="min-w-0 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-base font-bold text-white">{activeChannel.displayName}</h2>
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                          activePlatform === 'kick'
+                            ? 'bg-emerald-500 text-slate-950'
+                            : 'bg-purple-600 text-white'
+                        }`}
+                      >
+                        {activePlatform === 'kick' ? 'KICK.COM' : 'TWITCH.TV'}
+                      </span>
+                      <h2 className="text-base font-bold text-white">
+                        {activePlatform === 'kick'
+                          ? `kick.com/${activeKickChannel.slug}`
+                          : activeChannel.displayName}
+                      </h2>
                       <span className="text-xs text-slate-400">
-                        {activeChannel.category} · {activeChannel.followerCount.toLocaleString()} followers · Mod: www.wittlawfirm.com
+                        {currentStreamEntity.category} · {currentStreamEntity.followerCount.toLocaleString()} followers · Mod: www.wittlawfirm.com
                       </span>
                     </div>
-                    <p className="text-sm text-slate-200 leading-snug">{activeChannel.streamTitle}</p>
+                    <p className="text-sm text-slate-200 leading-snug">{currentStreamEntity.streamTitle}</p>
                     <div className="text-xs font-mono text-slate-400">
-                      Source: {primaryProgramPack.unitName} → Node: {activeRed5Node.nodeName} · IRC: {activeChannel.ircChannel}
+                      Source: {primaryProgramPack.unitName} → Node: {activeRed5Node.nodeName} · IRC: {currentStreamEntity.ircChannel}
+                      {activePlatform === 'kick' && ` · Pusher ${activeKickChannel.pusherCluster} (Room ${activeKickChannel.chatroomId})`}
                     </div>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
                     <button
                       type="button"
-                      onClick={() => handleToggleFollow(activeChannel.id)}
+                      onClick={() =>
+                        handleToggleFollow(
+                          currentStreamEntity.id,
+                          activePlatform === 'kick' ? activeKickChannel.slug : activeChannel.displayName
+                        )
+                      }
                       className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 min-h-[40px] cursor-pointer whitespace-nowrap ${
                         isFollowed
                           ? 'bg-slate-800 text-rose-300 border border-rose-500/40'
+                          : activePlatform === 'kick'
+                          ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
                           : 'bg-purple-600 hover:bg-purple-500 text-white'
                       }`}
                     >
@@ -877,7 +1240,12 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
 
                     <button
                       type="button"
-                      onClick={() => handleSubscribe(activeChannel.id)}
+                      onClick={() =>
+                        handleSubscribe(
+                          currentStreamEntity.id,
+                          activePlatform === 'kick' ? activeKickChannel.slug : activeChannel.displayName
+                        )
+                      }
                       className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 min-h-[40px] cursor-pointer whitespace-nowrap ${
                         isSubscribed
                           ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
@@ -885,7 +1253,15 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
                       }`}
                     >
                       <Crown className="w-3.5 h-3.5" />
-                      <span>{isSubscribed ? 'Subscribed' : `Subscribe ($${activeChannel.subPriceUsd})`}</span>
+                      <span>
+                        {isSubscribed
+                          ? activePlatform === 'kick'
+                            ? 'Subscribed (95/5)'
+                            : 'Subscribed'
+                          : activePlatform === 'kick'
+                          ? `Sub 95/5 ($${activeKickChannel.subPriceUsd})`
+                          : `Subscribe ($${activeChannel.subPriceUsd})`}
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -998,127 +1374,268 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
               </section>
             </div>
 
-            {/* RIGHT COLUMN: Live Synchronized Twitch Chat, Bits & Channel Points */}
+            {/* RIGHT COLUMN: Live Synchronized Twitch OR Kick.com Pusher WS Chat */}
             {!isTheaterMode && (
               <aside className="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-xl flex flex-col overflow-hidden min-h-[540px]">
-                <div className="p-3.5 border-b border-slate-800 flex items-center justify-between gap-2">
-                  <div>
+                {/* Chat Platform Switcher Header */}
+                <div className="p-3.5 border-b border-slate-800 space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
                     <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
-                      <MessageSquare className="w-4 h-4 text-purple-400" />
-                      <span>Stream Chat · {activeChannel.ircChannel}</span>
+                      <MessageSquare className={`w-4 h-4 ${activePlatform === 'kick' ? 'text-emerald-400' : 'text-purple-400'}`} />
+                      <span>
+                        {activePlatform === 'kick'
+                          ? `Kick Chat · ${activeKickChannel.ircChannel}`
+                          : `Twitch Chat · ${activeChannel.ircChannel}`}
+                      </span>
                     </h3>
-                    <p className="text-[11px] font-mono text-slate-400">
-                      WittLaw Moderators · {activeChannel.moderators.length} active
-                    </p>
+                    <div className="text-right font-mono tabular-nums text-[11px]">
+                      {activePlatform === 'kick' ? (
+                        <>
+                          <div className="text-emerald-300 font-bold">{userKicksBalance.toLocaleString()} Kicks</div>
+                          <div className="text-slate-400">us2 Room {activeKickChannel.chatroomId}</div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-amber-300 font-bold">{channelPoints.toLocaleString()} pts</div>
+                          <div className="text-purple-300">{userBitsBalance.toLocaleString()} Bits</div>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right font-mono tabular-nums text-[11px]">
-                    <div className="text-amber-300 font-bold">{channelPoints.toLocaleString()} pts</div>
-                    <div className="text-purple-300">{userBitsBalance.toLocaleString()} Bits</div>
+
+                  {/* Quick Chat Room Toggle: Twitch vs Kick.com */}
+                  <div className="grid grid-cols-2 gap-1.5 bg-slate-950 p-1 rounded-lg border border-slate-800 text-[11px] font-mono">
+                    <button
+                      type="button"
+                      onClick={() => setActivePlatform('twitch')}
+                      className={`py-1 rounded font-bold cursor-pointer transition-colors ${
+                        activePlatform === 'twitch'
+                          ? 'bg-purple-600 text-white'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Twitch Chat
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActivePlatform('kick')}
+                      className={`py-1 rounded font-bold cursor-pointer transition-colors ${
+                        activePlatform === 'kick'
+                          ? 'bg-emerald-500 text-slate-950'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Kick Pusher WS
+                    </button>
                   </div>
                 </div>
 
                 {/* Chat Filter Indicators */}
-                {(slowModeSec > 0 || followersOnlyChat) && (
+                {activePlatform === 'twitch' && (slowModeSec > 0 || followersOnlyChat) && (
                   <div className="px-3.5 py-2 bg-slate-950 border-b border-slate-800 text-[11px] font-mono text-amber-300">
                     {slowModeSec > 0 && `Slow Mode (${slowModeSec}s)`}
                     {slowModeSec > 0 && followersOnlyChat && ' · '}
                     {followersOnlyChat && 'Followers-Only Chat'}
                   </div>
                 )}
+                {activePlatform === 'kick' && (kickSubsOnlyChat || kickEmoteOnlyChat) && (
+                  <div className="px-3.5 py-2 bg-slate-950 border-b border-slate-800 text-[11px] font-mono text-emerald-300">
+                    {kickSubsOnlyChat && 'Subs-Only (95/5)'}
+                    {kickSubsOnlyChat && kickEmoteOnlyChat && ' · '}
+                    {kickEmoteOnlyChat && 'Emote-Only'}
+                  </div>
+                )}
 
-                {/* Chat Messages Scroll Feed */}
-                <div className="flex-1 overflow-y-auto p-3.5 space-y-2.5 max-h-[420px]">
-                  {visibleChatMessages.length === 0 ? (
-                    <div className="py-10 text-center text-xs text-slate-400">
-                      No chat messages yet in {activeChannel.displayName}. Start the conversation below.
-                    </div>
-                  ) : (
-                    visibleChatMessages.map((msg) => {
-                      const isHighlighted = msg.id === highlightedChatId;
-                      return (
-                        <div
-                          key={msg.id}
-                          className={`text-xs leading-relaxed p-2 rounded-lg transition-colors ${
-                            isHighlighted
-                              ? 'bg-purple-600/25 border border-purple-500/60'
-                              : msg.bitsAmount
-                              ? 'bg-amber-500/10 border border-amber-500/30'
-                              : 'hover:bg-slate-800/50'
-                          }`}
-                        >
-                          <span className="font-mono text-[10px] text-slate-500 mr-1.5 tabular-nums">
-                            {msg.timestamp}
-                          </span>
-                          <span className={`font-mono text-[10px] font-bold mr-1.5 ${msg.badgeColor}`}>
-                            [{msg.badge}]
-                          </span>
-                          <span className="font-bold text-white mr-1.5">{msg.author}:</span>
-                          <span className="text-slate-200 break-words">{msg.text}</span>
+                {activePlatform === 'twitch' ? (
+                  <>
+                    {/* Twitch Messages */}
+                    <div className="flex-1 overflow-y-auto p-3.5 space-y-2.5 max-h-[400px]">
+                      {visibleChatMessages.length === 0 ? (
+                        <div className="py-10 text-center text-xs text-slate-400">
+                          No chat messages yet in {activeChannel.displayName}. Start the conversation below.
                         </div>
-                      );
-                    })
-                  )}
-                </div>
-
-                {/* Channel Point Rewards Quick Strip */}
-                <div className="p-3 border-t border-slate-800 bg-slate-950/60 space-y-2">
-                  <div className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
-                    <span className="flex items-center gap-1">
-                      <Gift className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Channel Point Rewards</span>
-                    </span>
-                    <span className="font-mono text-amber-300 tabular-nums">{channelPoints} pts</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {CHANNEL_POINT_REWARDS.map((rw) => (
-                      <button
-                        key={rw.id}
-                        type="button"
-                        onClick={() => handleRedeemPoints(rw.id)}
-                        className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left cursor-pointer"
-                        title={rw.description}
-                      >
-                        <div className="text-[11px] font-semibold text-white truncate">{rw.title}</div>
-                        <div className="text-[10px] font-mono text-amber-300 tabular-nums">{rw.cost} pts</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Chat Composer & Bits Cheer */}
-                <form onSubmit={(e) => handleSendChat(e)} className="p-3 border-t border-slate-800 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      placeholder={`Message ${activeChannel.displayName} as ${ircNick}...`}
-                      className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
-                    />
-                    <button
-                      type="submit"
-                      className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1 cursor-pointer min-h-[36px]"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>Chat</span>
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 text-[11px]">
-                    <div className="flex items-center gap-1.5">
-                      {[100, 500].map((amt) => (
-                        <button
-                          key={amt}
-                          type="button"
-                          onClick={(e) => handleSendChat(e, amt)}
-                          className="px-2 py-1 rounded bg-slate-950 hover:bg-slate-800 border border-purple-500/40 text-purple-300 font-mono cursor-pointer"
-                        >
-                          Cheer {amt} Bits
-                        </button>
-                      ))}
+                      ) : (
+                        visibleChatMessages.map((msg) => {
+                          const isHighlighted = msg.id === highlightedChatId;
+                          return (
+                            <div
+                              key={msg.id}
+                              className={`text-xs leading-relaxed p-2 rounded-lg transition-colors ${
+                                isHighlighted
+                                  ? 'bg-purple-600/25 border border-purple-500/60'
+                                  : msg.bitsAmount
+                                  ? 'bg-amber-500/10 border border-amber-500/30'
+                                  : 'hover:bg-slate-800/50'
+                              }`}
+                            >
+                              <span className="font-mono text-[10px] text-slate-500 mr-1.5 tabular-nums">
+                                {msg.timestamp}
+                              </span>
+                              <span className={`font-mono text-[10px] font-bold mr-1.5 ${msg.badgeColor}`}>
+                                [{msg.badge}]
+                              </span>
+                              <span className="font-bold text-white mr-1.5">{msg.author}:</span>
+                              <span className="text-slate-200 break-words">{msg.text}</span>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
-                    <span className="text-slate-400 font-mono">Synced with UnrealIRCd</span>
-                  </div>
-                </form>
+
+                    {/* Channel Point Rewards Quick Strip */}
+                    <div className="p-3 border-t border-slate-800 bg-slate-950/60 space-y-2">
+                      <div className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <Gift className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Channel Point Rewards</span>
+                        </span>
+                        <span className="font-mono text-amber-300 tabular-nums">{channelPoints} pts</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {CHANNEL_POINT_REWARDS.map((rw) => (
+                          <button
+                            key={rw.id}
+                            type="button"
+                            onClick={() => handleRedeemPoints(rw.id)}
+                            className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left cursor-pointer"
+                            title={rw.description}
+                          >
+                            <div className="text-[11px] font-semibold text-white truncate">{rw.title}</div>
+                            <div className="text-[10px] font-mono text-amber-300 tabular-nums">{rw.cost} pts</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Twitch Chat Composer */}
+                    <form onSubmit={(e) => handleSendChat(e)} className="p-3 border-t border-slate-800 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={chatInput}
+                          onChange={(e) => setChatInput(e.target.value)}
+                          placeholder={`Message ${activeChannel.displayName} as ${ircNick}...`}
+                          className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                        />
+                        <button
+                          type="submit"
+                          className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1 cursor-pointer min-h-[36px]"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          <span>Chat</span>
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 text-[11px]">
+                        <div className="flex items-center gap-1.5">
+                          {[100, 500].map((amt) => (
+                            <button
+                              key={amt}
+                              type="button"
+                              onClick={(e) => handleSendChat(e, amt)}
+                              className="px-2 py-1 rounded bg-slate-950 hover:bg-slate-800 border border-purple-500/40 text-purple-300 font-mono cursor-pointer"
+                            >
+                              Cheer {amt} Bits
+                            </button>
+                          ))}
+                        </div>
+                        <span className="text-slate-400 font-mono">Synced with UnrealIRCd</span>
+                      </div>
+                    </form>
+                  </>
+                ) : (
+                  <>
+                    {/* Kick.com Pusher WebSocket Messages */}
+                    <div className="flex-1 overflow-y-auto p-3.5 space-y-2.5 max-h-[400px]">
+                      {visibleKickChatMessages.length === 0 ? (
+                        <div className="py-10 text-center text-xs text-slate-400">
+                          Connected to chatrooms.{activeKickChannel.chatroomId}.v2 on Pusher {activeKickChannel.pusherCluster}. Say hello!
+                        </div>
+                      ) : (
+                        visibleKickChatMessages.map((msg) => (
+                          <div
+                            key={msg.id}
+                            className={`text-xs leading-relaxed p-2 rounded-lg transition-colors ${
+                              msg.kicksGifted
+                                ? 'bg-emerald-500/10 border border-emerald-500/35'
+                                : 'hover:bg-slate-800/50'
+                            }`}
+                          >
+                            <span className="font-mono text-[10px] text-slate-500 mr-1.5 tabular-nums">
+                              {msg.timestamp}
+                            </span>
+                            <span className={`font-mono text-[10px] font-bold mr-1.5 ${msg.badgeColor}`}>
+                              [{msg.badge}]
+                            </span>
+                            <span className="font-bold text-white mr-1.5">{msg.author}:</span>
+                            <span className="text-slate-200 break-words">{msg.text}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Kick.com Kicks & Gift Sub Actions */}
+                    <div className="p-3 border-t border-slate-800 bg-slate-950/60 space-y-2">
+                      <div className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <Zap className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Kick Gifts &amp; 95/5 Creator Payout</span>
+                        </span>
+                        <span className="font-mono text-emerald-300 tabular-nums">
+                          {activeKickChannel.kicksTotal.toLocaleString()} Kicks
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {KICK_GIFT_ACTIONS.map((act) => (
+                          <button
+                            key={act.id}
+                            type="button"
+                            onClick={() => handleKickGiftAction(act.id)}
+                            className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-emerald-500/25 text-left cursor-pointer"
+                            title={act.description}
+                          >
+                            <div className="text-[11px] font-semibold text-white truncate">{act.label}</div>
+                            <div className="text-[10px] font-mono text-emerald-300 tabular-nums">{act.kicksCost} Kicks</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Kick Chat Composer */}
+                    <form onSubmit={(e) => handleSendKickChat(e)} className="p-3 border-t border-slate-800 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={kickChatInput}
+                          onChange={(e) => setKickChatInput(e.target.value)}
+                          placeholder={`Chat in kick.com/${activeKickChannel.slug} as ${ircNick}...`}
+                          className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                        />
+                        <button
+                          type="submit"
+                          className="px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1 cursor-pointer min-h-[36px]"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          <span>Send</span>
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 text-[11px]">
+                        <div className="flex items-center gap-1.5">
+                          {[100, 500].map((amt) => (
+                            <button
+                              key={amt}
+                              type="button"
+                              onClick={(e) => handleSendKickChat(e, amt)}
+                              className="px-2 py-1 rounded bg-slate-950 hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 font-mono cursor-pointer"
+                            >
+                              Gift {amt} Kicks
+                            </button>
+                          ))}
+                        </div>
+                        <span className="text-slate-400 font-mono">Pusher us2 · IRC Sync</span>
+                      </div>
+                    </form>
+                  </>
+                )}
               </aside>
             )}
           </div>
@@ -1684,6 +2201,313 @@ export const TvuRed5TwitchView: React.FC<TvuRed5TwitchViewProps> = ({
           </section>
         </div>
       )}
+
+      {/* ========================================================
+          SUB-VIEW 5: KICK.COM CHANNELS DIRECTORY, 95/5 CREATOR DECK & API V2
+          ======================================================== */}
+      {subView === 'kick' && (
+        <div className="space-y-5">
+          {/* Kick.com Creator Stream Manager Controls */}
+          <section className="bg-slate-900 border border-emerald-500/30 rounded-xl p-4 sm:p-5 space-y-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-2 py-0.5 rounded bg-emerald-500 text-slate-950 font-mono text-[10px] font-bold">
+                    KICK.COM
+                  </span>
+                  <h2 className="text-base font-bold text-white">
+                    Kick Creator Dashboard — kick.com/{activeKickChannel.slug}
+                  </h2>
+                  <span className="text-[11px] font-mono text-emerald-300 border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 rounded">
+                    95/5 Revenue Split ($4.74/sub)
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  Synced with Kick API v2, Pusher WebSocket ({activeKickChannel.pusherCluster} · Room {activeKickChannel.chatroomId}), and Red5.net RTMPS egress.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href={`https://kick.com/${activeKickChannel.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  <span>Open kick.com/{activeKickChannel.slug}</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRed5DevSection('kick_dev');
+                    setSubView('red5');
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 text-xs font-mono flex items-center gap-1.5 cursor-pointer"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>dev.kick.com API Console</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => notify(`Clipped last 45s on kick.com/${activeKickChannel.slug} (1080p60)!`)}
+                  className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Scissors className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Clip VOD</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setKickSubsOnlyChat((v) => !v)}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-mono cursor-pointer ${
+                    kickSubsOnlyChat
+                      ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                      : 'bg-slate-950 border-slate-800 text-slate-300'
+                  }`}
+                >
+                  Subs-Only: {kickSubsOnlyChat ? 'ON' : 'OFF'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setKickEmoteOnlyChat((v) => !v)}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-mono cursor-pointer ${
+                    kickEmoteOnlyChat
+                      ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                      : 'bg-slate-950 border-slate-800 text-slate-300'
+                  }`}
+                >
+                  Emote-Only: {kickEmoteOnlyChat ? 'ON' : 'OFF'}
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveKickTitle} className="flex flex-col sm:flex-row gap-2.5">
+              <input
+                type="text"
+                value={draftKickTitle}
+                onChange={(e) => setDraftKickTitle(e.target.value)}
+                className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold cursor-pointer whitespace-nowrap"
+              >
+                Update Kick.com Title
+              </button>
+            </form>
+
+            {/* RTMPS & Pusher Telemetry Strip */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
+              <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-[10px] text-slate-400">Kick RTMPS Ingest (Red5 Output)</div>
+                  <div className="text-emerald-300 truncate">{activeKickChannel.rtmpIngestUrl}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleCopyText(activeKickChannel.rtmpIngestUrl, 'kick-rtmp', 'Kick RTMPS Ingest URL')
+                  }
+                  className="p-2 rounded bg-slate-900 border border-slate-800 text-slate-300 hover:text-white shrink-0 cursor-pointer"
+                >
+                  {copiedKey === 'kick-rtmp' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-[10px] text-slate-400">Pusher WebSocket Channel</div>
+                  <div className="text-sky-300 truncate">
+                    ws-{activeKickChannel.pusherCluster}.pusher.com · chatrooms.{activeKickChannel.chatroomId}.v2
+                  </div>
+                </div>
+                <Users className="w-4 h-4 text-sky-400 shrink-0" />
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-[10px] text-slate-400">Creator Payout &amp; Kicks</div>
+                  <div className="text-amber-300 truncate tabular-nums">
+                    95% Split · {activeKickChannel.kicksTotal.toLocaleString()} Kicks
+                  </div>
+                </div>
+                <Crown className="w-4 h-4 text-amber-400 shrink-0" />
+              </div>
+            </div>
+          </section>
+
+          {/* Register New Kick.com Channel into Red5 WebRTC Studio */}
+          <section className="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-5 space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+              <Plus className="w-4 h-4 text-emerald-400" />
+              <span>Add Kick.com Channel to Red5 WebRTC Live Studio</span>
+            </h3>
+            <form onSubmit={handleAddCustomKickChannel} className="grid grid-cols-1 md:grid-cols-12 gap-2.5">
+              <input
+                type="text"
+                required
+                value={newKickSlug}
+                onChange={(e) => setNewKickSlug(e.target.value)}
+                placeholder="Kick channel slug (e.g. drfun1media)"
+                className="md:col-span-3 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+              />
+              <input
+                type="text"
+                value={newKickTitle}
+                onChange={(e) => setNewKickTitle(e.target.value)}
+                placeholder="Live stream title..."
+                className="md:col-span-5 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+              />
+              <select
+                value={newKickCategory}
+                onChange={(e) => setNewKickCategory(e.target.value as Exclude<KickCategory, 'All'>)}
+                className="md:col-span-2 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+              >
+                <option value="Field Broadcast">Field Broadcast</option>
+                <option value="SATCOM & NOC">SATCOM &amp; NOC</option>
+                <option value="Just Chatting">Just Chatting</option>
+                <option value="Legal & FCC">Legal &amp; FCC</option>
+                <option value="Music & DJ">Music &amp; DJ</option>
+              </select>
+              <button
+                type="submit"
+                className="md:col-span-2 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold cursor-pointer whitespace-nowrap"
+              >
+                Add Kick Channel
+              </button>
+            </form>
+          </section>
+
+          {/* Kick.com Directory Filters & Grid */}
+          <section className="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 overflow-x-auto">
+                {(
+                  [
+                    'All',
+                    'Just Chatting',
+                    'SATCOM & NOC',
+                    'Field Broadcast',
+                    'Legal & FCC',
+                    'Music & DJ',
+                  ] as const
+                ).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setKickCategory(cat)}
+                    className={`px-2.5 py-1.5 rounded text-xs whitespace-nowrap cursor-pointer ${
+                      kickCategory === cat
+                        ? 'bg-emerald-500 text-slate-950 font-bold'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={kickSearch}
+                  onChange={(e) => setKickSearch(e.target.value)}
+                  placeholder="Search Kick.com channels..."
+                  className="bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 w-full sm:w-56"
+                />
+              </div>
+            </div>
+
+            {filteredKickChannels.length === 0 ? (
+              <div className="py-10 text-center text-sm text-slate-400">
+                No Kick.com channels match your current filter.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {filteredKickChannels.map((ch) => (
+                  <div
+                    key={ch.id}
+                    className="bg-slate-950 border border-slate-800 hover:border-emerald-500/40 rounded-xl overflow-hidden flex flex-col justify-between transition-colors"
+                  >
+                    <div>
+                      <div className="relative aspect-video bg-slate-900">
+                        {!imgFailed[ch.id] ? (
+                          <img
+                            src={ch.thumbnailUrl}
+                            alt={ch.displayName}
+                            referrerPolicy="no-referrer"
+                            onError={() => setImgFailed((prev) => ({ ...prev, [ch.id]: true }))}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Zap className="w-8 h-8 text-emerald-400" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                        <div className="absolute top-2 left-2.5 flex items-center gap-1.5 text-[10px] font-mono">
+                          <span className="bg-emerald-500 text-slate-950 px-1.5 py-0.5 rounded font-bold">
+                            KICK 95/5
+                          </span>
+                          <span className="bg-black/75 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/40">
+                            Room {ch.chatroomId}
+                          </span>
+                        </div>
+                        <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[11px] font-mono text-white">
+                          <span className="bg-emerald-600 px-1.5 py-0.5 rounded font-bold">LIVE</span>
+                          <span className="bg-black/75 px-2 py-0.5 rounded tabular-nums">
+                            {ch.viewerCount.toLocaleString()} viewers
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 space-y-1.5">
+                        <div className="text-xs text-slate-400">
+                          {ch.category} · {ch.ircChannel}
+                        </div>
+                        <h3 className="text-sm font-bold text-white leading-snug line-clamp-2">
+                          {ch.streamTitle}
+                        </h3>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-emerald-400 font-semibold font-mono">
+                            kick.com/{ch.slug}
+                          </span>
+                          <span className="text-amber-300 font-mono text-[11px] tabular-nums">
+                            {ch.kicksTotal.toLocaleString()} Kicks
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="px-3.5 pb-3.5 pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                      <a
+                        href={`https://kick.com/${ch.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] font-mono text-slate-300 hover:text-emerald-300 flex items-center gap-1"
+                      >
+                        <span>kick.com/{ch.slug}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleSelectKickChannel(ch);
+                          setSubView('unified');
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold cursor-pointer whitespace-nowrap"
+                      >
+                        Watch on Kick WebRTC
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 };
+

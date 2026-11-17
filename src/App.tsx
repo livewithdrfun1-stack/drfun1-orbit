@@ -71,8 +71,8 @@ const STORAGE_KEY_MEMBERSHIP = 'drfun1_user_membership';
 const STORAGE_KEY_IRC_SESSION = 'drfun1_irc_session';
 
 export default function App() {
-  // Tab state - WebIRC is primary index main page
-  const [activeTab, setActiveTab] = useState<AppTab>('irc');
+  // Tab state - DrFun1 News is primary index main page
+  const [activeTab, setActiveTab] = useState<AppTab>('drfun1_news');
   const [storeSubTab, setStoreSubTab] = useState<'catalog' | 'domains'>('catalog');
 
   // IRC Client Session & Startup Login State
@@ -96,15 +96,8 @@ export default function App() {
     };
   });
 
-  // Prompt login on startup on index unless session dismissed in current tab
-  const [isIrcStartupLoginOpen, setIsIrcStartupLoginOpen] = useState<boolean>(() => {
-    try {
-      const dismissed = sessionStorage.getItem('drfun1_irc_startup_dismissed');
-      return !dismissed;
-    } catch (_) {
-      return true;
-    }
-  });
+  // Startup IRC login modal opens on user request (header or overlay Login button) so index loads unobstructed
+  const [isIrcStartupLoginOpen, setIsIrcStartupLoginOpen] = useState<boolean>(false);
 
   const handleIrcLogin = (credentials: IrcLoginCredentials, openFullTab?: boolean) => {
     const updated: IrcLoginSession = {
@@ -144,13 +137,13 @@ export default function App() {
       setActiveTab('satcom_rss');
     } else if (tab === 'master_control' || tab === 'orbits' || tab === 'compare' || tab === 'ircstats') {
       setActiveTab('master_control');
-    } else if (tab === 'tvu_red5_twitch' || tab === 'tvu' || tab === 'red5' || tab === 'twitch') {
+    } else if (tab === 'tvu_red5_twitch' || tab === 'tvu' || tab === 'red5' || tab === 'twitch' || tab === 'kick' || tab === 'kick.com') {
       setActiveTab('tvu_red5_twitch');
     } else if (tab === 'fubotv') {
       setActiveTab('fubotv');
     } else if (tab === 'drfun1_tv' || tab === 'youtubetv' || tab === 'ytv') {
       setActiveTab('drfun1_tv');
-    } else if (tab === 'drfun1_news' || tab === 'news_tv') {
+    } else if (tab === 'drfun1_news' || tab === 'news_tv' || tab === 'index' || tab === 'home') {
       setActiveTab('drfun1_news');
     } else if (tab === 'social_control' || tab === 'socials' || tab === 'drfun1media_feeds') {
       setActiveTab('social_control');
@@ -159,7 +152,7 @@ export default function App() {
     } else if (tab === 'community' || tab === 'irc') {
       setActiveTab('irc');
     } else {
-      setActiveTab('irc');
+      setActiveTab('drfun1_news');
     }
   };
 
@@ -740,13 +733,23 @@ export default function App() {
           />
         </main>
       ) : activeTab === 'drfun1_news' ? (
-        /* 3B-2. DrFun1 News (Global News Outlets Dynamic Directory & Live TV News Service) */
+        /* 1. Primary Index: DrFun1 News (Global News Outlets Dynamic Directory & Live TV News Service + Video IRC Overlay) */
         <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
           <DrFun1NewsView
             onOpenLicense={() => setIsLicenseModalOpen(true)}
             onNavigateToIrc={() => handleNavigateTab('irc')}
             onNavigateToRss={() => handleNavigateTab('satcom_rss')}
             onNavigateToDrFun1Tv={() => handleNavigateTab('drfun1_tv')}
+            ircSession={ircSession}
+            activeRank={activeOperRank}
+            onOpenIrcLogin={() => setIsIrcStartupLoginOpen(true)}
+            onUpdateIrcSession={(partial) => {
+              const updated = { ...ircSession, ...partial };
+              setIrcSession(updated);
+              try {
+                localStorage.setItem(STORAGE_KEY_IRC_SESSION, JSON.stringify(updated));
+              } catch (_) {}
+            }}
           />
         </main>
       ) : activeTab === 'social_control' ? (
@@ -1098,8 +1101,8 @@ export default function App() {
         }}
       />
 
-      {/* Persistent Floating / Docked Live IRC Client on Other Tabs */}
-      {activeTab !== 'irc' && (
+      {/* Persistent Floating / Docked Live IRC Client on Other Tabs (DrFun1 News embeds IRC directly on its video player) */}
+      {activeTab !== 'irc' && activeTab !== 'drfun1_news' && (
         <IndexIrcFloatingClient
           session={ircSession}
           onOpenLoginModal={() => setIsIrcStartupLoginOpen(true)}
