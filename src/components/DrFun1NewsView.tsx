@@ -17,6 +17,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   Bookmark,
+  CalendarClock,
   Captions,
   Check,
   Copy,
@@ -53,6 +54,7 @@ import {
 import { IrcLoginSession } from '../types/irc';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { DrFun1NewsWorldMap } from './DrFun1NewsWorldMap';
+import { DrFun1NewsEpgSection } from './DrFun1NewsEpgSection';
 import { NewsVideoIrcOverlay } from './NewsVideoIrcOverlay';
 
 interface DrFun1NewsViewProps {
@@ -184,6 +186,8 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
   const [bookmarkedOnly, setBookmarkedOnly] = useState<boolean>(false);
   const [statusOverrides, setStatusOverrides] = useState<Record<string, { breaking?: boolean; status?: 'ON AIR' | 'STANDBY' }>>({});
   const directorySectionRef = useRef<HTMLDivElement | null>(null);
+  const epgSectionRef = useRef<HTMLDivElement | null>(null);
+  const playerSectionRef = useRef<HTMLDivElement | null>(null);
 
   // Add Outlet Modal / Form
   const [showAddOutlet, setShowAddOutlet] = useState<boolean>(false);
@@ -490,6 +494,17 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
+              onClick={() =>
+                epgSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
+              className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer"
+            >
+              <CalendarClock className="w-3.5 h-3.5" />
+              <span>{allOutlets.length}-Outlet EPG</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setViewMode((v) => (v === 'theater' ? 'quad' : 'theater'))}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold border transition flex items-center gap-1.5 cursor-pointer ${
                 viewMode === 'quad'
@@ -593,6 +608,7 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
       {/* ================================================================
           2. DRFUN1 NEWS LIVE TV DESK (THEATER OR 4-OUTLET ANCHOR QUAD)
           ================================================================ */}
+      <div ref={playerSectionRef}>
       {viewMode === 'theater' ? (
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
           {/* Broadcast Stage */}
@@ -900,6 +916,27 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
           })}
         </div>
       )}
+      </div>
+
+      {/* ================================================================
+          2A. 33+ WORLD NEWS OUTLETS ELECTRONIC PROGRAM GUIDE (EPG)
+          ================================================================ */}
+      <div ref={epgSectionRef}>
+        <DrFun1NewsEpgSection
+          allOutlets={allOutlets}
+          filteredOutlets={filteredOutlets}
+          activeMapRegion={regionFilter}
+          tunedOutletId={tunedOutlet.id}
+          onTuneOutlet={(outlet) => {
+            setTunedOutletId(outlet.id);
+            setViewMode('theater');
+            setIsPlayerPlaying(true);
+            showNotice(`Tuned DrFun1 News EPG to ${outlet.name} (${outlet.country})`);
+            playerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
+          onNotify={showNotice}
+        />
+      </div>
 
       {/* ================================================================
           2B. D3 INTERACTIVE GLOBAL NEWS COVERAGE WORLD MAP

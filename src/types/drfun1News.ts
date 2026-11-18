@@ -55,3 +55,20 @@ export interface DrFun1NewsBulletin {
   timestamp: string;
   author: string;
 }
+
+export interface NewsOutletEpgSlot {
+  id: string;
+  windowType: 'now' | 'next' | 'later';
+  timeRange: string;
+  title: string;
+  deskOrHost: string;
+  synopsis: string;
+  isLive: boolean;
+}
+
+export interface NewsOutletEpgRow {
+  outlet: GlobalNewsOutlet;
+  channelNumber: number;
+  progressPct: number;
+  slots: [NewsOutletEpgSlot, NewsOutletEpgSlot, NewsOutletEpgSlot];
+}

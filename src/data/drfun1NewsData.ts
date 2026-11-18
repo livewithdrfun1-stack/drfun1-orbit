@@ -798,3 +798,281 @@ export const INITIAL_DRFUN1_NEWS_BULLETINS: DrFun1NewsBulletin[] = [
     author: 'London Bureau Pool',
   },
 ];
+
+// Realistic upcoming 2-hour EPG lineup mapped for every built-in global news outlet (33 outlets)
+export const OUTLET_UPCOMING_PROGRAMS: Record<
+  string,
+  { nextTitle: string; nextSynopsis: string; laterTitle: string; laterSynopsis: string }
+> = {
+  'news-drfun1-hq': {
+    nextTitle: 'DrFun1 Prime World Wire & Satcom Telemetry',
+    nextSynopsis: 'Live optical carrier reports across Switch SUPERNAP 100G & 10 RisingNet backbones.',
+    laterTitle: 'Global Desk Overnight with Capitol & London Bureaus',
+    laterSynopsis: 'Continuous international breaking news, markets & FCC spectrum docket coverage.',
+  },
+  'news-reuters-tv': {
+    nextTitle: 'Reuters Global Markets & Central Bank Brief',
+    nextSynopsis: 'Sovereign debt, currency desks & European industrial supply chain analysis.',
+    laterTitle: 'Reuters Diplomatic & UN Security Council Wrap',
+    laterSynopsis: 'Correspondent reports from Geneva, London, Tokyo & Washington.',
+  },
+  'news-ap-live': {
+    nextTitle: 'AP Raw Camera Pool: Global Press Briefings',
+    nextSynopsis: 'Unedited multilateral summits and breaking live agency feeds.',
+    laterTitle: 'AP World Science, Climate & Space Coverage',
+    laterSynopsis: 'Orbital treaty developments and international observatory briefings.',
+  },
+  'news-bloomberg': {
+    nextTitle: 'Bloomberg Markets: Asia-Europe Crossover',
+    nextSynopsis: 'Equities, telecom infrastructure capex & semiconductor futures.',
+    laterTitle: 'Bloomberg Technology & Satellite Capital',
+    laterSynopsis: 'Interviews with LEO constellation founders and institutional funds.',
+  },
+  'news-cnn-us': {
+    nextTitle: 'CNN Inside Politics & Capitol Hill',
+    nextSynopsis: 'Live floor votes, Senate Commerce briefings and national desk reporting.',
+    laterTitle: 'CNN International Connect the World',
+    laterSynopsis: 'Global diplomatic and breaking crisis coverage across five continents.',
+  },
+  'news-cnbc': {
+    nextTitle: 'Closing Bell: Worldwide Market Desk',
+    nextSynopsis: 'Real-time NYSE/NASDAQ reaction and 5G NTN carrier earnings coverage.',
+    laterTitle: 'CNBC Squawk Box Asia & Europe Preview',
+    laterSynopsis: 'Pre-market futures and global sovereign bond desk commentary.',
+  },
+  'news-foxnews': {
+    nextTitle: 'The Story & Washington Bureau Live',
+    nextSynopsis: 'Federal policy, energy independence and national security analysis.',
+    laterTitle: 'FOX News @ Night West Coast Desk',
+    laterSynopsis: 'Live congressional interviews and appellate court docket updates.',
+  },
+  'news-msnbc': {
+    nextTitle: 'The Beat & Federal Justice Desk',
+    nextSynopsis: 'Constitutional law panel and FCC regulatory compliance coverage.',
+    laterTitle: 'The 11th Hour Live World Panel',
+    laterSynopsis: 'Late-evening national and international diplomatic correspondents.',
+  },
+  'news-abc-live': {
+    nextTitle: 'ABC World News Tonight Extended',
+    nextSynopsis: 'National weather emergencies, aviation telemetry and top domestic stories.',
+    laterTitle: 'Nightline Live Investigation Desk',
+    laterSynopsis: 'Long-form reporting from ABC domestic and international bureaus.',
+  },
+  'news-cbs-247': {
+    nextTitle: 'CBS Evening News Full Stream',
+    nextSynopsis: 'Investigative reporting on clean energy, data centers and public health.',
+    laterTitle: 'CBS 24/7 Americas & Pacific Edition',
+    laterSynopsis: 'Overnight live breaking coverage from New York and Los Angeles.',
+  },
+  'news-nbc-now': {
+    nextTitle: 'NBC Nightly News International Stream',
+    nextSynopsis: 'National travel, severe weather tracking and White House briefings.',
+    laterTitle: 'Hallie Jackson & Washington Late Desk',
+    laterSynopsis: 'Live political reporting and technology policy spotlights.',
+  },
+  'news-pbs-world': {
+    nextTitle: 'Washington Week & Foreign Affairs Desk',
+    nextSynopsis: 'Commercial-free roundtable with diplomatic and science reporters.',
+    laterTitle: 'Amanpour & Company Global Forum',
+    laterSynopsis: 'In-depth interviews with world leaders, jurists and authors.',
+  },
+  'news-scotus-cspan': {
+    nextTitle: 'WittLaw Federal Appellate Docket Analysis',
+    nextSynopsis: 'Full breakdown of FCC FRN 0034981290 rulings and communications law.',
+    laterTitle: 'C-SPAN Congressional Floor & Hearing Archive',
+    laterSynopsis: 'Gavel-to-gavel legislative proceedings and judicial confirmation hearings.',
+  },
+  'news-cbc-nn': {
+    nextTitle: 'Power & Politics Ottawa Desk',
+    nextSynopsis: 'Canadian federal legislation, Arctic broadband and trade negotiations.',
+    laterTitle: 'The National with Adrienne Arsenault',
+    laterSynopsis: 'CBC flagship evening news and investigative documentaries.',
+  },
+  'news-bbc-world': {
+    nextTitle: 'BBC News at Ten & Global Impact',
+    nextSynopsis: 'Comprehensive UK, European and Commonwealth international reporting.',
+    laterTitle: 'BBC HARDtalk & Dateline London',
+    laterSynopsis: 'Unfiltered interviews with international policymakers and journalists.',
+  },
+  'news-sky-uk': {
+    nextTitle: 'Sky News Press Preview & Westminster',
+    nextSynopsis: 'Next-day UK front pages and parliamentary tech committee updates.',
+    laterTitle: 'Sky News Global Live Desk',
+    laterSynopsis: 'Overnight European and Atlantic breaking news updates.',
+  },
+  'news-euronews': {
+    nextTitle: 'Brussels My Love & EU Policy Brief',
+    nextSynopsis: 'European Parliament debates on IRIS2 satellites and digital sovereignty.',
+    laterTitle: 'Euronews Witness: Europe in Focus',
+    laterSynopsis: 'On-the-ground documentary dispatches across EU member states.',
+  },
+  'news-france24': {
+    nextTitle: 'France 24 Perspectives & Europe Desk',
+    nextSynopsis: 'Analysis of European security, space launches and Francophone affairs.',
+    laterTitle: 'France 24 Encore & Tech 24',
+    laterSynopsis: 'Culture, aerospace engineering and global cinema coverage from Paris.',
+  },
+  'news-dw': {
+    nextTitle: 'DW Conflict Zone & Business Germany',
+    nextSynopsis: 'Industrial manufacturing, DE-CIX peering records and European energy.',
+    laterTitle: 'DW Shift & Global Science Magazine',
+    laterSynopsis: 'Deep technology, robotics and transatlantic diplomacy reports.',
+  },
+  'news-rai24': {
+    nextTitle: 'RAI Economia & Mediterraneo Live',
+    nextSynopsis: 'Italian financial markets and Mediterranean subsea cable infrastructure.',
+    laterTitle: 'RAI Notte 24 Diretta Roma',
+    laterSynopsis: 'Continuous overnight Italian and Vatican diplomatic dispatches.',
+  },
+  'news-tve24h': {
+    nextTitle: 'La Noche en 24 Horas Madrid',
+    nextSynopsis: 'Iberian politics, Latin America links and deep space ground telemetry.',
+    laterTitle: 'RTVE América & Global Wire',
+    laterSynopsis: 'Trans-Atlantic Spanish-language breaking news desk.',
+  },
+  'news-aljazeera': {
+    nextTitle: 'Inside Story & Middle East Brief',
+    nextSynopsis: 'Multi-panel analysis from Doha, Beirut, Cairo and London.',
+    laterTitle: 'Counting the Cost & Al Jazeera World',
+    laterSynopsis: 'Global maritime trade, sovereign wealth and geopolitical reporting.',
+  },
+  'news-alarabiya': {
+    nextTitle: 'Gulf Markets & Sovereign Cloud Report',
+    nextSynopsis: 'Riyadh and Dubai telecom investments and OPEC+ energy briefings.',
+    laterTitle: 'Al Arabiya Panorama Diplomatic Hour',
+    laterSynopsis: 'Regional summits and Middle East technology corridors.',
+  },
+  'news-trtworld': {
+    nextTitle: 'The Newsmakers & Strait Briefing',
+    nextSynopsis: 'Eurasian transit corridors, trade logistics and Black Sea security.',
+    laterTitle: 'TRT World Showcase & Strait Talk',
+    laterSynopsis: 'Geopolitical roundtables from Istanbul and Washington.',
+  },
+  'news-nhk-world': {
+    nextTitle: 'NHK Newsroom Tokyo & Science View',
+    nextSynopsis: 'Optical laser relay satellites, robotics and Pacific early-warning buoys.',
+    laterTitle: 'Asia Insight & Direct Talk',
+    laterSynopsis: 'On-location documentaries from across Japan and East Asia.',
+  },
+  'news-cna': {
+    nextTitle: 'CNA East Asia & Money Mind',
+    nextSynopsis: 'Singapore semiconductor logistics and ASEAN central bank coverage.',
+    laterTitle: 'CNA Insight Investigative Desk',
+    laterSynopsis: 'Special reports on Asia-Pacific trade and subsea cable security.',
+  },
+  'news-abc-au': {
+    nextTitle: 'ABC 7.30 Report & The Business',
+    nextSynopsis: 'Australian resources, Indo-Pacific security and rural satellite networks.',
+    laterTitle: 'ABC Pacific Beat & Overnight Wire',
+    laterSynopsis: 'Regional reporting across Australia, New Zealand and Oceania.',
+  },
+  'news-wion': {
+    nextTitle: 'WION World Order & ISRO Space Watch',
+    nextSynopsis: 'South Asian diplomacy, orbital telemetry and Indo-Pacific strategy.',
+    laterTitle: 'WION Global Leadership Series',
+    laterSynopsis: 'Interviews with diplomats, defense analysts and space engineers.',
+  },
+  'news-arirang': {
+    nextTitle: 'Arirang Biz & K-Tech 6G Report',
+    nextSynopsis: 'Korean semiconductor exports and 6G satellite-terrestrial trials.',
+    laterTitle: 'Arirang Global Insight Seoul',
+    laterSynopsis: 'Korean Peninsula policy and global cultural diplomacy.',
+  },
+  'news-globonews': {
+    nextTitle: 'Em Ponto & Mercosur Economic Hour',
+    nextSynopsis: 'Brazilian fiscal policy, Sao Paulo exchange and Amazon telemetry.',
+    laterTitle: 'GloboNews Painel & Edição da Madrugada',
+    laterSynopsis: 'South American political analysis and overnight live updates.',
+  },
+  'news-sabc': {
+    nextTitle: 'SABC Globe & Southern Africa Markets',
+    nextSynopsis: 'Johannesburg power grid updates, mining equities and fiber rings.',
+    laterTitle: 'SABC Prime Live Desk',
+    laterSynopsis: 'Pan-African parliamentary and continental development news.',
+  },
+  'news-africanews': {
+    nextTitle: 'Sci-Tech Africa & Startup Spotlight',
+    nextSynopsis: 'East African fintech, mobile money and satellite broadband rollouts.',
+    laterTitle: 'Africanews Tonight Multilingual',
+    laterSynopsis: 'Breaking news across West, Central, East and Southern Africa.',
+  },
+  'news-nasa-scan': {
+    nextTitle: 'ISS Expedition Mission Control Feed',
+    nextSynopsis: 'Live astronaut downlink, orbital debris tracking and Goldstone DSN.',
+    laterTitle: 'Artemis Deep Space Optical Comms Brief',
+    laterSynopsis: 'Engineering briefings on 1.2 Gbps laser Earth-to-Moon relays.',
+  },
+};
+
+const formatHourSlot = (baseDate: Date, offsetMinutes: number): string => {
+  const d = new Date(baseDate.getTime() + offsetMinutes * 60000);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+export function buildWorldNewsEpgRows(
+  outlets: GlobalNewsOutlet[],
+  allOrderedOutlets: GlobalNewsOutlet[],
+  nowDate: Date = new Date()
+): import('../types/drfun1News').NewsOutletEpgRow[] {
+  // Align EPG block to the top of the current hour for realistic broadcast blocks
+  const blockStart = new Date(nowDate);
+  blockStart.setMinutes(0, 0, 0);
+  const currentMinutePct = Math.max(8, Math.min(96, Math.round((nowDate.getMinutes() / 60) * 100)));
+
+  const nowWindow = `${formatHourSlot(blockStart, 0)} – ${formatHourSlot(blockStart, 60)}`;
+  const nextWindow = `${formatHourSlot(blockStart, 60)} – ${formatHourSlot(blockStart, 120)}`;
+  const laterWindow = `${formatHourSlot(blockStart, 120)} – ${formatHourSlot(blockStart, 180)}`;
+
+  const chNumMap = new Map<string, number>();
+  allOrderedOutlets.forEach((o, idx) => chNumMap.set(o.id, 101 + idx));
+
+  return outlets.map((outlet, idx) => {
+    const channelNumber = chNumMap.get(outlet.id) ?? 101 + idx;
+    const schedule = OUTLET_UPCOMING_PROGRAMS[outlet.id] ?? {
+      nextTitle: `${outlet.callSign} Global Evening Desk`,
+      nextSynopsis: `Continued live coverage from ${outlet.headquarters} (${outlet.region}).`,
+      laterTitle: `${outlet.callSign} Overnight World Wire`,
+      laterSynopsis: `24/7 Switch SUPERNAP & RisingNet syndicated news relay.`,
+    };
+
+    const staggeredProgress = Math.max(
+      12,
+      Math.min(94, (currentMinutePct + ((idx * 11) % 35) - 10 + 100) % 100 || 45)
+    );
+
+    return {
+      outlet,
+      channelNumber,
+      progressPct: outlet.status === 'ON AIR' ? staggeredProgress : 0,
+      slots: [
+        {
+          id: `${outlet.id}-epg-now`,
+          windowType: 'now',
+          timeRange: nowWindow,
+          title: outlet.currentProgram,
+          deskOrHost: outlet.anchorOrDesk,
+          synopsis: outlet.headline,
+          isLive: outlet.status === 'ON AIR',
+        },
+        {
+          id: `${outlet.id}-epg-next`,
+          windowType: 'next',
+          timeRange: nextWindow,
+          title: schedule.nextTitle,
+          deskOrHost: `${outlet.callSign} Desk`,
+          synopsis: schedule.nextSynopsis,
+          isLive: false,
+        },
+        {
+          id: `${outlet.id}-epg-later`,
+          windowType: 'later',
+          timeRange: laterWindow,
+          title: schedule.laterTitle,
+          deskOrHost: outlet.headquarters,
+          synopsis: schedule.laterSynopsis,
+          isLive: false,
+        },
+      ],
+    };
+  });
+}
