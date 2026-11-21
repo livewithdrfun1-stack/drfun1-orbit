@@ -9,18 +9,20 @@
  * newsroom bot commands (!breaking, !outlet, !feed), opacity/docking controls, and full WebIRC handoff.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeftRight,
   ChevronDown,
   ChevronUp,
   Eye,
+  Info,
   Lock,
   Maximize2,
   Minimize2,
   Send,
   Terminal,
   User,
+  Users,
   X,
 } from 'lucide-react';
 import { IrcLoginSession, IrcMessage } from '../types/irc';
@@ -85,6 +87,77 @@ const OVERLAY_SOURCE_OPTIONS: { id: NewsStreamSourceType; label: string }[] = [
   { id: 'fiber', label: '100G' },
 ];
 
+interface OverlayIrcNickEntry {
+  nick: string;
+  prefix: '~' | '&' | '@' | '%' | '+' | '';
+  role: string;
+  host: string;
+  away?: boolean;
+  isSelf?: boolean;
+}
+
+const PREFIX_RANK_ORDER: Record<OverlayIrcNickEntry['prefix'], number> = {
+  '~': 0,
+  '&': 1,
+  '@': 2,
+  '%': 3,
+  '+': 4,
+  '': 5,
+};
+
+const CHANNEL_BASE_NICKS: Record<string, OverlayIrcNickEntry[]> = {
+  '#drfun1-news': [
+    { nick: 'Richard_Witt', prefix: '~', role: 'Network Founder', host: 'wittlawfirm.com' },
+    { nick: 'DrFun1_NewsBot', prefix: '&', role: 'Broadcast Relay Bot', host: 'bot.drfun1media.com' },
+    { nick: 'Switch_NOC', prefix: '@', role: 'SUPERNAP 100G Ops', host: 'noc.switch.drfun1.net' },
+    { nick: 'FailoverGuard', prefix: '@', role: 'Mirror Failover Monitor', host: 'guard.drfun1.com' },
+    { nick: 'WorldDesk_Prod', prefix: '%', role: 'Senior News Producer', host: 'desk.drfun1media.com' },
+    { nick: 'satcom_viewer', prefix: '+', role: 'Voiced Subscriber', host: 'ka-band.drfun1.net' },
+    { nick: 'breaking_wire', prefix: '', role: 'Live Wire Reader', host: 'edge02.drfun1.com' },
+    { nick: 'global_anchor', prefix: '', role: 'Desk Monitor', host: 'eu-pop.drfun1.com' },
+  ],
+  '#satcom-news': [
+    { nick: 'Richard_Witt', prefix: '~', role: 'Network Founder', host: 'wittlawfirm.com' },
+    { nick: 'SatcomRelayBot', prefix: '&', role: 'Orbital Downlink Bot', host: 'tp42.drfun1media.com' },
+    { nick: 'RisingNet_Ops', prefix: '@', role: 'Optical Ring Engineer', host: 'rn02.risingnet.net' },
+    { nick: 'Goldstone_RX', prefix: '%', role: 'Teleport Operator', host: 'goldstone.drfun1.net' },
+    { nick: 'dvb_s2x_lock', prefix: '+', role: 'RF Signal Monitor', host: 'ku-band.drfun1.net' },
+    { nick: 'leo_tracker', prefix: '', role: 'Orbital Analyst', host: 'orbit.drfun1.com' },
+    { nick: 'rf_telemetry', prefix: '', role: 'Carrier Watcher', host: 'rx07.drfun1.com', away: true },
+  ],
+  '#drfun1-media': [
+    { nick: 'Richard_Witt', prefix: '~', role: 'Network Founder', host: 'wittlawfirm.com' },
+    { nick: 'DrFun1_NewsBot', prefix: '&', role: 'Media Syndication Bot', host: 'bot.drfun1media.com' },
+    { nick: 'MasterControl', prefix: '@', role: 'MCR Operator', host: 'mcr.drfun1media.com' },
+    { nick: 'Studio_Ingest', prefix: '%', role: 'Ingest Engineer', host: 'ingest.drfun1.net' },
+    { nick: 'red5_edge', prefix: '+', role: 'WHEP Stream Node', host: 'whep.drfun1media.com' },
+    { nick: 'media_archivist', prefix: '', role: 'Archive Desk', host: 'vault.drfun1.com' },
+  ],
+  '#whitehouse-briefings': [
+    { nick: 'Richard_Witt', prefix: '~', role: 'Network Founder', host: 'wittlawfirm.com' },
+    { nick: 'DC_Pool_Bot', prefix: '&', role: 'Press Pool Feed', host: 'dc-pool.drfun1.com' },
+    { nick: 'Capitol_Desk', prefix: '@', role: 'Policy Editor', host: 'dc.drfun1media.com' },
+    { nick: 'SCOTUS_Wire', prefix: '%', role: 'Judicial Desk', host: 'court.drfun1.com' },
+    { nick: 'press_corps_01', prefix: '+', role: 'Accredited Press', host: 'press.drfun1.com' },
+    { nick: 'policy_watch', prefix: '', role: 'Viewer', host: 'us-east.drfun1.com' },
+  ],
+  '#switch-supernap': [
+    { nick: 'Richard_Witt', prefix: '~', role: 'Network Founder', host: 'wittlawfirm.com' },
+    { nick: 'Switch_NOC', prefix: '@', role: 'SUPERNAP 8 Core', host: 'noc.switch.drfun1.net' },
+    { nick: 'RisingNet_Ops', prefix: '@', role: '100G DWDM Ops', host: 'rn08.risingnet.net' },
+    { nick: 'DataPacket_EU', prefix: '%', role: 'London Anycast', host: 'dp07.drfun1.net' },
+    { nick: 'bgp_route_mon', prefix: '+', role: 'BGP Telemetry', host: 'asn.drfun1.net' },
+    { nick: 'fiber_ring_09', prefix: '', role: 'Optical Observer', host: 'lv.drfun1.net' },
+  ],
+  '#lobby': [
+    { nick: 'Richard_Witt', prefix: '~', role: 'Network Founder', host: 'wittlawfirm.com' },
+    { nick: 'ChanServ', prefix: '&', role: 'Anope Services', host: 'services.drfun1.com' },
+    { nick: 'DrFun1_NewsBot', prefix: '@', role: 'Newsroom Relay', host: 'bot.drfun1media.com' },
+    { nick: 'guest_desk', prefix: '+', role: 'Verified Viewer', host: 'webirc.drfun1.com' },
+    { nick: 'world_viewer', prefix: '', role: 'WebIRC User', host: 'edge.drfun1.com' },
+  ],
+};
+
 export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
   session,
   tunedOutlet,
@@ -130,10 +203,59 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
   const [currentChannel, setCurrentChannel] = useState<string>(initialChan);
   const [userNick, setUserNick] = useState<string>(session.nick || 'RichardAlanWitt');
   const [inputValue, setInputValue] = useState<string>('');
+  const [showNickList, setShowNickList] = useState<boolean>(overlaySlot === 'primary');
   const [simulatedPing, setSimulatedPing] = useState<number>(
     overlaySlot === 'secondary' ? 1.6 : 1.3
   );
   const rankDef = getRankDefinition(activeRank);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Build channel-aware, rank-sorted IRC nick list (includes active user + live outlet bureau nick)
+  const channelNicks = useMemo<OverlayIrcNickEntry[]>(() => {
+    const base = CHANNEL_BASE_NICKS[currentChannel] || CHANNEL_BASE_NICKS['#drfun1-news'];
+    const outletNickSlug = tunedOutlet.callSign.replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    const liveBureauNick: OverlayIrcNickEntry = {
+      nick: `${outletNickSlug || 'News'}_Desk`,
+      prefix: '+',
+      role: `${tunedOutlet.country} Live Bureau`,
+      host: `${activeSourceType}.drfun1media.com`,
+    };
+
+    const userPrefixRaw = rankDef.prefix || '';
+    const userPrefix: OverlayIrcNickEntry['prefix'] =
+      userPrefixRaw === '~' ||
+      userPrefixRaw === '&' ||
+      userPrefixRaw === '@' ||
+      userPrefixRaw === '%' ||
+      userPrefixRaw === '+'
+        ? userPrefixRaw
+        : '';
+
+    const selfEntry: OverlayIrcNickEntry = {
+      nick: userNick,
+      prefix: userPrefix,
+      role: `${rankDef.shortLabel} (You)`,
+      host: 'switch.drfun1.com',
+      isSelf: true,
+    };
+
+    const seen = new Set<string>();
+    const combined: OverlayIrcNickEntry[] = [];
+    for (const entry of [selfEntry, liveBureauNick, ...base]) {
+      const key = entry.nick.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      combined.push(entry);
+    }
+
+    return combined.sort((a, b) => {
+      const rankDiff = PREFIX_RANK_ORDER[a.prefix] - PREFIX_RANK_ORDER[b.prefix];
+      if (rankDiff !== 0) return rankDiff;
+      if (a.isSelf && !b.isSelf) return -1;
+      if (!a.isSelf && b.isSelf) return 1;
+      return a.nick.localeCompare(b.nick);
+    });
+  }, [currentChannel, tunedOutlet.callSign, tunedOutlet.country, activeSourceType, userNick, rankDef.prefix, rankDef.shortLabel]);
 
   const [messages, setMessages] = useState<IrcMessage[]>(() => {
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -411,8 +533,27 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
 
     if (cmd === '/whois') {
       const target = arg || userNick;
+      const matched = channelNicks.find((n) => n.nick.toLowerCase() === target.toLowerCase());
+      if (matched && !matched.isSelf) {
+        pushSystemLine(
+          `${matched.prefix}${matched.nick}!relay@${matched.host} · ${matched.role} in ${currentChannel}${matched.away ? ' [AWAY]' : ''}`,
+          'notice',
+          'irc.drfun1.com'
+        );
+      } else {
+        pushSystemLine(
+          `${target}!${session.ident || 'web'}@switch.drfun1.com · Rank ${rankDef.prefix}${rankDef.shortLabel} (Lvl ${rankDef.accessLevel})`,
+          'notice',
+          'irc.drfun1.com'
+        );
+      }
+      return;
+    }
+
+    if (cmd === '/names') {
+      const formatted = channelNicks.map((n) => `${n.prefix}${n.nick}`).join(', ');
       pushSystemLine(
-        `${target}!${session.ident || 'web'}@switch.drfun1.com · Rank ${rankDef.prefix}${rankDef.shortLabel} (Lvl ${rankDef.accessLevel})`,
+        `${currentChannel} (${channelNicks.length} users): ${formatted}`,
         'notice',
         'irc.drfun1.com'
       );
@@ -429,9 +570,18 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
     }
 
     pushSystemLine(
-      `Executed ${rawCmd}. Commands: /nick, /join, /tune <callsign>, /source <satellite|web|local|fiber>, /drop, /reconnect, /stats, /whois, /clear, !breaking`,
+      `Executed ${rawCmd}. Commands: /nick, /join, /names, /tune <callsign>, /source <satellite|web|local|fiber>, /drop, /reconnect, /stats, /whois, /clear, !breaking`,
       'system'
     );
+  };
+
+  const handleMentionNick = (nick: string) => {
+    setInputValue((prev) => {
+      const trimmed = prev.trimStart();
+      if (trimmed.toLowerCase().startsWith(`${nick.toLowerCase()}:`)) return prev;
+      return `${nick}: ${trimmed}`;
+    });
+    inputRef.current?.focus();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -531,8 +681,10 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
       : 'bg-slate-900/90 border-slate-800/90';
 
   const widthClass = isDualActive
-    ? 'w-full md:w-[46.5%] lg:w-[45%]'
-    : 'w-full md:w-[335px] lg:w-[360px]';
+    ? 'w-full md:w-[46.5%] lg:w-[45.5%]'
+    : showNickList
+      ? 'w-full md:w-[395px] lg:w-[425px]'
+      : 'w-full md:w-[335px] lg:w-[360px]';
 
   const opacityTooltip =
     opacityMode === 'transparent'
@@ -702,51 +854,146 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
             /clear
           </button>
         </div>
-        <span className="text-purple-300 font-bold truncate max-w-[95px]">
-          {rankDef.prefix}{userNick}
-        </span>
+
+        <button
+          type="button"
+          aria-pressed={showNickList}
+          onClick={() => setShowNickList((v) => !v)}
+          className={`px-1.5 py-0.5 rounded border flex items-center gap-1 font-bold shrink-0 cursor-pointer transition-colors ${
+            showNickList
+              ? isCyan
+                ? 'bg-cyan-500/20 text-cyan-200 border-cyan-400/50'
+                : 'bg-purple-500/25 text-purple-200 border-purple-400/50'
+              : 'bg-slate-900/90 text-slate-300 border-slate-700 hover:text-white'
+          }`}
+          title={showNickList ? 'Hide channel IRC nick list' : 'Show channel IRC nick list'}
+        >
+          <Users className="w-3 h-3 shrink-0" />
+          <span className="tabular-nums">{channelNicks.length}</span>
+        </button>
       </div>
 
-      {/* Live Scrolling IRC Message Stream */}
-      <div className="flex-1 overflow-y-auto px-2.5 py-2 space-y-1.5 select-text">
-        {messages.map((m) => {
-          const isMe = m.sender.endsWith(userNick);
-          return (
-            <div key={m.id} className="leading-snug break-words">
-              <span className="text-slate-500 text-[9.5px] mr-1 tabular-nums">[{m.timestamp}]</span>
-              {m.type === 'system' ? (
-                <span className="text-purple-300 italic">{m.content}</span>
-              ) : m.type === 'notice' ? (
-                <span className="text-amber-300">
-                  <strong className="mr-1">[{m.sender}]</strong>
-                  {m.content}
-                </span>
-              ) : m.type === 'join' ? (
-                <span className="text-emerald-400">{m.content}</span>
-              ) : m.type === 'mode' ? (
-                <span className="text-sky-300">{m.content}</span>
-              ) : (
-                <>
-                  <span
-                    className={`font-bold mr-1 ${
-                      isMe
-                        ? 'text-cyan-300'
-                        : m.sender.startsWith('~')
-                          ? 'text-red-400'
-                          : m.sender.startsWith('@')
-                            ? 'text-emerald-400'
-                            : 'text-purple-300'
-                    }`}
-                  >
-                    &lt;{m.sender}&gt;
+      {/* Main Chat Area: Live Scrolling IRC Message Stream + Toggleable Nick List Sidebar */}
+      <div className="flex-1 min-h-0 flex overflow-hidden">
+        <div className="flex-1 min-w-0 overflow-y-auto px-2.5 py-2 space-y-1.5 select-text">
+          {messages.map((m) => {
+            const isMe = m.sender.endsWith(userNick);
+            return (
+              <div key={m.id} className="leading-snug break-words">
+                <span className="text-slate-500 text-[9.5px] mr-1 tabular-nums">[{m.timestamp}]</span>
+                {m.type === 'system' ? (
+                  <span className="text-purple-300 italic">{m.content}</span>
+                ) : m.type === 'notice' ? (
+                  <span className="text-amber-300">
+                    <strong className="mr-1">[{m.sender}]</strong>
+                    {m.content}
                   </span>
-                  <span className="text-slate-100">{m.content}</span>
-                </>
-              )}
+                ) : m.type === 'join' ? (
+                  <span className="text-emerald-400">{m.content}</span>
+                ) : m.type === 'mode' ? (
+                  <span className="text-sky-300">{m.content}</span>
+                ) : (
+                  <>
+                    <span
+                      className={`font-bold mr-1 ${
+                        isMe
+                          ? 'text-cyan-300'
+                          : m.sender.startsWith('~')
+                            ? 'text-red-400'
+                            : m.sender.startsWith('@')
+                              ? 'text-emerald-400'
+                              : 'text-purple-300'
+                      }`}
+                    >
+                      &lt;{m.sender}&gt;
+                    </span>
+                    <span className="text-slate-100">{m.content}</span>
+                  </>
+                )}
+              </div>
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Channel IRC Nick List Sidebar */}
+        {showNickList && (
+          <aside
+            aria-label={`${currentChannel} IRC nick list`}
+            className={`w-[118px] sm:w-[130px] shrink-0 border-l flex flex-col overflow-hidden ${
+              opacityMode === 'transparent'
+                ? 'bg-slate-950/35 border-white/10'
+                : 'bg-slate-950/75 border-slate-800/90'
+            }`}
+          >
+            <div className="px-2 py-1 border-b border-slate-800/80 flex items-center justify-between text-[9.5px] text-slate-400 shrink-0">
+              <span className="font-bold uppercase tracking-wider text-slate-300">Nicks</span>
+              <span className="tabular-nums text-emerald-300 font-bold">{channelNicks.length}</span>
             </div>
-          );
-        })}
-        <div ref={messagesEndRef} />
+
+            <ul className="flex-1 overflow-y-auto py-1 px-1 space-y-0.5">
+              {channelNicks.map((entry) => {
+                const prefixColor =
+                  entry.prefix === '~'
+                    ? 'text-red-400'
+                    : entry.prefix === '&'
+                      ? 'text-amber-400'
+                      : entry.prefix === '@'
+                        ? 'text-emerald-400'
+                        : entry.prefix === '%'
+                          ? 'text-sky-400'
+                          : entry.prefix === '+'
+                            ? 'text-cyan-300'
+                            : 'text-slate-500';
+                return (
+                  <li
+                    key={entry.nick}
+                    className="group flex items-center justify-between gap-1 rounded px-1.5 py-0.5 hover:bg-slate-800/75 transition-colors"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleMentionNick(entry.nick)}
+                      className="flex items-center gap-1 min-w-0 flex-1 text-left cursor-pointer"
+                      title={`${entry.prefix}${entry.nick} — ${entry.role} (click to mention)`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                          entry.away ? 'bg-amber-400/70' : 'bg-emerald-400'
+                        }`}
+                      />
+                      <span className="truncate text-[10px]">
+                        {entry.prefix && (
+                          <span className={`font-bold ${prefixColor}`}>{entry.prefix}</span>
+                        )}
+                        <span
+                          className={
+                            entry.isSelf
+                              ? 'text-cyan-300 font-bold'
+                              : entry.away
+                                ? 'text-slate-400'
+                                : 'text-slate-200 group-hover:text-white'
+                          }
+                        >
+                          {entry.nick}
+                        </span>
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => runCommand(`/whois ${entry.nick}`)}
+                      className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-0.5 rounded text-slate-400 hover:text-cyan-300 shrink-0 cursor-pointer transition-opacity"
+                      title={`/whois ${entry.nick}`}
+                      aria-label={`Whois ${entry.nick}`}
+                    >
+                      <Info className="w-2.5 h-2.5" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </aside>
+        )}
       </div>
 
       {/* IRC Chat Input Bar */}
@@ -755,6 +1002,7 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
         className={`p-2 border-t flex items-center gap-1.5 shrink-0 ${inputBarBgClass}`}
       >
         <input
+          ref={inputRef}
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
