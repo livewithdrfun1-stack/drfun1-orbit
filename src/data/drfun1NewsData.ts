@@ -1396,21 +1396,119 @@ export interface ResolvedOutletStreamSource {
   activeEndpoint: import('../types/drfun1News').StreamMirrorEndpoint;
   hasSecondaryMirror: boolean;
   nextMirrorEndpoint: import('../types/drfun1News').StreamMirrorEndpoint | null;
+  qualityOptions: import('../types/drfun1News').StreamQualityOption[];
+  activeQuality: import('../types/drfun1News').StreamQualityOption;
+}
+
+export function getSourceQualityTiers(
+  outlet: GlobalNewsOutlet,
+  sourceType: import('../types/drfun1News').NewsStreamSourceType
+): import('../types/drfun1News').StreamQualityOption[] {
+  const profile =
+    NEWS_STREAM_SOURCE_PROFILES.find((p) => p.id === sourceType) ||
+    NEWS_STREAM_SOURCE_PROFILES[0];
+  const baseMaxMbps = +(outlet.bitrateMbps * profile.bitrateMultiplier).toFixed(1);
+
+  const supports480p =
+    sourceType === 'web'
+      ? true
+      : sourceType === 'local'
+        ? true
+        : sourceType === 'satellite'
+          ? outlet.bitrateMbps < 20
+          : false; // Fiber 100G mezzanine links carry HD minimum
+
+  const reason480p =
+    sourceType === 'fiber'
+      ? 'HD minimum on 100G fiber'
+      : sourceType === 'satellite'
+        ? 'HD/UHD transponder only'
+        : undefined;
+
+  const supports1080p =
+    sourceType === 'local' ? outlet.bitrateMbps >= 15.0 : true;
+
+  const reason1080p =
+    sourceType === 'local' && !supports1080p
+      ? '720p max on regional OTA'
+      : undefined;
+
+  const bitrate1080 = Math.max(
+    5.8,
+    +(
+      sourceType === 'web'
+        ? Math.min(12.8, baseMaxMbps * 0.62)
+        : sourceType === 'local'
+          ? Math.min(14.5, baseMaxMbps * 0.78)
+          : baseMaxMbps
+    ).toFixed(1)
+  );
+  const bitrate720 = Math.max(
+    3.0,
+    +(
+      sourceType === 'web'
+        ? Math.min(6.4, bitrate1080 * 0.52)
+        : bitrate1080 * 0.58
+    ).toFixed(1)
+  );
+  const bitrate480 = Math.max(1.4, +(bitrate720 * 0.45).toFixed(1));
+
+  return [
+    {
+      tier: '1080p',
+      label: '1080p Full HD',
+      shortLabel: '1080p',
+      dimensions: '1920×1080',
+      fps: 60,
+      bitrateMbps: bitrate1080,
+      available: supports1080p,
+      unavailableReason: reason1080p,
+    },
+    {
+      tier: '720p',
+      label: '720p HD',
+      shortLabel: '720p',
+      dimensions: '1280×720',
+      fps: 60,
+      bitrateMbps: bitrate720,
+      available: true,
+    },
+    {
+      tier: '480p',
+      label: '480p SD',
+      shortLabel: '480p',
+      dimensions: '854×480',
+      fps: 30,
+      bitrateMbps: bitrate480,
+      available: supports480p,
+      unavailableReason: reason480p,
+    },
+  ];
 }
 
 export function resolveOutletStreamSource(
   outlet: GlobalNewsOutlet,
   sourceType: import('../types/drfun1News').NewsStreamSourceType,
   liveTick: number = 0,
-  activeEndpointIndex: number = 0
+  activeEndpointIndex: number = 0,
+  preferredQualityTier: import('../types/drfun1News').StreamQualityTier = '1080p'
 ): ResolvedOutletStreamSource {
   const profile =
     NEWS_STREAM_SOURCE_PROFILES.find((p) => p.id === sourceType) ||
     NEWS_STREAM_SOURCE_PROFILES[0];
 
+  const qualityOptions = getSourceQualityTiers(outlet, sourceType);
+  const requestedQuality = qualityOptions.find(
+    (q) => q.tier === preferredQualityTier && q.available
+  );
+  const activeQuality =
+    requestedQuality ||
+    qualityOptions.find((q) => q.available) ||
+    qualityOptions[1];
+
   const slug = outlet.id.replace(/^news-/, '');
   const jitter = ((liveTick % 5) - 2) * (sourceType === 'fiber' ? 0.1 : sourceType === 'local' ? 0.5 : 1.5);
-  const effectiveBitrateMbps = +(outlet.bitrateMbps * profile.bitrateMultiplier).toFixed(1);
+  const effectiveBitrateMbps = activeQuality.bitrateMbps;
 
   const customSecondary = outlet.secondaryMirrorUrls?.[0]?.trim();
   const customTertiary = outlet.secondaryMirrorUrls?.[1]?.trim();
@@ -1426,21 +1524,21 @@ export function resolveOutletStreamSource(
       {
         tier: 'primary',
         label: 'Primary Transponder',
-        url: `sat://dvb-s2x.drfun1media.com/${slug}/tp-42`,
+        url: `sat://dvb-s2x.drfun1media.com/${slug}/tp-42/${activeQuality.tier}`,
         routeLabel: `Orbital Downlink · ${band} (${outlet.region})`,
         latencyOffsetMs: 0,
       },
       {
         tier: 'secondary',
         label: 'Secondary Mirror (Teleport B)',
-        url: customSecondary || `sat://dvb-s2x-mirror2.drfun1media.com/${slug}/tp-84-bkp`,
+        url: customSecondary || `sat://dvb-s2x-mirror2.drfun1media.com/${slug}/tp-84-bkp/${activeQuality.tier}`,
         routeLabel: `Backup Teleport · Goldstone / Redundant ${band}`,
         latencyOffsetMs: 14,
       },
       {
         tier: 'tertiary',
         label: 'Tertiary Mirror (HLS Edge)',
-        url: customTertiary || outlet.hlsFeedUrl,
+        url: customTertiary || `${outlet.hlsFeedUrl}?res=${activeQuality.tier}`,
         routeLabel: `Satcom-to-Edge Fallback · Red5 LL-HLS (${outlet.country})`,
         latencyOffsetMs: -185,
       },
@@ -1450,21 +1548,21 @@ export function resolveOutletStreamSource(
       {
         tier: 'primary',
         label: 'Primary Web Origin',
-        url: outlet.hlsFeedUrl,
+        url: `${outlet.hlsFeedUrl}?res=${activeQuality.tier}`,
         routeLabel: `Red5 WHEP & Global LL-HLS Edge (${outlet.country})`,
         latencyOffsetMs: 0,
       },
       {
         tier: 'secondary',
         label: 'Secondary Mirror (CDN EU/US)',
-        url: customSecondary || `https://mirror-cdn2.drfun1media.com/hls/${slug}/backup.m3u8`,
+        url: customSecondary || `https://mirror-cdn2.drfun1media.com/hls/${slug}/${activeQuality.tier}/backup.m3u8`,
         routeLabel: `Secondary CDN Mirror · DataPacket Anycast (${outlet.region})`,
         latencyOffsetMs: 9,
       },
       {
         tier: 'tertiary',
         label: 'Tertiary Mirror (Relay)',
-        url: customTertiary || outlet.streamUrl,
+        url: customTertiary || `${outlet.streamUrl}?res=${activeQuality.tier}`,
         routeLabel: `Direct Broadcast Relay · DrFun1 Origin Mirror`,
         latencyOffsetMs: 18,
       },
@@ -1474,21 +1572,21 @@ export function resolveOutletStreamSource(
       {
         tier: 'primary',
         label: 'Primary Studio Feed',
-        url: `atsc3://local-desk.drfun1.local/${slug}/rf-ch34`,
+        url: `atsc3://local-desk.drfun1.local/${slug}/rf-ch34/${activeQuality.tier}`,
         routeLabel: `Local Bureau Direct · ${outlet.headquarters}`,
         latencyOffsetMs: 0,
       },
       {
         tier: 'secondary',
         label: 'Secondary Mirror (Backup Tower)',
-        url: customSecondary || `atsc3://mirror-tower2.drfun1.local/${slug}/rf-ch51`,
+        url: customSecondary || `atsc3://mirror-tower2.drfun1.local/${slug}/rf-ch51/${activeQuality.tier}`,
         routeLabel: `Backup Regional Tower · ${outlet.country} Affiliate`,
         latencyOffsetMs: 6,
       },
       {
         tier: 'tertiary',
         label: 'Tertiary Mirror (Web Studio)',
-        url: customTertiary || outlet.hlsFeedUrl,
+        url: customTertiary || `${outlet.hlsFeedUrl}?res=${activeQuality.tier}`,
         routeLabel: `Studio IP Backup · LL-HLS Ingest (${outlet.country})`,
         latencyOffsetMs: 22,
       },
@@ -1498,21 +1596,21 @@ export function resolveOutletStreamSource(
       {
         tier: 'primary',
         label: 'Primary 100G Ring',
-        url: `st2110://switch-supernap.drfun1.net/100g/${slug}`,
+        url: `st2110://switch-supernap.drfun1.net/100g/${slug}/${activeQuality.tier}`,
         routeLabel: outlet.switchIngestPop,
         latencyOffsetMs: 0,
       },
       {
         tier: 'secondary',
         label: 'Secondary Mirror (RisingNet Ring B)',
-        url: customSecondary || `st2110://rn-backup-ring.drfun1.net/100g/${slug}`,
+        url: customSecondary || `st2110://rn-backup-ring.drfun1.net/100g/${slug}/${activeQuality.tier}`,
         routeLabel: `RisingNet Redundant Optical Ring · Diversity Path B`,
         latencyOffsetMs: 0.8,
       },
       {
         tier: 'tertiary',
         label: 'Tertiary Mirror (Edge HLS)',
-        url: customTertiary || outlet.hlsFeedUrl,
+        url: customTertiary || `${outlet.hlsFeedUrl}?res=${activeQuality.tier}`,
         routeLabel: `Switch Optical-to-CDN Failover Mirror`,
         latencyOffsetMs: 32,
       },
@@ -1539,5 +1637,7 @@ export function resolveOutletStreamSource(
     activeEndpoint,
     hasSecondaryMirror: endpoints.length > 1,
     nextMirrorEndpoint,
+    qualityOptions,
+    activeQuality,
   };
 }

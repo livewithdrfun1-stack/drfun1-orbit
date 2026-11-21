@@ -40,6 +40,7 @@ import { MasterControlView } from './components/MasterControlView';
 import { FuboTvCloneView } from './components/FuboTvCloneView';
 import { DrFun1TvView } from './components/DrFun1TvView';
 import { DrFun1NewsView } from './components/DrFun1NewsView';
+import { DrFun1FloatingPipFallback } from './components/DrFun1FloatingPipFallback';
 import { SocialMediaControlPanelView } from './components/SocialMediaControlPanelView';
 import { IrcDuplicatorHostingView } from './components/IrcDuplicatorHostingView';
 import { SatcomCompaniesView } from './components/SatcomCompaniesView';
@@ -1112,6 +1113,11 @@ export default function App() {
           }}
         />
       )}
+
+      {/* Persistent Floating PiP Fallback (shown only when browser/iframe blocks native Picture-in-Picture) */}
+      <DrFun1FloatingPipFallback
+        onReturnToNews={() => handleNavigateTab('drfun1_news')}
+      />
 
       {/* 14-Tier IRCD Rank Access Control Matrix & Live Switcher */}
       <IrcdRankAccessModal

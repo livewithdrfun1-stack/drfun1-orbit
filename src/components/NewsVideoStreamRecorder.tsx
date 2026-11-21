@@ -12,6 +12,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Archive,
   Circle,
   Download,
   Film,
@@ -36,6 +37,11 @@ interface NewsVideoStreamRecorderProps {
   effectiveBitrateMbps: number;
   latencyMs: number;
   connectionPhase: StreamConnectionPhase;
+  clips?: RecordedStreamClip[];
+  onClipSaved?: (clip: RecordedStreamClip, blob: Blob) => void;
+  onDeleteClip?: (clip: RecordedStreamClip) => void;
+  onClearBuffer?: () => void;
+  onOpenArchiveTab?: () => void;
   onRecordingStateChange?: (recording: boolean, elapsedSec: number) => void;
   onNotify?: (msg: string) => void;
 }
@@ -106,15 +112,23 @@ export const NewsVideoStreamRecorder: React.FC<NewsVideoStreamRecorderProps> = (
   effectiveBitrateMbps,
   latencyMs,
   connectionPhase,
+  clips: externalClips,
+  onClipSaved,
+  onDeleteClip,
+  onClearBuffer,
+  onOpenArchiveTab,
   onRecordingStateChange,
   onNotify,
 }) => {
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [elapsedSec, setElapsedSec] = useState<number>(0);
   const [liveBufferedBytes, setLiveBufferedBytes] = useState<number>(0);
-  const [clips, setClips] = useState<RecordedStreamClip[]>([]);
+  const [localClips, setLocalClips] = useState<RecordedStreamClip[]>([]);
   const [isBufferOpen, setIsBufferOpen] = useState<boolean>(false);
   const [previewClipId, setPreviewClipId] = useState<string | null>(null);
+
+  const isControlled = Array.isArray(externalClips);
+  const clips = isControlled ? externalClips : localClips;
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -304,11 +318,12 @@ export const NewsVideoStreamRecorder: React.FC<NewsVideoStreamRecorderProps> = (
     const stamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const fileName = `drfun1-news-${safeSlug}-${snap.activeSourceLabel.toLowerCase().replace(/\s+/g, '')}-${stamp}.${extension}`;
     const objectUrl = URL.createObjectURL(blob);
-    clipUrlsRef.current.push(objectUrl);
 
     const newClip: RecordedStreamClip = {
       id: `clip-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       fileName,
+      title: `${snap.tunedOutlet.callSign} — ${snap.tunedOutlet.currentProgram}`,
+      outletId: snap.tunedOutlet.id,
       outletCallSign: snap.tunedOutlet.callSign,
       outletName: snap.tunedOutlet.name,
       programTitle: snap.tunedOutlet.currentProgram,
@@ -320,12 +335,20 @@ export const NewsVideoStreamRecorder: React.FC<NewsVideoStreamRecorderProps> = (
       mimeType: blob.type || (extension === 'webm' ? 'video/webm' : 'application/json'),
       objectUrl,
       recordedAt: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      recordedAtMs: now.getTime(),
+      isStarred: false,
+      notes: '',
     };
 
-    setClips((prev) => [newClip, ...prev].slice(0, 12));
+    if (onClipSaved) {
+      onClipSaved(newClip, blob);
+    } else {
+      clipUrlsRef.current.push(objectUrl);
+      setLocalClips((prev) => [newClip, ...prev].slice(0, 12));
+    }
     setIsBufferOpen(true);
     onNotify?.(
-      `Saved ${formatDuration(newClip.durationSec)} ${snap.tunedOutlet.callSign} clip (${formatBytes(newClip.sizeBytes)}) to local download buffer`
+      `Saved ${formatDuration(newClip.durationSec)} ${snap.tunedOutlet.callSign} clip (${formatBytes(newClip.sizeBytes)}) to Stream Archive`
     );
   };
 
@@ -455,17 +478,25 @@ export const NewsVideoStreamRecorder: React.FC<NewsVideoStreamRecorderProps> = (
   };
 
   const handleDeleteClip = (clip: RecordedStreamClip) => {
+    if (previewClipId === clip.id) setPreviewClipId(null);
+    if (onDeleteClip) {
+      onDeleteClip(clip);
+      return;
+    }
     URL.revokeObjectURL(clip.objectUrl);
     clipUrlsRef.current = clipUrlsRef.current.filter((u) => u !== clip.objectUrl);
-    setClips((prev) => prev.filter((c) => c.id !== clip.id));
-    if (previewClipId === clip.id) setPreviewClipId(null);
+    setLocalClips((prev) => prev.filter((c) => c.id !== clip.id));
   };
 
   const handleClearBuffer = () => {
-    clips.forEach((c) => URL.revokeObjectURL(c.objectUrl));
-    clipUrlsRef.current = [];
-    setClips([]);
     setPreviewClipId(null);
+    if (onClearBuffer) {
+      onClearBuffer();
+      return;
+    }
+    localClips.forEach((c) => URL.revokeObjectURL(c.objectUrl));
+    clipUrlsRef.current = [];
+    setLocalClips([]);
     onNotify?.('Cleared local browser download buffer');
   };
 
@@ -542,6 +573,20 @@ export const NewsVideoStreamRecorder: React.FC<NewsVideoStreamRecorderProps> = (
             </div>
 
             <div className="flex items-center gap-1 shrink-0">
+              {onOpenArchiveTab && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsBufferOpen(false);
+                    onOpenArchiveTab();
+                  }}
+                  className="px-2 py-0.5 rounded bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-[10px] text-cyan-200 font-bold flex items-center gap-1 cursor-pointer"
+                  title="Open full Stream Archive library tab"
+                >
+                  <Archive className="w-3 h-3" />
+                  <span>Archive</span>
+                </button>
+              )}
               {clips.length > 0 && (
                 <button
                   type="button"

@@ -33,6 +33,8 @@ import {
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { getRankDefinition } from '../utils/ircdAccess';
 
+export type IrcOverlayOpacityMode = 'transparent' | 'translucent' | 'solid';
+
 export interface NewsVideoIrcOverlayProps {
   session: IrcLoginSession;
   tunedOutlet: GlobalNewsOutlet;
@@ -44,10 +46,16 @@ export interface NewsVideoIrcOverlayProps {
   activeMirrorLabel?: string;
   connectionPhase?: StreamConnectionPhase;
   lastReconnectEvent?: StreamReconnectEvent | null;
+  overlaySlot?: 'primary' | 'secondary';
+  overlayTitle?: string;
+  defaultChannel?: string;
+  accentTone?: 'purple' | 'cyan';
+  isDualActive?: boolean;
+  onChangeBoundSource?: (source: NewsStreamSourceType) => void;
   isOpen: boolean;
   isMinimized: boolean;
   position: 'right' | 'left';
-  opacityMode: 'translucent' | 'solid';
+  opacityMode: IrcOverlayOpacityMode;
   onToggleOpen: (open: boolean) => void;
   onToggleMinimized: () => void;
   onTogglePosition: () => void;
@@ -70,6 +78,13 @@ const NEWS_OVERLAY_CHANNELS = [
   '#lobby',
 ];
 
+const OVERLAY_SOURCE_OPTIONS: { id: NewsStreamSourceType; label: string }[] = [
+  { id: 'satellite', label: 'SAT' },
+  { id: 'web', label: 'WEB' },
+  { id: 'local', label: 'LOCAL' },
+  { id: 'fiber', label: '100G' },
+];
+
 export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
   session,
   tunedOutlet,
@@ -81,6 +96,12 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
   activeMirrorLabel = 'Primary',
   connectionPhase = 'connected',
   lastReconnectEvent = null,
+  overlaySlot = 'primary',
+  overlayTitle,
+  defaultChannel,
+  accentTone = 'purple',
+  isDualActive = false,
+  onChangeBoundSource,
   isOpen,
   isMinimized,
   position,
@@ -97,18 +118,53 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
   onSimulateDisconnect,
   onManualReconnect,
 }) => {
-  const initialChan = session.channel && NEWS_OVERLAY_CHANNELS.includes(session.channel)
-    ? session.channel
-    : '#drfun1-news';
+  const initialChan =
+    defaultChannel && NEWS_OVERLAY_CHANNELS.includes(defaultChannel)
+      ? defaultChannel
+      : session.channel && NEWS_OVERLAY_CHANNELS.includes(session.channel)
+        ? session.channel
+        : overlaySlot === 'secondary'
+          ? '#satcom-news'
+          : '#drfun1-news';
 
   const [currentChannel, setCurrentChannel] = useState<string>(initialChan);
   const [userNick, setUserNick] = useState<string>(session.nick || 'RichardAlanWitt');
   const [inputValue, setInputValue] = useState<string>('');
-  const [simulatedPing, setSimulatedPing] = useState<number>(1.3);
+  const [simulatedPing, setSimulatedPing] = useState<number>(
+    overlaySlot === 'secondary' ? 1.6 : 1.3
+  );
   const rankDef = getRankDefinition(activeRank);
 
   const [messages, setMessages] = useState<IrcMessage[]>(() => {
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (overlaySlot === 'secondary') {
+      return [
+        {
+          id: 'news-irc2-1',
+          timestamp: now,
+          sender: 'irc.drfun1.com',
+          channel: initialChan,
+          content: `Secondary transparent IRC overlay synced · Monitoring ${activeSourceLabel} (${activeSourceProtocol})`,
+          type: 'system',
+        },
+        {
+          id: 'news-irc2-2',
+          timestamp: now,
+          sender: 'SatcomRelayBot',
+          channel: initialChan,
+          content: `[DUAL CHAT] Side-by-side room ${initialChan} ready for ${tunedOutlet.callSign}. Switch source or channel independently above.`,
+          type: 'notice',
+        },
+        {
+          id: 'news-irc2-3',
+          timestamp: now,
+          sender: '@RisingNet_Ops',
+          channel: initialChan,
+          content: `Secondary ${activeSourceLabel} carrier locked. Use /source web|satellite|local|fiber or !feed to inspect telemetry.`,
+          type: 'message',
+        },
+      ];
+    }
     return [
       {
         id: 'news-irc-1',
@@ -256,7 +312,9 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
 
   const handleChannelChange = (nextChan: string) => {
     setCurrentChannel(nextChan);
-    onUpdateSession?.({ channel: nextChan });
+    if (overlaySlot === 'primary') {
+      onUpdateSession?.({ channel: nextChan });
+    }
     pushSystemLine(`Joined ${nextChan} (+cnt) on irc.drfun1.com:6697`, 'join');
   };
 
@@ -307,8 +365,12 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
         '100g': 'fiber',
       };
       const target = map[normalized];
-      if (target && onSelectSource) {
-        onSelectSource(target);
+      if (target && (onChangeBoundSource || onSelectSource)) {
+        if (onChangeBoundSource) {
+          onChangeBoundSource(target);
+        } else {
+          onSelectSource?.(target);
+        }
       } else {
         pushSystemLine('Usage: /source satellite | web | local | fiber', 'system');
       }
@@ -397,24 +459,32 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
     ]);
   };
 
+  const isCyan = accentTone === 'cyan';
+  const resolvedTitle =
+    overlayTitle || (isDualActive ? (overlaySlot === 'secondary' ? 'IRC #2' : 'IRC #1') : 'IRC Overlay');
+
   // Minimized floating dock chip anchored inside the bottom corner of the video player
   if (isMinimized) {
     return (
       <div
         className={`mt-2 md:mt-0 md:absolute md:bottom-14 ${
           position === 'right' ? 'md:right-3' : 'md:left-3'
-        } z-20 flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-slate-950/85 backdrop-blur-md border border-purple-500/50 shadow-2xl text-[11px] font-mono`}
+        } z-20 flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-slate-950/80 backdrop-blur-md border ${
+          isCyan ? 'border-cyan-400/50' : 'border-purple-500/50'
+        } shadow-2xl text-[11px] font-mono`}
       >
         <button
           type="button"
           onClick={onToggleMinimized}
           className="flex items-center gap-2 text-left cursor-pointer group"
-          title="Expand IRC Client Overlay"
+          title={`Expand ${resolvedTitle}`}
         >
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-          <Terminal className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-          <span className="font-bold text-white group-hover:text-purple-200">{currentChannel}</span>
-          <span className="text-slate-400 hidden sm:inline">· {userNick}</span>
+          <Terminal className={`w-3.5 h-3.5 shrink-0 ${isCyan ? 'text-cyan-400' : 'text-purple-400'}`} />
+          <span className="font-bold text-white group-hover:text-cyan-200">{currentChannel}</span>
+          <span className={`text-[10px] font-bold ${isCyan ? 'text-cyan-300' : 'text-purple-300'}`}>
+            {activeSourceLabel}
+          </span>
           <span className="text-emerald-300 tabular-nums">{messages.length} msgs</span>
           <ChevronUp className="w-3.5 h-3.5 text-slate-300" />
         </button>
@@ -423,8 +493,8 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
           type="button"
           onClick={() => onToggleOpen(false)}
           className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
-          aria-label="Hide IRC overlay"
-          title="Hide IRC overlay"
+          aria-label={`Hide ${resolvedTitle}`}
+          title={`Hide ${resolvedTitle}`}
         >
           <X className="w-3 h-3" />
         </button>
@@ -434,34 +504,90 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
 
   const surfaceClass =
     opacityMode === 'solid'
-      ? 'bg-slate-950/95 border-purple-500/50'
-      : 'bg-slate-950/75 border-white/15';
+      ? isCyan
+        ? 'bg-slate-950/95 border-cyan-500/50'
+        : 'bg-slate-950/95 border-purple-500/50'
+      : opacityMode === 'transparent'
+        ? isCyan
+          ? 'bg-slate-950/40 border-cyan-400/35 backdrop-blur-sm'
+          : 'bg-slate-950/40 border-purple-400/35 backdrop-blur-sm'
+        : isCyan
+          ? 'bg-slate-950/72 border-cyan-400/25 backdrop-blur-md'
+          : 'bg-slate-950/75 border-white/15 backdrop-blur-md';
+
+  const headerBgClass =
+    opacityMode === 'transparent'
+      ? 'bg-slate-950/55 border-white/10'
+      : 'bg-slate-900/85 border-slate-800/90';
+
+  const subBarBgClass =
+    opacityMode === 'transparent'
+      ? 'bg-slate-950/35 border-white/10'
+      : 'bg-slate-900/60 border-slate-800/80';
+
+  const inputBarBgClass =
+    opacityMode === 'transparent'
+      ? 'bg-slate-950/55 border-white/10'
+      : 'bg-slate-900/90 border-slate-800/90';
+
+  const widthClass = isDualActive
+    ? 'w-full md:w-[46.5%] lg:w-[45%]'
+    : 'w-full md:w-[335px] lg:w-[360px]';
+
+  const opacityTooltip =
+    opacityMode === 'transparent'
+      ? 'Transparent glass (40%) — click for translucent (75%)'
+      : opacityMode === 'translucent'
+        ? 'Translucent overlay (75%) — click for solid dark (95%)'
+        : 'Solid backdrop (95%) — click for transparent glass (40%)';
 
   return (
     <div
       className={`mt-3 md:mt-0 md:absolute md:top-14 md:bottom-14 ${
         position === 'right' ? 'md:right-3' : 'md:left-3'
-      } w-full md:w-[335px] lg:w-[360px] h-[250px] md:h-auto z-20 rounded-xl border backdrop-blur-md shadow-2xl flex flex-col overflow-hidden font-mono text-[11px] transition-opacity ${surfaceClass}`}
+      } ${widthClass} h-[250px] md:h-auto z-20 rounded-xl border shadow-2xl flex flex-col overflow-hidden font-mono text-[11px] transition-all ${surfaceClass}`}
       onClick={(e) => e.stopPropagation()}
     >
       {/* Overlay Header */}
-      <div className="px-2.5 py-2 bg-slate-900/85 border-b border-slate-800/90 flex items-center justify-between gap-1.5 shrink-0">
+      <div className={`px-2.5 py-2 border-b flex items-center justify-between gap-1.5 shrink-0 ${headerBgClass}`}>
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-          <Terminal className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-          <span className="font-bold text-white truncate">IRC Overlay</span>
-          <span className="text-[9.5px] text-emerald-300 flex items-center gap-0.5 shrink-0 tabular-nums">
-            <Lock className="w-2.5 h-2.5" />
-            {simulatedPing}ms
-          </span>
+          <Terminal className={`w-3.5 h-3.5 shrink-0 ${isCyan ? 'text-cyan-400' : 'text-purple-400'}`} />
+          <span className="font-bold text-white truncate">{resolvedTitle}</span>
+          {!isDualActive && (
+            <span className="text-[9.5px] text-emerald-300 flex items-center gap-0.5 shrink-0 tabular-nums">
+              <Lock className="w-2.5 h-2.5" />
+              {simulatedPing}ms
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
+          {onChangeBoundSource && (
+            <select
+              aria-label={`Select stream source for ${resolvedTitle}`}
+              value={activeSourceType}
+              onChange={(e) => onChangeBoundSource(e.target.value as NewsStreamSourceType)}
+              className={`bg-slate-950/90 border rounded px-1 py-0.5 text-[10px] font-bold cursor-pointer focus:outline-none ${
+                isCyan
+                  ? 'border-cyan-500/50 text-cyan-300'
+                  : 'border-purple-500/50 text-purple-300'
+              }`}
+              title="Bind this IRC overlay to a specific streaming source"
+            >
+              {OVERLAY_SOURCE_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          )}
+
           <select
-            aria-label="Select IRC overlay channel"
+            aria-label={`Select IRC channel for ${resolvedTitle}`}
             value={currentChannel}
             onChange={(e) => handleChannelChange(e.target.value)}
-            className="bg-slate-950/90 border border-slate-700 text-emerald-300 rounded px-1.5 py-0.5 text-[10px] font-bold max-w-[105px] cursor-pointer focus:outline-none"
+            className="bg-slate-950/90 border border-slate-700 text-emerald-300 rounded px-1.5 py-0.5 text-[10px] font-bold max-w-[100px] cursor-pointer focus:outline-none"
           >
             {NEWS_OVERLAY_CHANNELS.map((ch) => (
               <option key={ch} value={ch}>
@@ -474,7 +600,11 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
             type="button"
             onClick={onTogglePosition}
             className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer hidden md:inline-flex"
-            title={`Dock overlay to ${position === 'right' ? 'left' : 'right'} side of video player`}
+            title={
+              isDualActive
+                ? 'Swap left and right side-by-side IRC overlays'
+                : `Dock overlay to ${position === 'right' ? 'left' : 'right'} side of video player`
+            }
             aria-label="Switch overlay side"
           >
             <ArrowLeftRight className="w-3 h-3" />
@@ -483,14 +613,18 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
           <button
             type="button"
             onClick={onToggleOpacity}
-            className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
-            title={opacityMode === 'translucent' ? 'Switch to solid dark backdrop' : 'Switch to translucent video overlay'}
-            aria-label="Toggle overlay opacity"
+            className={`p-1 rounded hover:bg-slate-800 cursor-pointer ${
+              opacityMode === 'transparent'
+                ? 'text-cyan-300'
+                : 'text-slate-400 hover:text-white'
+            }`}
+            title={opacityTooltip}
+            aria-label="Cycle overlay transparency"
           >
             <Eye className="w-3 h-3" />
           </button>
 
-          {onOpenLoginModal && (
+          {onOpenLoginModal && !isDualActive && (
             <button
               type="button"
               onClick={onOpenLoginModal}
@@ -502,7 +636,7 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
             </button>
           )}
 
-          {onNavigateToFullIrc && (
+          {onNavigateToFullIrc && !isDualActive && (
             <button
               type="button"
               onClick={onNavigateToFullIrc}
@@ -518,8 +652,8 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
             type="button"
             onClick={onToggleMinimized}
             className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
-            title="Minimize IRC overlay"
-            aria-label="Minimize IRC overlay"
+            title={`Minimize ${resolvedTitle}`}
+            aria-label={`Minimize ${resolvedTitle}`}
           >
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
@@ -528,8 +662,8 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
             type="button"
             onClick={() => onToggleOpen(false)}
             className="p-1 rounded text-slate-400 hover:text-rose-300 hover:bg-slate-800 cursor-pointer"
-            title="Hide IRC overlay"
-            aria-label="Close IRC overlay"
+            title={`Hide ${resolvedTitle}`}
+            aria-label={`Close ${resolvedTitle}`}
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -537,7 +671,7 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
       </div>
 
       {/* Quick Command & Session Strip */}
-      <div className="px-2.5 py-1 bg-slate-900/60 border-b border-slate-800/80 flex items-center justify-between gap-2 text-[10px] text-slate-400 shrink-0">
+      <div className={`px-2.5 py-1 border-b flex items-center justify-between gap-2 text-[10px] text-slate-400 shrink-0 ${subBarBgClass}`}>
         <div className="flex items-center gap-1 overflow-x-auto">
           <button
             type="button"
@@ -618,19 +752,25 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
       {/* IRC Chat Input Bar */}
       <form
         onSubmit={handleSubmit}
-        className="p-2 bg-slate-900/90 border-t border-slate-800/90 flex items-center gap-1.5 shrink-0"
+        className={`p-2 border-t flex items-center gap-1.5 shrink-0 ${inputBarBgClass}`}
       >
         <input
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder={`Chat ${currentChannel} or /tune BBC...`}
-          className="flex-1 min-w-0 bg-slate-950/90 border border-slate-700 focus:border-purple-500 rounded-lg px-2.5 py-1.5 text-[11px] text-white placeholder-slate-500 focus:outline-none"
+          placeholder={`Chat ${currentChannel} (${activeSourceLabel})...`}
+          className={`flex-1 min-w-0 bg-slate-950/80 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[11px] text-white placeholder-slate-400 focus:outline-none ${
+            isCyan ? 'focus:border-cyan-400' : 'focus:border-purple-500'
+          }`}
         />
         <button
           type="submit"
           disabled={!inputValue.trim()}
-          className="px-2.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-bold flex items-center gap-1 cursor-pointer shrink-0"
+          className={`px-2.5 py-1.5 rounded-lg disabled:opacity-40 font-bold flex items-center gap-1 cursor-pointer shrink-0 ${
+            isCyan
+              ? 'bg-cyan-600 hover:bg-cyan-500 text-slate-950'
+              : 'bg-purple-600 hover:bg-purple-500 text-white'
+          }`}
           aria-label="Send IRC message"
         >
           <Send className="w-3 h-3" />

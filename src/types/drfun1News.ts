@@ -156,6 +156,8 @@ export interface BreakingNewsAlert {
 export interface RecordedStreamClip {
   id: string;
   fileName: string;
+  title?: string;
+  outletId?: string;
   outletCallSign: string;
   outletName: string;
   programTitle: string;
@@ -167,4 +169,42 @@ export interface RecordedStreamClip {
   mimeType: string;
   objectUrl: string;
   recordedAt: string;
+  recordedAtMs?: number;
+  isStarred?: boolean;
+  notes?: string;
+}
+
+export type AudioNormalizationPreset = 'news-desk' | 'ebu-r128' | 'atsc-a85' | 'night-limit';
+
+export interface AudioNormalizationConfig {
+  enabled: boolean;
+  targetDb: number; // -24 to -12 dBFS/LUFS baseline
+  preset: AudioNormalizationPreset;
+  truePeakLimiter: boolean;
+  ceilingDb: number; // e.g. -1.0 dBTP
+  rampMs: number; // anti-jump crossfade ramp duration
+  masterVolume: number; // 0 to 1
+}
+
+export interface AudioNormalizationTelemetry {
+  rawInputDb: number;
+  appliedGainDb: number;
+  normalizedOutputDb: number;
+  peakReductionDb: number;
+  isRamping: boolean;
+  lastJumpPreventedDb: number;
+  lastSwitchSummary: string | null;
+}
+
+export type StreamQualityTier = '480p' | '720p' | '1080p';
+
+export interface StreamQualityOption {
+  tier: StreamQualityTier;
+  label: string;
+  shortLabel: string;
+  dimensions: string;
+  fps: number;
+  bitrateMbps: number;
+  available: boolean;
+  unavailableReason?: string;
 }
