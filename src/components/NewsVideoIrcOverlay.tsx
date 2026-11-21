@@ -24,7 +24,12 @@ import {
   X,
 } from 'lucide-react';
 import { IrcLoginSession, IrcMessage } from '../types/irc';
-import { GlobalNewsOutlet } from '../types/drfun1News';
+import {
+  GlobalNewsOutlet,
+  NewsStreamSourceType,
+  StreamConnectionPhase,
+  StreamReconnectEvent,
+} from '../types/drfun1News';
 import { AnopeRankLevel } from '../types/ircdAdmin';
 import { getRankDefinition } from '../utils/ircdAccess';
 
@@ -32,6 +37,13 @@ export interface NewsVideoIrcOverlayProps {
   session: IrcLoginSession;
   tunedOutlet: GlobalNewsOutlet;
   activeRank?: AnopeRankLevel;
+  activeSourceType?: NewsStreamSourceType;
+  activeSourceLabel?: string;
+  activeSourceProtocol?: string;
+  activeFeedUrl?: string;
+  activeMirrorLabel?: string;
+  connectionPhase?: StreamConnectionPhase;
+  lastReconnectEvent?: StreamReconnectEvent | null;
   isOpen: boolean;
   isMinimized: boolean;
   position: 'right' | 'left';
@@ -44,6 +56,9 @@ export interface NewsVideoIrcOverlayProps {
   onOpenLoginModal?: () => void;
   onNavigateToFullIrc?: () => void;
   onTuneByCallSign?: (query: string) => GlobalNewsOutlet | null;
+  onSelectSource?: (source: NewsStreamSourceType) => void;
+  onSimulateDisconnect?: () => void;
+  onManualReconnect?: () => void;
 }
 
 const NEWS_OVERLAY_CHANNELS = [
@@ -59,6 +74,13 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
   session,
   tunedOutlet,
   activeRank = 'sra',
+  activeSourceType = 'satellite',
+  activeSourceLabel = 'Satellite',
+  activeSourceProtocol = 'DVB-S2X Ku/Ka-Band',
+  activeFeedUrl,
+  activeMirrorLabel = 'Primary',
+  connectionPhase = 'connected',
+  lastReconnectEvent = null,
   isOpen,
   isMinimized,
   position,
@@ -71,6 +93,9 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
   onOpenLoginModal,
   onNavigateToFullIrc,
   onTuneByCallSign,
+  onSelectSource,
+  onSimulateDisconnect,
+  onManualReconnect,
 }) => {
   const initialChan = session.channel && NEWS_OVERLAY_CHANNELS.includes(session.channel)
     ? session.channel
@@ -121,6 +146,8 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
   });
 
   const lastAnnouncedOutletIdRef = useRef<string>(tunedOutlet.id);
+  const lastAnnouncedSourceRef = useRef<NewsStreamSourceType>(activeSourceType);
+  const lastAnnouncedReconnectIdRef = useRef<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // Sync external nick edits from IrcStartupLoginModal
@@ -142,11 +169,58 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
         timestamp: now,
         sender: 'DrFun1_NewsBot',
         channel: currentChannel,
-        content: `Tuned desk → ${tunedOutlet.callSign} (${tunedOutlet.country} · ${tunedOutlet.bitrateMbps} Mbps): ${tunedOutlet.headline}`,
+        content: `Tuned desk → ${tunedOutlet.callSign} (${tunedOutlet.country} · ${activeSourceLabel}): ${tunedOutlet.headline}`,
         type: 'notice',
       },
     ]);
-  }, [tunedOutlet.id, tunedOutlet.callSign, tunedOutlet.country, tunedOutlet.bitrateMbps, tunedOutlet.headline, currentChannel]);
+  }, [tunedOutlet.id, tunedOutlet.callSign, tunedOutlet.country, tunedOutlet.headline, activeSourceLabel, currentChannel]);
+
+  // Announce stream source switches inside the video player IRC overlay
+  useEffect(() => {
+    if (lastAnnouncedSourceRef.current === activeSourceType) return;
+    lastAnnouncedSourceRef.current = activeSourceType;
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setMessages((prev) => [
+      ...prev.slice(-60),
+      {
+        id: `src-${Date.now()}`,
+        timestamp: now,
+        sender: 'DrFun1_NewsBot',
+        channel: currentChannel,
+        content: `Source switched → ${activeSourceLabel} (${activeSourceProtocol}) for ${tunedOutlet.callSign}`,
+        type: 'notice',
+      },
+    ]);
+  }, [activeSourceType, activeSourceLabel, activeSourceProtocol, tunedOutlet.callSign, currentChannel]);
+
+  // Announce auto-reconnection & secondary mirror failover transitions
+  useEffect(() => {
+    if (!lastReconnectEvent || lastAnnouncedReconnectIdRef.current === lastReconnectEvent.id) return;
+    lastAnnouncedReconnectIdRef.current = lastReconnectEvent.id;
+    const tag =
+      lastReconnectEvent.status === 'switched'
+        ? '[MIRROR FAILOVER]'
+        : lastReconnectEvent.status === 'restored'
+          ? '[PRIMARY RESTORED]'
+          : lastReconnectEvent.status === 'reconnecting'
+            ? '[AUTO-RECONNECT]'
+            : lastReconnectEvent.status === 'exhausted'
+              ? '[MIRROR EXHAUSTED]'
+              : '[STREAM DROP]';
+    setMessages((prev) => [
+      ...prev.slice(-60),
+      {
+        id: `reconn-${lastReconnectEvent.id}`,
+        timestamp: lastReconnectEvent.timestamp,
+        sender: 'FailoverGuard',
+        channel: currentChannel,
+        content: `${tag} ${lastReconnectEvent.outletCallSign} (${lastReconnectEvent.sourceLabel}): ${lastReconnectEvent.reason}${
+          lastReconnectEvent.toUrl ? ` → ${lastReconnectEvent.toUrl}` : ''
+        }`,
+        type: 'notice',
+      },
+    ]);
+  }, [lastReconnectEvent, currentChannel]);
 
   // Subtle jitter ping telemetry
   useEffect(() => {
@@ -220,6 +294,45 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
       return;
     }
 
+    if (cmd === '/source' && arg) {
+      const normalized = arg.toLowerCase();
+      const map: Record<string, NewsStreamSourceType> = {
+        sat: 'satellite',
+        satellite: 'satellite',
+        web: 'web',
+        hls: 'web',
+        local: 'local',
+        ota: 'local',
+        fiber: 'fiber',
+        '100g': 'fiber',
+      };
+      const target = map[normalized];
+      if (target && onSelectSource) {
+        onSelectSource(target);
+      } else {
+        pushSystemLine('Usage: /source satellite | web | local | fiber', 'system');
+      }
+      return;
+    }
+
+    if (cmd === '/drop') {
+      if (onSimulateDisconnect) {
+        onSimulateDisconnect();
+      } else {
+        pushSystemLine('Disconnect test handler is not connected.', 'system');
+      }
+      return;
+    }
+
+    if (cmd === '/reconnect') {
+      if (onManualReconnect) {
+        onManualReconnect();
+      } else {
+        pushSystemLine('Reconnect handler is not connected.', 'system');
+      }
+      return;
+    }
+
     if (cmd === '/clear') {
       setMessages([]);
       return;
@@ -227,7 +340,7 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
 
     if (cmd === '/stats') {
       pushSystemLine(
-        `irc.drfun1.com:6697 · ${simulatedPing} ms RTT · 1,034 leaf nodes · Watching ${tunedOutlet.callSign}`,
+        `irc.drfun1.com:6697 · ${simulatedPing} ms RTT · Source: ${activeSourceLabel} (${activeMirrorLabel} · ${connectionPhase}) · Watching ${tunedOutlet.callSign}`,
         'notice',
         'StatServ'
       );
@@ -246,7 +359,7 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
 
     if (cmd === '!breaking' || cmd === '!outlet' || cmd === '!feed') {
       pushSystemLine(
-        `[${tunedOutlet.callSign}] ${tunedOutlet.currentProgram} — ${tunedOutlet.headline} (HLS: ${tunedOutlet.hlsFeedUrl})`,
+        `[${tunedOutlet.callSign} · ${activeSourceLabel} · ${activeMirrorLabel}] ${tunedOutlet.currentProgram} — ${tunedOutlet.headline} (Feed: ${activeFeedUrl || tunedOutlet.hlsFeedUrl})`,
         'notice',
         'DrFun1_NewsBot'
       );
@@ -254,7 +367,7 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
     }
 
     pushSystemLine(
-      `Executed ${rawCmd}. Commands: /nick, /join, /tune <callsign>, /stats, /whois, /clear, !breaking`,
+      `Executed ${rawCmd}. Commands: /nick, /join, /tune <callsign>, /source <satellite|web|local|fiber>, /drop, /reconnect, /stats, /whois, /clear, !breaking`,
       'system'
     );
   };

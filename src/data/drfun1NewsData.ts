@@ -5,7 +5,13 @@
  * DrFun1 Media Inc. & DrFun1 ECOM Inc.
  */
 
-import { DrFun1NewsBulletin, GlobalNewsOutlet } from '../types/drfun1News';
+import {
+  BreakingNewsAlert,
+  DrFun1NewsBulletin,
+  GlobalNewsOutlet,
+  NewsStreamSourceType,
+} from '../types/drfun1News';
+import { getNextDynamicHeadline, INITIAL_RSS_ARTICLES } from './rssNewsData';
 
 export const GLOBAL_NEWS_OUTLETS: GlobalNewsOutlet[] = [
   {
@@ -1075,4 +1081,463 @@ export function buildWorldNewsEpgRows(
       ],
     };
   });
+}
+
+export const EPG_AUTO_SYNC_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+
+const LIVE_SYNC_BULLETIN_SUFFIXES = [
+  'Live Update',
+  'Verified Feed',
+  'Extended Desk',
+  'Global Dispatch',
+];
+
+/**
+ * Simulated asynchronous EPG API call that refreshes the 33+ channel World News schedule
+ * every 15 minutes (or on manual 'Sync EPG' click), returning fresh time slots, progress,
+ * and server revision metadata.
+ */
+export function fetchSyncedWorldNewsEpg(
+  outlets: GlobalNewsOutlet[],
+  nextRevision: number,
+  signal?: AbortSignal
+): Promise<import('../types/drfun1News').EpgSyncSnapshot> {
+  const simulatedLatencyMs = 460 + ((nextRevision * 97) % 280);
+
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException('EPG sync aborted', 'AbortError'));
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      const now = new Date();
+      const freshRows = buildWorldNewsEpgRows(outlets, outlets, now);
+      const rowsByOutletId: Record<string, import('../types/drfun1News').NewsOutletEpgRow> = {};
+      let updatedSlotCount = 0;
+
+      freshRows.forEach((row, idx) => {
+        // On subsequent sync revisions, subtly refresh active breaking-desk slot copy to reflect live schedule updates
+        const shouldRefreshTag = nextRevision > 1 && row.outlet.isBreaking;
+        const suffix =
+          LIVE_SYNC_BULLETIN_SUFFIXES[(nextRevision + idx) % LIVE_SYNC_BULLETIN_SUFFIXES.length];
+
+        const slots: [
+          import('../types/drfun1News').NewsOutletEpgSlot,
+          import('../types/drfun1News').NewsOutletEpgSlot,
+          import('../types/drfun1News').NewsOutletEpgSlot,
+        ] = [
+          {
+            ...row.slots[0],
+            title: shouldRefreshTag
+              ? `${row.slots[0].title} (${suffix})`
+              : row.slots[0].title,
+          },
+          row.slots[1],
+          row.slots[2],
+        ];
+
+        updatedSlotCount += slots.length;
+        rowsByOutletId[row.outlet.id] = {
+          ...row,
+          slots,
+        };
+      });
+
+      resolve({
+        revision: nextRevision,
+        syncedAt: now.toISOString(),
+        channelCount: freshRows.length,
+        updatedSlotCount,
+        rowsByOutletId,
+        endpointUrl: `https://api.drfun1media.com/v2/epg/world-news?channels=${freshRows.length}&rev=${nextRevision}`,
+        latencyMs: simulatedLatencyMs,
+      });
+    }, simulatedLatencyMs);
+
+    const onAbort = () => {
+      window.clearTimeout(timer);
+      reject(new DOMException('EPG sync aborted', 'AbortError'));
+    };
+    signal?.addEventListener('abort', onAbort, { once: true });
+  });
+}
+
+export interface BreakingNewsFeedResponse {
+  alerts: BreakingNewsAlert[];
+  fetchedAt: string;
+  latencyMs: number;
+  feedLabel: string;
+  endpointUrl: string;
+}
+
+const ACTIVE_DESK_FLASH_TEMPLATES = [
+  (o: GlobalNewsOutlet, srcLabel: string) =>
+    `${o.callSign} (${o.headquarters}) live bulletin via ${srcLabel}: ${o.headline}`,
+  (o: GlobalNewsOutlet, srcLabel: string) =>
+    `Now airing "${o.currentProgram}" with ${o.anchorOrDesk} · ${o.viewers.toLocaleString()} live viewers on ${srcLabel}.`,
+  (o: GlobalNewsOutlet, srcLabel: string) =>
+    `Bureau telemetry update for ${o.name} (${o.country}): ${o.region} live wire synchronized via ${o.switchIngestPop}.`,
+];
+
+/**
+ * Fetches live breaking headline alerts from the active news outlet feed,
+ * producer flash desk, regional breaking outlets, and live satcom wire.
+ */
+export function fetchActiveBreakingNewsAlerts(params: {
+  tunedOutlet: GlobalNewsOutlet;
+  allOutlets: GlobalNewsOutlet[];
+  bulletins: DrFun1NewsBulletin[];
+  activeSourceType: NewsStreamSourceType;
+  activeFeedUrl: string;
+  pollCycle: number;
+  signal?: AbortSignal;
+}): Promise<BreakingNewsFeedResponse> {
+  const {
+    tunedOutlet,
+    allOutlets,
+    bulletins,
+    activeSourceType,
+    activeFeedUrl,
+    pollCycle,
+    signal,
+  } = params;
+
+  const sourceProfile =
+    NEWS_STREAM_SOURCE_PROFILES.find((p) => p.id === activeSourceType) ||
+    NEWS_STREAM_SOURCE_PROFILES[0];
+  const simulatedLatencyMs = 240 + ((pollCycle * 67) % 210);
+
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException('Breaking news fetch aborted', 'AbortError'));
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      const now = new Date();
+      const timeLabel = now.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      const alerts: BreakingNewsAlert[] = [];
+
+      // 1. Live alert from the currently tuned active news feed
+      const template =
+        ACTIVE_DESK_FLASH_TEMPLATES[pollCycle % ACTIVE_DESK_FLASH_TEMPLATES.length];
+      alerts.push({
+        id: `active-${tunedOutlet.id}-${activeSourceType}-${pollCycle}`,
+        outletId: tunedOutlet.id,
+        outletCallSign: tunedOutlet.callSign,
+        region: tunedOutlet.region,
+        priority: tunedOutlet.isBreaking ? 'BREAKING' : 'LIVE FEED',
+        headline: template(tunedOutlet, sourceProfile.label),
+        timestamp: timeLabel,
+        sourceFeedLabel: `${tunedOutlet.callSign} · ${sourceProfile.label}`,
+        sourceUrl: activeFeedUrl,
+      });
+
+      // 2. Producer desk bulletins (prioritizing active outlet first)
+      const orderedBulletins = [...bulletins].sort((a, b) => {
+        const aMatch = a.outletCallSign === tunedOutlet.callSign ? 1 : 0;
+        const bMatch = b.outletCallSign === tunedOutlet.callSign ? 1 : 0;
+        return bMatch - aMatch;
+      });
+
+      orderedBulletins.slice(0, 3).forEach((b) => {
+        const matchedOutlet = allOutlets.find((o) => o.callSign === b.outletCallSign);
+        alerts.push({
+          id: `bul-alert-${b.id}`,
+          outletId: matchedOutlet?.id,
+          outletCallSign: b.outletCallSign,
+          region: b.region,
+          priority: b.priority === 'WORLD DESK' ? 'BREAKING' : b.priority,
+          headline: b.headline,
+          timestamp: b.timestamp,
+          sourceFeedLabel: `Producer Desk · ${b.author}`,
+          sourceUrl: matchedOutlet?.website,
+        });
+      });
+
+      // 3. Freshly polled live satcom/broadcast wire headline for this cycle
+      const livePolledWire = getNextDynamicHeadline(pollCycle);
+      alerts.push({
+        id: `wire-live-${livePolledWire.id}`,
+        outletCallSign: livePolledWire.sourceName.toUpperCase(),
+        region: 'Global Wire',
+        priority: livePolledWire.isBreaking ? 'FLASH' : 'URGENT',
+        headline: livePolledWire.title,
+        timestamp: timeLabel,
+        sourceFeedLabel: `Live Wire · ${livePolledWire.category}`,
+        sourceUrl: livePolledWire.link,
+      });
+
+      // 4. Other breaking global news outlets (same region first)
+      const otherBreaking = allOutlets
+        .filter((o) => o.id !== tunedOutlet.id && o.isBreaking && o.status === 'ON AIR')
+        .sort((a, b) => {
+          const aSame = a.region === tunedOutlet.region ? 1 : 0;
+          const bSame = b.region === tunedOutlet.region ? 1 : 0;
+          return bSame - aSame || b.viewers - a.viewers;
+        })
+        .slice(0, 4);
+
+      otherBreaking.forEach((o) => {
+        alerts.push({
+          id: `outlet-brk-${o.id}-${pollCycle}`,
+          outletId: o.id,
+          outletCallSign: o.callSign,
+          region: o.region,
+          priority: 'BREAKING',
+          headline: o.headline,
+          timestamp: timeLabel,
+          sourceFeedLabel: `${o.country} · ${o.currentProgram}`,
+          sourceUrl: o.website,
+        });
+      });
+
+      // 5. Additional breaking RSS wire items
+      INITIAL_RSS_ARTICLES.filter((a) => a.isBreaking)
+        .slice(0, 2)
+        .forEach((art) => {
+          alerts.push({
+            id: `rss-brk-${art.id}`,
+            outletCallSign: art.sourceName.toUpperCase(),
+            region: 'Global Wire',
+            priority: 'URGENT',
+            headline: art.title,
+            timestamp: art.pubDate,
+            sourceFeedLabel: art.category,
+            sourceUrl: art.link,
+          });
+        });
+
+      resolve({
+        alerts,
+        fetchedAt: now.toISOString(),
+        latencyMs: simulatedLatencyMs,
+        feedLabel: `${tunedOutlet.callSign} (${sourceProfile.label})`,
+        endpointUrl: activeFeedUrl,
+      });
+    }, simulatedLatencyMs);
+
+    const onAbort = () => {
+      window.clearTimeout(timer);
+      reject(new DOMException('Breaking news fetch aborted', 'AbortError'));
+    };
+    signal?.addEventListener('abort', onAbort, { once: true });
+  });
+}
+
+export const NEWS_STREAM_SOURCE_PROFILES: import('../types/drfun1News').NewsStreamSourceProfile[] = [
+  {
+    id: 'satellite',
+    label: 'Satellite',
+    shortLabel: 'SAT',
+    protocol: 'DVB-S2X Ku/Ka-Band',
+    baseLatencyMs: 248,
+    bitrateMultiplier: 1.22,
+    codecLabel: 'HEVC 4K60 10-bit',
+    signalLabel: '14.8 dB C/N · Lock',
+    description: 'Direct orbital transponder downlink via Switch & Goldstone C/Ku/Ka-band teleports.',
+    accentHex: '#38bdf8',
+    badgeClass: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+  },
+  {
+    id: 'web',
+    label: 'Web',
+    shortLabel: 'WEB',
+    protocol: 'LL-HLS / Red5 WHEP',
+    baseLatencyMs: 38,
+    bitrateMultiplier: 0.88,
+    codecLabel: 'AV1 / VP9 ABR',
+    signalLabel: 'CDN Edge · 99.99%',
+    description: 'Adaptive global internet stream over Red5 Pro WebRTC & multi-CDN HLS edge.',
+    accentHex: '#a855f7',
+    badgeClass: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+  },
+  {
+    id: 'local',
+    label: 'Local',
+    shortLabel: 'LOCAL',
+    protocol: 'ATSC 3.0 / Studio Feed',
+    baseLatencyMs: 14,
+    bitrateMultiplier: 1.0,
+    codecLabel: 'NextGen TV HDR',
+    signalLabel: 'OTA / Bureau Direct',
+    description: 'Direct local affiliate broadcast tower & regional newsroom studio ingest feed.',
+    accentHex: '#10b981',
+    badgeClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+  },
+  {
+    id: 'fiber',
+    label: 'Fiber 100G',
+    shortLabel: 'FIBER',
+    protocol: 'SMPTE ST 2110 · 100G',
+    baseLatencyMs: 2.1,
+    bitrateMultiplier: 1.35,
+    codecLabel: 'Uncompressed Mezzanine',
+    signalLabel: 'DWDM 0% Loss',
+    description: 'Dedicated Switch SUPERNAP 100G & 10 RisingNet optical ring contribution link.',
+    accentHex: '#f59e0b',
+    badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+  },
+];
+
+export interface ResolvedOutletStreamSource {
+  profile: import('../types/drfun1News').NewsStreamSourceProfile;
+  feedUrl: string;
+  routeLabel: string;
+  effectiveBitrateMbps: number;
+  latencyMs: number;
+  endpoints: import('../types/drfun1News').StreamMirrorEndpoint[];
+  activeEndpointIndex: number;
+  activeEndpoint: import('../types/drfun1News').StreamMirrorEndpoint;
+  hasSecondaryMirror: boolean;
+  nextMirrorEndpoint: import('../types/drfun1News').StreamMirrorEndpoint | null;
+}
+
+export function resolveOutletStreamSource(
+  outlet: GlobalNewsOutlet,
+  sourceType: import('../types/drfun1News').NewsStreamSourceType,
+  liveTick: number = 0,
+  activeEndpointIndex: number = 0
+): ResolvedOutletStreamSource {
+  const profile =
+    NEWS_STREAM_SOURCE_PROFILES.find((p) => p.id === sourceType) ||
+    NEWS_STREAM_SOURCE_PROFILES[0];
+
+  const slug = outlet.id.replace(/^news-/, '');
+  const jitter = ((liveTick % 5) - 2) * (sourceType === 'fiber' ? 0.1 : sourceType === 'local' ? 0.5 : 1.5);
+  const effectiveBitrateMbps = +(outlet.bitrateMbps * profile.bitrateMultiplier).toFixed(1);
+
+  const customSecondary = outlet.secondaryMirrorUrls?.[0]?.trim();
+  const customTertiary = outlet.secondaryMirrorUrls?.[1]?.trim();
+
+  let endpoints: import('../types/drfun1News').StreamMirrorEndpoint[];
+
+  if (sourceType === 'satellite') {
+    const band =
+      outlet.region === 'Global Wire' || outlet.region === 'North America'
+        ? 'Ka-Band 20.2 GHz'
+        : 'Ku-Band 11.9 GHz';
+    endpoints = [
+      {
+        tier: 'primary',
+        label: 'Primary Transponder',
+        url: `sat://dvb-s2x.drfun1media.com/${slug}/tp-42`,
+        routeLabel: `Orbital Downlink · ${band} (${outlet.region})`,
+        latencyOffsetMs: 0,
+      },
+      {
+        tier: 'secondary',
+        label: 'Secondary Mirror (Teleport B)',
+        url: customSecondary || `sat://dvb-s2x-mirror2.drfun1media.com/${slug}/tp-84-bkp`,
+        routeLabel: `Backup Teleport · Goldstone / Redundant ${band}`,
+        latencyOffsetMs: 14,
+      },
+      {
+        tier: 'tertiary',
+        label: 'Tertiary Mirror (HLS Edge)',
+        url: customTertiary || outlet.hlsFeedUrl,
+        routeLabel: `Satcom-to-Edge Fallback · Red5 LL-HLS (${outlet.country})`,
+        latencyOffsetMs: -185,
+      },
+    ];
+  } else if (sourceType === 'web') {
+    endpoints = [
+      {
+        tier: 'primary',
+        label: 'Primary Web Origin',
+        url: outlet.hlsFeedUrl,
+        routeLabel: `Red5 WHEP & Global LL-HLS Edge (${outlet.country})`,
+        latencyOffsetMs: 0,
+      },
+      {
+        tier: 'secondary',
+        label: 'Secondary Mirror (CDN EU/US)',
+        url: customSecondary || `https://mirror-cdn2.drfun1media.com/hls/${slug}/backup.m3u8`,
+        routeLabel: `Secondary CDN Mirror · DataPacket Anycast (${outlet.region})`,
+        latencyOffsetMs: 9,
+      },
+      {
+        tier: 'tertiary',
+        label: 'Tertiary Mirror (Relay)',
+        url: customTertiary || outlet.streamUrl,
+        routeLabel: `Direct Broadcast Relay · DrFun1 Origin Mirror`,
+        latencyOffsetMs: 18,
+      },
+    ];
+  } else if (sourceType === 'local') {
+    endpoints = [
+      {
+        tier: 'primary',
+        label: 'Primary Studio Feed',
+        url: `atsc3://local-desk.drfun1.local/${slug}/rf-ch34`,
+        routeLabel: `Local Bureau Direct · ${outlet.headquarters}`,
+        latencyOffsetMs: 0,
+      },
+      {
+        tier: 'secondary',
+        label: 'Secondary Mirror (Backup Tower)',
+        url: customSecondary || `atsc3://mirror-tower2.drfun1.local/${slug}/rf-ch51`,
+        routeLabel: `Backup Regional Tower · ${outlet.country} Affiliate`,
+        latencyOffsetMs: 6,
+      },
+      {
+        tier: 'tertiary',
+        label: 'Tertiary Mirror (Web Studio)',
+        url: customTertiary || outlet.hlsFeedUrl,
+        routeLabel: `Studio IP Backup · LL-HLS Ingest (${outlet.country})`,
+        latencyOffsetMs: 22,
+      },
+    ];
+  } else {
+    endpoints = [
+      {
+        tier: 'primary',
+        label: 'Primary 100G Ring',
+        url: `st2110://switch-supernap.drfun1.net/100g/${slug}`,
+        routeLabel: outlet.switchIngestPop,
+        latencyOffsetMs: 0,
+      },
+      {
+        tier: 'secondary',
+        label: 'Secondary Mirror (RisingNet Ring B)',
+        url: customSecondary || `st2110://rn-backup-ring.drfun1.net/100g/${slug}`,
+        routeLabel: `RisingNet Redundant Optical Ring · Diversity Path B`,
+        latencyOffsetMs: 0.8,
+      },
+      {
+        tier: 'tertiary',
+        label: 'Tertiary Mirror (Edge HLS)',
+        url: customTertiary || outlet.hlsFeedUrl,
+        routeLabel: `Switch Optical-to-CDN Failover Mirror`,
+        latencyOffsetMs: 32,
+      },
+    ];
+  }
+
+  const clampedIndex = Math.max(0, Math.min(endpoints.length - 1, activeEndpointIndex));
+  const activeEndpoint = endpoints[clampedIndex];
+  const latencyMs = Math.max(
+    1.2,
+    +(profile.baseLatencyMs + activeEndpoint.latencyOffsetMs + jitter).toFixed(1)
+  );
+  const nextMirrorEndpoint =
+    clampedIndex + 1 < endpoints.length ? endpoints[clampedIndex + 1] : null;
+
+  return {
+    profile,
+    feedUrl: activeEndpoint.url,
+    routeLabel: activeEndpoint.routeLabel,
+    effectiveBitrateMbps,
+    latencyMs,
+    endpoints,
+    activeEndpointIndex: clampedIndex,
+    activeEndpoint,
+    hasSecondaryMirror: endpoints.length > 1,
+    nextMirrorEndpoint,
+  };
 }

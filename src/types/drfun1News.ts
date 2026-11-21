@@ -33,6 +33,7 @@ export interface GlobalNewsOutlet {
   website: string;
   streamUrl: string;
   hlsFeedUrl: string;
+  secondaryMirrorUrls?: string[];
   currentProgram: string;
   anchorOrDesk: string;
   headline: string;
@@ -71,4 +72,99 @@ export interface NewsOutletEpgRow {
   channelNumber: number;
   progressPct: number;
   slots: [NewsOutletEpgSlot, NewsOutletEpgSlot, NewsOutletEpgSlot];
+}
+
+export type NewsStreamSourceType = 'satellite' | 'web' | 'local' | 'fiber';
+
+export interface NewsStreamSourceProfile {
+  id: NewsStreamSourceType;
+  label: string;
+  shortLabel: string;
+  protocol: string;
+  baseLatencyMs: number;
+  bitrateMultiplier: number;
+  codecLabel: string;
+  signalLabel: string;
+  description: string;
+  accentHex: string;
+  badgeClass: string;
+}
+
+export type StreamConnectionPhase =
+  | 'connected'
+  | 'disconnected'
+  | 'reconnecting'
+  | 'mirror_active'
+  | 'failed';
+
+export interface StreamMirrorEndpoint {
+  tier: 'primary' | 'secondary' | 'tertiary';
+  label: string;
+  url: string;
+  routeLabel: string;
+  latencyOffsetMs: number;
+}
+
+export interface StreamReconnectEvent {
+  id: string;
+  timestamp: string;
+  outletCallSign: string;
+  sourceLabel: string;
+  fromUrl: string;
+  toUrl?: string;
+  status: 'disconnected' | 'reconnecting' | 'switched' | 'restored' | 'exhausted';
+  reason: string;
+}
+
+export interface WatchHistoryEntry {
+  key: string;
+  outletId: string;
+  callSign: string;
+  outletName: string;
+  country: string;
+  region: NewsOutletRegion;
+  accentColor: string;
+  programTitle: string;
+  sourceType: NewsStreamSourceType;
+  sourceLabel: string;
+  sourceProtocol: string;
+  viewedAt: number;
+}
+
+export interface EpgSyncSnapshot {
+  revision: number;
+  syncedAt: string;
+  channelCount: number;
+  updatedSlotCount: number;
+  rowsByOutletId: Record<string, NewsOutletEpgRow>;
+  endpointUrl: string;
+  latencyMs: number;
+}
+
+export interface BreakingNewsAlert {
+  id: string;
+  outletId?: string;
+  outletCallSign: string;
+  region: string;
+  priority: 'FLASH' | 'URGENT' | 'BREAKING' | 'LIVE FEED';
+  headline: string;
+  timestamp: string;
+  sourceFeedLabel: string;
+  sourceUrl?: string;
+}
+
+export interface RecordedStreamClip {
+  id: string;
+  fileName: string;
+  outletCallSign: string;
+  outletName: string;
+  programTitle: string;
+  sourceLabel: string;
+  sourceProtocol: string;
+  feedUrl: string;
+  durationSec: number;
+  sizeBytes: number;
+  mimeType: string;
+  objectUrl: string;
+  recordedAt: string;
 }

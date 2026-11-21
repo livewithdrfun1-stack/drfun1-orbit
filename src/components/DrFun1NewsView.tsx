@@ -13,9 +13,10 @@
  * - Switch SUPERNAP 100G & 10 RisingNet optical ingest paths under www.wittlawfirm.com (FCC FRN 0034981290) oversight
  */
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
+  AlertTriangle,
   Bookmark,
   CalendarClock,
   Captions,
@@ -31,6 +32,8 @@ import {
   Play,
   Plus,
   Radio,
+  RefreshCw,
+  RotateCcw,
   Rss,
   Search,
   Send,
@@ -40,22 +43,36 @@ import {
   Tv,
   Volume2,
   VolumeX,
+  WifiOff,
 } from 'lucide-react';
 import {
+  EPG_AUTO_SYNC_INTERVAL_MS,
+  fetchSyncedWorldNewsEpg,
   GLOBAL_NEWS_OUTLETS,
   INITIAL_DRFUN1_NEWS_BULLETINS,
+  NEWS_STREAM_SOURCE_PROFILES,
+  resolveOutletStreamSource,
 } from '../data/drfun1NewsData';
 import {
   DrFun1NewsBulletin,
+  EpgSyncSnapshot,
   GlobalNewsOutlet,
   NewsOutletCategory,
   NewsOutletRegion,
+  NewsStreamSourceType,
+  StreamConnectionPhase,
+  StreamReconnectEvent,
+  WatchHistoryEntry,
 } from '../types/drfun1News';
 import { IrcLoginSession } from '../types/irc';
 import { AnopeRankLevel } from '../types/ircdAdmin';
+import { DrFun1BreakingNewsTicker } from './DrFun1BreakingNewsTicker';
 import { DrFun1NewsWorldMap } from './DrFun1NewsWorldMap';
 import { DrFun1NewsEpgSection } from './DrFun1NewsEpgSection';
+import { DrFun1NewsSourceSwitcher } from './DrFun1NewsSourceSwitcher';
+import { DrFun1NewsWatchHistorySidebar } from './DrFun1NewsWatchHistorySidebar';
 import { NewsVideoIrcOverlay } from './NewsVideoIrcOverlay';
+import { NewsVideoStreamRecorder } from './NewsVideoStreamRecorder';
 
 interface DrFun1NewsViewProps {
   onOpenLicense?: () => void;
@@ -74,6 +91,10 @@ type OutletSortMode = 'viewers' | 'alpha' | 'region' | 'breaking';
 const STORAGE_KEY_CUSTOM_OUTLETS = 'drfun1_news_custom_outlets_v1';
 const STORAGE_KEY_BOOKMARKED_OUTLETS = 'drfun1_news_bookmarked_outlets_v1';
 const STORAGE_KEY_BULLETINS = 'drfun1_news_bulletins_v1';
+const STORAGE_KEY_STREAM_SOURCE = 'drfun1_news_stream_source_v1';
+const STORAGE_KEY_WATCH_HISTORY = 'drfun1_news_watch_history_v1';
+const STORAGE_KEY_EPG_AUTOSYNC = 'drfun1_news_epg_autosync_v1';
+const MAX_WATCH_HISTORY = 5;
 
 const REGIONS: ('All' | NewsOutletRegion)[] = [
   'All',
@@ -145,6 +166,64 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [showCaptions, setShowCaptions] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<NewsViewMode>('theater');
+  const [isStreamRecording, setIsStreamRecording] = useState<boolean>(false);
+  const [recordingElapsedSec, setRecordingElapsedSec] = useState<number>(0);
+
+  const handleRecordingStateChange = useCallback((recording: boolean, elapsedSec: number) => {
+    setIsStreamRecording(recording);
+    setRecordingElapsedSec(elapsedSec);
+  }, []);
+
+  // Dynamic Stream Source Switcher state (Satellite, Web, Local, Fiber 100G)
+  const [activeStreamSource, setActiveStreamSource] = useState<NewsStreamSourceType>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_STREAM_SOURCE);
+      if (saved === 'satellite' || saved === 'web' || saved === 'local' || saved === 'fiber') {
+        return saved;
+      }
+    } catch (_) {}
+    return 'satellite';
+  });
+  const [autoFailover, setAutoFailover] = useState<boolean>(true);
+  const [activeMirrorIndex, setActiveMirrorIndex] = useState<number>(0);
+  const [connectionPhase, setConnectionPhase] = useState<StreamConnectionPhase>('connected');
+  const [reconnectAttempt, setReconnectAttempt] = useState<number>(0);
+  const [disconnectReason, setDisconnectReason] = useState<string | null>(null);
+  const [reconnectLog, setReconnectLog] = useState<StreamReconnectEvent[]>([]);
+  const reconnectTimerRef = useRef<number | null>(null);
+  const probeTimerRef = useRef<number | null>(null);
+
+  // Watch History (tracks last 5 TV / news stream sources viewed)
+  const [watchHistory, setWatchHistory] = useState<WatchHistoryEntry[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_WATCH_HISTORY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed.slice(0, MAX_WATCH_HISTORY);
+      }
+    } catch (_) {}
+    return [];
+  });
+  const lastRecordedHistoryKeyRef = useRef<string | null>(null);
+
+  // Sync EPG (15-minute automatic schedule refresh via simulated API call)
+  const [epgSyncSnapshot, setEpgSyncSnapshot] = useState<EpgSyncSnapshot | null>(null);
+  const [isSyncingEpg, setIsSyncingEpg] = useState<boolean>(false);
+  const [epgAutoSyncEnabled, setEpgAutoSyncEnabled] = useState<boolean>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_EPG_AUTOSYNC);
+      if (raw === 'false') return false;
+    } catch (_) {}
+    return true;
+  });
+  const [epgNextSyncAt, setEpgNextSyncAt] = useState<number>(
+    () => Date.now() + EPG_AUTO_SYNC_INTERVAL_MS
+  );
+  const [epgCountdownSec, setEpgCountdownSec] = useState<number>(
+    Math.floor(EPG_AUTO_SYNC_INTERVAL_MS / 1000)
+  );
+  const epgAbortRef = useRef<AbortController | null>(null);
+  const epgRevisionRef = useRef<number>(0);
 
   // Integrated IRC Client Overlay on the Video Player
   const [showIrcOverlay, setShowIrcOverlay] = useState<boolean>(true);
@@ -197,6 +276,7 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
   const [newRegion, setNewRegion] = useState<NewsOutletRegion>('Europe');
   const [newCategory, setNewCategory] = useState<NewsOutletCategory>('24/7 Cable News');
   const [newWebsite, setNewWebsite] = useState<string>('');
+  const [newSecondaryMirrorUrl, setNewSecondaryMirrorUrl] = useState<string>('');
   const [newProgram, setNewProgram] = useState<string>('Live World Desk');
 
   // Producer Bulletin Composer
@@ -209,10 +289,22 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
   const toastTimerRef = useRef<number | null>(null);
   const copyTimerRef = useRef<number | null>(null);
 
+  const clearReconnectTimers = () => {
+    if (reconnectTimerRef.current !== null) {
+      window.clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+    if (probeTimerRef.current !== null) {
+      window.clearTimeout(probeTimerRef.current);
+      probeTimerRef.current = null;
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
       if (copyTimerRef.current !== null) window.clearTimeout(copyTimerRef.current);
+      clearReconnectTimers();
     };
   }, []);
 
@@ -233,6 +325,24 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
       localStorage.setItem(STORAGE_KEY_BULLETINS, JSON.stringify(bulletins));
     } catch (_) {}
   }, [bulletins]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_STREAM_SOURCE, activeStreamSource);
+    } catch (_) {}
+  }, [activeStreamSource]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_WATCH_HISTORY, JSON.stringify(watchHistory));
+    } catch (_) {}
+  }, [watchHistory]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_EPG_AUTOSYNC, String(epgAutoSyncEnabled));
+    } catch (_) {}
+  }, [epgAutoSyncEnabled]);
 
   useEffect(() => {
     if (!isLiveStreaming) return;
@@ -281,6 +391,404 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
     [allOutlets, tunedOutletId]
   );
 
+  // Keep latest outlets ref for 15-minute EPG auto-sync without re-arming timers on viewer ticks
+  const allOutletsRef = useRef<GlobalNewsOutlet[]>(allOutlets);
+  allOutletsRef.current = allOutlets;
+
+  const runEpgSync = async (trigger: 'initial' | 'manual' | 'auto') => {
+    if (epgAbortRef.current) {
+      epgAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    epgAbortRef.current = controller;
+    setIsSyncingEpg(true);
+
+    const nextRev = epgRevisionRef.current + 1;
+
+    try {
+      const snapshot = await fetchSyncedWorldNewsEpg(
+        allOutletsRef.current,
+        nextRev,
+        controller.signal
+      );
+      if (controller.signal.aborted) return;
+      epgRevisionRef.current = snapshot.revision;
+      setEpgSyncSnapshot(snapshot);
+      const nextAt = Date.now() + EPG_AUTO_SYNC_INTERVAL_MS;
+      setEpgNextSyncAt(nextAt);
+      setEpgCountdownSec(Math.floor(EPG_AUTO_SYNC_INTERVAL_MS / 1000));
+
+      if (trigger === 'manual') {
+        showNotice(
+          `Synced ${snapshot.channelCount}-channel EPG (Rev #${snapshot.revision}, ${snapshot.latencyMs}ms) — next auto-sync in 15m`
+        );
+      } else if (trigger === 'auto') {
+        showNotice(
+          `Auto-synced ${snapshot.channelCount}-channel EPG schedule (Rev #${snapshot.revision})`
+        );
+      }
+    } catch (err) {
+      if ((err as Error)?.name !== 'AbortError') {
+        showNotice('EPG sync failed — retrying automatically at next interval');
+      }
+    } finally {
+      if (epgAbortRef.current === controller) {
+        epgAbortRef.current = null;
+        setIsSyncingEpg(false);
+      }
+    }
+  };
+
+  const runEpgSyncRef = useRef(runEpgSync);
+  runEpgSyncRef.current = runEpgSync;
+
+  // Initial EPG API sync on mount + cleanup abort on unmount
+  useEffect(() => {
+    runEpgSyncRef.current('initial');
+    return () => {
+      epgAbortRef.current?.abort();
+    };
+  }, []);
+
+  // Reset 15-minute deadline when Auto-Sync is re-enabled
+  useEffect(() => {
+    if (!epgAutoSyncEnabled) return;
+    const nextAt = Date.now() + EPG_AUTO_SYNC_INTERVAL_MS;
+    setEpgNextSyncAt(nextAt);
+    setEpgCountdownSec(Math.floor(EPG_AUTO_SYNC_INTERVAL_MS / 1000));
+  }, [epgAutoSyncEnabled]);
+
+  // Automatic 15-minute EPG refresh timer + 1s countdown display in exact lockstep
+  useEffect(() => {
+    if (!epgAutoSyncEnabled) return;
+
+    const delayMs = Math.max(1000, epgNextSyncAt - Date.now());
+    const autoSyncTimeoutId = window.setTimeout(() => {
+      runEpgSyncRef.current('auto');
+    }, delayMs);
+
+    const tickId = window.setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((epgNextSyncAt - Date.now()) / 1000));
+      setEpgCountdownSec(remaining);
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(autoSyncTimeoutId);
+      window.clearInterval(tickId);
+    };
+  }, [epgAutoSyncEnabled, epgNextSyncAt]);
+
+  const resolvedActiveSource = useMemo(
+    () => resolveOutletStreamSource(tunedOutlet, activeStreamSource, liveTick, activeMirrorIndex),
+    [tunedOutlet, activeStreamSource, liveTick, activeMirrorIndex]
+  );
+
+  const appendReconnectEvent = (
+    event: Omit<StreamReconnectEvent, 'id' | 'timestamp'>
+  ) => {
+    const timestamp = new Date().toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+    const entry: StreamReconnectEvent = {
+      id: `reconn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp,
+      ...event,
+    };
+    setReconnectLog((prev) => [entry, ...prev].slice(0, 15));
+  };
+
+  const resetToPrimaryConnection = () => {
+    clearReconnectTimers();
+    setActiveMirrorIndex(0);
+    setConnectionPhase('connected');
+    setReconnectAttempt(0);
+    setDisconnectReason(null);
+  };
+
+  const attemptMirrorFailover = (
+    fromIndex: number,
+    reason: string,
+    outletSnapshot: GlobalNewsOutlet,
+    sourceSnapshot: NewsStreamSourceType
+  ) => {
+    clearReconnectTimers();
+    const resolvedCurrent = resolveOutletStreamSource(
+      outletSnapshot,
+      sourceSnapshot,
+      liveTick,
+      fromIndex
+    );
+    const nextIndex = fromIndex + 1;
+    const nextMirror =
+      nextIndex < resolvedCurrent.endpoints.length
+        ? resolvedCurrent.endpoints[nextIndex]
+        : null;
+
+    setConnectionPhase('reconnecting');
+    setReconnectAttempt((prev) => prev + 1);
+
+    appendReconnectEvent({
+      outletCallSign: outletSnapshot.callSign,
+      sourceLabel: resolvedCurrent.profile.label,
+      fromUrl: resolvedCurrent.feedUrl,
+      toUrl: nextMirror?.url,
+      status: 'reconnecting',
+      reason: nextMirror
+        ? `Probing ${nextMirror.label}`
+        : 'No secondary mirror remaining — verifying primary',
+    });
+
+    probeTimerRef.current = window.setTimeout(() => {
+      probeTimerRef.current = null;
+      if (nextMirror) {
+        setActiveMirrorIndex(nextIndex);
+        setConnectionPhase('mirror_active');
+        setDisconnectReason(null);
+        appendReconnectEvent({
+          outletCallSign: outletSnapshot.callSign,
+          sourceLabel: resolvedCurrent.profile.label,
+          fromUrl: resolvedCurrent.feedUrl,
+          toUrl: nextMirror.url,
+          status: 'switched',
+          reason: `Switched to ${nextMirror.label} after ${reason.toLowerCase()}`,
+        });
+        showNotice(
+          `Auto-reconnected ${outletSnapshot.callSign} via ${nextMirror.label} (${nextMirror.url})`
+        );
+      } else {
+        setConnectionPhase('failed');
+        setDisconnectReason(
+          `All ${resolvedCurrent.endpoints.length} ${resolvedCurrent.profile.label} endpoints unavailable`
+        );
+        appendReconnectEvent({
+          outletCallSign: outletSnapshot.callSign,
+          sourceLabel: resolvedCurrent.profile.label,
+          fromUrl: resolvedCurrent.feedUrl,
+          status: 'exhausted',
+          reason: 'All mirrors exhausted — retry primary or switch stream source',
+        });
+        showNotice(
+          `${outletSnapshot.callSign}: All ${resolvedCurrent.profile.label} mirrors exhausted. Retry primary or switch source.`
+        );
+      }
+    }, 1350);
+  };
+
+  const handleStreamDisconnectDetected = (reason: string) => {
+    if (connectionPhase === 'reconnecting') return;
+    clearReconnectTimers();
+
+    const outletSnapshot = tunedOutlet;
+    const sourceSnapshot = activeStreamSource;
+    const currentIdx = activeMirrorIndex;
+    const resolvedCurrent = resolveOutletStreamSource(
+      outletSnapshot,
+      sourceSnapshot,
+      liveTick,
+      currentIdx
+    );
+
+    setConnectionPhase('disconnected');
+    setDisconnectReason(reason);
+    appendReconnectEvent({
+      outletCallSign: outletSnapshot.callSign,
+      sourceLabel: resolvedCurrent.profile.label,
+      fromUrl: resolvedCurrent.feedUrl,
+      status: 'disconnected',
+      reason,
+    });
+
+    if (autoFailover) {
+      showNotice(
+        `Stream disconnect detected on ${outletSnapshot.callSign} (${resolvedCurrent.activeEndpoint.label}) — switching to secondary mirror…`
+      );
+      reconnectTimerRef.current = window.setTimeout(() => {
+        reconnectTimerRef.current = null;
+        attemptMirrorFailover(currentIdx, reason, outletSnapshot, sourceSnapshot);
+      }, 600);
+    } else {
+      showNotice(
+        `Stream disconnected for ${outletSnapshot.callSign}. Auto-Reconnect is OFF — click Reconnect to switch mirrors.`
+      );
+    }
+  };
+
+  const handleManualReconnect = () => {
+    const outletSnapshot = tunedOutlet;
+    const sourceSnapshot = activeStreamSource;
+    const resolvedCurrent = resolveOutletStreamSource(
+      outletSnapshot,
+      sourceSnapshot,
+      liveTick,
+      activeMirrorIndex
+    );
+
+    if (connectionPhase === 'failed' || !resolvedCurrent.nextMirrorEndpoint) {
+      // Probe primary again when all mirrors were previously exhausted
+      clearReconnectTimers();
+      setConnectionPhase('reconnecting');
+      setReconnectAttempt((prev) => prev + 1);
+      probeTimerRef.current = window.setTimeout(() => {
+        probeTimerRef.current = null;
+        const primary = resolvedCurrent.endpoints[0];
+        setActiveMirrorIndex(0);
+        setConnectionPhase('connected');
+        setDisconnectReason(null);
+        appendReconnectEvent({
+          outletCallSign: outletSnapshot.callSign,
+          sourceLabel: resolvedCurrent.profile.label,
+          fromUrl: resolvedCurrent.feedUrl,
+          toUrl: primary.url,
+          status: 'restored',
+          reason: 'Reconnected to primary stream endpoint',
+        });
+        showNotice(`Restored primary ${resolvedCurrent.profile.label} feed for ${outletSnapshot.callSign}`);
+      }, 1100);
+      return;
+    }
+
+    attemptMirrorFailover(
+      activeMirrorIndex,
+      disconnectReason || 'manual failover request',
+      outletSnapshot,
+      sourceSnapshot
+    );
+  };
+
+  const handleRestorePrimary = () => {
+    const resolvedPrimary = resolveOutletStreamSource(tunedOutlet, activeStreamSource, liveTick, 0);
+    const prevUrl = resolvedActiveSource.feedUrl;
+    resetToPrimaryConnection();
+    appendReconnectEvent({
+      outletCallSign: tunedOutlet.callSign,
+      sourceLabel: resolvedPrimary.profile.label,
+      fromUrl: prevUrl,
+      toUrl: resolvedPrimary.feedUrl,
+      status: 'restored',
+      reason: 'Restored primary stream endpoint',
+    });
+    showNotice(
+      `Restored primary ${resolvedPrimary.profile.label} stream for ${tunedOutlet.callSign}`
+    );
+  };
+
+  const handleSelectMirrorIndex = (nextIndex: number) => {
+    clearReconnectTimers();
+    const clamped = Math.max(0, Math.min(resolvedActiveSource.endpoints.length - 1, nextIndex));
+    const target = resolvedActiveSource.endpoints[clamped];
+    const prevUrl = resolvedActiveSource.feedUrl;
+    setActiveMirrorIndex(clamped);
+    setConnectionPhase(clamped === 0 ? 'connected' : 'mirror_active');
+    setDisconnectReason(null);
+    appendReconnectEvent({
+      outletCallSign: tunedOutlet.callSign,
+      sourceLabel: resolvedActiveSource.profile.label,
+      fromUrl: prevUrl,
+      toUrl: target.url,
+      status: clamped === 0 ? 'restored' : 'switched',
+      reason: `Manually selected ${target.label}`,
+    });
+    showNotice(`Switched ${tunedOutlet.callSign} to ${target.label} (${target.url})`);
+  };
+
+  // Detect real browser offline/online disconnects and trigger auto-reconnection
+  const disconnectHandlerRef = useRef(handleStreamDisconnectDetected);
+  const manualReconnectRef = useRef(handleManualReconnect);
+  disconnectHandlerRef.current = handleStreamDisconnectDetected;
+  manualReconnectRef.current = handleManualReconnect;
+
+  useEffect(() => {
+    const onOffline = () => {
+      disconnectHandlerRef.current('Browser network offline — primary stream disconnected');
+    };
+    const onOnline = () => {
+      if (autoFailover && (connectionPhase === 'disconnected' || connectionPhase === 'failed')) {
+        manualReconnectRef.current();
+      }
+    };
+    window.addEventListener('offline', onOffline);
+    window.addEventListener('online', onOnline);
+    return () => {
+      window.removeEventListener('offline', onOffline);
+      window.removeEventListener('online', onOnline);
+    };
+  }, [autoFailover, connectionPhase]);
+
+  // Reset mirror/reconnect state cleanly when tuning a different outlet
+  useEffect(() => {
+    resetToPrimaryConnection();
+  }, [tunedOutletId]);
+
+  // Automatically track the last 5 TV/news stream sources viewed in Watch History
+  useEffect(() => {
+    if (!tunedOutlet) return;
+    const historyKey = `${tunedOutlet.id}::${activeStreamSource}`;
+    if (lastRecordedHistoryKeyRef.current === historyKey) return;
+    lastRecordedHistoryKeyRef.current = historyKey;
+
+    const sourceProfile =
+      NEWS_STREAM_SOURCE_PROFILES.find((p) => p.id === activeStreamSource) ||
+      NEWS_STREAM_SOURCE_PROFILES[0];
+
+    const entry: WatchHistoryEntry = {
+      key: historyKey,
+      outletId: tunedOutlet.id,
+      callSign: tunedOutlet.callSign,
+      outletName: tunedOutlet.name,
+      country: tunedOutlet.country,
+      region: tunedOutlet.region,
+      accentColor: tunedOutlet.accentColor,
+      programTitle: tunedOutlet.currentProgram,
+      sourceType: activeStreamSource,
+      sourceLabel: sourceProfile.label,
+      sourceProtocol: sourceProfile.protocol,
+      viewedAt: Date.now(),
+    };
+
+    setWatchHistory((prev) =>
+      [entry, ...prev.filter((item) => item.key !== historyKey)].slice(0, MAX_WATCH_HISTORY)
+    );
+  }, [tunedOutlet, activeStreamSource]);
+
+  const handleJumpToWatchHistory = (entry: WatchHistoryEntry) => {
+    const exists = allOutlets.some((o) => o.id === entry.outletId);
+    if (!exists) {
+      setWatchHistory((prev) => prev.filter((item) => item.key !== entry.key));
+      showNotice(`${entry.callSign} is no longer in the directory and was removed from Watch History.`);
+      return;
+    }
+
+    resetToPrimaryConnection();
+    // Allow re-recording the refreshed timestamp at top of history
+    lastRecordedHistoryKeyRef.current = null;
+    setTunedOutletId(entry.outletId);
+    setActiveStreamSource(entry.sourceType);
+    setViewMode('theater');
+    setIsPlayerPlaying(true);
+    showNotice(`Returned to ${entry.callSign} · ${entry.sourceLabel} (${entry.sourceProtocol})`);
+  };
+
+  const handleRemoveWatchHistoryEntry = (key: string) => {
+    setWatchHistory((prev) => prev.filter((item) => item.key !== key));
+  };
+
+  const handleClearWatchHistory = () => {
+    lastRecordedHistoryKeyRef.current = `${tunedOutlet.id}::${activeStreamSource}`;
+    setWatchHistory([]);
+    showNotice('Cleared DrFun1 News Watch History');
+  };
+
+  const handleSelectStreamSource = (nextSource: NewsStreamSourceType) => {
+    resetToPrimaryConnection();
+    setActiveStreamSource(nextSource);
+    const resolved = resolveOutletStreamSource(tunedOutlet, nextSource, liveTick, 0);
+    showNotice(
+      `Source switched to ${resolved.profile.label} (${resolved.profile.protocol}) for ${tunedOutlet.callSign} · ${resolved.effectiveBitrateMbps} Mbps`
+    );
+  };
+
   const quadOutlets = useMemo(
     () =>
       quadOutletIds
@@ -324,17 +832,6 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
     () => allOutlets.filter((o) => o.isBreaking).length,
     [allOutlets]
   );
-
-  const currentTickerHeadline = useMemo(() => {
-    const combined = [
-      ...bulletins.map((b) => `[${b.priority} · ${b.outletCallSign}] ${b.headline}`),
-      ...allOutlets
-        .filter((o) => o.isBreaking)
-        .map((o) => `[BREAKING · ${o.callSign} (${o.country})] ${o.headline}`),
-    ];
-    if (combined.length === 0) return `[DRFUN1 NEWS] Monitoring ${allOutlets.length} global television news feeds.`;
-    return combined[liveTick % combined.length];
-  }, [bulletins, allOutlets, liveTick]);
 
   const handleToggleBookmark = (id: string) => {
     setBookmarkedIds((prev) =>
@@ -411,6 +908,9 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
       website: newWebsite.trim() || `https://news.drfun1media.com/${slug}`,
       streamUrl: `https://news.drfun1media.com/relay/${slug}`,
       hlsFeedUrl: `https://stream.drfun1media.com/hls/${slug}/index.m3u8`,
+      secondaryMirrorUrls: newSecondaryMirrorUrl.trim()
+        ? [newSecondaryMirrorUrl.trim()]
+        : undefined,
       currentProgram: newProgram.trim() || 'Live World News',
       anchorOrDesk: `${newCallSign.trim().toUpperCase()} Live Newsroom`,
       headline: `${newName.trim()} now live on DrFun1 News over Switch SUPERNAP 100G & RisingNet optical ring.`,
@@ -430,6 +930,7 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
     setNewCallSign('');
     setNewCountry('');
     setNewWebsite('');
+    setNewSecondaryMirrorUrl('');
     setShowAddOutlet(false);
     showNotice(`Added ${created.name} (${created.callSign}) to DrFun1 News Global Directory`);
   };
@@ -453,6 +954,29 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* ================================================================
+          0. LIVE BREAKING NEWS TICKER (ACTIVE NEWS FEED ALERTS)
+          ================================================================ */}
+      <DrFun1BreakingNewsTicker
+        tunedOutlet={tunedOutlet}
+        allOutlets={allOutlets}
+        bulletins={bulletins}
+        activeSourceType={activeStreamSource}
+        activeFeedUrl={resolvedActiveSource.feedUrl}
+        isLiveStreaming={isLiveStreaming}
+        totalLiveViewers={totalLiveViewers}
+        onTuneOutletId={(outletId) => {
+          const target = allOutlets.find((o) => o.id === outletId);
+          if (!target) return;
+          setTunedOutletId(target.id);
+          setViewMode('theater');
+          setIsPlayerPlaying(true);
+          showNotice(`Tuned DrFun1 News from Breaking Ticker to ${target.name} (${target.callSign})`);
+          playerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }}
+        onNotify={showNotice}
+      />
+
       {/* ================================================================
           1. DRFUN1 NEWS MASTHEAD & LIVE WORLD TELEMETRY
           ================================================================ */}
@@ -497,10 +1021,21 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
               onClick={() =>
                 epgSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
               }
-              className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 text-xs font-mono font-bold flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
             >
               <CalendarClock className="w-3.5 h-3.5" />
               <span>{allOutlets.length}-Outlet EPG</span>
+            </button>
+
+            <button
+              type="button"
+              disabled={isSyncingEpg}
+              onClick={() => runEpgSync('manual')}
+              className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-60 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-bold flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+              title="Refresh the 33-channel EPG grid immediately (auto-syncs every 15 minutes)"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncingEpg ? 'animate-spin' : ''}`} />
+              <span>{isSyncingEpg ? 'Syncing EPG…' : 'Sync EPG'}</span>
             </button>
 
             <button
@@ -574,19 +1109,6 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
             )}
           </div>
         </div>
-
-        {/* Breaking Chyron Ticker */}
-        <div className="mt-4 rounded-xl bg-red-950/60 border border-red-500/40 px-3.5 py-2 flex items-center gap-3">
-          <span className="px-2 py-0.5 rounded bg-red-600 text-white text-[10px] font-mono font-black uppercase shrink-0 animate-pulse">
-            BREAKING WIRE
-          </span>
-          <div className="text-xs font-mono text-white truncate flex-1">
-            {currentTickerHeadline}
-          </div>
-          <span className="hidden sm:inline text-[10px] font-mono text-amber-300 shrink-0 tabular-nums">
-            {totalLiveViewers.toLocaleString()} Watching Worldwide
-          </span>
-        </div>
       </div>
 
       {toastMsg && (
@@ -608,26 +1130,114 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
       {/* ================================================================
           2. DRFUN1 NEWS LIVE TV DESK (THEATER OR 4-OUTLET ANCHOR QUAD)
           ================================================================ */}
-      <div ref={playerSectionRef}>
+      <div ref={playerSectionRef} className="space-y-3">
+        {/* Dynamic Source Switcher & Auto-Reconnect Menu (Satellite, Web, Local, Fiber 100G) */}
+        <DrFun1NewsSourceSwitcher
+          tunedOutlet={tunedOutlet}
+          activeSource={activeStreamSource}
+          activeMirrorIndex={activeMirrorIndex}
+          connectionPhase={connectionPhase}
+          reconnectAttempt={reconnectAttempt}
+          disconnectReason={disconnectReason}
+          reconnectLog={reconnectLog}
+          autoFailover={autoFailover}
+          liveTick={liveTick}
+          onSelectSource={handleSelectStreamSource}
+          onSelectMirrorIndex={handleSelectMirrorIndex}
+          onToggleAutoFailover={() => {
+            setAutoFailover((prev) => {
+              const next = !prev;
+              showNotice(
+                next
+                  ? 'Auto-Reconnect enabled — disconnects will automatically switch to secondary mirror URLs'
+                  : 'Auto-Reconnect disabled — stream drops will wait for manual mirror switching'
+              );
+              return next;
+            });
+          }}
+          onSimulateDisconnect={() =>
+            handleStreamDisconnectDetected(
+              `Primary ${resolvedActiveSource.profile.label} carrier signal dropped (0 kbps heartbeat)`
+            )
+          }
+          onManualReconnect={handleManualReconnect}
+          onRestorePrimary={handleRestorePrimary}
+          onCopyActiveUrl={(url, label) => {
+            handleCopy(url, 'hls-tuned');
+            showNotice(`Copied ${label} stream URI for ${tunedOutlet.callSign}`);
+          }}
+          copiedFeed={copiedId === 'hls-tuned'}
+        />
+
       {viewMode === 'theater' ? (
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
           {/* Broadcast Stage */}
           <div className="xl:col-span-8 bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
             <div className="relative min-h-[390px] sm:min-h-[430px] md:aspect-video bg-gradient-to-br from-[#1b080c] via-slate-950 to-[#091529] p-4 sm:p-6 flex flex-col justify-between">
               <div className="flex flex-wrap items-center justify-between gap-2 z-10">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span
                     className="px-2.5 py-1 rounded-md font-black text-xs text-slate-950 shadow"
                     style={{ backgroundColor: tunedOutlet.accentColor }}
                   >
                     {tunedOutlet.callSign}
                   </span>
-                  <span className="px-2.5 py-1 rounded-md bg-red-600 text-white text-[11px] font-mono font-bold flex items-center gap-1.5">
-                    <span className={`w-1.5 h-1.5 rounded-full bg-white ${isPlayerPlaying ? 'animate-pulse' : ''}`} />
-                    <span>{tunedOutlet.status}</span>
+                  <span
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold flex items-center gap-1.5 ${
+                      connectionPhase === 'reconnecting'
+                        ? 'bg-amber-600 text-slate-950'
+                        : connectionPhase === 'disconnected' || connectionPhase === 'failed'
+                          ? 'bg-rose-700 text-white'
+                          : connectionPhase === 'mirror_active'
+                            ? 'bg-cyan-600 text-slate-950'
+                            : 'bg-red-600 text-white'
+                    }`}
+                  >
+                    {connectionPhase === 'reconnecting' ? (
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                    ) : connectionPhase === 'disconnected' || connectionPhase === 'failed' ? (
+                      <WifiOff className="w-3 h-3" />
+                    ) : (
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          connectionPhase === 'mirror_active' ? 'bg-slate-950' : 'bg-white'
+                        } ${isPlayerPlaying ? 'animate-pulse' : ''}`}
+                      />
+                    )}
+                    <span>
+                      {connectionPhase === 'reconnecting'
+                        ? 'RECONNECTING'
+                        : connectionPhase === 'disconnected'
+                          ? 'DISCONNECTED'
+                          : connectionPhase === 'failed'
+                            ? 'OFFLINE'
+                            : connectionPhase === 'mirror_active'
+                              ? activeMirrorIndex === 2
+                                ? 'MIRROR #3 LIVE'
+                                : 'MIRROR #2 LIVE'
+                              : tunedOutlet.status}
+                    </span>
                   </span>
-                  <span className="px-2 py-1 rounded-md bg-slate-900/90 border border-slate-700 text-[11px] font-mono text-slate-200">
-                    {tunedOutlet.codec} · {tunedOutlet.bitrateMbps} Mbps
+                  {isStreamRecording && (
+                    <span className="px-2.5 py-1 rounded-md bg-red-600/95 border border-red-400 text-white text-[11px] font-mono font-bold flex items-center gap-1.5 shadow shadow-red-950/60 tabular-nums">
+                      <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                      <span>
+                        REC {String(Math.floor(recordingElapsedSec / 60)).padStart(2, '0')}:
+                        {String(recordingElapsedSec % 60).padStart(2, '0')}
+                      </span>
+                    </span>
+                  )}
+                  <span
+                    className={`px-2 py-1 rounded-md border text-[11px] font-mono font-bold ${resolvedActiveSource.profile.badgeClass}`}
+                  >
+                    {resolvedActiveSource.profile.label} · {resolvedActiveSource.activeEndpoint.label}
+                  </span>
+                  <span className="px-2 py-1 rounded-md bg-slate-900/90 border border-slate-700 text-[11px] font-mono text-slate-200 tabular-nums">
+                    {connectionPhase === 'disconnected' ||
+                    connectionPhase === 'reconnecting' ||
+                    connectionPhase === 'failed'
+                      ? '0.0 Mbps · -- ms'
+                      : `${resolvedActiveSource.effectiveBitrateMbps} Mbps · ${resolvedActiveSource.latencyMs} ms`}
                   </span>
                 </div>
 
@@ -647,11 +1257,15 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
 
                   <button
                     type="button"
-                    onClick={() => handleCopy(tunedOutlet.hlsFeedUrl, 'hls-tuned')}
+                    onClick={() => handleCopy(resolvedActiveSource.feedUrl, 'hls-tuned')}
                     className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-700 text-xs font-mono font-bold flex items-center gap-1 cursor-pointer"
                   >
                     {copiedId === 'hls-tuned' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedId === 'hls-tuned' ? 'HLS Copied' : 'Copy HLS'}</span>
+                    <span>
+                      {copiedId === 'hls-tuned'
+                        ? `${resolvedActiveSource.profile.shortLabel} Copied`
+                        : `Copy ${resolvedActiveSource.profile.shortLabel}`}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -680,8 +1294,90 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
                   <span>·</span>
                   <span className="text-emerald-300 tabular-nums">{tunedOutlet.viewers.toLocaleString()} live viewers</span>
                   <span>·</span>
-                  <span className="text-cyan-300">{tunedOutlet.switchIngestPop}</span>
+                  <span className="text-cyan-300">{resolvedActiveSource.routeLabel}</span>
                 </div>
+
+                {/* Live Auto-Reconnection & Secondary Mirror Status Banner */}
+                {connectionPhase !== 'connected' && (
+                  <div
+                    className={`mt-2 mx-auto max-w-xl rounded-xl border px-3.5 py-2.5 text-left font-mono text-[11px] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
+                      connectionPhase === 'reconnecting'
+                        ? 'bg-amber-950/75 border-amber-500/60 text-amber-100'
+                        : connectionPhase === 'mirror_active'
+                          ? 'bg-cyan-950/75 border-cyan-500/50 text-cyan-100'
+                          : 'bg-rose-950/80 border-rose-500/60 text-rose-100'
+                    }`}
+                  >
+                    <div className="flex items-start gap-2 min-w-0">
+                      {connectionPhase === 'reconnecting' ? (
+                        <RefreshCw className="w-4 h-4 text-amber-300 animate-spin shrink-0 mt-0.5" />
+                      ) : connectionPhase === 'mirror_active' ? (
+                        <ShieldCheck className="w-4 h-4 text-cyan-300 shrink-0 mt-0.5" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 text-rose-300 shrink-0 mt-0.5" />
+                      )}
+                      <div className="min-w-0">
+                        <div className="font-bold">
+                          {connectionPhase === 'reconnecting'
+                            ? `Auto-Reconnecting (Attempt #${reconnectAttempt}) — Probing secondary mirror…`
+                            : connectionPhase === 'mirror_active'
+                              ? `Failover Active: ${resolvedActiveSource.activeEndpoint.label}`
+                              : connectionPhase === 'failed'
+                                ? 'All Mirror URLs Exhausted'
+                                : 'Stream Source Disconnected'}
+                        </div>
+                        <div className="text-[10px] opacity-85 truncate mt-0.5">
+                          {connectionPhase === 'reconnecting'
+                            ? resolvedActiveSource.nextMirrorEndpoint?.url || resolvedActiveSource.feedUrl
+                            : connectionPhase === 'mirror_active'
+                              ? resolvedActiveSource.feedUrl
+                              : disconnectReason || 'Primary stream carrier interrupted'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {connectionPhase === 'mirror_active' ? (
+                        <button
+                          type="button"
+                          onClick={handleRestorePrimary}
+                          className="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 text-cyan-100 text-[10.5px] font-bold flex items-center gap-1 whitespace-nowrap cursor-pointer"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>Restore Primary</span>
+                        </button>
+                      ) : connectionPhase === 'disconnected' || connectionPhase === 'failed' ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleManualReconnect}
+                            className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-[10.5px] font-bold flex items-center gap-1 whitespace-nowrap cursor-pointer"
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            <span>
+                              {resolvedActiveSource.nextMirrorEndpoint
+                                ? 'Use Secondary Mirror'
+                                : 'Retry Primary'}
+                            </span>
+                          </button>
+                          {connectionPhase === 'failed' && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleSelectStreamSource(
+                                  activeStreamSource === 'web' ? 'fiber' : 'web'
+                                )
+                              }
+                              className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-600 text-slate-100 text-[10.5px] font-bold whitespace-nowrap cursor-pointer"
+                            >
+                              Switch Source
+                            </button>
+                          )}
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Live IRC Client Overlay Rendered Directly On Video Player */}
@@ -689,6 +1385,13 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
                 session={effectiveIrcSession}
                 tunedOutlet={tunedOutlet}
                 activeRank={activeRank}
+                activeSourceType={activeStreamSource}
+                activeSourceLabel={resolvedActiveSource.profile.label}
+                activeSourceProtocol={resolvedActiveSource.profile.protocol}
+                activeFeedUrl={resolvedActiveSource.feedUrl}
+                activeMirrorLabel={resolvedActiveSource.activeEndpoint.label}
+                connectionPhase={connectionPhase}
+                lastReconnectEvent={reconnectLog[0] || null}
                 isOpen={showIrcOverlay}
                 isMinimized={isIrcOverlayMinimized}
                 position={ircOverlayPosition}
@@ -706,10 +1409,17 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
                 onOpenLoginModal={onOpenIrcLogin}
                 onNavigateToFullIrc={onNavigateToIrc}
                 onTuneByCallSign={handleTuneByCallSign}
+                onSelectSource={handleSelectStreamSource}
+                onSimulateDisconnect={() =>
+                  handleStreamDisconnectDetected(
+                    `Primary ${resolvedActiveSource.profile.label} stream dropped via IRC /drop`
+                  )
+                }
+                onManualReconnect={handleManualReconnect}
               />
 
               {/* Captions & Player Transport */}
-              <div className="space-y-2.5 pt-2 z-10">
+              <div className="space-y-2.5 pt-2 z-20">
                 {showCaptions && (
                   <div
                     className={`bg-black/80 border border-slate-800 rounded-lg px-3.5 py-1.5 text-xs font-mono text-white text-center truncate ${
@@ -720,7 +1430,7 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
                         : ''
                     }`}
                   >
-                    [CC · {tunedOutlet.callSign}] {tunedOutlet.headline}
+                    [CC · {tunedOutlet.callSign} · {resolvedActiveSource.profile.shortLabel}] {tunedOutlet.headline}
                   </div>
                 )}
 
@@ -770,6 +1480,19 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
                       <Terminal className="w-3.5 h-3.5" />
                       <span>{showIrcOverlay ? 'IRC Overlay: ON' : 'Show IRC Overlay'}</span>
                     </button>
+
+                    <NewsVideoStreamRecorder
+                      tunedOutlet={tunedOutlet}
+                      activeSourceLabel={resolvedActiveSource.profile.label}
+                      activeSourceProtocol={resolvedActiveSource.profile.protocol}
+                      activeFeedUrl={resolvedActiveSource.feedUrl}
+                      activeRouteLabel={resolvedActiveSource.routeLabel}
+                      effectiveBitrateMbps={resolvedActiveSource.effectiveBitrateMbps}
+                      latencyMs={resolvedActiveSource.latencyMs}
+                      connectionPhase={connectionPhase}
+                      onRecordingStateChange={handleRecordingStateChange}
+                      onNotify={showNotice}
+                    />
                   </div>
 
                   <a
@@ -786,64 +1509,77 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
             </div>
           </div>
 
-          {/* Right Column: Newsroom Producer Flash Desk */}
-          <div className="xl:col-span-4 bg-slate-900/95 border border-slate-800 rounded-2xl p-4 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-red-400" />
-                <h3 className="text-sm font-bold text-white">DrFun1 News Producer Desk</h3>
-              </div>
-              <span className="text-[10px] font-mono text-emerald-400 font-bold">
-                {activeBreakingCount} Breaking Desks
-              </span>
-            </div>
+          {/* Right Column: Watch History Sidebar & Newsroom Producer Flash Desk */}
+          <div className="xl:col-span-4 space-y-5">
+            <DrFun1NewsWatchHistorySidebar
+              entries={watchHistory}
+              activeOutletId={tunedOutlet.id}
+              activeSourceType={activeStreamSource}
+              nowTick={liveTick}
+              onSelectEntry={handleJumpToWatchHistory}
+              onRemoveEntry={handleRemoveWatchHistoryEntry}
+              onClearHistory={handleClearWatchHistory}
+            />
 
-            <form onSubmit={handlePublishBulletin} className="space-y-2.5">
-              <textarea
-                rows={2}
-                value={bulletinText}
-                onChange={(e) => setBulletinText(e.target.value)}
-                placeholder={`Push breaking news chyron for ${tunedOutlet.callSign} or World Desk...`}
-                className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-red-500/60"
-              />
-              <div className="flex items-center justify-between gap-2">
-                <select
-                  value={bulletinPriority}
-                  onChange={(e) => setBulletinPriority(e.target.value as DrFun1NewsBulletin['priority'])}
-                  className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white"
-                >
-                  <option value="FLASH">FLASH</option>
-                  <option value="URGENT">URGENT</option>
-                  <option value="WORLD DESK">WORLD DESK</option>
-                </select>
-                <button
-                  type="submit"
-                  className="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Push Bulletin</span>
-                </button>
-              </div>
-            </form>
-
-            <div className="space-y-2 max-h-60 overflow-y-auto pr-1 pt-2 border-t border-slate-800">
-              {bulletins.map((b) => (
-                <div key={b.id} className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-mono">
-                    <span className="px-1.5 py-0.2 rounded bg-red-500/20 text-red-300 font-bold">
-                      {b.priority} · {b.outletCallSign}
-                    </span>
-                    <span className="text-slate-500">{b.timestamp}</span>
-                  </div>
-                  <p className="text-xs text-slate-200 leading-relaxed">{b.headline}</p>
+            <div className="bg-slate-900/95 border border-slate-800 rounded-2xl p-4 space-y-4 shadow-xl">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-red-400" />
+                  <h3 className="text-sm font-bold text-white">DrFun1 News Producer Desk</h3>
                 </div>
-              ))}
+                <span className="text-[10px] font-mono text-emerald-400 font-bold">
+                  {activeBreakingCount} Breaking Desks
+                </span>
+              </div>
+
+              <form onSubmit={handlePublishBulletin} className="space-y-2.5">
+                <textarea
+                  rows={2}
+                  value={bulletinText}
+                  onChange={(e) => setBulletinText(e.target.value)}
+                  placeholder={`Push breaking news chyron for ${tunedOutlet.callSign} or World Desk...`}
+                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-red-500/60"
+                />
+                <div className="flex items-center justify-between gap-2">
+                  <select
+                    value={bulletinPriority}
+                    onChange={(e) => setBulletinPriority(e.target.value as DrFun1NewsBulletin['priority'])}
+                    className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-white"
+                  >
+                    <option value="FLASH">FLASH</option>
+                    <option value="URGENT">URGENT</option>
+                    <option value="WORLD DESK">WORLD DESK</option>
+                  </select>
+                  <button
+                    type="submit"
+                    className="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Push Bulletin</span>
+                  </button>
+                </div>
+              </form>
+
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1 pt-2 border-t border-slate-800">
+                {bulletins.map((b) => (
+                  <div key={b.id} className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                    <div className="flex items-center justify-between text-[10px] font-mono">
+                      <span className="px-1.5 py-0.2 rounded bg-red-500/20 text-red-300 font-bold">
+                        {b.priority} · {b.outletCallSign}
+                      </span>
+                      <span className="text-slate-500">{b.timestamp}</span>
+                    </div>
+                    <p className="text-xs text-slate-200 leading-relaxed">{b.headline}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       ) : (
-        /* 4-Outlet Global News Anchor Quad */
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        /* 4-Outlet Global News Anchor Quad + Watch History Sidebar */
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+          <div className="xl:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4">
           {quadOutlets.map((outlet, idx) => {
             const hasAudio = quadAudioSlot === idx;
             return (
@@ -898,7 +1634,13 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-                  <span className="text-emerald-300 tabular-nums">{outlet.viewers.toLocaleString()} live</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-emerald-300 tabular-nums shrink-0">{outlet.viewers.toLocaleString()} live</span>
+                    <span aria-hidden="true">·</span>
+                    <span className="text-cyan-300 truncate">
+                      {resolvedActiveSource.profile.label} · {+(outlet.bitrateMbps * resolvedActiveSource.profile.bitrateMultiplier).toFixed(1)} Mbps
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={(e) => {
@@ -906,7 +1648,7 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
                       setTunedOutletId(outlet.id);
                       setViewMode('theater');
                     }}
-                    className="text-red-400 hover:text-red-300 font-bold cursor-pointer"
+                    className="text-red-400 hover:text-red-300 font-bold cursor-pointer shrink-0 ml-2"
                   >
                     Open Full Desk →
                   </button>
@@ -914,6 +1656,18 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
               </div>
             );
           })}
+          </div>
+          <div className="xl:col-span-3">
+            <DrFun1NewsWatchHistorySidebar
+              entries={watchHistory}
+              activeOutletId={tunedOutlet.id}
+              activeSourceType={activeStreamSource}
+              nowTick={liveTick}
+              onSelectEntry={handleJumpToWatchHistory}
+              onRemoveEntry={handleRemoveWatchHistoryEntry}
+              onClearHistory={handleClearWatchHistory}
+            />
+          </div>
         </div>
       )}
       </div>
@@ -927,6 +1681,22 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
           filteredOutlets={filteredOutlets}
           activeMapRegion={regionFilter}
           tunedOutletId={tunedOutlet.id}
+          epgSyncSnapshot={epgSyncSnapshot}
+          isSyncingEpg={isSyncingEpg}
+          epgAutoSyncEnabled={epgAutoSyncEnabled}
+          epgCountdownSec={epgCountdownSec}
+          onSyncEpg={() => runEpgSync('manual')}
+          onToggleAutoSync={() => {
+            setEpgAutoSyncEnabled((prev) => {
+              const next = !prev;
+              showNotice(
+                next
+                  ? 'EPG Auto-Sync enabled — refreshing 33-channel schedule every 15 minutes'
+                  : 'EPG Auto-Sync paused — use Sync EPG to refresh manually'
+              );
+              return next;
+            });
+          }}
           onTuneOutlet={(outlet) => {
             setTunedOutletId(outlet.id);
             setViewMode('theater');
@@ -1098,7 +1868,14 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
               value={newProgram}
               onChange={(e) => setNewProgram(e.target.value)}
               placeholder="Current Live Show Title"
-              className="sm:col-span-2 px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-white placeholder:text-slate-500"
+              className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-white placeholder:text-slate-500"
+            />
+            <input
+              type="text"
+              value={newSecondaryMirrorUrl}
+              onChange={(e) => setNewSecondaryMirrorUrl(e.target.value)}
+              placeholder="Secondary Mirror URL (optional, e.g. https://mirror...m3u8)"
+              className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-white placeholder:text-slate-500"
             />
             <div className="flex items-center justify-end gap-2">
               <button
