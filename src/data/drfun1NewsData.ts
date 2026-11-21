@@ -1010,24 +1010,220 @@ export const OUTLET_UPCOMING_PROGRAMS: Record<
   },
 };
 
-const formatHourSlot = (baseDate: Date, offsetMinutes: number): string => {
-  const d = new Date(baseDate.getTime() + offsetMinutes * 60000);
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+export const EPG_REGIONAL_TIMEZONE_OFFSETS: import('../types/drfun1News').EpgRegionalOffsetOption[] = [
+  { id: 'utc-12', offsetMinutes: -720, offsetLabel: 'UTC-12:00', shortCode: 'IDLW', regionName: 'Baker Island / Dateline West' },
+  { id: 'utc-11', offsetMinutes: -660, offsetLabel: 'UTC-11:00', shortCode: 'SST', regionName: 'Pago Pago / Midway' },
+  { id: 'utc-10', offsetMinutes: -600, offsetLabel: 'UTC-10:00', shortCode: 'HST', regionName: 'Hawaii (Honolulu)' },
+  { id: 'utc-9', offsetMinutes: -540, offsetLabel: 'UTC-09:00', shortCode: 'AKST', regionName: 'Alaska (Anchorage)' },
+  { id: 'utc-8', offsetMinutes: -480, offsetLabel: 'UTC-08:00', shortCode: 'PST', regionName: 'US Pacific (Los Angeles / Las Vegas)' },
+  { id: 'utc-7', offsetMinutes: -420, offsetLabel: 'UTC-07:00', shortCode: 'MST', regionName: 'US Mountain (Denver / Phoenix)' },
+  { id: 'utc-6', offsetMinutes: -360, offsetLabel: 'UTC-06:00', shortCode: 'CST', regionName: 'US Central (Chicago / Mexico City)' },
+  { id: 'utc-5', offsetMinutes: -300, offsetLabel: 'UTC-05:00', shortCode: 'EST', regionName: 'US Eastern (New York / Washington DC)' },
+  { id: 'utc-4', offsetMinutes: -240, offsetLabel: 'UTC-04:00', shortCode: 'AST', regionName: 'Atlantic (Halifax / Santiago)' },
+  { id: 'utc-3.5', offsetMinutes: -210, offsetLabel: 'UTC-03:30', shortCode: 'NST', regionName: 'Newfoundland (St. John’s)' },
+  { id: 'utc-3', offsetMinutes: -180, offsetLabel: 'UTC-03:00', shortCode: 'BRT', regionName: 'South America (São Paulo / Buenos Aires)' },
+  { id: 'utc-2', offsetMinutes: -120, offsetLabel: 'UTC-02:00', shortCode: 'GST', regionName: 'South Georgia / Mid-Atlantic' },
+  { id: 'utc-1', offsetMinutes: -60, offsetLabel: 'UTC-01:00', shortCode: 'CVT', regionName: 'Azores / Cape Verde' },
+  { id: 'utc+0', offsetMinutes: 0, offsetLabel: 'UTC+00:00', shortCode: 'GMT', regionName: 'Western Europe (London / Lisbon / Accra)' },
+  { id: 'utc+1', offsetMinutes: 60, offsetLabel: 'UTC+01:00', shortCode: 'CET', regionName: 'Central Europe & West Africa (Paris / Berlin / Lagos)' },
+  { id: 'utc+2', offsetMinutes: 120, offsetLabel: 'UTC+02:00', shortCode: 'EET', regionName: 'Eastern Europe & Southern Africa (Cairo / Johannesburg)' },
+  { id: 'utc+3', offsetMinutes: 180, offsetLabel: 'UTC+03:00', shortCode: 'AST', regionName: 'Middle East & East Africa (Doha / Riyadh / Nairobi)' },
+  { id: 'utc+3.5', offsetMinutes: 210, offsetLabel: 'UTC+03:30', shortCode: 'IRST', regionName: 'Iran (Tehran)' },
+  { id: 'utc+4', offsetMinutes: 240, offsetLabel: 'UTC+04:00', shortCode: 'GST', regionName: 'Gulf Standard (Dubai / Abu Dhabi)' },
+  { id: 'utc+4.5', offsetMinutes: 270, offsetLabel: 'UTC+04:30', shortCode: 'AFT', regionName: 'Afghanistan (Kabul)' },
+  { id: 'utc+5', offsetMinutes: 300, offsetLabel: 'UTC+05:00', shortCode: 'PKT', regionName: 'West Asia (Karachi / Tashkent)' },
+  { id: 'utc+5.5', offsetMinutes: 330, offsetLabel: 'UTC+05:30', shortCode: 'IST', regionName: 'India & Sri Lanka (New Delhi / Mumbai)' },
+  { id: 'utc+5.75', offsetMinutes: 345, offsetLabel: 'UTC+05:45', shortCode: 'NPT', regionName: 'Nepal (Kathmandu)' },
+  { id: 'utc+6', offsetMinutes: 360, offsetLabel: 'UTC+06:00', shortCode: 'BST', regionName: 'Central & South Asia (Dhaka / Almaty)' },
+  { id: 'utc+6.5', offsetMinutes: 390, offsetLabel: 'UTC+06:30', shortCode: 'MMT', regionName: 'Myanmar (Yangon)' },
+  { id: 'utc+7', offsetMinutes: 420, offsetLabel: 'UTC+07:00', shortCode: 'ICT', regionName: 'Southeast Asia (Bangkok / Jakarta)' },
+  { id: 'utc+8', offsetMinutes: 480, offsetLabel: 'UTC+08:00', shortCode: 'SGT', regionName: 'East Asia (Singapore / Hong Kong / Beijing)' },
+  { id: 'utc+9', offsetMinutes: 540, offsetLabel: 'UTC+09:00', shortCode: 'JST', regionName: 'Japan & Korea (Tokyo / Seoul)' },
+  { id: 'utc+9.5', offsetMinutes: 570, offsetLabel: 'UTC+09:30', shortCode: 'ACST', regionName: 'Central Australia (Adelaide)' },
+  { id: 'utc+10', offsetMinutes: 600, offsetLabel: 'UTC+10:00', shortCode: 'AEST', regionName: 'Eastern Australia (Sydney / Melbourne)' },
+  { id: 'utc+11', offsetMinutes: 660, offsetLabel: 'UTC+11:00', shortCode: 'SBT', regionName: 'Solomon Islands / Nouméa' },
+  { id: 'utc+12', offsetMinutes: 720, offsetLabel: 'UTC+12:00', shortCode: 'NZST', regionName: 'New Zealand (Auckland / Fiji)' },
+  { id: 'utc+13', offsetMinutes: 780, offsetLabel: 'UTC+13:00', shortCode: 'TOT', regionName: 'Tonga / Samoa' },
+  { id: 'utc+14', offsetMinutes: 840, offsetLabel: 'UTC+14:00', shortCode: 'LINT', regionName: 'Line Islands (Kiritimati)' },
+];
+
+export const DEFAULT_EPG_TIMEZONE_SELECTION: import('../types/drfun1News').EpgTimezoneSelection = {
+  mode: 'local',
+  customOffsetMinutes: -300, // Default custom preset: US Eastern (UTC-05:00)
 };
+
+export function formatUtcOffsetMinutes(offsetMinutes: number): string {
+  const sign = offsetMinutes >= 0 ? '+' : '-';
+  const abs = Math.abs(offsetMinutes);
+  const hh = String(Math.floor(abs / 60)).padStart(2, '0');
+  const mm = String(abs % 60).padStart(2, '0');
+  return `UTC${sign}${hh}:${mm}`;
+}
+
+export function getLocalTimezoneMeta(refDate: Date = new Date()): {
+  offsetMinutes: number;
+  offsetLabel: string;
+  shortCode: string;
+  ianaName: string;
+} {
+  const offsetMinutes = -refDate.getTimezoneOffset();
+  const offsetLabel = formatUtcOffsetMinutes(offsetMinutes);
+  let shortCode = offsetLabel;
+  let ianaName = 'Local System Time';
+  try {
+    const parts = new Intl.DateTimeFormat(undefined, { timeZoneName: 'short' }).formatToParts(refDate);
+    const tzPart = parts.find((p) => p.type === 'timeZoneName')?.value;
+    if (tzPart) shortCode = tzPart;
+    const resolved = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (resolved) ianaName = resolved;
+  } catch {
+    // Fallback to offsetLabel
+  }
+  return { offsetMinutes, offsetLabel, shortCode, ianaName };
+}
+
+function getTimezoneDateParts(
+  ms: number,
+  selection: import('../types/drfun1News').EpgTimezoneSelection
+): {
+  year: number;
+  month: number;
+  day: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+} {
+  if (selection.mode === 'local') {
+    const d = new Date(ms);
+    return {
+      year: d.getFullYear(),
+      month: d.getMonth(),
+      day: d.getDate(),
+      hours: d.getHours(),
+      minutes: d.getMinutes(),
+      seconds: d.getSeconds(),
+    };
+  }
+  const offsetMs = selection.mode === 'utc' ? 0 : selection.customOffsetMinutes * 60000;
+  const d = new Date(ms + offsetMs);
+  return {
+    year: d.getUTCFullYear(),
+    month: d.getUTCMonth(),
+    day: d.getUTCDate(),
+    hours: d.getUTCHours(),
+    minutes: d.getUTCMinutes(),
+    seconds: d.getUTCSeconds(),
+  };
+}
+
+export function formatEpgClockTime(
+  ms: number,
+  selection: import('../types/drfun1News').EpgTimezoneSelection,
+  includeSeconds: boolean = false
+): string {
+  if (selection.mode === 'local') {
+    return new Date(ms).toLocaleTimeString(
+      [],
+      includeSeconds
+        ? { hour: '2-digit', minute: '2-digit', second: '2-digit' }
+        : { hour: '2-digit', minute: '2-digit' }
+    );
+  }
+  const p = getTimezoneDateParts(ms, selection);
+  const hh = String(p.hours).padStart(2, '0');
+  const mm = String(p.minutes).padStart(2, '0');
+  const ss = String(p.seconds).padStart(2, '0');
+  return includeSeconds ? `${hh}:${mm}:${ss}` : `${hh}:${mm}`;
+}
+
+export function formatEpgTimeRange(
+  startMs: number,
+  endMs: number,
+  selection: import('../types/drfun1News').EpgTimezoneSelection,
+  refDate?: Date
+): string {
+  const startText = formatEpgClockTime(startMs, selection, false);
+  const endText = formatEpgClockTime(endMs, selection, false);
+
+  let daySuffix = '';
+  if (refDate) {
+    const startParts = getTimezoneDateParts(startMs, selection);
+    const refParts = getTimezoneDateParts(refDate.getTime(), selection);
+    const startKey = startParts.year * 10000 + startParts.month * 100 + startParts.day;
+    const refKey = refParts.year * 10000 + refParts.month * 100 + refParts.day;
+    if (startKey > refKey) {
+      daySuffix = ' (+1d)';
+    }
+  }
+
+  return `${startText} – ${endText}${daySuffix}`;
+}
+
+export function getActiveEpgTimezoneMeta(
+  selection: import('../types/drfun1News').EpgTimezoneSelection,
+  refDate: Date = new Date()
+): {
+  mode: import('../types/drfun1News').EpgTimezoneMode;
+  shortCode: string;
+  offsetLabel: string;
+  regionLabel: string;
+  headerZoneTag: string;
+} {
+  if (selection.mode === 'utc') {
+    return {
+      mode: 'utc',
+      shortCode: 'UTC',
+      offsetLabel: 'UTC+00:00',
+      regionLabel: 'Coordinated Universal Time',
+      headerZoneTag: 'UTC',
+    };
+  }
+  if (selection.mode === 'local') {
+    const local = getLocalTimezoneMeta(refDate);
+    return {
+      mode: 'local',
+      shortCode: local.shortCode,
+      offsetLabel: local.offsetLabel,
+      regionLabel: local.ianaName,
+      headerZoneTag: local.shortCode,
+    };
+  }
+  const preset = EPG_REGIONAL_TIMEZONE_OFFSETS.find(
+    (opt) => opt.offsetMinutes === selection.customOffsetMinutes
+  );
+  const offsetLabel = preset?.offsetLabel ?? formatUtcOffsetMinutes(selection.customOffsetMinutes);
+  const shortCode = preset?.shortCode ?? offsetLabel;
+  return {
+    mode: 'custom',
+    shortCode,
+    offsetLabel,
+    regionLabel: preset?.regionName ?? 'Custom Regional Offset',
+    headerZoneTag: preset ? `${preset.shortCode} ${offsetLabel}` : offsetLabel,
+  };
+}
 
 export function buildWorldNewsEpgRows(
   outlets: GlobalNewsOutlet[],
   allOrderedOutlets: GlobalNewsOutlet[],
-  nowDate: Date = new Date()
+  nowDate: Date = new Date(),
+  timezoneSelection: import('../types/drfun1News').EpgTimezoneSelection = DEFAULT_EPG_TIMEZONE_SELECTION
 ): import('../types/drfun1News').NewsOutletEpgRow[] {
   // Align EPG block to the top of the current hour for realistic broadcast blocks
   const blockStart = new Date(nowDate);
   blockStart.setMinutes(0, 0, 0);
+  const blockStartMs = blockStart.getTime();
   const currentMinutePct = Math.max(8, Math.min(96, Math.round((nowDate.getMinutes() / 60) * 100)));
 
-  const nowWindow = `${formatHourSlot(blockStart, 0)} – ${formatHourSlot(blockStart, 60)}`;
-  const nextWindow = `${formatHourSlot(blockStart, 60)} – ${formatHourSlot(blockStart, 120)}`;
-  const laterWindow = `${formatHourSlot(blockStart, 120)} – ${formatHourSlot(blockStart, 180)}`;
+  const nowStartMs = blockStartMs;
+  const nowEndMs = blockStartMs + 60 * 60000;
+  const nextStartMs = nowEndMs;
+  const nextEndMs = blockStartMs + 120 * 60000;
+  const laterStartMs = nextEndMs;
+  const laterEndMs = blockStartMs + 180 * 60000;
+
+  const nowWindow = formatEpgTimeRange(nowStartMs, nowEndMs, timezoneSelection, nowDate);
+  const nextWindow = formatEpgTimeRange(nextStartMs, nextEndMs, timezoneSelection, nowDate);
+  const laterWindow = formatEpgTimeRange(laterStartMs, laterEndMs, timezoneSelection, nowDate);
 
   const chNumMap = new Map<string, number>();
   allOrderedOutlets.forEach((o, idx) => chNumMap.set(o.id, 101 + idx));
@@ -1055,6 +1251,8 @@ export function buildWorldNewsEpgRows(
           id: `${outlet.id}-epg-now`,
           windowType: 'now',
           timeRange: nowWindow,
+          startMs: nowStartMs,
+          endMs: nowEndMs,
           title: outlet.currentProgram,
           deskOrHost: outlet.anchorOrDesk,
           synopsis: outlet.headline,
@@ -1064,6 +1262,8 @@ export function buildWorldNewsEpgRows(
           id: `${outlet.id}-epg-next`,
           windowType: 'next',
           timeRange: nextWindow,
+          startMs: nextStartMs,
+          endMs: nextEndMs,
           title: schedule.nextTitle,
           deskOrHost: `${outlet.callSign} Desk`,
           synopsis: schedule.nextSynopsis,
@@ -1073,6 +1273,8 @@ export function buildWorldNewsEpgRows(
           id: `${outlet.id}-epg-later`,
           windowType: 'later',
           timeRange: laterWindow,
+          startMs: laterStartMs,
+          endMs: laterEndMs,
           title: schedule.laterTitle,
           deskOrHost: outlet.headquarters,
           synopsis: schedule.laterSynopsis,
@@ -1383,6 +1585,19 @@ export const NEWS_STREAM_SOURCE_PROFILES: import('../types/drfun1News').NewsStre
     accentHex: '#f59e0b',
     badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
   },
+  {
+    id: 'strimm',
+    label: 'Strimm.com',
+    shortLabel: 'STRIMM',
+    protocol: 'Strimm OTT / Linear HLS',
+    baseLatencyMs: 28,
+    bitrateMultiplier: 0.94,
+    codecLabel: 'H.264 / HLS Linear',
+    signalLabel: 'Strimm Playout · Synced',
+    description: '24/7 linear TV channel playout, website embed engine, direct HLS & EPG JSON via Strimm.com.',
+    accentHex: '#14b8a6',
+    badgeClass: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+  },
 ];
 
 export interface ResolvedOutletStreamSource {
@@ -1410,7 +1625,7 @@ export function getSourceQualityTiers(
   const baseMaxMbps = +(outlet.bitrateMbps * profile.bitrateMultiplier).toFixed(1);
 
   const supports480p =
-    sourceType === 'web'
+    sourceType === 'web' || sourceType === 'strimm'
       ? true
       : sourceType === 'local'
         ? true
@@ -1438,9 +1653,11 @@ export function getSourceQualityTiers(
     +(
       sourceType === 'web'
         ? Math.min(12.8, baseMaxMbps * 0.62)
-        : sourceType === 'local'
-          ? Math.min(14.5, baseMaxMbps * 0.78)
-          : baseMaxMbps
+        : sourceType === 'strimm'
+          ? Math.min(10.5, baseMaxMbps * 0.68)
+          : sourceType === 'local'
+            ? Math.min(14.5, baseMaxMbps * 0.78)
+            : baseMaxMbps
     ).toFixed(1)
   );
   const bitrate720 = Math.max(
@@ -1591,6 +1808,34 @@ export function resolveOutletStreamSource(
         latencyOffsetMs: 22,
       },
     ];
+  } else if (sourceType === 'strimm') {
+    endpoints = [
+      {
+        tier: 'primary',
+        label: 'Primary Strimm Linear HLS',
+        url: outlet.hlsFeedUrl.includes('strimm.com')
+          ? `${outlet.hlsFeedUrl}${outlet.hlsFeedUrl.includes('?') ? '&' : '?'}res=${activeQuality.tier}`
+          : `https://stream.strimm.com/live/drfun1/${slug}/${activeQuality.tier}/master.m3u8`,
+        routeLabel: `Strimm.com Linear Playout CDN · ${outlet.callSign}`,
+        latencyOffsetMs: 0,
+      },
+      {
+        tier: 'secondary',
+        label: 'Secondary Strimm Edge Mirror',
+        url:
+          customSecondary ||
+          `https://cdn-b.strimm.com/hls/drfun1/${slug}/${activeQuality.tier}/playlist.m3u8`,
+        routeLabel: `Strimm.com Redundant OTT Mirror · ${outlet.region}`,
+        latencyOffsetMs: 7,
+      },
+      {
+        tier: 'tertiary',
+        label: 'Tertiary Mirror (Origin HLS)',
+        url: customTertiary || `${outlet.hlsFeedUrl}?res=${activeQuality.tier}`,
+        routeLabel: `DrFun1 Direct HLS Origin Fallback (${outlet.country})`,
+        latencyOffsetMs: 14,
+      },
+    ];
   } else {
     endpoints = [
       {
@@ -1641,3 +1886,138 @@ export function resolveOutletStreamSource(
     activeQuality,
   };
 }
+
+export const INITIAL_STRIMM_CHANNELS: import('../types/drfun1News').StrimmChannelConfig[] = [
+  {
+    id: 'strimm-drfun1-world',
+    strimmChannelId: 'drfun1-world-news-247',
+    name: 'DrFun1 World News Linear 24/7',
+    callSign: 'STRM-NEWS',
+    category: '24/7 Cable News',
+    region: 'Global Wire',
+    country: 'United States',
+    accentColor: '#14b8a6',
+    embedUrl: 'https://www.strimm.com/DrFun1Media/DrFun1WorldNews',
+    hlsStreamUrl: 'https://stream.strimm.com/live/drfun1/world-news-247/master.m3u8',
+    epgJsonUrl: 'https://api.strimm.com/v1/epg/drfun1-world-news-247.json',
+    whitelistedDomain: 'drfun1media.com',
+    logoBugText: 'DRFUN1 · STRIMM',
+    crawlTickerText:
+      'LIVE LINEAR PLAYOUT VIA STRIMM.COM · 24/7 GLOBAL NEWS SYNDICATION · SWITCH SUPERNAP 100G BACKBONE · FCC FRN 0034981290',
+    showLogoBug: true,
+    showTickerCrawl: true,
+    showProgramGuide: true,
+    autoplay: true,
+    schedule: [
+      {
+        id: 'strm-blk-1',
+        title: 'DrFun1 Global Headlines & Satcom Wire',
+        durationMin: 60,
+        sourceKind: 'hls_live',
+        sourceUrl: 'https://stream.strimm.com/live/drfun1/world-news-247/headlines.m3u8',
+        hostOrDesk: 'Las Vegas SUPERNAP Desk',
+        synopsis: 'Continuous live breaking wire covering global diplomacy, satellite telemetry, and markets.',
+      },
+      {
+        id: 'strm-blk-2',
+        title: 'International Markets & European Desk Relay',
+        durationMin: 60,
+        sourceKind: 'news_feed',
+        sourceUrl: 'https://stream.strimm.com/live/drfun1/europe-markets/master.m3u8',
+        hostOrDesk: 'London / Frankfurt Bureau',
+        synopsis: 'Cross-continental market briefing and transatlantic energy & telecom reporting.',
+      },
+      {
+        id: 'strm-blk-3',
+        title: 'Asia-Pacific Nightly Wire & Tech Dispatch',
+        durationMin: 60,
+        sourceKind: 'vod_clip',
+        sourceUrl: 'https://stream.strimm.com/vod/drfun1/apac-tech-dispatch.m3u8',
+        hostOrDesk: 'Tokyo / Singapore Desk',
+        synopsis: 'Semiconductor supply chains, submarine fiber rings, and Asia-Pacific headlines.',
+      },
+    ],
+  },
+  {
+    id: 'strimm-supernap-satcom',
+    strimmChannelId: 'switch-satcom-briefings',
+    name: 'Switch SUPERNAP Satcom & Aerospace TV',
+    callSign: 'STRM-SAT',
+    category: 'Science & Satcom',
+    region: 'North America',
+    country: 'United States',
+    accentColor: '#38bdf8',
+    embedUrl: 'https://www.strimm.com/DrFun1Media/SatcomAerospaceTV',
+    hlsStreamUrl: 'https://stream.strimm.com/live/drfun1/satcom-aerospace/master.m3u8',
+    epgJsonUrl: 'https://api.strimm.com/v1/epg/switch-satcom-briefings.json',
+    whitelistedDomain: 'drfun1media.com',
+    logoBugText: 'SATCOM · STRIMM',
+    crawlTickerText:
+      'ORBITAL TELEPORT BRIEFINGS · KA/KU-BAND DVB-S2X DOWNLINKS · RISINGNET OPTICAL NETWORK TELEMETRY · STRIMM.COM OTT',
+    showLogoBug: true,
+    showTickerCrawl: true,
+    showProgramGuide: true,
+    autoplay: true,
+    schedule: [
+      {
+        id: 'strm-sat-1',
+        title: 'LEO & GEO Constellation Downlink Briefing',
+        durationMin: 60,
+        sourceKind: 'hls_live',
+        sourceUrl: 'https://stream.strimm.com/live/drfun1/satcom-briefing/master.m3u8',
+        hostOrDesk: 'Goldstone & Switch Teleport Desk',
+        synopsis: 'Live carrier lock telemetry, transponder schedules, and deep-space optical links.',
+      },
+      {
+        id: 'strm-sat-2',
+        title: 'NASA Optical Relay & Launchpad Coverage',
+        durationMin: 60,
+        sourceKind: 'news_feed',
+        sourceUrl: 'https://stream.strimm.com/live/drfun1/nasa-relay/master.m3u8',
+        hostOrDesk: 'Orbital Operations Bureau',
+        synopsis: 'Scheduled mission control coverage and satellite launch countdown feeds.',
+      },
+    ],
+  },
+  {
+    id: 'strimm-witt-judicial',
+    strimmChannelId: 'witt-law-policy-linear',
+    name: 'Witt Law Judicial & FCC Policy Linear',
+    callSign: 'STRM-LAW',
+    category: 'Judicial & Policy',
+    region: 'North America',
+    country: 'United States',
+    accentColor: '#f59e0b',
+    embedUrl: 'https://www.strimm.com/DrFun1Media/WittLawPolicyTV',
+    hlsStreamUrl: 'https://stream.strimm.com/live/drfun1/witt-law-policy/master.m3u8',
+    epgJsonUrl: 'https://api.strimm.com/v1/epg/witt-law-policy-linear.json',
+    whitelistedDomain: 'wittlawfirm.com',
+    logoBugText: 'WITT LAW · STRIMM',
+    crawlTickerText:
+      'THE LAW OFFICE OF RICHARD A. WITT LLC (WWW.WITTLAWFIRM.COM) · FCC FRN 0034981290 · TELECOM & FEDERAL COURT BRIEFINGS',
+    showLogoBug: true,
+    showTickerCrawl: true,
+    showProgramGuide: true,
+    autoplay: true,
+    schedule: [
+      {
+        id: 'strm-law-1',
+        title: 'Federal Communications & Spectrum Docket Live',
+        durationMin: 60,
+        sourceKind: 'hls_live',
+        sourceUrl: 'https://stream.strimm.com/live/drfun1/fcc-docket/master.m3u8',
+        hostOrDesk: 'Washington DC Policy Desk',
+        synopsis: 'FCC broadcast compliance, carrier licensing, and federal appellate hearings.',
+      },
+      {
+        id: 'strm-law-2',
+        title: 'SCOTUS Oral Arguments & Telecom Law Review',
+        durationMin: 60,
+        sourceKind: 'vod_clip',
+        sourceUrl: 'https://stream.strimm.com/vod/drfun1/scotus-telecom-review.m3u8',
+        hostOrDesk: 'www.wittlawfirm.com Compliance Desk',
+        synopsis: 'In-depth legal commentary on broadcast rights, satcom treaties, and media law.',
+      },
+    ],
+  },
+];

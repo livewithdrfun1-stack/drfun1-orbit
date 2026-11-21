@@ -79,6 +79,7 @@ export const DEFAULT_AUDIO_NORMALIZATION_CONFIG: AudioNormalizationConfig = {
 const SOURCE_BASE_LOUDNESS_DB: Record<NewsStreamSourceType, number> = {
   satellite: -14.2,
   fiber: -16.4,
+  strimm: -19.2,
   local: -20.6,
   web: -23.4,
 };

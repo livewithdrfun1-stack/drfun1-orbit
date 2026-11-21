@@ -38,6 +38,7 @@ import {
   RefreshCw,
   RotateCcw,
   Rss,
+  Satellite,
   Search,
   Send,
   ShieldCheck,
@@ -67,9 +68,11 @@ import {
   NewsOutletRegion,
   NewsStreamSourceType,
   RecordedStreamClip,
+  SatelliteOrbitalAlert,
   StreamConnectionPhase,
   StreamQualityTier,
   StreamReconnectEvent,
+  StrimmChannelConfig,
   WatchHistoryEntry,
 } from '../types/drfun1News';
 import { IrcLoginSession } from '../types/irc';
@@ -93,13 +96,22 @@ import {
   NewsPipSnapshot,
   PipActiveMode,
 } from '../utils/newsPictureInPicture';
+import {
+  buildInitialSatelliteAlerts,
+  pollNextRssForSatelliteAlert,
+} from '../utils/satelliteAlertDetector';
 import { DrFun1AudioNormalizerControl } from './DrFun1AudioNormalizerControl';
 import { DrFun1BreakingNewsTicker } from './DrFun1BreakingNewsTicker';
 import { DrFun1NewsWorldMap } from './DrFun1NewsWorldMap';
 import { DrFun1NewsEpgSection } from './DrFun1NewsEpgSection';
 import { DrFun1NewsSourceSwitcher } from './DrFun1NewsSourceSwitcher';
 import { DrFun1NewsWatchHistorySidebar } from './DrFun1NewsWatchHistorySidebar';
+import {
+  DrFun1SatelliteAlertCenter,
+  DrFun1SatelliteAlertOverlayBadges,
+} from './DrFun1SatelliteAlertOverlay';
 import { DrFun1StreamArchiveTab } from './DrFun1StreamArchiveTab';
+import { DrFun1StrimmIntegrationTab } from './DrFun1StrimmIntegrationTab';
 import { IrcOverlayOpacityMode, NewsVideoIrcOverlay } from './NewsVideoIrcOverlay';
 import { NewsVideoQualitySelector } from './NewsVideoQualitySelector';
 import { NewsVideoStreamRecorder } from './NewsVideoStreamRecorder';
@@ -116,7 +128,7 @@ interface DrFun1NewsViewProps {
 }
 
 type NewsViewMode = 'theater' | 'quad';
-type NewsWorkspaceTab = 'live' | 'archive';
+type NewsWorkspaceTab = 'live' | 'archive' | 'strimm';
 type OutletSortMode = 'viewers' | 'alpha' | 'region' | 'breaking';
 
 const STORAGE_KEY_CUSTOM_OUTLETS = 'drfun1_news_custom_outlets_v1';
@@ -127,6 +139,7 @@ const STORAGE_KEY_WATCH_HISTORY = 'drfun1_news_watch_history_v1';
 const STORAGE_KEY_EPG_AUTOSYNC = 'drfun1_news_epg_autosync_v1';
 const STORAGE_KEY_AUDIO_NORM = 'drfun1_news_audio_norm_v1';
 const STORAGE_KEY_QUALITY_TIER = 'drfun1_news_quality_tier_v1';
+const STORAGE_KEY_SAT_ALERTS_ENABLED = 'drfun1_news_sat_alerts_enabled_v1';
 const MAX_WATCH_HISTORY = 5;
 
 const REGIONS: ('All' | NewsOutletRegion)[] = [
@@ -312,11 +325,17 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
     setToastMsg('Cleared all recorded segments from local Stream Archive');
   }, []);
 
-  // Dynamic Stream Source Switcher state (Satellite, Web, Local, Fiber 100G)
+  // Dynamic Stream Source Switcher state (Satellite, Web, Local, Fiber 100G, Strimm.com)
   const [activeStreamSource, setActiveStreamSource] = useState<NewsStreamSourceType>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_STREAM_SOURCE);
-      if (saved === 'satellite' || saved === 'web' || saved === 'local' || saved === 'fiber') {
+      if (
+        saved === 'satellite' ||
+        saved === 'web' ||
+        saved === 'local' ||
+        saved === 'fiber' ||
+        saved === 'strimm'
+      ) {
         return saved;
       }
     } catch (_) {}
@@ -371,6 +390,26 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
   );
   const epgAbortRef = useRef<AbortController | null>(null);
   const epgRevisionRef = useRef<number>(0);
+
+  // Live RSS Satellite Alert Notification System (malfunctions, constellation launches, solar/RF alerts)
+  const [satelliteAlerts, setSatelliteAlerts] = useState<SatelliteOrbitalAlert[]>(() =>
+    buildInitialSatelliteAlerts()
+  );
+  const [satelliteAlertsEnabled, setSatelliteAlertsEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_SAT_ALERTS_ENABLED);
+      if (saved === 'false') return false;
+    } catch (_) {}
+    return true;
+  });
+  const [showSatelliteAlertCenter, setShowSatelliteAlertCenter] = useState<boolean>(false);
+  const [selectedSatelliteAlertId, setSelectedSatelliteAlertId] = useState<string | null>(null);
+  const [isScanningSatelliteRss, setIsScanningSatelliteRss] = useState<boolean>(false);
+  const [lastSatelliteScanLabel, setLastSatelliteScanLabel] = useState<string>(() =>
+    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  );
+  const satelliteRssPollCycleRef = useRef<number>(1);
+  const satelliteScanTimerRef = useRef<number | null>(null);
 
   // Integrated Dual Transparent IRC Client Overlays on the Video Player
   const [showIrcOverlay, setShowIrcOverlay] = useState<boolean>(true);
@@ -499,6 +538,40 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
       localStorage.setItem(STORAGE_KEY_EPG_AUTOSYNC, String(epgAutoSyncEnabled));
     } catch (_) {}
   }, [epgAutoSyncEnabled]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_SAT_ALERTS_ENABLED, String(satelliteAlertsEnabled));
+    } catch (_) {}
+  }, [satelliteAlertsEnabled]);
+
+  useEffect(() => {
+    return () => {
+      if (satelliteScanTimerRef.current !== null) {
+        window.clearTimeout(satelliteScanTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Automatically scan the live satcom RSS feed every 22s for critical orbital events
+  useEffect(() => {
+    if (!isLiveStreaming || !satelliteAlertsEnabled) return;
+    const intervalId = window.setInterval(() => {
+      const nextCycle = satelliteRssPollCycleRef.current++;
+      const { alert } = pollNextRssForSatelliteAlert(nextCycle);
+      setLastSatelliteScanLabel(
+        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      );
+      if (!alert) return;
+
+      setSatelliteAlerts((prev) => {
+        const deduped = prev.filter((item) => item.title !== alert.title);
+        return [alert, ...deduped].slice(0, 24);
+      });
+    }, 22000);
+
+    return () => window.clearInterval(intervalId);
+  }, [isLiveStreaming, satelliteAlertsEnabled]);
 
   useEffect(() => {
     if (!isLiveStreaming) return;
@@ -978,6 +1051,162 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
     const resolved = resolveOutletStreamSource(tunedOutlet, nextSource, liveTick, 0);
     showNotice(
       `Source switched to ${resolved.profile.label} (${resolved.profile.protocol}) for ${tunedOutlet.callSign} · ${resolved.effectiveBitrateMbps} Mbps`
+    );
+  };
+
+  const handlePushStrimmChannelToLiveDesk = (channel: StrimmChannelConfig) => {
+    const outletId = channel.linkedOutletId || `news-strimm-${channel.id}`;
+    const leadBlock = channel.schedule[0];
+    const mappedOutlet: GlobalNewsOutlet = {
+      id: outletId,
+      callSign: channel.callSign,
+      name: channel.name,
+      country: channel.country,
+      region: channel.region,
+      language: 'English',
+      category: channel.category,
+      headquarters: `Strimm.com (${channel.whitelistedDomain})`,
+      website: channel.embedUrl || 'https://www.strimm.com',
+      streamUrl: channel.embedUrl || 'https://www.strimm.com',
+      hlsFeedUrl: channel.hlsStreamUrl,
+      currentProgram: leadBlock?.title || `${channel.name} 24/7 Linear`,
+      anchorOrDesk: leadBlock?.hostOrDesk || `${channel.callSign} Strimm Playout`,
+      headline:
+        leadBlock?.synopsis ||
+        `Live 24/7 Strimm.com linear TV broadcast (${channel.schedule.length} scheduled blocks).`,
+      isBreaking: false,
+      status: 'ON AIR',
+      bitrateMbps: 10.5,
+      viewers: 4820,
+      codec: 'H.264 1080p60',
+      switchIngestPop: `Strimm.com OTT Edge · ${channel.whitelistedDomain}`,
+      accentColor: channel.accentColor || '#14b8a6',
+      isUserAdded: true,
+    };
+
+    setCustomOutlets((prev) => {
+      const exists = prev.some((o) => o.id === outletId);
+      if (exists) {
+        return prev.map((o) => (o.id === outletId ? mappedOutlet : o));
+      }
+      return [mappedOutlet, ...prev];
+    });
+
+    resetToPrimaryConnection();
+    setActiveStreamSource('strimm');
+    setTunedOutletId(outletId);
+    setViewMode('theater');
+    setIsPlayerPlaying(true);
+    setActiveNewsTab('live');
+    showNotice(
+      `Synced Strimm.com channel "${channel.name}" (${channel.callSign}) to Live Desk & EPG`
+    );
+  };
+
+  const unreadSatelliteAlertCount = useMemo(
+    () => satelliteAlerts.filter((a) => !a.acknowledged).length,
+    [satelliteAlerts]
+  );
+
+  const hasCriticalSatelliteAlert = useMemo(
+    () => satelliteAlerts.some((a) => !a.acknowledged && a.severity === 'CRITICAL'),
+    [satelliteAlerts]
+  );
+
+  const handleScanSatelliteRssNow = () => {
+    if (isScanningSatelliteRss) return;
+    setIsScanningSatelliteRss(true);
+    if (satelliteScanTimerRef.current !== null) {
+      window.clearTimeout(satelliteScanTimerRef.current);
+    }
+    satelliteScanTimerRef.current = window.setTimeout(() => {
+      let foundAlert: SatelliteOrbitalAlert | null = null;
+      for (let attempt = 0; attempt < 2 && !foundAlert; attempt++) {
+        const nextCycle = satelliteRssPollCycleRef.current++;
+        const polled = pollNextRssForSatelliteAlert(nextCycle);
+        if (polled.alert) {
+          foundAlert = polled.alert;
+        }
+      }
+      const nowLabel = new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+      setLastSatelliteScanLabel(nowLabel);
+      setIsScanningSatelliteRss(false);
+
+      if (foundAlert) {
+        const captured = foundAlert;
+        setSatelliteAlerts((prev) => {
+          const deduped = prev.filter((item) => item.title !== captured.title);
+          return [captured, ...deduped].slice(0, 24);
+        });
+        setSelectedSatelliteAlertId(captured.id);
+        setSatelliteAlertsEnabled(true);
+        showNotice(
+          `Satellite Alert detected via ${captured.sourceName}: [${captured.badgeLabel}] ${captured.title}`
+        );
+      } else {
+        showNotice('Live RSS orbital scan complete — no new anomalies detected');
+      }
+    }, 320);
+  };
+
+  const handleInspectSatelliteAlert = (alert: SatelliteOrbitalAlert) => {
+    setSelectedSatelliteAlertId(alert.id);
+    setShowSatelliteAlertCenter(true);
+    setSatelliteAlerts((prev) =>
+      prev.map((a) => (a.id === alert.id ? { ...a, acknowledged: true } : a))
+    );
+  };
+
+  const handleDismissSatelliteAlertOverlay = (alertId: string) => {
+    setSatelliteAlerts((prev) =>
+      prev.map((a) => (a.id === alertId ? { ...a, dismissedOverlay: true } : a))
+    );
+  };
+
+  const handleAcknowledgeSatelliteAlert = (alertId: string) => {
+    setSatelliteAlerts((prev) =>
+      prev.map((a) =>
+        a.id === alertId ? { ...a, acknowledged: true, dismissedOverlay: true } : a
+      )
+    );
+  };
+
+  const handleAcknowledgeAllSatelliteAlerts = () => {
+    setSatelliteAlerts((prev) =>
+      prev.map((a) => ({ ...a, acknowledged: true, dismissedOverlay: true }))
+    );
+    showNotice('Acknowledged all active Satellite Alerts');
+  };
+
+  const handlePinSatelliteAlertToOverlay = (alertId: string) => {
+    setSatelliteAlertsEnabled(true);
+    setSatelliteAlerts((prev) =>
+      prev.map((a) => (a.id === alertId ? { ...a, dismissedOverlay: false } : a))
+    );
+    setActiveNewsTab('live');
+    showNotice('Restored Satellite Alert overlay badge onto live video player');
+  };
+
+  const handleTuneSatcomDeskFromAlert = () => {
+    const satcomOutlet =
+      allOutlets.find((o) => o.id === 'news-nasa-scan') ||
+      allOutlets.find((o) => o.category === 'Science & Satcom');
+    if (satcomOutlet) {
+      setTunedOutletId(satcomOutlet.id);
+    }
+    setActiveStreamSource('satellite');
+    setActiveNewsTab('live');
+    setViewMode('theater');
+    setIsPlayerPlaying(true);
+    setShowSatelliteAlertCenter(false);
+    showNotice(
+      satcomOutlet
+        ? `Tuned ${satcomOutlet.name} (${satcomOutlet.callSign}) on Satellite Ku/Ka-Band downlink`
+        : 'Switched live desk to Satellite Ku/Ka-Band downlink'
     );
   };
 
@@ -1487,6 +1716,34 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
 
             <button
               type="button"
+              aria-expanded={showSatelliteAlertCenter}
+              onClick={() => setShowSatelliteAlertCenter((v) => !v)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold border transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer tabular-nums ${
+                showSatelliteAlertCenter
+                  ? 'bg-rose-600 text-white border-rose-400'
+                  : hasCriticalSatelliteAlert
+                    ? 'bg-rose-950/75 hover:bg-rose-900/80 text-rose-200 border-rose-500/60'
+                    : 'bg-slate-900 hover:bg-slate-800 text-cyan-300 border-slate-700'
+              }`}
+              title="Open live RSS Satellite Alert Notification Center for orbital malfunctions & constellation launches"
+            >
+              <Satellite className="w-3.5 h-3.5 shrink-0" />
+              <span>Sat Alerts</span>
+              {unreadSatelliteAlertCount > 0 && (
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                    showSatelliteAlertCenter
+                      ? 'bg-slate-950/30 text-white'
+                      : 'bg-rose-600 text-white'
+                  }`}
+                >
+                  {unreadSatelliteAlertCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
               onClick={() => {
                 setActiveNewsTab('live');
                 setViewMode((v) => (v === 'theater' ? 'quad' : 'theater'));
@@ -1634,6 +1891,30 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="Recording in progress" />
             )}
           </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeNewsTab === 'strimm'}
+            onClick={() => setActiveNewsTab('strimm')}
+            className={`px-3.5 py-2 rounded-lg text-xs font-mono font-bold flex items-center gap-2 whitespace-nowrap cursor-pointer transition-colors ${
+              activeNewsTab === 'strimm'
+                ? 'bg-teal-500 text-slate-950 shadow'
+                : 'text-slate-300 hover:text-white hover:bg-slate-900'
+            }`}
+          >
+            <Tv className="w-3.5 h-3.5" />
+            <span>Strimm.com TV</span>
+            <span
+              className={`px-1.5 py-0.5 rounded text-[10px] ${
+                activeNewsTab === 'strimm'
+                  ? 'bg-slate-950/20 text-slate-950'
+                  : 'bg-slate-900 text-teal-300 border border-slate-800'
+              }`}
+            >
+              Linear OTT
+            </span>
+          </button>
         </div>
 
         <div className="px-2.5 text-[11px] font-mono text-slate-400 hidden sm:flex items-center gap-2 tabular-nums">
@@ -1670,6 +1951,49 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
           onNotify={showNotice}
         />
       )}
+
+      {/* Strimm.com Linear TV & OTT Integration Tab Panel */}
+      {activeNewsTab === 'strimm' && (
+        <DrFun1StrimmIntegrationTab
+          activeTunedOutlet={tunedOutlet}
+          allOutlets={allOutlets}
+          onPushChannelToLiveDesk={handlePushStrimmChannelToLiveDesk}
+          onReturnToLiveDesk={() => setActiveNewsTab('live')}
+          onNotify={showNotice}
+        />
+      )}
+
+      {/* Expandable Satellite Alert Notification Center (Live RSS Orbital Monitor) */}
+      <DrFun1SatelliteAlertCenter
+        isOpen={showSatelliteAlertCenter}
+        alerts={satelliteAlerts}
+        selectedAlertId={selectedSatelliteAlertId}
+        alertsEnabled={satelliteAlertsEnabled}
+        isScanning={isScanningSatelliteRss}
+        lastScanLabel={lastSatelliteScanLabel}
+        onClose={() => setShowSatelliteAlertCenter(false)}
+        onSelectAlert={(id) => {
+          setSelectedSatelliteAlertId(id);
+          setSatelliteAlerts((prev) =>
+            prev.map((a) => (a.id === id ? { ...a, acknowledged: true } : a))
+          );
+        }}
+        onToggleAlertsEnabled={() => {
+          const next = !satelliteAlertsEnabled;
+          setSatelliteAlertsEnabled(next);
+          showNotice(
+            next
+              ? 'Satellite Alert video overlay badges enabled (scanning live RSS feed)'
+              : 'Satellite Alert video overlay badges muted'
+          );
+        }}
+        onScanNow={handleScanSatelliteRssNow}
+        onAcknowledgeAlert={handleAcknowledgeSatelliteAlert}
+        onAcknowledgeAll={handleAcknowledgeAllSatelliteAlerts}
+        onPinToOverlay={handlePinSatelliteAlertToOverlay}
+        onTuneSatcomDesk={handleTuneSatcomDeskFromAlert}
+        onNavigateToRss={onNavigateToRss}
+      />
 
       {/* ================================================================
           2. DRFUN1 NEWS LIVE TV DESK (THEATER OR 4-OUTLET ANCHOR QUAD)
@@ -1820,6 +2144,17 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
                     </span>
                   </button>
                 </div>
+              </div>
+
+              {/* Dynamic RSS Satellite Alert Overlay Badges (Malfunctions, Constellation Launches, Solar RF) */}
+              <div className="mt-2.5 flex justify-start z-20">
+                <DrFun1SatelliteAlertOverlayBadges
+                  alerts={satelliteAlerts}
+                  alertsEnabled={satelliteAlertsEnabled}
+                  onInspectAlert={handleInspectSatelliteAlert}
+                  onDismissOverlay={handleDismissSatelliteAlertOverlay}
+                  onOpenAlertCenter={() => setShowSatelliteAlertCenter(true)}
+                />
               </div>
 
               {/* Main Program Headline & Anchor Info (shifts cleanly when a single IRC overlay is open; stays centered behind dual transparent side-by-side overlays) */}
@@ -2359,7 +2694,14 @@ export const DrFun1NewsView: React.FC<DrFun1NewsViewProps> = ({
               </div>
             </div>
 
-            <div className="relative">
+            <div className="relative space-y-2.5">
+              <DrFun1SatelliteAlertOverlayBadges
+                alerts={satelliteAlerts}
+                alertsEnabled={satelliteAlertsEnabled}
+                onInspectAlert={handleInspectSatelliteAlert}
+                onDismissOverlay={handleDismissSatelliteAlertOverlay}
+                onOpenAlertCenter={() => setShowSatelliteAlertCenter(true)}
+              />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {quadOutlets.map((outlet, idx) => {
                   const hasAudio = quadAudioSlot === idx;

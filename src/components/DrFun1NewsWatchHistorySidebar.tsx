@@ -20,6 +20,7 @@ import {
   Satellite,
   Server,
   Trash2,
+  Tv,
   X,
 } from 'lucide-react';
 import { NewsStreamSourceType, WatchHistoryEntry } from '../types/drfun1News';
@@ -44,6 +45,8 @@ const getSourceIcon = (sourceType: NewsStreamSourceType) => {
       return <Radio className="w-3 h-3 text-emerald-400 shrink-0" />;
     case 'fiber':
       return <Server className="w-3 h-3 text-amber-400 shrink-0" />;
+    case 'strimm':
+      return <Tv className="w-3 h-3 text-teal-400 shrink-0" />;
   }
 };
 

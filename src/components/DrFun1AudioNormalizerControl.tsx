@@ -55,6 +55,7 @@ const SOURCE_LIST: { id: NewsStreamSourceType; label: string; shortLabel: string
   { id: 'web', label: 'Web HLS', shortLabel: 'WEB' },
   { id: 'local', label: 'Local OTA', shortLabel: 'LOCAL' },
   { id: 'fiber', label: 'Fiber 100G', shortLabel: '100G' },
+  { id: 'strimm', label: 'Strimm.com', shortLabel: 'STRIMM' },
 ];
 
 const dbToMeterPct = (db: number): number => {

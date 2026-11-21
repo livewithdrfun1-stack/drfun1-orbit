@@ -20,13 +20,29 @@ import {
   ChevronUp,
   Clock,
   Flame,
+  Globe,
   MonitorPlay,
   RefreshCw,
   Search,
   Tv,
 } from 'lucide-react';
-import { buildWorldNewsEpgRows } from '../data/drfun1NewsData';
-import { EpgSyncSnapshot, GlobalNewsOutlet, NewsOutletRegion } from '../types/drfun1News';
+import {
+  buildWorldNewsEpgRows,
+  DEFAULT_EPG_TIMEZONE_SELECTION,
+  EPG_REGIONAL_TIMEZONE_OFFSETS,
+  formatEpgClockTime,
+  formatEpgTimeRange,
+  getActiveEpgTimezoneMeta,
+  getLocalTimezoneMeta,
+} from '../data/drfun1NewsData';
+import {
+  EpgSyncSnapshot,
+  EpgTimezoneMode,
+  EpgTimezoneSelection,
+  GlobalNewsOutlet,
+  NewsOutletEpgSlot,
+  NewsOutletRegion,
+} from '../types/drfun1News';
 
 interface DrFun1NewsEpgSectionProps {
   allOutlets: GlobalNewsOutlet[];
@@ -44,6 +60,7 @@ interface DrFun1NewsEpgSectionProps {
 }
 
 const STORAGE_KEY_EPG_REMINDERS = 'drfun1_news_epg_reminders_v1';
+const STORAGE_KEY_EPG_TIMEZONE = 'drfun1_news_epg_timezone_v1';
 
 const EPG_REGIONS: ('All' | NewsOutletRegion)[] = [
   'All',
@@ -89,11 +106,37 @@ export const DrFun1NewsEpgSection: React.FC<DrFun1NewsEpgSectionProps> = ({
     return [];
   });
 
+  const [timezoneSelection, setTimezoneSelection] = useState<EpgTimezoneSelection>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_EPG_TIMEZONE);
+      if (saved) {
+        const parsed = JSON.parse(saved) as Partial<EpgTimezoneSelection>;
+        if (
+          (parsed.mode === 'local' || parsed.mode === 'utc' || parsed.mode === 'custom') &&
+          typeof parsed.customOffsetMinutes === 'number' &&
+          Number.isFinite(parsed.customOffsetMinutes)
+        ) {
+          return {
+            mode: parsed.mode,
+            customOffsetMinutes: parsed.customOffsetMinutes,
+          };
+        }
+      }
+    } catch (_) {}
+    return DEFAULT_EPG_TIMEZONE_SELECTION;
+  });
+
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY_EPG_REMINDERS, JSON.stringify(remindedSlotIds));
     } catch (_) {}
   }, [remindedSlotIds]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_EPG_TIMEZONE, JSON.stringify(timezoneSelection));
+    } catch (_) {}
+  }, [timezoneSelection]);
 
   // Keep EPG clock aligned every 30s
   useEffect(() => {
@@ -101,23 +144,62 @@ export const DrFun1NewsEpgSection: React.FC<DrFun1NewsEpgSectionProps> = ({
     return () => window.clearInterval(id);
   }, []);
 
+  const localTzMeta = useMemo(() => getLocalTimezoneMeta(clockDate), [clockDate]);
+  const activeTzMeta = useMemo(
+    () => getActiveEpgTimezoneMeta(timezoneSelection, clockDate),
+    [timezoneSelection, clockDate]
+  );
+
+  const handleSelectTimezoneMode = (mode: EpgTimezoneMode) => {
+    const next: EpgTimezoneSelection = { ...timezoneSelection, mode };
+    setTimezoneSelection(next);
+    const meta = getActiveEpgTimezoneMeta(next, clockDate);
+    onNotify?.(`EPG schedule timezone switched to ${meta.shortCode} (${meta.offsetLabel} · ${meta.regionLabel})`);
+  };
+
+  const handleSelectCustomOffset = (offsetMinutes: number) => {
+    const next: EpgTimezoneSelection = {
+      mode: 'custom',
+      customOffsetMinutes: offsetMinutes,
+    };
+    setTimezoneSelection(next);
+    const meta = getActiveEpgTimezoneMeta(next, clockDate);
+    onNotify?.(`EPG schedule timezone set to ${meta.shortCode} (${meta.offsetLabel} · ${meta.regionLabel})`);
+  };
+
   const baseList = useMemo(() => {
     if (syncWithMapFilter) return filteredOutlets;
     return allOutlets;
   }, [syncWithMapFilter, filteredOutlets, allOutlets]);
 
   const epgRows = useMemo(() => {
-    const computedRows = buildWorldNewsEpgRows(baseList, allOutlets, clockDate);
+    const computedRows = buildWorldNewsEpgRows(baseList, allOutlets, clockDate, timezoneSelection);
     const syncedMap = epgSyncSnapshot?.rowsByOutletId;
 
-    // Merge latest API-synced slots & progress while preserving live outlet viewer/breaking telemetry
+    // Merge latest API-synced slots & progress while formatting every slot window in the active EPG timezone
     const mergedRows = computedRows.map((row) => {
       const synced = syncedMap?.[row.outlet.id];
       if (!synced) return row;
+
+      const localizedSlots = synced.slots.map((syncedSlot, slotIdx) => {
+        const fallbackSlot = row.slots[slotIdx];
+        const startMs = syncedSlot.startMs ?? fallbackSlot?.startMs;
+        const endMs = syncedSlot.endMs ?? fallbackSlot?.endMs;
+        return {
+          ...syncedSlot,
+          startMs,
+          endMs,
+          timeRange:
+            typeof startMs === 'number' && typeof endMs === 'number'
+              ? formatEpgTimeRange(startMs, endMs, timezoneSelection, clockDate)
+              : fallbackSlot?.timeRange ?? syncedSlot.timeRange,
+        };
+      }) as [NewsOutletEpgSlot, NewsOutletEpgSlot, NewsOutletEpgSlot];
+
       return {
         ...row,
         progressPct: synced.progressPct,
-        slots: synced.slots,
+        slots: localizedSlots,
       };
     });
 
@@ -149,6 +231,7 @@ export const DrFun1NewsEpgSection: React.FC<DrFun1NewsEpgSectionProps> = ({
     baseList,
     allOutlets,
     clockDate,
+    timezoneSelection,
     epgSyncSnapshot,
     epgSearch,
     syncWithMapFilter,
@@ -172,13 +255,9 @@ export const DrFun1NewsEpgSection: React.FC<DrFun1NewsEpgSectionProps> = ({
   };
 
   const utcTimeLabel = clockDate.toISOString().slice(11, 16) + ' UTC';
-  const localTimeLabel = clockDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const activeClockLabel = `${formatEpgClockTime(clockDate.getTime(), timezoneSelection, false)} ${activeTzMeta.shortCode}`;
   const lastSyncedLabel = epgSyncSnapshot
-    ? new Date(epgSyncSnapshot.syncedAt).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      })
+    ? `${formatEpgClockTime(new Date(epgSyncSnapshot.syncedAt).getTime(), timezoneSelection, true)} ${activeTzMeta.shortCode}`
     : null;
   const countdownMins = String(Math.floor(Math.max(0, epgCountdownSec) / 60)).padStart(2, '0');
   const countdownSecs = String(Math.max(0, epgCountdownSec) % 60).padStart(2, '0');
@@ -229,11 +308,18 @@ export const DrFun1NewsEpgSection: React.FC<DrFun1NewsEpgSectionProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300 flex items-center gap-1.5 tabular-nums whitespace-nowrap shrink-0">
+          <div
+            className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300 flex items-center gap-1.5 tabular-nums whitespace-nowrap shrink-0"
+            title={`Active EPG Schedule Timezone: ${activeTzMeta.shortCode} (${activeTzMeta.offsetLabel} · ${activeTzMeta.regionLabel})`}
+          >
             <Clock className="w-3.5 h-3.5 text-cyan-400" />
-            <span>{localTimeLabel}</span>
-            <span className="text-slate-600">·</span>
-            <span className="text-cyan-300">{utcTimeLabel}</span>
+            <span className="text-white font-semibold">{activeClockLabel}</span>
+            {timezoneSelection.mode !== 'utc' && (
+              <>
+                <span className="text-slate-600" aria-hidden="true">·</span>
+                <span className="text-cyan-300">{utcTimeLabel}</span>
+              </>
+            )}
           </div>
 
           {onSyncEpg && (
@@ -370,6 +456,89 @@ export const DrFun1NewsEpgSection: React.FC<DrFun1NewsEpgSectionProps> = ({
             EPG following active D3 Map / Directory filter: <strong>{activeMapRegion}</strong> ({filteredOutlets.length} channels)
           </div>
         )}
+        {/* EPG Schedule Timezone Toggle (Local / UTC / Custom Regional Offset) */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 px-3 py-2 rounded-xl bg-slate-950/90 border border-slate-800">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-300 whitespace-nowrap shrink-0">
+              <Globe className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+              <span>Schedule Timezone</span>
+            </div>
+
+            <div
+              role="group"
+              aria-label="EPG schedule timezone mode"
+              className="inline-flex items-center p-0.5 rounded-lg bg-slate-900 border border-slate-800"
+            >
+              <button
+                type="button"
+                aria-pressed={timezoneSelection.mode === 'local'}
+                onClick={() => handleSelectTimezoneMode('local')}
+                title={`View EPG schedule in your browser's local timezone (${localTzMeta.shortCode} · ${localTzMeta.offsetLabel})`}
+                className={`px-2.5 py-1 rounded-md text-xs font-mono font-semibold transition whitespace-nowrap shrink-0 cursor-pointer ${
+                  timezoneSelection.mode === 'local'
+                    ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                Local ({localTzMeta.shortCode})
+              </button>
+              <button
+                type="button"
+                aria-pressed={timezoneSelection.mode === 'utc'}
+                onClick={() => handleSelectTimezoneMode('utc')}
+                title="View EPG schedule in Coordinated Universal Time (UTC+00:00)"
+                className={`px-2.5 py-1 rounded-md text-xs font-mono font-semibold transition whitespace-nowrap shrink-0 cursor-pointer ${
+                  timezoneSelection.mode === 'utc'
+                    ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                UTC
+              </button>
+              <button
+                type="button"
+                aria-pressed={timezoneSelection.mode === 'custom'}
+                onClick={() => handleSelectTimezoneMode('custom')}
+                title="View EPG schedule using a custom selected regional UTC offset"
+                className={`px-2.5 py-1 rounded-md text-xs font-mono font-semibold transition whitespace-nowrap shrink-0 cursor-pointer ${
+                  timezoneSelection.mode === 'custom'
+                    ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                Regional Offset
+              </button>
+            </div>
+
+            <label className="flex items-center gap-1.5 min-w-0">
+              <span className="sr-only">Select custom regional UTC offset</span>
+              <select
+                aria-label="Custom regional timezone offset"
+                value={timezoneSelection.customOffsetMinutes}
+                onChange={(e) => handleSelectCustomOffset(Number(e.target.value))}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-mono tabular-nums bg-slate-900 border transition focus:outline-none focus:border-cyan-400 cursor-pointer max-w-[270px] sm:max-w-[320px] truncate ${
+                  timezoneSelection.mode === 'custom'
+                    ? 'border-cyan-500/60 text-cyan-200'
+                    : 'border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                }`}
+              >
+                {EPG_REGIONAL_TIMEZONE_OFFSETS.map((opt) => (
+                  <option key={opt.id} value={opt.offsetMinutes} className="bg-slate-950 text-slate-100">
+                    {opt.offsetLabel} · {opt.shortCode} — {opt.regionName}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400 tabular-nums whitespace-nowrap shrink-0">
+            <span className="text-cyan-300 font-semibold">{activeTzMeta.offsetLabel}</span>
+            <span aria-hidden="true">·</span>
+            <span className="truncate max-w-[240px]" title={activeTzMeta.regionLabel}>
+              {activeTzMeta.regionLabel}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* EPG Matrix Grid */}
@@ -400,18 +569,23 @@ export const DrFun1NewsEpgSection: React.FC<DrFun1NewsEpgSectionProps> = ({
             }`}
           >
             {/* Sticky Time Header Row */}
-            <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm grid grid-cols-12 gap-2 px-2.5 py-2 border-b border-slate-800 text-[11px] font-mono text-slate-400 uppercase">
-              <div className="col-span-3 flex items-center gap-1.5">
-                <Tv className="w-3.5 h-3.5 text-cyan-400" />
-                <span>World Outlet (CH 101–{100 + allOutlets.length})</span>
+            <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm grid grid-cols-12 gap-2 px-2.5 py-2 border-b border-slate-800 text-[11px] font-mono text-slate-400 uppercase tabular-nums">
+              <div className="col-span-3 flex items-center justify-between gap-1.5 pr-2">
+                <span className="flex items-center gap-1.5 truncate">
+                  <Tv className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span className="truncate">World Outlet (CH 101–{100 + allOutlets.length})</span>
+                </span>
+                <span className="text-[10px] text-cyan-300 font-semibold shrink-0">
+                  {activeTzMeta.headerZoneTag}
+                </span>
               </div>
-              <div className="col-span-3 text-red-400 font-bold">
+              <div className="col-span-3 text-red-400 font-bold truncate">
                 On Now · {epgRows[0]?.slots[0].timeRange}
               </div>
-              <div className="col-span-3">
+              <div className="col-span-3 truncate">
                 Up Next · {epgRows[0]?.slots[1].timeRange}
               </div>
-              <div className="col-span-3">
+              <div className="col-span-3 truncate">
                 Later · {epgRows[0]?.slots[2].timeRange}
               </div>
             </div>
@@ -506,7 +680,7 @@ export const DrFun1NewsEpgSection: React.FC<DrFun1NewsEpgSectionProps> = ({
                             <div className="text-xs font-bold text-white truncate hover:text-red-300">
                               {slot.title}
                             </div>
-                            <div className="text-[10px] font-mono text-cyan-300 truncate mt-0.5">
+                            <div className="text-[10px] font-mono tabular-nums text-cyan-300 truncate mt-0.5">
                               {slot.timeRange} · {slot.deskOrHost}
                             </div>
                             <div className="text-[10px] text-slate-400 line-clamp-1 mt-0.5">

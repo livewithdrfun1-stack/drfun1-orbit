@@ -61,6 +61,8 @@ export interface NewsOutletEpgSlot {
   id: string;
   windowType: 'now' | 'next' | 'later';
   timeRange: string;
+  startMs?: number;
+  endMs?: number;
   title: string;
   deskOrHost: string;
   synopsis: string;
@@ -74,7 +76,7 @@ export interface NewsOutletEpgRow {
   slots: [NewsOutletEpgSlot, NewsOutletEpgSlot, NewsOutletEpgSlot];
 }
 
-export type NewsStreamSourceType = 'satellite' | 'web' | 'local' | 'fiber';
+export type NewsStreamSourceType = 'satellite' | 'web' | 'local' | 'fiber' | 'strimm';
 
 export interface NewsStreamSourceProfile {
   id: NewsStreamSourceType;
@@ -207,4 +209,80 @@ export interface StreamQualityOption {
   bitrateMbps: number;
   available: boolean;
   unavailableReason?: string;
+}
+
+export type EpgTimezoneMode = 'local' | 'utc' | 'custom';
+
+export interface EpgRegionalOffsetOption {
+  id: string;
+  offsetMinutes: number;
+  offsetLabel: string;
+  shortCode: string;
+  regionName: string;
+}
+
+export interface EpgTimezoneSelection {
+  mode: EpgTimezoneMode;
+  customOffsetMinutes: number;
+}
+
+export type StrimmProgramSourceKind = 'hls_live' | 'vod_clip' | 'news_feed' | 'youtube_vod';
+
+export interface StrimmLinearProgramBlock {
+  id: string;
+  title: string;
+  durationMin: number;
+  sourceKind: StrimmProgramSourceKind;
+  sourceUrl: string;
+  hostOrDesk: string;
+  synopsis: string;
+}
+
+export interface StrimmChannelConfig {
+  id: string;
+  strimmChannelId: string;
+  name: string;
+  callSign: string;
+  category: NewsOutletCategory;
+  region: NewsOutletRegion;
+  country: string;
+  accentColor: string;
+  embedUrl: string;
+  hlsStreamUrl: string;
+  epgJsonUrl: string;
+  whitelistedDomain: string;
+  logoBugText: string;
+  crawlTickerText: string;
+  showLogoBug: boolean;
+  showTickerCrawl: boolean;
+  showProgramGuide: boolean;
+  autoplay: boolean;
+  linkedOutletId?: string;
+  schedule: StrimmLinearProgramBlock[];
+}
+
+export type SatelliteAlertEventType =
+  | 'malfunction'
+  | 'launch'
+  | 'solar_weather'
+  | 'telemetry_milestone';
+
+export type SatelliteAlertSeverity = 'CRITICAL' | 'HIGH' | 'ADVISORY';
+
+export interface SatelliteOrbitalAlert {
+  id: string;
+  articleId: string;
+  eventType: SatelliteAlertEventType;
+  severity: SatelliteAlertSeverity;
+  badgeLabel: string;
+  title: string;
+  summary: string;
+  sourceName: string;
+  sourceUrl: string;
+  orbitRegime: 'LEO' | 'MEO' | 'GEO' | 'Multi-Orbit';
+  detectedAt: string;
+  detectedAtMs: number;
+  matchedKeywords: string[];
+  acknowledged: boolean;
+  dismissedOverlay: boolean;
 }

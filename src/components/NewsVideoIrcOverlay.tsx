@@ -85,6 +85,7 @@ const OVERLAY_SOURCE_OPTIONS: { id: NewsStreamSourceType; label: string }[] = [
   { id: 'web', label: 'WEB' },
   { id: 'local', label: 'LOCAL' },
   { id: 'fiber', label: '100G' },
+  { id: 'strimm', label: 'STRIMM' },
 ];
 
 interface OverlayIrcNickEntry {
@@ -485,6 +486,8 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
         ota: 'local',
         fiber: 'fiber',
         '100g': 'fiber',
+        strimm: 'strimm',
+        srtimm: 'strimm',
       };
       const target = map[normalized];
       if (target && (onChangeBoundSource || onSelectSource)) {
@@ -494,7 +497,7 @@ export const NewsVideoIrcOverlay: React.FC<NewsVideoIrcOverlayProps> = ({
           onSelectSource?.(target);
         }
       } else {
-        pushSystemLine('Usage: /source satellite | web | local | fiber', 'system');
+        pushSystemLine('Usage: /source satellite | web | local | fiber | strimm', 'system');
       }
       return;
     }

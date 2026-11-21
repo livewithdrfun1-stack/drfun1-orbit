@@ -23,6 +23,7 @@ import {
   Server,
   ShieldCheck,
   SlidersHorizontal,
+  Tv,
   WifiOff,
 } from 'lucide-react';
 import {
@@ -66,6 +67,8 @@ const getSourceIcon = (id: NewsStreamSourceType, className = 'w-3.5 h-3.5') => {
       return <Radio className={className} />;
     case 'fiber':
       return <Server className={className} />;
+    case 'strimm':
+      return <Tv className={className} />;
   }
 };
 
